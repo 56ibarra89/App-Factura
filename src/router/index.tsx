@@ -1,5 +1,5 @@
-import { Route, Routes } from "react-router-dom";
-// import Home from '../pages/Home';
+import { Navigate, Route, Routes } from "react-router-dom";
+import Home from '../pages/Home';
 // import Facturacion from '../pages/Facturacion';
 // import Orders from '../pages/Orders';
 // import Tables from '../pages/Tables';
@@ -12,19 +12,19 @@ import { Route, Routes } from "react-router-dom";
 // import Admin from '../pages/Admin';
 import Login from '../pages/Login';
 
-// const PrivateRoute = ({ element }: { element: JSX.Element }) => {
+const PrivateRoute = ({ element }: { element: JSX.Element }) => {
 
-//const isLoggedIn = sessionStorage.getItem("loggedIn") === "true";
+const isLoggedIn = sessionStorage.getItem("loggedIn") === "true";
 
-//return isLoggedIn ? element : <Navigate to="/" replace />;
+return isLoggedIn ? element : <Navigate to="/" replace />;
 
-// };
+};
 
 const AppRoutes = () => (
     <Routes>
         <Route path="/" element={<Login />} />
-        {/* <Route path="/home" element={<PrivateRoute element={<Home />} />} />
-        <Route path="/facturacion" element={<PrivateRoute element={<Facturacion />} />} />
+        <Route path="/home" element={<PrivateRoute element={<Home />} />} />
+        {/* <Route path="/facturacion" element={<PrivateRoute element={<Facturacion />} />} />
         <Route path="/orders" element={<PrivateRoute element={<Orders />} />} />
         <Route path="/ordenes" element={<PrivateRoute element={<Orders />} />} />
         <Route path="/mesas" element={<PrivateRoute element={<Tables />} />} />
