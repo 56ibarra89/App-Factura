@@ -69,6 +69,7 @@ const Login = () => {
       }
 
       sessionStorage.setItem("loggedIn", "true");
+      sessionStorage.setItem("username", credentials.username); // Guardar el nombre de usuario en sessionStorage
       navigate("/home");
     } else {
       setError("Credenciales incorrectas");
