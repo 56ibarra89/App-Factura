@@ -10,12 +10,16 @@ import {
   Alert,
   FormControlLabel,
   Checkbox,
+  CircularProgress,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const fakeAuth = async (username: string, password: string): Promise<boolean> => {
+const fakeAuth = async (
+  username: string,
+  password: string
+): Promise<boolean> => {
   // Simulamos una autenticación simple para varios usuarios conocidos
   const allowedUsers = new Set(["admin", "fran", "engels", "sidney"]);
   return new Promise((resolve) => {
@@ -28,7 +32,10 @@ const fakeAuth = async (username: string, password: string): Promise<boolean> =>
 const Login = () => {
   const navigate = useNavigate();
 
-  const [credentials, setCredentials] = useState({ username: "", password: "" });
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
@@ -69,6 +76,7 @@ const Login = () => {
       }
 
       sessionStorage.setItem("loggedIn", "true");
+      sessionStorage.setItem("username", credentials.username); // Guardar el nombre de usuario en sessionStorage
       navigate("/home");
     } else {
       setError("Credenciales incorrectas");
@@ -106,28 +114,34 @@ const Login = () => {
 
         <TextField
           label="Contraseña"
-          variant="outlined"
           type={showPassword ? "text" : "password"}
           name="password"
           value={credentials.password}
           onChange={handleChange}
           fullWidth
           margin="normal"
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
           }}
         />
 
-        <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mt={1}
+        >
           <FormControlLabel
             control={
               <Checkbox
@@ -148,15 +162,24 @@ const Login = () => {
           </Button>
         </Box>
 
+        {/* Botón con loader circular */}
         <Button
           variant="contained"
           color="primary"
           fullWidth
-          sx={{ mt: 2, borderRadius: 2 }}
+          sx={{ mt: 2, borderRadius: 2, height: 42, position: "relative" }}
           onClick={handleLogin}
           disabled={loading}
         >
-          {loading ? "Validando..." : "Entrar"}
+          {loading ? (
+            <CircularProgress
+              size={26}
+              color="inherit"
+              sx={{ position: "absolute" }}
+            />
+          ) : (
+            "Entrar"
+          )}
         </Button>
       </Paper>
 
@@ -166,7 +189,11 @@ const Login = () => {
         onClose={() => setError("")}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert onClose={() => setError("")} severity="error" sx={{ width: "100%" }}>
+        <Alert
+          onClose={() => setError("")}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
           {error}
         </Alert>
       </Snackbar>
