@@ -1,0 +1,90 @@
+// src/components/Cart.tsx
+import { Box, Typography, Divider, Button } from "@mui/material";
+import CartItem from "../components/CartItem";
+import { ProductSize } from "../context/ProductContext"; // Importa tus tipos
+
+// Define el tipo para un item del carrito
+export interface CartItemType {
+  name: string;
+  price: number;
+  size: ProductSize;
+  quantity: number;
+}
+
+interface CartProps {
+  cartItems: CartItemType[];
+  total: number;
+  onAddItem: (item: Omit<CartItemType, "quantity">) => void;
+  onRemoveItem: (index: number) => void;
+  onChangeQuantity: (index: number, quantity: number) => void;
+  onPreviewClick: () => void;
+}
+
+const Cart = ({
+  cartItems,
+  total,
+  onAddItem,
+  onRemoveItem,
+  onChangeQuantity,
+  onPreviewClick,
+}: CartProps) => {
+  return (
+    <Box
+      width="300px"
+      p={2}
+      bgcolor="#f9f9f9"
+      borderRadius={2}
+      display="flex"
+      flexDirection="column"
+      maxHeight="100%"
+      boxShadow={2}
+    >
+      <Typography variant="h6" fontWeight="bold" mb={1}>
+        Tu pedido
+      </Typography>
+      <Divider />
+
+      <Box flex={1} overflow="auto" pr={1} my={1}>
+        {cartItems.map((item, i) => (
+          <CartItem
+            key={i}
+            name={
+              item.size === "único"
+                ? item.name
+                : `${item.name} (${item.size})`
+            }
+            price={item.price}
+            quantity={item.quantity}
+            onAdd={() =>
+              onAddItem({
+                name: item.name,
+                price: item.price,
+                size: item.size,
+              })
+            }
+            onRemove={() => onRemoveItem(i)}
+            onChangeQuantity={(qty) => onChangeQuantity(i, qty)}
+          />
+        ))}
+      </Box>
+
+      <Divider sx={{ my: 1 }} />
+      <Box position="sticky" bottom={0} bgcolor="#f9f9f9" pt={1}>
+        <Typography fontWeight="bold" mb={1}>
+          Total: ${total.toFixed(2)}
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          disabled={cartItems.length === 0}
+          onClick={onPreviewClick}
+        >
+          Vista previa
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+export default Cart;

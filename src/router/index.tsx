@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Home from '../pages/Home';
-// import Facturacion from '../pages/Facturacion';
+import Facturacion from '../pages/Facturacion';
 // import Orders from '../pages/Orders';
 // import Tables from '../pages/Tables';
 // import Reports from '../pages/Reports';
@@ -25,8 +25,8 @@ const AppRoutes = () => (
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<PrivateRoute element={<Home />} />} />
         <Route path="/producto" element={<PrivateRoute element={<Producto />} />} />
-        {/* <Route path="/facturacion" element={<PrivateRoute element={<Facturacion />} />} />
-        <Route path="/orders" element={<PrivateRoute element={<Orders />} />} />
+        <Route path="/facturacion" element={<PrivateRoute element={<Facturacion />} />} />
+        {/* <Route path="/orders" element={<PrivateRoute element={<Orders />} />} />
         <Route path="/ordenes" element={<PrivateRoute element={<Orders />} />} />
         <Route path="/mesas" element={<PrivateRoute element={<Tables />} />} />
         <Route path="/reporte" element={<PrivateRoute element={<Reports />} />} />
