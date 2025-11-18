@@ -1,3 +1,4 @@
+// src/context/ProductContext.tsx
 import { createContext, useContext, useState, ReactNode } from "react";
 
 // Tipos para los precios
@@ -45,7 +46,6 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     { label: "Alitas", items: [] },
     { label: "Postres", items: [] },
     { label: "Bebidas", items: [] },
-    { label: "Combo", items: [] },
   ]);
 
   const addProduct = (category: string, product: Product) => {
