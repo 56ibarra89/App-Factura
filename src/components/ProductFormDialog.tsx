@@ -8,7 +8,7 @@ import {
   Stack,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { Product, ProductSize } from "../context/ProductContext";
+import { Product, ProductSize } from "../types/product";
 
 const categoriesList = [
   "Pizzas",

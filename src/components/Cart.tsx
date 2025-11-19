@@ -1,15 +1,7 @@
 // src/components/Cart.tsx
 import { Box, Typography, Divider, Button } from "@mui/material";
 import CartItem from "../components/CartItem";
-import { ProductSize } from "../context/ProductContext"; // Importa tus tipos
-
-// Define el tipo para un item del carrito
-export interface CartItemType {
-  name: string;
-  price: number;
-  size: ProductSize;
-  quantity: number;
-}
+import { CartItemType } from "../types/cart";
 
 interface CartProps {
   cartItems: CartItemType[];

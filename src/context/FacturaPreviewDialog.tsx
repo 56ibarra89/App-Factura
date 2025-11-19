@@ -12,18 +12,11 @@ import {
   Button,
   Box,
 } from "@mui/material";
-import { ProductSize } from "../context/ProductContext"; // Asegúrate de importar desde donde tienes definido ProductSize
-
-interface CartItem {
-  name: string;
-  price: number;
-  size: ProductSize;
-  quantity: number;
-}
+import { CartItemType } from "../types/cart";
 
 interface FacturaPreviewDialogProps {
   open: boolean;
-  cart: CartItem[];
+  cart: CartItemType[];
   total: number;
   onClose: () => void;
   onConfirm: () => void;

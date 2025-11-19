@@ -1,24 +1,6 @@
 // src/context/ProductContext.tsx
 import { createContext, useContext, useState, ReactNode } from "react";
-
-// Tipos para los precios
-export type ProductSize = "familiar" | "mediana" | "personal" | "único";
-
-export interface ProductPrice {
-  size: ProductSize;
-  price: number;
-}
-
-export interface Product {
-  name: string;
-  prices: ProductPrice[];
-}
-
-// Cada categoría contiene una etiqueta y sus productos
-export interface Category {
-  label: string;
-  items: Product[];
-}
+import { Category, Product } from "../types/product";
 
 // Contexto y métodos disponibles
 interface ProductContextType {
