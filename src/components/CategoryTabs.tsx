@@ -9,7 +9,7 @@ import {
   Cake,
 } from "@mui/icons-material";
 // 👇 1. IMPORTA EL TIPO 'Product' DE TU CONTEXTO
-import { Product } from "../context/ProductContext"; 
+import { Product } from "../types/product"; 
 
 // Este mapa de iconos puede vivir aquí o ser importado de un archivo de constantes
 const iconMap: Record<string, JSX.Element> = {

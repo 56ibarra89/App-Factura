@@ -1,6 +1,7 @@
 import { Box, Button, Paper, Stack } from "@mui/material";
 import { useState } from "react";
-import { useProductContext, Product } from "../context/ProductContext";
+import { useProductContext } from "../context/ProductContext";
+import { Product } from "../types/product";
 import { useNavigate } from "react-router-dom";
 import ProductsTable from "../components/ProductsTable";
 import ProductFormDialog from "../components/ProductFormDialog";

@@ -9,7 +9,7 @@ import {
   Box,
 } from "@mui/material";
 import { useState } from "react";
-import { ProductPrice, ProductSize } from "../context/ProductContext";
+import { ProductPrice, ProductSize } from "../types/product";
 
 interface SelectSizeDialogProps {
   open: boolean;

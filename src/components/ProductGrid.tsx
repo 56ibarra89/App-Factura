@@ -1,7 +1,7 @@
 // src/components/ProductGrid.tsx
 import { Box } from "@mui/material";
 import ProductCard from "../components/ProductCard";
-import { Product } from "../context/ProductContext"; // Asegúrate de importar tu tipo Product
+import { Product } from "../types/product"; // Asegúrate de importar tu tipo Product
 
 interface ProductGridProps {
   products: Product[];

@@ -3,7 +3,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Paper, IconButton, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Category, Product } from "../context/ProductContext";
+import { Category, Product } from "../types/product";
 
 interface ProductsTableProps {
   categories: Category[];

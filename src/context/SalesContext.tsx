@@ -1,16 +1,6 @@
 // src/context/SalesContext.tsx
 import React, { createContext, useContext, useState } from "react";
-
-type SaleItem = {
-  name: string;
-  price: number;
-  size: string;
-};
-
-interface SalesContextProps {
-  sales: SaleItem[];
-  addSale: (item: SaleItem) => void;
-}
+import { SaleItem, SalesContextProps } from "../types/sales";
 
 const SalesContext = createContext<SalesContextProps | undefined>(undefined);
 
