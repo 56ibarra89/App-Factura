@@ -19,16 +19,13 @@ export const useProductContext = () => {
   return context;
 };
 
+import { initialCategories } from "../data/initialData";
+
+// ...
+
 // Componente Provider
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
-  const [categories, setCategories] = useState<Category[]>([
-    { label: "Pizzas", items: [] },
-    { label: "Mexicanos", items: [] },
-    { label: "Submarinos", items: [] },
-    { label: "Alitas", items: [] },
-    { label: "Postres", items: [] },
-    { label: "Bebidas", items: [] },
-  ]);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
 
   const addProduct = (category: string, product: Product) => {
     setCategories((prev) =>
