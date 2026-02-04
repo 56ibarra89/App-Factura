@@ -12,7 +12,7 @@ import ProductGrid from "../components/ProductGrid";
 import Cart from "../components/Cart";
 
 // Importa los diálogos
-import FacturaPreviewDialog from "../context/FacturaPreviewDialog";
+import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 import ExtrasDialog from "../components/ExtrasDialog";
 import SelectSizeDialog from "../components/SelectSizeDialog";
 
