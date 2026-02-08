@@ -69,7 +69,7 @@ const Home: React.FC = () => {
     {
       label: "Abrir Caja",
       icon: <LocalAtmIcon fontSize="large" color="success" />,
-      action: () => console.log("Abrir Caja"),
+      action: () => navigate("/abrircaja"),
     },
     {
       label: "Cerrar Caja",
