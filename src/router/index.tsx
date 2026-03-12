@@ -12,6 +12,7 @@ import ChangePassword from '../pages/ChangePassword';
 // import Admin from '../pages/Admin';
 import Login from '../pages/Login';
 import AbrirCajaPage from "../pages/AbrirCajaPage";
+import Mesa from "../pages/Mesa";
 
 const PrivateRoute = ({ element }: { element: JSX.Element }) => {
 
@@ -29,9 +30,10 @@ const AppRoutes = () => (
         <Route path="/facturacion" element={<PrivateRoute element={<Facturacion />} />} />
         <Route path="/clave" element={<PrivateRoute element={<ChangePassword />} />} />
         <Route path="/abrircaja" element={<PrivateRoute element={<AbrirCajaPage />} />} />
+        <Route path="/mesas" element={<PrivateRoute element={<Mesa />} />} />
         {/* <Route path="/orders" element={<PrivateRoute element={<Orders />} />} />
         <Route path="/ordenes" element={<PrivateRoute element={<Orders />} />} />
-        <Route path="/mesas" element={<PrivateRoute element={<Tables />} />} />
+        
         <Route path="/reporte" element={<PrivateRoute element={<Reports />} />} />
         <Route path="/reimprimir" element={<PrivateRoute element={<ReimprimirFactura />} />} />
         <Route path="/cuentas" element={<PrivateRoute element={<Users />} />} />
