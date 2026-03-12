@@ -17,4 +17,4 @@ export interface Category {
   items: Product[];
 }
 
-export default {} as any;
+

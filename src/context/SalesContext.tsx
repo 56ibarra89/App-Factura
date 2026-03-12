@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // src/context/SalesContext.tsx
 import React, { createContext, useContext, useState } from "react";
 import { SaleItem, SalesContextProps } from "../types/sales";

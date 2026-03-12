@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // src/context/ProductContext.tsx
 import { createContext, useContext, useState, ReactNode } from "react";
 import { Category, Product } from "../types/product";
