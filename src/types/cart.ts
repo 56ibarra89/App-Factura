@@ -8,4 +8,4 @@ export interface CartItemType {
   quantity: number;
 }
 
-export default {} as any;
+

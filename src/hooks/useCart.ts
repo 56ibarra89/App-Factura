@@ -2,9 +2,10 @@
 import { useCallback, useMemo, useState } from "react";
 import { CartItemType } from "../types/cart";
 import { Product, ProductPrice, ProductSize } from "../types/product";
+import { SaleItem } from "../types/sales";
 
 interface UseCartOptions {
-  addSale?: (item: any) => void;
+  addSale?: (item: SaleItem) => void;
   navigate?: (path: string) => void;
 }
 

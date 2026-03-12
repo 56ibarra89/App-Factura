@@ -10,4 +10,4 @@ export interface SalesContextProps {
   addSale: (item: SaleItem) => void;
 }
 
-export default {} as any;
+

@@ -13,16 +13,11 @@ import Cart from "../components/Cart";
 
 // Importa los diálogos
 import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
-import ExtrasDialog from "../components/ExtrasDialog";
 import SelectSizeDialog from "../components/SelectSizeDialog";
-
-// Constantes fuera del componente para que no se re-creen
-const extras = ["Queso extra", "Pepperoni", "Jamón", "Bacon"];
 
 export const Facturacion = () => {
   const { categories } = useProductContext();
   const [selectedTab, setSelectedTab] = useState(0);
-  const [openExtras, setOpenExtras] = useState(false); // Sigues teniendo este estado, aunque no se usa
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const navigate = useNavigate();
@@ -70,11 +65,6 @@ export const Facturacion = () => {
 
       {/* Los diálogos siguen viviendo aquí, ya que son controlados
           por el estado de esta página (Facturacion) */}
-      <ExtrasDialog
-        open={openExtras}
-        extras={extras}
-        onClose={() => setOpenExtras(false)}
-      />
 
       {selectedProduct && (
         <SelectSizeDialog

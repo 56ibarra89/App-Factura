@@ -1,9 +1,6 @@
 import { app, BrowserWindow } from 'electron'
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-
-const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -33,6 +30,9 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.mjs'),
     },
   })
+
+  // Remover el menú por defecto (File, Edit, View, Window, Help)
+  win.setMenu(null)
 
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
