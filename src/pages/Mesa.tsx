@@ -27,20 +27,35 @@ export default function MesasPage() {
   ];
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", bgcolor: "#f4f4f4" }}>
+    <Box sx={{ display: "flex", height: "100vh", bgcolor: "#f0f2f5", p: 2, gap: 2, boxSizing: "border-box" }}>
 
-      <SectionSidebar
-        floors={floors}
-        selectedFloor={selectedFloor}
-        onChangeFloor={setSelectedFloor}
-      />
+      {/* Sidebar with rounded corners and shadow */}
+      <Box sx={{ width: 240, flexShrink: 0 }}>
+        <SectionSidebar
+          floors={floors}
+          selectedFloor={selectedFloor}
+          onChangeFloor={setSelectedFloor}
+        />
+      </Box>
 
-      <MesaGrid
-        mesas={mesas}
-        selectedFloor={selectedFloor}
-      />
+      {/* Main Grid Area with rounded corners and shadow */}
+      <Box sx={{ 
+        flexGrow: 1, 
+        bgcolor: "white", 
+        borderRadius: 4, 
+        boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+        overflow: "hidden"
+      }}>
+        <MesaGrid
+          mesas={mesas}
+          selectedFloor={selectedFloor}
+        />
+      </Box>
 
-      <OrderPanel order={currentOrder} />
+      {/* Right side Order Panel */}
+      <Box sx={{ width: 380, flexShrink: 0 }}>
+        <OrderPanel order={currentOrder} />
+      </Box>
 
     </Box>
   );

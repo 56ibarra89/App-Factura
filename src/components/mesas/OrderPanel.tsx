@@ -12,19 +12,32 @@ interface Props {
 export default function OrderPanel({ order }: Props) {
   return (
     <Paper
+      elevation={0}
       sx={{
-        width: 400,
-        borderRadius: 0,
+        height: "100%",
         display: "flex",
         flexDirection: "column",
-        borderLeft: "1px solid #ccc",
+        borderRadius: 4,
+        boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+        bgcolor: "white",
+        overflow: "hidden"
       }}
     >
       <OrderHeader />
-      <OrderList order={order} />
-      <Box sx={{ p: 2 }}>
+      
+      <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+        <OrderList order={order} />
+      </Box>
+
+      <Box sx={{ 
+        p: 2.5, 
+        borderTop: "1px solid rgba(0,0,0,0.06)",
+        bgcolor: "#fafafa" 
+      }}>
         <OrderSummary order={order} />
-        <OrderActions />
+        <Box sx={{ mt: 3 }}>
+          <OrderActions />
+        </Box>
       </Box>
     </Paper>
   );

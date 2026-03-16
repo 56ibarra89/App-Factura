@@ -1,5 +1,6 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Divider } from "@mui/material";
 import { OrderItem } from "../../types/order.types";
+import PersonIcon from '@mui/icons-material/Person';
 
 interface Props {
   order: OrderItem[];
@@ -12,43 +13,53 @@ export default function OrderSummary({ order }: Props) {
   );
 
   return (
-    <Box sx={{ mb: 2 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-        <Typography>Sub total</Typography>
-        <Typography fontWeight="bold">
-          {subTotal.toFixed(2)}
+    <Box>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1, color: "text.secondary" }}>
+        <Typography variant="body2" fontWeight="500">Subtotal</Typography>
+        <Typography variant="body2" fontWeight="700">
+          ${subTotal.toFixed(2)}
         </Typography>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-        <Typography>IVA 15%</Typography>
-        <Typography>0.00</Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, color: "text.secondary" }}>
+        <Typography variant="body2" fontWeight="500">IVA 15%</Typography>
+        <Typography variant="body2" fontWeight="700">$0.00</Typography>
       </Box>
+
+      <Divider sx={{ borderStyle: "dashed", opacity: 0.6, my: 2 }} />
 
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          mt: 1,
-          pt: 1,
-          borderTop: "2px solid #ddd",
+          alignItems: "center",
+          mb: 3
         }}
       >
-        <Typography variant="h6" fontWeight="bold">
+        <Typography variant="h5" fontWeight="800" color="text.primary">
           Total
         </Typography>
-        <Typography variant="h6" fontWeight="bold">
-          {subTotal.toFixed(2)}
+        <Typography variant="h4" fontWeight="900" color="primary.main">
+          ${subTotal.toFixed(2)}
         </Typography>
       </Box>
 
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{ mt: 1 }}
-      >
-        Mesero: <strong>Ileana Gago</strong>
-      </Typography>
+      <Box sx={{ 
+        display: "flex", 
+        alignItems: "center", 
+        gap: 1, 
+        bgcolor: "rgba(0,0,0,0.03)", 
+        p: 1.5, 
+        borderRadius: 2 
+      }}>
+        <PersonIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+        <Typography
+          variant="body2"
+          color="text.secondary"
+        >
+          Mesero: <Box component="span" sx={{ color: "text.primary", fontWeight: "700" }}>Ileana Gago</Box>
+        </Typography>
+      </Box>
     </Box>
   );
 }
