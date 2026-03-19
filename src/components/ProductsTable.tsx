@@ -20,6 +20,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
     cat.items.map((product, iProd) => ({
       id: `${iCat}-${iProd}`,
       name: product.name,
+      description: product.description || "",
       category: cat.label,
       prices: product.prices
         .map((p) =>
@@ -34,6 +35,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Nombre", flex: 1 },
+    { field: "description", headerName: "Descripción", flex: 1.5 },
     { field: "category", headerName: "Categoría", flex: 1 },
     { field: "prices", headerName: "Precios", flex: 2 },
 

@@ -17,6 +17,7 @@ const ProductGrid = ({ products, onProductClick }: ProductGridProps) => {
             key={idx}
             name={item.name}
             price={item.prices?.[0]?.price || 0}
+            description={item.description}
             onClick={() => onProductClick(item)}
           />
         ))}

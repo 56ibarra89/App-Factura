@@ -14,6 +14,7 @@ import Cart from "../components/Cart";
 // Importa los diálogos
 import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 import SelectSizeDialog from "../components/SelectSizeDialog";
+import ExtrasDialog from "../components/ExtrasDialog";
 
 export const Facturacion = () => {
   const { categories } = useProductContext();
@@ -28,10 +29,13 @@ export const Facturacion = () => {
     total,
     selectedProduct,
     setSelectedProduct,
+    pendingItem,
     handleChangeQuantity,
     handleAddToCartItem,
     handleAddToCart,
     handleSelectSize,
+    handleConfirmExtras,
+    handleCancelExtras,
     handleRemoveItem,
     handleConfirmFactura,
   } = useCart({ addSale, navigate });
@@ -39,7 +43,6 @@ export const Facturacion = () => {
   const currentProducts = categories[selectedTab]?.items || [];
 
   // --- RENDERIZADO ---
-  // El JSX ahora es mucho más limpio y semántico
   return (
     <Box display="flex" height="100vh" overflow="hidden">
       
@@ -63,9 +66,7 @@ export const Facturacion = () => {
         onPreviewClick={() => setPreviewOpen(true)}
       />
 
-      {/* Los diálogos siguen viviendo aquí, ya que son controlados
-          por el estado de esta página (Facturacion) */}
-
+      {/* Diálogo de selección de tamaño */}
       {selectedProduct && (
         <SelectSizeDialog
           open={!!selectedProduct}
@@ -73,6 +74,18 @@ export const Facturacion = () => {
           prices={selectedProduct.prices}
           onClose={() => setSelectedProduct(null)}
           onSelect={handleSelectSize}
+        />
+      )}
+
+      {/* Diálogo de extras (aparece después de seleccionar tamaño) */}
+      {pendingItem && (
+        <ExtrasDialog
+          open={!!pendingItem}
+          productName={pendingItem.product.name}
+          size={pendingItem.size}
+          extras={pendingItem.product.extras || []}
+          onClose={handleCancelExtras}
+          onConfirm={handleConfirmExtras}
         />
       )}
 

@@ -38,7 +38,23 @@ export default function FacturaPreviewDialog({
             <ListItem key={index} disableGutters>
               <ListItemText
                 primary={`${item.name} (${item.size}) x${item.quantity}`}
-                secondary={`$${item.price.toFixed(2)} c/u — Subtotal: $${(item.price * item.quantity).toFixed(2)}`}
+                secondary={
+                  <Box component="span" display="flex" flexDirection="column">
+                    {item.extras?.length > 0 && (
+                      <Typography component="span" variant="caption" color="primary">
+                        Extras: {item.extras.map((e) => `${e.name} (+$${e.price.toFixed(2)})`).join(", ")}
+                      </Typography>
+                    )}
+                    {item.note && (
+                      <Typography component="span" variant="caption" color="error.main" sx={{ fontStyle: 'italic' }}>
+                        Nota: {item.note}
+                      </Typography>
+                    )}
+                    <Typography component="span" variant="body2" color="text.secondary">
+                      {`$${item.price.toFixed(2)} c/u — Subtotal: $${(item.price * item.quantity).toFixed(2)}`}
+                    </Typography>
+                  </Box>
+                }
               />
             </ListItem>
           ))}

@@ -47,11 +47,15 @@ const Cart = ({
             }
             price={item.price}
             quantity={item.quantity}
+            extras={item.extras}
+            note={item.note}
             onAdd={() =>
               onAddItem({
                 name: item.name,
                 price: item.price,
                 size: item.size,
+                extras: item.extras,
+                note: item.note,
               })
             }
             onRemove={() => onRemoveItem(i)}
