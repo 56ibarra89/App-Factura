@@ -13,75 +13,21 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
-const fakeAuth = async (
-  username: string,
-  password: string
-): Promise<boolean> => {
-  // Simulamos una autenticación simple para varios usuarios conocidos
-  const allowedUsers = new Set(["admin", "fran", "engels", "sidney"]);
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(allowedUsers.has(username) && password === "123456");
-    }, 1000);
-  });
-};
+import { useLogin } from "../hooks/useLogin";
 
 const Login = () => {
-  const navigate = useNavigate();
-
-  const [credentials, setCredentials] = useState({
-    username: "",
-    password: "",
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem("rememberedUser");
-    if (savedUser) {
-      setCredentials((prev) => ({ ...prev, username: savedUser }));
-      setRemember(true);
-    }
-
-    const isLogged = sessionStorage.getItem("loggedIn");
-    if (isLogged) {
-      navigate("/");
-    }
-  }, [navigate]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCredentials({ ...credentials, [e.target.name]: e.target.value });
-  };
-
-  const handleLogin = async () => {
-    if (!credentials.username || !credentials.password) {
-      setError("Todos los campos son obligatorios");
-      return;
-    }
-
-    setLoading(true);
-    const isValid = await fakeAuth(credentials.username, credentials.password);
-    setLoading(false);
-
-    if (isValid) {
-      if (remember) {
-        localStorage.setItem("rememberedUser", credentials.username);
-      } else {
-        localStorage.removeItem("rememberedUser");
-      }
-
-      sessionStorage.setItem("loggedIn", "true");
-      sessionStorage.setItem("username", credentials.username); // Guardar el nombre de usuario en sessionStorage
-      navigate("/home");
-    } else {
-      setError("Credenciales incorrectas");
-    }
-  };
+  const {
+    credentials,
+    showPassword,
+    remember,
+    error,
+    loading,
+    handleChange,
+    handleLogin,
+    setRemember,
+    togglePasswordVisibility,
+    clearError,
+  } = useLogin();
 
   return (
     <Box
@@ -125,7 +71,7 @@ const Login = () => {
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={togglePasswordVisibility}
                     edge="end"
                   >
                     {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -186,11 +132,11 @@ const Login = () => {
       <Snackbar
         open={!!error}
         autoHideDuration={4000}
-        onClose={() => setError("")}
+        onClose={clearError}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
-          onClose={() => setError("")}
+          onClose={clearError}
           severity="error"
           sx={{ width: "100%" }}
         >
