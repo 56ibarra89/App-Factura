@@ -38,6 +38,7 @@ export const Facturacion = () => {
     handleCancelExtras,
     handleRemoveItem,
     handleConfirmFactura,
+    handleChangeGiftQuantity,
   } = useCart({ addSale, navigate });
 
   const currentProducts = categories[selectedTab]?.items || [];
@@ -63,6 +64,7 @@ export const Facturacion = () => {
         onAddItem={handleAddToCartItem}
         onRemoveItem={handleRemoveItem}
         onChangeQuantity={handleChangeQuantity}
+        onChangeGiftQuantity={handleChangeGiftQuantity}
         onPreviewClick={() => setPreviewOpen(true)}
       />
 
