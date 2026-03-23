@@ -10,3 +10,21 @@ export const fakeAuth = async (
     }, 1000);
   });
 };
+
+export const fakePinAuth = async (
+  pin: string
+): Promise<string | null> => {
+  // Simular la autenticación por PIN (por ejemplo, 1234 corresponde a "admin")
+  const pinDictionary: Record<string, string> = {
+    "1234": "admin",
+    "4321": "fran",
+    "0000": "engels",
+    "1111": "sidney"
+  };
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(pinDictionary[pin] || null);
+    }, 1000);
+  });
+};
