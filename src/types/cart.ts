@@ -9,6 +9,7 @@ export interface CartItemType {
   quantity: number;
   extras: SelectedExtra[];
   note?: string;
+  giftQuantity?: number;
 }
 
 

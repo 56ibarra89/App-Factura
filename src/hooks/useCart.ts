@@ -25,9 +25,23 @@ export function useCart({ addSale, navigate }: UseCartOptions = {}) {
   const handleChangeQuantity = useCallback((index: number, quantity: number) => {
     setCart((prev) => {
       const updated = [...prev];
+      const newQuantity = Math.max(1, quantity);
+      const currentGiftQuantity = updated[index].giftQuantity || 0;
       updated[index] = {
         ...updated[index],
-        quantity: Math.max(1, quantity),
+        quantity: newQuantity,
+        giftQuantity: Math.min(newQuantity, currentGiftQuantity),
+      };
+      return updated;
+    });
+  }, []);
+
+  const handleChangeGiftQuantity = useCallback((index: number, giftQuantity: number) => {
+    setCart((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        giftQuantity: Math.max(0, Math.min(updated[index].quantity, giftQuantity)),
       };
       return updated;
     });
@@ -163,7 +177,12 @@ export function useCart({ addSale, navigate }: UseCartOptions = {}) {
   }, [cart, addSale, navigate]);
 
   const total = useMemo(
-    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    () =>
+      cart.reduce((sum, item) => {
+        const giftQty = item.giftQuantity || 0;
+        const paidQty = Math.max(0, item.quantity - giftQty);
+        return sum + item.price * paidQty;
+      }, 0),
     [cart]
   );
 
@@ -174,6 +193,7 @@ export function useCart({ addSale, navigate }: UseCartOptions = {}) {
     setSelectedProduct,
     pendingItem,
     handleChangeQuantity,
+    handleChangeGiftQuantity,
     handleAddToCartItem,
     handleAddToCart,
     handleSelectSize,

@@ -9,6 +9,7 @@ interface CartProps {
   onAddItem: (item: Omit<CartItemType, "quantity">) => void;
   onRemoveItem: (index: number) => void;
   onChangeQuantity: (index: number, quantity: number) => void;
+  onChangeGiftQuantity: (index: number, quantity: number) => void;
   onPreviewClick: () => void;
 }
 
@@ -18,6 +19,7 @@ const Cart = ({
   onAddItem,
   onRemoveItem,
   onChangeQuantity,
+  onChangeGiftQuantity,
   onPreviewClick,
 }: CartProps) => {
   return (
@@ -49,6 +51,7 @@ const Cart = ({
             quantity={item.quantity}
             extras={item.extras}
             note={item.note}
+            giftQuantity={item.giftQuantity}
             onAdd={() =>
               onAddItem({
                 name: item.name,
@@ -60,6 +63,7 @@ const Cart = ({
             }
             onRemove={() => onRemoveItem(i)}
             onChangeQuantity={(qty) => onChangeQuantity(i, qty)}
+            onChangeGiftQuantity={(qty) => onChangeGiftQuantity(i, qty)}
           />
         ))}
       </Box>

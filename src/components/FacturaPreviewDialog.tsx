@@ -51,8 +51,13 @@ export default function FacturaPreviewDialog({
                       </Typography>
                     )}
                     <Typography component="span" variant="body2" color="text.secondary">
-                      {`$${item.price.toFixed(2)} c/u — Subtotal: $${(item.price * item.quantity).toFixed(2)}`}
+                      {`$${item.price.toFixed(2)} c/u — Subtotal: $${(item.price * Math.max(0, item.quantity - (item.giftQuantity || 0))).toFixed(2)}`}
                     </Typography>
+                    {item.giftQuantity && item.giftQuantity > 0 ? (
+                      <Typography component="span" variant="caption" color="success.main">
+                        Regalo: {item.giftQuantity} item(s) (-${(item.price * item.giftQuantity).toFixed(2)})
+                      </Typography>
+                    ) : null}
                   </Box>
                 }
               />

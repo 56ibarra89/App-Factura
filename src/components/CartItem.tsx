@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import { SelectedExtra } from "../types/extras";
 
 interface CartItemProps {
@@ -19,6 +20,8 @@ interface CartItemProps {
   onAdd: () => void;
   onRemove: () => void;
   onChangeQuantity?: (qty: number) => void;
+  giftQuantity?: number;
+  onChangeGiftQuantity?: (qty: number) => void;
 }
 
 const CartItem = ({
@@ -30,6 +33,8 @@ const CartItem = ({
   onAdd,
   onRemove,
   onChangeQuantity,
+  giftQuantity = 0,
+  onChangeGiftQuantity,
 }: CartItemProps) => {
   return (
     <Paper
@@ -55,10 +60,16 @@ const CartItem = ({
           </Typography>
         )}
         <Typography variant="body2" color="text.secondary">
-          ${price.toFixed(2)} x {quantity} = ${(price * quantity).toFixed(2)}
+          ${price.toFixed(2)} x {quantity} = ${(price * Math.max(0, quantity - giftQuantity)).toFixed(2)}
         </Typography>
+        {giftQuantity > 0 && (
+          <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <CardGiftcardIcon fontSize="small" /> {giftQuantity} de regalo (-${(price * giftQuantity).toFixed(2)})
+          </Typography>
+        )}
       </Box>
-      <Box display="flex" alignItems="center" gap={1}>
+      <Box display="flex" flexDirection="column" gap={1} alignItems="flex-end">
+        <Box display="flex" alignItems="center" gap={1}>
         <IconButton onClick={onRemove} size="small">
           <RemoveIcon fontSize="small" />
         </IconButton>
@@ -91,6 +102,29 @@ const CartItem = ({
         <IconButton onClick={onAdd} size="small">
           <AddIcon fontSize="small" />
         </IconButton>
+      </Box>
+      {onChangeGiftQuantity && (
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <CardGiftcardIcon fontSize="small" color="success" />
+          <IconButton
+            size="small"
+            onClick={() => onChangeGiftQuantity(Math.max(0, giftQuantity - 1))}
+            disabled={giftQuantity <= 0}
+            sx={{ padding: 0.5 }}
+          >
+            <RemoveIcon fontSize="inherit" />
+          </IconButton>
+          <Typography variant="body2">{giftQuantity}</Typography>
+          <IconButton
+            size="small"
+            onClick={() => onChangeGiftQuantity(Math.min(quantity, giftQuantity + 1))}
+            disabled={giftQuantity >= quantity}
+            sx={{ padding: 0.5 }}
+          >
+            <AddIcon fontSize="inherit" />
+          </IconButton>
+        </Box>
+      )}
       </Box>
     </Paper>
   );
