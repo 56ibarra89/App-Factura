@@ -1,38 +1,29 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { fakePinAuth } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 export const useLoginPin = () => {
   const navigate = useNavigate();
-  const [pin, setPin] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { isLoggedIn, loading, error, loginWithPin, clearError } = useAuth();
 
+  const [pin, setPin] = useState<string>("");
   const MAX_PIN_LENGTH = 4;
 
   useEffect(() => {
-    const isLogged = sessionStorage.getItem("loggedIn");
-    if (isLogged) {
+    if (isLoggedIn) {
       navigate("/home");
     }
-  }, [navigate]);
+  }, [navigate, isLoggedIn]);
 
-  const handlePinSubmit = useCallback(async (enteredPin: string) => {
-    setLoading(true);
-    setError("");
-    
-    const username = await fakePinAuth(enteredPin);
-    setLoading(false);
-
-    if (username) {
-      sessionStorage.setItem("loggedIn", "true");
-      sessionStorage.setItem("username", username);
-      navigate("/home");
-    } else {
-      setError("PIN incorrecto");
-      setPin(""); // clear PIN on error
-    }
-  }, [navigate]);
+  const handlePinSubmit = useCallback(
+    async (enteredPin: string) => {
+      const success = await loginWithPin(enteredPin);
+      if (!success) {
+        setPin("");
+      }
+    },
+    [loginWithPin]
+  );
 
   useEffect(() => {
     if (pin.length === MAX_PIN_LENGTH) {
@@ -50,8 +41,6 @@ export const useLoginPin = () => {
     setPin((prev) => prev.slice(0, -1));
   };
 
-  const clearError = () => setError("");
-
   return {
     pin,
     loading,
@@ -59,6 +48,6 @@ export const useLoginPin = () => {
     appendDigit,
     deleteDigit,
     clearError,
-    MAX_PIN_LENGTH
+    MAX_PIN_LENGTH,
   };
 };

@@ -16,7 +16,7 @@ import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 import SelectSizeDialog from "../components/SelectSizeDialog";
 import ExtrasDialog from "../components/ExtrasDialog";
 
-export const Facturacion = () => {
+const Facturacion = () => {
   const { categories } = useProductContext();
   const [selectedTab, setSelectedTab] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);

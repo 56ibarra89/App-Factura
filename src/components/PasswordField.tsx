@@ -8,15 +8,36 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface PasswordFieldProps {
   label: string;
+  name?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   helperText?: string;
+  /** Si se proporciona, el toggle externo controla la visibilidad */
+  showPassword?: boolean;
+  onToggleVisibility?: () => void;
 }
 
-export function PasswordField({ label, helperText }: PasswordFieldProps) {
-  const [show, setShow] = useState(false);
+export function PasswordField({
+  label,
+  name,
+  value,
+  onChange,
+  helperText,
+  showPassword: externalShow,
+  onToggleVisibility,
+}: PasswordFieldProps) {
+  const [internalShow, setInternalShow] = useState(false);
+
+  // Usar estado externo si se proporciona, si no usar interno
+  const show = externalShow !== undefined ? externalShow : internalShow;
+  const toggleShow = onToggleVisibility ?? (() => setInternalShow((prev) => !prev));
 
   return (
     <TextField
       label={label}
+      name={name}
+      value={value}
+      onChange={onChange}
       type={show ? "text" : "password"}
       fullWidth
       margin="normal"
@@ -25,10 +46,7 @@ export function PasswordField({ label, helperText }: PasswordFieldProps) {
         input: {
           endAdornment: (
             <InputAdornment position="end">
-              <IconButton
-                onClick={() => setShow(!show)}
-                edge="end"
-              >
+              <IconButton onClick={toggleShow} edge="end">
                 {show ? <VisibilityOff /> : <Visibility />}
               </IconButton>
             </InputAdornment>

@@ -6,46 +6,11 @@ import {
   MenuItem,
   Button,
   Stack,
-  Typography,
-  IconButton,
-  Box,
   Divider,
-  Paper,
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import { useEffect, useState } from "react";
-import { Product, ProductSize } from "../types/product";
-import { ExtraIngredientDef } from "../types/extras";
-
-const categoriesList = [
-  "Pizzas",
-  "Mexicanos",
-  "Submarinos",
-  "Alitas",
-  "Postres",
-  "Bebidas",
-];
-
-const isPizza = (cat: string) => cat === "Pizzas";
-
-const pizzaDefaults = [
-  { size: "familiar", price: "" },
-  { size: "mediana", price: "" },
-  { size: "personal", price: "" },
-];
-
-const pizzaSizes: ProductSize[] = ["familiar", "mediana", "personal"];
-
-interface ExtraFormItem {
-  name: string;
-  prices: { size: string; price: string }[];
-}
-
-const emptyExtra = (): ExtraFormItem => ({
-  name: "",
-  prices: pizzaSizes.map((s) => ({ size: s, price: "" })),
-});
+import { Product } from "../types/product";
+import { useProductForm, isPizza, categoriesList } from "../hooks/useProductForm";
+import ExtrasFormSection from "./ExtrasFormSection";
 
 const ProductFormDialog = ({
   open,
@@ -58,129 +23,17 @@ const ProductFormDialog = ({
   onSubmit: (category: string, product: Product, oldName?: string) => void;
   editing: null | { product: Product; category: string };
 }) => {
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    category: "",
-    prices: pizzaDefaults,
-    singlePrice: "",
-  });
-
-  const [extras, setExtras] = useState<ExtraFormItem[]>([]);
-
-  useEffect(() => {
-    if (editing) {
-      const { product, category } = editing;
-
-      setForm({
-        name: product.name,
-        description: product.description || "",
-        category,
-        prices: isPizza(category)
-          ? product.prices.map((p) => ({
-              size: p.size,
-              price: p.price.toString(),
-            }))
-          : [{ size: "único", price: product.prices[0].price.toString() }],
-        singlePrice: isPizza(category)
-          ? ""
-          : product.prices[0].price.toString(),
-      });
-
-      // Cargar extras existentes
-      if (product.extras?.length) {
-        setExtras(
-          product.extras.map((ext) => ({
-            name: ext.name,
-            prices: pizzaSizes.map((s) => {
-              const found = ext.prices.find((p) => p.size === s);
-              return { size: s, price: found ? found.price.toString() : "" };
-            }),
-          }))
-        );
-      } else {
-        setExtras([]);
-      }
-    } else {
-      setForm({
-        name: "",
-        description: "",
-        category: "",
-        prices: pizzaDefaults.map((p) => ({ ...p })),
-        singlePrice: "",
-      });
-      setExtras([]);
-    }
-  }, [editing]);
-
-  const handleAddExtra = () => {
-    setExtras((prev) => [...prev, emptyExtra()]);
-  };
-
-  const handleRemoveExtra = (index: number) => {
-    setExtras((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleExtraNameChange = (index: number, name: string) => {
-    setExtras((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], name };
-      return updated;
-    });
-  };
-
-  const handleExtraPriceChange = (extraIndex: number, sizeIndex: number, price: string) => {
-    setExtras((prev) => {
-      const updated = [...prev];
-      const prices = [...updated[extraIndex].prices];
-      prices[sizeIndex] = { ...prices[sizeIndex], price };
-      updated[extraIndex] = { ...updated[extraIndex], prices };
-      return updated;
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Construir extras del producto
-    const productExtras: ExtraIngredientDef[] = isPizza(form.category)
-      ? extras
-          .filter((ext) => ext.name.trim() !== "")
-          .map((ext) => ({
-            name: ext.name.trim(),
-            prices: ext.prices
-              .filter((p) => p.price !== "" && parseFloat(p.price) > 0)
-              .map((p) => ({
-                size: p.size as ProductSize,
-                price: parseFloat(p.price),
-              })),
-          }))
-          .filter((ext) => ext.prices.length > 0)
-      : [];
-
-    const newProduct: Product = {
-      name: form.name,
-      description: form.description.trim() || undefined,
-      prices: isPizza(form.category)
-        ? form.prices.map((p) => ({
-            size: p.size as ProductSize,
-            price: parseFloat(p.price),
-          }))
-        : [
-            {
-              size: "único",
-              price: parseFloat(form.singlePrice),
-            },
-          ],
-      extras: productExtras.length > 0 ? productExtras : undefined,
-    };
-
-    onSubmit(
-      form.category,
-      newProduct,
-      editing ? editing.product.name : undefined
-    );
-  };
+  const {
+    form,
+    setForm,
+    extras,
+    handleCategoryChange,
+    handleAddExtra,
+    handleRemoveExtra,
+    handleExtraNameChange,
+    handleExtraPriceChange,
+    handleSubmit,
+  } = useProductForm({ editing, onSubmit });
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -219,20 +72,7 @@ const ProductFormDialog = ({
             name="category"
             sx={{ mb: 2 }}
             value={form.category}
-            onChange={(e) => {
-              const cat = e.target.value;
-              setForm({
-                ...form,
-                category: cat,
-                prices: isPizza(cat)
-                  ? pizzaDefaults.map((p) => ({ ...p, price: "" }))
-                  : [{ size: "único", price: "" }],
-                singlePrice: "",
-              });
-              if (!isPizza(cat)) {
-                setExtras([]);
-              }
-            }}
+            onChange={(e) => handleCategoryChange(e.target.value)}
           >
             {categoriesList.map((c) => (
               <MenuItem key={c} value={c}>
@@ -270,70 +110,17 @@ const ProductFormDialog = ({
               />
             )}
 
-          {/* --- SECCIÓN DE EXTRAS (solo para Pizzas) --- */}
+          {/* Sección de extras (solo Pizzas) */}
           {isPizza(form.category) && (
             <>
               <Divider sx={{ my: 2 }} />
-              <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  Ingredientes Extra
-                </Typography>
-                <Button
-                  size="small"
-                  startIcon={<AddCircleOutlineIcon />}
-                  onClick={handleAddExtra}
-                >
-                  Agregar extra
-                </Button>
-              </Box>
-
-              {extras.length === 0 && (
-                <Typography variant="body2" color="text.secondary" mb={2}>
-                  No hay extras configurados. Los clientes no podrán agregar ingredientes extra.
-                </Typography>
-              )}
-
-              {extras.map((extra, extraIdx) => (
-                <Paper
-                  key={extraIdx}
-                  variant="outlined"
-                  sx={{ p: 1.5, mb: 1.5 }}
-                >
-                  <Box display="flex" alignItems="center" gap={1} mb={1}>
-                    <TextField
-                      size="small"
-                      label="Nombre del extra"
-                      value={extra.name}
-                      onChange={(e) => handleExtraNameChange(extraIdx, e.target.value)}
-                      sx={{ flex: 1 }}
-                    />
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleRemoveExtra(extraIdx)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-
-                  <Box display="flex" gap={1}>
-                    {extra.prices.map((p, sizeIdx) => (
-                      <TextField
-                        key={p.size}
-                        size="small"
-                        label={`${p.size}`}
-                        type="number"
-                        value={p.price}
-                        onChange={(e) =>
-                          handleExtraPriceChange(extraIdx, sizeIdx, e.target.value)
-                        }
-                        sx={{ flex: 1 }}
-                        inputProps={{ min: 0, step: 0.5 }}
-                      />
-                    ))}
-                  </Box>
-                </Paper>
-              ))}
+              <ExtrasFormSection
+                extras={extras}
+                onAdd={handleAddExtra}
+                onRemove={handleRemoveExtra}
+                onNameChange={handleExtraNameChange}
+                onPriceChange={handleExtraPriceChange}
+              />
             </>
           )}
 
@@ -341,7 +128,6 @@ const ProductFormDialog = ({
             <Button type="submit" variant="contained" fullWidth>
               {editing ? "Actualizar" : "Guardar"}
             </Button>
-
             <Button fullWidth variant="outlined" onClick={onClose}>
               Cancelar
             </Button>

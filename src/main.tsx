@@ -1,19 +1,26 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { ThemeProvider } from '@mui/material/styles'
+import { CssBaseline } from '@mui/material'
 import App from './App.tsx'
+import appTheme from './theme/appTheme.ts'
+import { AuthProvider } from './context/AuthContext.tsx'
 import { ProductProvider } from './context/ProductContext.tsx'
 import { SalesProvider } from './context/SalesContext.tsx'
-import { CssBaseline } from '@mui/material'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <ProductProvider>
-    <SalesProvider>
-      <React.StrictMode>
-        <CssBaseline />
-        <App />
-      </React.StrictMode>
-    </SalesProvider>
-  </ProductProvider>  
+  <React.StrictMode>
+    <ThemeProvider theme={appTheme}>
+      <CssBaseline />
+      <AuthProvider>
+        <ProductProvider>
+          <SalesProvider>
+            <App />
+          </SalesProvider>
+        </ProductProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </React.StrictMode>
 )
 
 // Use contextBridge
