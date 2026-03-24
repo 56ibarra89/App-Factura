@@ -34,20 +34,20 @@ const Login = () => {
 
   return (
     <Box
-      height="100vh"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
       sx={{
+        minHeight: "100vh",
+        display: "flex",
         background: "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)", // Fondo claro y cálido exterior
         padding: 2,
+        overflow: "auto" // Asegura que nunca te quedes atascado sin poder bajar
       }}
     >
       <Paper
         elevation={24}
         sx={{
+          m: "auto", // Centrado inteligente que no corta contenido
           width: { xs: "100%", sm: "95%", md: 950 },
-          minHeight: 650,
+          minHeight: { xs: "auto", md: 650 }, // No fuerza 650px en celulares
           borderRadius: 6,
           display: "flex",
           overflow: "hidden",
@@ -58,44 +58,58 @@ const Login = () => {
         {/* Lado Izquierdo: Branding/Diseño (Idéntico a LoginPin pero sin flecha atrás) */}
         <Box
           sx={{
-            flex: 1,
+            flex: { xs: "none", md: 1 }, // Solo flex en escritorio
             background: "linear-gradient(135deg, #2b2b2b 0%, #121212 100%)",
             backgroundImage:
               "radial-gradient(circle at bottom left, #4a4a4a 0%, #121212 100%)",
             color: "white",
-            p: { xs: 4, sm: 6 },
+            p: { xs: 2, md: 6 }, // Padding mínimo en móviles para ahorrar espacio
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
+            flexDirection: { xs: "row", md: "column" }, // Header horizontal en celular, columna en PC
+            justifyContent: { xs: "center", md: "center" },
+            alignItems: { xs: "center", md: "flex-start" },
+            textAlign: { xs: "center", md: "left" },
             position: "relative",
+            gap: { xs: 2, md: 0 } // Separación logo-texto en celular
           }}
         >
-          <Box>
-            <Box
-              component="img"
-              src={logoImg}
-              alt="Pizza To Go Logo"
-              sx={{
-                width: 110,
-                height: 110,
-                borderRadius: "25%",
-                mb: 4,
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-                objectFit: "cover", // Se asegura que la imagen no se deforme
-                border: "3px solid rgba(255,255,255,0.2)", // Agrega un marco suave para destacar el logo rojo sobre el fondo azul
-                bgcolor: "white", // Fondo blanco en caso de transparencia
-              }}
-              onError={(e) => {
-                // Fallback temporal si no encuentra logo.png
-                e.currentTarget.src =
-                  "https://via.placeholder.com/110/cf1f2e/ffffff?text=LOGO";
-              }}
-            />
+          {/* Logo */}
+          <Box
+            component="img"
+            src={logoImg}
+            alt="Pizza To Go Logo"
+            sx={{
+              width: { xs: 50, md: 110 }, // Logo super compacto en móvil
+              height: { xs: 50, md: 110 },
+              borderRadius: "25%",
+              mb: { xs: 0, md: 4 }, // Sin margen abajo en móvil
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+              objectFit: "cover",
+              border: "3px solid rgba(255,255,255,0.2)",
+              bgcolor: "white",
+            }}
+            onError={(e) => {
+              e.currentTarget.src =
+                "https://via.placeholder.com/110/cf1f2e/ffffff?text=LOGO";
+            }}
+          />
+
+          {/* Título en una línea solo para móviles */}
+          <Typography
+            variant="h5"
+            fontWeight="800"
+            sx={{ display: { xs: "block", md: "none" }, m: 0 }}
+          >
+            Pizza To Go
+          </Typography>
+
+          {/* Textos gigantes solo para Escritorio (Ocultos en móvil para dar espacio al login) */}
+          <Box sx={{ display: { xs: "none", md: "block" } }}>
             <Typography
               variant="h3"
               fontWeight="900"
               mb={2}
-              sx={{ textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
+              sx={{ textShadow: "0 2px 10px rgba(0,0,0,0.3)", fontSize: { xs: "2rem", md: "3rem" } }}
             >
               Sistema
               <br />
@@ -115,8 +129,8 @@ const Login = () => {
         {/* Lado Derecho: Formulario de Login Clásico */}
         <Box
           sx={{
-            flex: 1.2,
-            p: { xs: 4, sm: 6, md: 8 },
+            flex: { xs: "none", md: 1.2 },
+            p: { xs: 3, sm: 4, md: 8 }, // Espacio ultra-optimizado en celular
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
