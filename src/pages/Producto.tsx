@@ -7,7 +7,7 @@ import ProductsTable from "../components/ProductsTable";
 import ProductFormDialog from "../components/ProductFormDialog";
 
 
-export const Producto = () => {
+const Producto = () => {
   const { categories, addProduct, updateProduct, deleteProduct } = useProductContext();
   const navigate = useNavigate();
 

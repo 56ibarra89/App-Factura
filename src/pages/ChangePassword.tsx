@@ -6,11 +6,12 @@ import {
 import { LockReset } from "@mui/icons-material";
 import { FormCard } from "../components/FormCard";
 import { PasswordField } from "../components/PasswordField";
+import { useAuth } from "../context/AuthContext";
 
 
 export default function ChangePassword() {
   const minLength = 6;
-  const username = sessionStorage.getItem("username") || "Usuario";
+  const { username } = useAuth();
 
   return (
     <Box
@@ -18,7 +19,7 @@ export default function ChangePassword() {
       display="flex"
       alignItems="center"
       justifyContent="center"
-      bgcolor="#f4f6f8"
+      bgcolor="background.default"
       p={2}
     >
       <FormCard>

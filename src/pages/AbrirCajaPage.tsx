@@ -28,7 +28,7 @@ export default function AbrirCajaPage() {
       justifyContent="center"
       alignItems="center"
       minHeight="100vh"
-      bgcolor="#f5f5f5"
+      bgcolor="background.default"
     >
       <Card sx={{ width: 420 }}>
         <CardContent>

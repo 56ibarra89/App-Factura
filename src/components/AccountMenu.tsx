@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Box,
   Avatar,
   Menu,
   MenuItem,
@@ -8,19 +7,18 @@ import {
   Divider,
   IconButton,
   Tooltip,
-  Typography,
 } from "@mui/material";
 import Settings from "@mui/icons-material/Settings";
 import Logout from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const AccountMenu: React.FC = () => {
   const navigate = useNavigate();
+  const { username, logout } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-
-  const username = sessionStorage.getItem("username") || "Usuario";
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -29,29 +27,12 @@ const AccountMenu: React.FC = () => {
   const handleClose = () => setAnchorEl(null);
 
   const handleLogout = () => {
-    sessionStorage.clear();
-    window.location.href = "/login";
+    logout();
+    navigate("/");
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        p: 1,
-        mb: 2,
-      }}
-    >
-      {/* Espaciador izquierdo (agregar logo) */}
-      <Box sx={{ width: 48 }} />
-
-      {/* Título centrado */}
-      <Typography variant="h4" fontWeight={600} align="center">
-        Menú Principal
-      </Typography>
-
-      {/* Avatar a la derecha */}
+    <>
       <Tooltip title="Configuración de cuenta">
         <IconButton
           onClick={handleClick}
@@ -61,7 +42,7 @@ const AccountMenu: React.FC = () => {
           aria-expanded={open ? "true" : undefined}
         >
           <Avatar sx={{ bgcolor: "primary.main" }}>
-            {username.charAt(0).toUpperCase()}
+            {(username || "U").charAt(0).toUpperCase()}
           </Avatar>
         </IconButton>
       </Tooltip>
@@ -101,7 +82,7 @@ const AccountMenu: React.FC = () => {
       >
         <MenuItem disabled>
           <PersonIcon fontSize="small" sx={{ mr: 1 }} />
-          {username}
+          {username || "Usuario"}
         </MenuItem>
 
         <Divider />
@@ -120,7 +101,7 @@ const AccountMenu: React.FC = () => {
           Cerrar sesión
         </MenuItem>
       </Menu>
-    </Box>
+    </>
   );
 };
 

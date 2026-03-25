@@ -27,7 +27,7 @@ export default function MesasPage() {
   ];
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", bgcolor: "#f0f2f5", p: 2, gap: 2, boxSizing: "border-box" }}>
+    <Box sx={{ display: "flex", height: "100vh", bgcolor: "background.default", p: 2, gap: 2, boxSizing: "border-box" }}>
 
       {/* Sidebar with rounded corners and shadow */}
       <Box sx={{ width: 240, flexShrink: 0 }}>
