@@ -21,4 +21,17 @@ export interface Category {
   items: Product[];
 }
 
+export interface ExtraFormItem {
+  name: string;
+  prices: { size: string; price: string }[];
+}
+
+export interface ProductFormState {
+  name: string;
+  description: string;
+  category: string;
+  prices: { size: string; price: string }[];
+  singlePrice: string;
+}
+
 
