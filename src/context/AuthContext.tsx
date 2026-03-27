@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { fakeAuth, fakePinAuth } from "../services/authService";
+import { authService as defaultAuthService } from "../services/authService";
+import { IAuthService } from "../types/authService";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -21,7 +22,12 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+  service?: IAuthService;
+}
+
+export const AuthProvider = ({ children, service = defaultAuthService }: AuthProviderProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => sessionStorage.getItem("loggedIn") === "true"
   );
@@ -37,46 +43,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     async (user: string, password: string, remember = false): Promise<boolean> => {
       setLoading(true);
       setError("");
-      const isValid = await fakeAuth(user, password);
-      setLoading(false);
+      try {
+        const isValid = await service.login(user, password);
+        setLoading(false);
 
-      if (isValid) {
-        sessionStorage.setItem("loggedIn", "true");
-        sessionStorage.setItem("username", user);
-        setIsLoggedIn(true);
-        setUsername(user);
+        if (isValid) {
+          sessionStorage.setItem("loggedIn", "true");
+          sessionStorage.setItem("username", user);
+          setIsLoggedIn(true);
+          setUsername(user);
 
-        if (remember) {
-          localStorage.setItem("rememberedUser", user);
-        } else {
-          localStorage.removeItem("rememberedUser");
+          if (remember) {
+            localStorage.setItem("rememberedUser", user);
+          } else {
+            localStorage.removeItem("rememberedUser");
+          }
+          return true;
         }
-        return true;
-      }
 
-      setError("Credenciales incorrectas");
-      return false;
+        setError("Credenciales incorrectas");
+        return false;
+      } catch (err) {
+        setLoading(false);
+        setError("Error en la autenticación");
+        return false;
+      }
     },
-    []
+    [service]
   );
 
   const loginWithPin = useCallback(async (pin: string): Promise<boolean> => {
     setLoading(true);
     setError("");
-    const user = await fakePinAuth(pin);
-    setLoading(false);
+    try {
+      const user = await service.loginWithPin(pin);
+      setLoading(false);
 
-    if (user) {
-      sessionStorage.setItem("loggedIn", "true");
-      sessionStorage.setItem("username", user);
-      setIsLoggedIn(true);
-      setUsername(user);
-      return true;
+      if (user) {
+        sessionStorage.setItem("loggedIn", "true");
+        sessionStorage.setItem("username", user);
+        setIsLoggedIn(true);
+        setUsername(user);
+        return true;
+      }
+
+      setError("PIN incorrecto");
+      return false;
+    } catch (err) {
+      setLoading(false);
+      setError("Error en la autenticación");
+      return false;
     }
-
-    setError("PIN incorrecto");
-    return false;
-  }, []);
+  }, [service]);
 
   const logout = useCallback(() => {
     sessionStorage.clear();
