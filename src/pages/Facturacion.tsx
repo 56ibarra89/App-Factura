@@ -1,5 +1,5 @@
 // src/pages/Facturacion.tsx
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import { useState } from "react";
 import { useProductContext } from "../context/ProductContext";
 import { useSalesContext } from "../context/SalesContext";

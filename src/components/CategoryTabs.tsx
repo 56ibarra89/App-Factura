@@ -8,8 +8,7 @@ import {
   LocalDrink,
   Cake,
 } from "@mui/icons-material";
-// 👇 1. IMPORTA EL TIPO 'Product' DE TU CONTEXTO
-import { Product } from "../types/product"; 
+import { Product } from "../types/product";
 
 // Este mapa de iconos puede vivir aquí o ser importado de un archivo de constantes
 const iconMap: Record<string, JSX.Element> = {
@@ -23,8 +22,7 @@ const iconMap: Record<string, JSX.Element> = {
 
 interface Category {
   label: string;
-  // 👇 2. USA EL TIPO 'Product' EN LUGAR DE 'any'
-  items: Product[]; 
+  items: Product[];
 }
 
 interface CategoryTabsProps {
@@ -61,9 +59,9 @@ const CategoryTabs = ({
         variant="scrollable"
         sx={{ height: "100%" }}
       >
-        {categories.map((cat, i) => (
+        {categories.map((cat) => (
           <Tab
-            key={i}
+            key={cat.label}
             icon={iconMap[cat.label] ?? null}
             label={cat.label}
             sx={{

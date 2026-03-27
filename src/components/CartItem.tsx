@@ -24,11 +24,13 @@ interface CartItemProps {
   onChangeGiftQuantity?: (qty: number) => void;
 }
 
+const EMPTY_EXTRAS: SelectedExtra[] = [];
+
 const CartItem = ({
   name,
   price,
   quantity,
-  extras = [],
+  extras = EMPTY_EXTRAS,
   note,
   onAdd,
   onRemove,

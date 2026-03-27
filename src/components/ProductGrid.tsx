@@ -1,5 +1,5 @@
 // src/components/ProductGrid.tsx
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import ProductCard from "../components/ProductCard";
 import { Product } from "../types/product"; // Asegúrate de importar tu tipo Product
 
@@ -12,9 +12,9 @@ const ProductGrid = ({ products, onProductClick }: ProductGridProps) => {
   return (
     <Box flex={1} p={3} sx={{ maxHeight: "100%", overflowY: "auto" }}>
       <Box display="flex" flexWrap="wrap" gap={2}>
-        {products.map((item, idx) => (
+        {products.map((item) => (
           <ProductCard
-            key={idx}
+            key={item.name}
             name={item.name}
             price={item.prices?.[0]?.price || 0}
             description={item.description}

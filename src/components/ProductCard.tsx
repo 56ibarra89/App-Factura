@@ -1,5 +1,9 @@
 import React from "react";
-import { Card, CardContent, Typography, Tooltip, IconButton } from "@mui/material";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 interface ProductCardProps {
