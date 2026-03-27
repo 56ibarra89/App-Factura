@@ -8,55 +8,28 @@ import { useNavigate } from "react-router-dom";
 import { useLoginPin } from "../hooks/useLoginPin";
 import { AuthLayout } from "../components/auth/AuthLayout";
 import { BrandingPanel } from "../components/auth/BrandingPanel";
+import { PinDots } from "../components/auth/PinDots";
 import { LOGIN_COLORS } from "../theme/loginTheme";
 
-interface PinDotsProps {
-  pin: string;
-  MAX_PIN_LENGTH: number;
-}
-
-const PinDots = ({ pin, MAX_PIN_LENGTH }: PinDotsProps) => {
-  const dots = [];
-  for (let i = 0; i < MAX_PIN_LENGTH; i++) {
-    dots.push(
-      <Box
-        key={`pin-dot-${i}`}
-        sx={{
-          width: 28,
-          height: 28,
-          borderRadius: "50%",
-          bgcolor: i < pin.length ? LOGIN_COLORS.primary : "grey.300",
-          mx: 1.5,
-          transition: "all 0.2s ease-in-out",
-          boxShadow: i < pin.length ? `0 4px 12px ${LOGIN_COLORS.dotActiveShadow}` : "none",
-        }}
-      />
-    );
-  }
-  return <Box display="flex" justifyContent="center" mb={5}>{dots}</Box>;
+const numpadButtonSx = {
+  height: 90,
+  fontSize: 42,
+  fontWeight: 600,
+  borderRadius: 4,
+  color: "text.primary",
+  borderColor: "grey.200",
+  "&:hover": {
+    borderColor: LOGIN_COLORS.primary,
+    bgcolor: LOGIN_COLORS.primarySubtle,
+    transform: "scale(1.05)",
+    boxShadow: `0 10px 20px ${LOGIN_COLORS.numpadHoverShadow}`,
+  },
+  transition: "all 0.15s ease",
 };
 
 const LoginPin = () => {
-
   const navigate = useNavigate();
   const { pin, loading, error, appendDigit, deleteDigit, clearError, MAX_PIN_LENGTH } = useLoginPin();
-
-
-  const numpadButtonSx = {
-    height: 90,
-    fontSize: 42,
-    fontWeight: 600,
-    borderRadius: 4,
-    color: "text.primary",
-    borderColor: "grey.200",
-    "&:hover": {
-      borderColor: LOGIN_COLORS.primary,
-      bgcolor: LOGIN_COLORS.primarySubtle,
-      transform: "scale(1.05)",
-      boxShadow: `0 10px 20px ${LOGIN_COLORS.numpadHoverShadow}`,
-    },
-    transition: "all 0.15s ease",
-  };
 
   return (
     <AuthLayout error={error} onClearError={clearError}>
