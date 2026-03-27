@@ -1,43 +1,8 @@
 import { useEffect, useState } from "react";
-import { Product, ProductSize } from "../types/product";
-import { ExtraIngredientDef } from "../types/extras";
-
-const pizzaSizes: ProductSize[] = ["familiar", "mediana", "personal"];
-
-const pizzaDefaults = [
-  { size: "familiar", price: "" },
-  { size: "mediana", price: "" },
-  { size: "personal", price: "" },
-];
-
-export const isPizza = (cat: string) => cat === "Pizzas";
-
-export interface ExtraFormItem {
-  name: string;
-  prices: { size: string; price: string }[];
-}
-
-export interface ProductFormState {
-  name: string;
-  description: string;
-  category: string;
-  prices: { size: string; price: string }[];
-  singlePrice: string;
-}
-
-const emptyExtra = (): ExtraFormItem => ({
-  name: "",
-  prices: pizzaSizes.map((s) => ({ size: s, price: "" })),
-});
-
-export const categoriesList = [
-  "Pizzas",
-  "Mexicanos",
-  "Submarinos",
-  "Alitas",
-  "Postres",
-  "Bebidas",
-];
+import { Product, ProductFormState } from "../types/product";
+import { PIZZA_DEFAULTS, IS_PIZZA } from "../config/constants";
+import { productMapper } from "../services/productMapper";
+import { useProductExtras } from "./useProductExtras";
 
 interface UseProductFormArgs {
   editing: null | { product: Product; category: string };
@@ -45,131 +10,47 @@ interface UseProductFormArgs {
 }
 
 export function useProductForm({ editing, onSubmit }: UseProductFormArgs) {
-  const [form, setForm] = useState<ProductFormState>({
-    name: "",
-    description: "",
-    category: "",
-    prices: pizzaDefaults,
-    singlePrice: "",
-  });
+  const [form, setForm] = useState<ProductFormState>(productMapper.toFormState(null, ""));
 
-  const [extras, setExtras] = useState<ExtraFormItem[]>([]);
+  const {
+    extras,
+    setExtras,
+    addExtra,
+    removeExtra,
+    changeExtraName,
+    changeExtraPrice,
+  } = useProductExtras();
 
+  // Handle initial form load for editing
   useEffect(() => {
     if (editing) {
-      const { product, category } = editing;
-      setForm({
-        name: product.name,
-        description: product.description || "",
-        category,
-        prices: isPizza(category)
-          ? product.prices.map((p) => ({
-              size: p.size,
-              price: p.price.toString(),
-            }))
-          : [{ size: "único", price: product.prices[0].price.toString() }],
-        singlePrice: isPizza(category)
-          ? ""
-          : product.prices[0].price.toString(),
-      });
-
-      if (product.extras?.length) {
-        setExtras(
-          product.extras.map((ext) => ({
-            name: ext.name,
-            prices: pizzaSizes.map((s) => {
-              const found = ext.prices.find((p) => p.size === s);
-              return { size: s, price: found ? found.price.toString() : "" };
-            }),
-          }))
-        );
-      } else {
-        setExtras([]);
-      }
+      setForm(productMapper.toFormState(editing.product, editing.category));
+      setExtras(productMapper.toFormExtras(editing.product.extras));
     } else {
-      setForm({
-        name: "",
-        description: "",
-        category: "",
-        prices: pizzaDefaults.map((p) => ({ ...p })),
-        singlePrice: "",
-      });
+      setForm(productMapper.toFormState(null, ""));
       setExtras([]);
     }
-  }, [editing]);
+  }, [editing, setExtras]);
 
   const handleCategoryChange = (cat: string) => {
-    setForm({
-      ...form,
+    const isPizzaCategory = IS_PIZZA(cat);
+    setForm((prev) => ({
+      ...prev,
       category: cat,
-      prices: isPizza(cat)
-        ? pizzaDefaults.map((p) => ({ ...p, price: "" }))
+      prices: isPizzaCategory
+        ? PIZZA_DEFAULTS.map((p) => ({ ...p, price: "" }))
         : [{ size: "único", price: "" }],
       singlePrice: "",
-    });
-    if (!isPizza(cat)) {
+    }));
+
+    if (!isPizzaCategory) {
       setExtras([]);
     }
-  };
-
-  const handleAddExtra = () => setExtras((prev) => [...prev, emptyExtra()]);
-
-  const handleRemoveExtra = (index: number) =>
-    setExtras((prev) => prev.filter((_, i) => i !== index));
-
-  const handleExtraNameChange = (index: number, name: string) => {
-    setExtras((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], name };
-      return updated;
-    });
-  };
-
-  const handleExtraPriceChange = (extraIndex: number, sizeIndex: number, price: string) => {
-    setExtras((prev) => {
-      const updated = [...prev];
-      const prices = [...updated[extraIndex].prices];
-      prices[sizeIndex] = { ...prices[sizeIndex], price };
-      updated[extraIndex] = { ...updated[extraIndex], prices };
-      return updated;
-    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const productExtras: ExtraIngredientDef[] = isPizza(form.category)
-      ? extras
-          .filter((ext) => ext.name.trim() !== "")
-          .map((ext) => ({
-            name: ext.name.trim(),
-            prices: ext.prices
-              .filter((p) => p.price !== "" && parseFloat(p.price) > 0)
-              .map((p) => ({
-                size: p.size as ProductSize,
-                price: parseFloat(p.price),
-              })),
-          }))
-          .filter((ext) => ext.prices.length > 0)
-      : [];
-
-    const newProduct: Product = {
-      name: form.name,
-      description: form.description.trim() || undefined,
-      prices: isPizza(form.category)
-        ? form.prices.map((p) => ({
-            size: p.size as ProductSize,
-            price: parseFloat(p.price),
-          }))
-        : [
-            {
-              size: "único",
-              price: parseFloat(form.singlePrice),
-            },
-          ],
-      extras: productExtras.length > 0 ? productExtras : undefined,
-    };
-
+    const newProduct = productMapper.toDomainProduct(form, extras);
     onSubmit(
       form.category,
       newProduct,
@@ -178,14 +59,17 @@ export function useProductForm({ editing, onSubmit }: UseProductFormArgs) {
   };
 
   return {
+    // Form and extras state
     form,
     setForm,
     extras,
+
+    // Category and extra actions
     handleCategoryChange,
-    handleAddExtra,
-    handleRemoveExtra,
-    handleExtraNameChange,
-    handleExtraPriceChange,
+    handleAddExtra: addExtra,
+    handleRemoveExtra: removeExtra,
+    handleExtraNameChange: changeExtraName,
+    handleExtraPriceChange: changeExtraPrice,
     handleSubmit,
   };
 }
