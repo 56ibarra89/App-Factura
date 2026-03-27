@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import { ExtraFormItem } from "../hooks/useProductForm";
+import { ExtraFormItem } from "../types/product";
 
 interface ExtrasFormSectionProps {
   extras: ExtraFormItem[];

@@ -9,7 +9,8 @@ import {
   Divider,
 } from "@mui/material";
 import { Product } from "../types/product";
-import { useProductForm, isPizza, categoriesList } from "../hooks/useProductForm";
+import { useProductForm } from "../hooks/useProductForm";
+import { IS_PIZZA as isPizza, PRODUCT_CATEGORIES as categoriesList } from "../config/constants";
 import ExtrasFormSection from "./ExtrasFormSection";
 
 const ProductFormDialog = ({
