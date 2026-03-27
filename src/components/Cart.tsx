@@ -41,7 +41,7 @@ const Cart = ({
       <Box flex={1} overflow="auto" pr={1} my={1}>
         {cartItems.map((item, i) => (
           <CartItem
-            key={i}
+            key={`${item.name}-${item.size}-${i}`}
             name={
               item.size === "único"
                 ? item.name

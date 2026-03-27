@@ -34,8 +34,8 @@ export default function FacturaPreviewDialog({
       <DialogTitle>Resumen de Factura</DialogTitle>
       <DialogContent>
         <List>
-          {cart.map((item, index) => (
-            <ListItem key={index} disableGutters>
+          {cart.map((item) => (
+            <ListItem key={`${item.name}-${item.size}`} disableGutters>
               <ListItemText
                 primary={`${item.name} (${item.size}) x${item.quantity}`}
                 secondary={

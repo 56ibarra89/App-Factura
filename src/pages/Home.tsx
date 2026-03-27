@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Box } from "@mui/material";
+import Box from "@mui/material/Box";
 import AccountMenu from "../components/AccountMenu";
 import MenuCard from "../components/MenuCard";
 import PageHeader from "../components/PageHeader";
@@ -51,9 +51,9 @@ const Home = () => {
         gap={3}
         px={2}
       >
-        {menuItems.map((item, index) => (
+        {menuItems.map((item) => (
           <MenuCard
-            key={index}
+            key={item.label}
             label={item.label}
             icon={item.icon}
             onClick={item.route ? () => navigate(item.route!) : item.action ?? (() => {})}
