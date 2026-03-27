@@ -1,5 +1,6 @@
-import { Box, Grid, Typography, alpha, Divider } from "@mui/material";
+import { Box, Grid, Typography, Divider } from "@mui/material";
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import { LOGIN_GRADIENTS } from "../../theme/loginTheme";
 
 export default function OrderHeader() {
   return (
@@ -10,23 +11,24 @@ export default function OrderHeader() {
         display: "flex", 
         alignItems: "center", 
         gap: 1.5,
-        bgcolor: "white" 
+        background: LOGIN_GRADIENTS.brandingPanel,
+        color: "white" 
       }}>
         <Box sx={{ 
-          bgcolor: alpha("#ff9800", 0.1), 
-          color: "#ff9800", 
+          bgcolor: "rgba(255,255,255,0.1)", 
+          color: "white", 
           p: 1, 
           borderRadius: 2,
           display: "flex"
         }}>
           <ReceiptLongIcon />
         </Box>
-        <Typography variant="h6" fontWeight="700" color="text.primary">
-          Pedido Actual
+        <Typography variant="h6" fontWeight="800" color="inherit" sx={{ letterSpacing: 0.5 }}>
+          PEDIDO ACTUAL
         </Typography>
       </Box>
 
-      <Divider sx={{ opacity: 0.6 }} />
+      <Divider sx={{ opacity: 0.1, bgcolor: "white" }} />
 
       {/* Column Headers */}
       <Box sx={{ 

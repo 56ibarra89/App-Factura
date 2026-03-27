@@ -48,7 +48,7 @@ export default function OrderItemRow({ item }: Props) {
         </Grid>
 
         <Grid size={3} textAlign="right">
-          <Typography fontWeight="800" variant="body1" color="primary.main">
+          <Typography fontWeight="800" variant="body1" color="text.primary">
             ${(item.price * item.quantity).toFixed(2)}
           </Typography>
         </Grid>
