@@ -6,6 +6,8 @@ import OrderPanel from "../components/mesas/OrderPanel";
 import { Mesa } from "../types/mesa.types";
 import { OrderItem } from "../types/order.types";
 
+import { LOGIN_GRADIENTS } from "../theme/loginTheme";
+
 const floors = [
   "Primera Planta", "Segunda Planta", "Tercera Planta", "Cuarta Planta",
   "Quinta Planta", "Sexta Planta", "Séptima Planta", "Octava Planta"
@@ -27,10 +29,17 @@ export default function MesasPage() {
   ];
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", bgcolor: "background.default", p: 2, gap: 2, boxSizing: "border-box" }}>
+    <Box sx={{ 
+      display: "flex", 
+      height: "100vh", 
+      background: LOGIN_GRADIENTS.pageBackground, 
+      p: 2.5, 
+      gap: 2.5, 
+      boxSizing: "border-box" 
+    }}>
 
-      {/* Sidebar with rounded corners and shadow */}
-      <Box sx={{ width: 240, flexShrink: 0 }}>
+      {/* Sidebar with branding style */}
+      <Box sx={{ width: 260, flexShrink: 0 }}>
         <SectionSidebar
           floors={floors}
           selectedFloor={selectedFloor}
@@ -38,13 +47,14 @@ export default function MesasPage() {
         />
       </Box>
 
-      {/* Main Grid Area with rounded corners and shadow */}
+      {/* Main Grid Area */}
       <Box sx={{ 
         flexGrow: 1, 
         bgcolor: "white", 
-        borderRadius: 4, 
-        boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-        overflow: "hidden"
+        borderRadius: 5, 
+        boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
+        overflow: "hidden",
+        border: "1px solid rgba(0,0,0,0.05)"
       }}>
         <MesaGrid
           mesas={mesas}
@@ -53,10 +63,9 @@ export default function MesasPage() {
       </Box>
 
       {/* Right side Order Panel */}
-      <Box sx={{ width: 380, flexShrink: 0 }}>
+      <Box sx={{ width: 400, flexShrink: 0 }}>
         <OrderPanel order={currentOrder} />
       </Box>
-
     </Box>
   );
 }

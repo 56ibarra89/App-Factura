@@ -1,6 +1,7 @@
-import { Box, List, ListItem, ListItemButton, ListItemText, Typography, alpha } from "@mui/material";
+import { Box, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
 import LayersIcon from '@mui/icons-material/Layers';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import { LOGIN_COLORS, LOGIN_GRADIENTS } from "../../theme/loginTheme";
 
 interface Props {
   floors: string[];
@@ -16,25 +17,28 @@ export default function SectionSidebar({
   return (
     <Box sx={{ 
       height: "100%", 
-      bgcolor: "white", 
+      background: LOGIN_GRADIENTS.brandingPanel,
+      backgroundImage: LOGIN_GRADIENTS.brandingPanelRadial,
       borderRadius: 4,
-      boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+      boxShadow: "0 10px 40px rgba(0,0,0,0.3)",
       display: "flex",
       flexDirection: "column",
-      overflow: "hidden"
+      overflow: "hidden",
+      borderRight: "1px solid rgba(255,255,255,0.05)"
     }}>
-      <Box sx={{ p: 3, borderBottom: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 1.5 }}>
+      <Box sx={{ p: 4, borderBottom: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", gap: 1.5 }}>
         <Box sx={{ 
-          bgcolor: alpha("#4482ff", 0.1), 
-          color: "#4482ff", 
-          p: 1, 
-          borderRadius: 2,
-          display: "flex"
+          bgcolor: "rgba(255,255,255,0.1)", 
+          color: "white", 
+          p: 1.2, 
+          borderRadius: 2.5,
+          display: "flex",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
         }}>
-          <DashboardIcon />
+          <DashboardIcon sx={{ fontSize: 24 }} />
         </Box>
-        <Typography variant="h6" fontWeight="700" color="text.primary">
-          Zonas
+        <Typography variant="h6" fontWeight="800" color="white" sx={{ letterSpacing: 0.5 }}>
+          ZONAS
         </Typography>
       </Box>
 
@@ -42,42 +46,44 @@ export default function SectionSidebar({
         {floors.map((floor, index) => {
           const isSelected = selectedFloor === index + 1;
           return (
-            <ListItem disablePadding key={floor} sx={{ mb: 1 }}>
+            <ListItem disablePadding key={floor} sx={{ mb: 1.5 }}>
               <ListItemButton
                 selected={isSelected}
                 onClick={() => onChangeFloor(index + 1)}
                 sx={{
                   borderRadius: 3,
-                  py: 1.5,
-                  px: 2,
-                  transition: "all 0.2s",
-                  bgcolor: isSelected ? "primary.main" : "transparent",
-                  color: isSelected ? "white" : "text.secondary",
+                  py: 1.8,
+                  px: 2.5,
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  bgcolor: isSelected ? "rgba(255,255,255,0.12)" : "transparent",
+                  color: isSelected ? "white" : "rgba(255,255,255,0.6)",
+                  borderLeft: isSelected ? `4px solid ${LOGIN_COLORS.primary}` : "4px solid transparent",
                   "&:hover": {
-                    bgcolor: isSelected ? "primary.dark" : alpha("#4482ff", 0.08),
-                    color: isSelected ? "white" : "primary.main",
-                    transform: "translateX(4px)",
+                    bgcolor: "rgba(255,255,255,0.08)",
+                    color: "white",
+                    transform: "translateX(6px)",
                   },
                   "&.Mui-selected": {
-                    bgcolor: "primary.main",
+                    bgcolor: "rgba(255,255,255,0.12)",
                     color: "white",
-                    boxShadow: "0 4px 12px rgba(68, 130, 255, 0.4)",
                     "&:hover": {
-                      bgcolor: "primary.dark",
+                      bgcolor: "rgba(255,255,255,0.15)",
                     }
                   }
                 }}
               >
                 <LayersIcon sx={{ 
                   mr: 2, 
-                  fontSize: 20, 
-                  color: isSelected ? "white" : "action.active" 
+                  fontSize: 22, 
+                  color: isSelected ? LOGIN_COLORS.primary : "inherit",
+                  transition: "all 0.3s"
                 }} />
                 <ListItemText 
                   primary={floor} 
                   primaryTypographyProps={{ 
-                    fontWeight: isSelected ? 700 : 500,
-                    fontSize: "0.95rem"
+                    fontWeight: isSelected ? 800 : 500,
+                    fontSize: "1rem",
+                    letterSpacing: 0.2
                   }} 
                 />
               </ListItemButton>

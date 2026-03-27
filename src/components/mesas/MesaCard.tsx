@@ -3,36 +3,46 @@ import { Mesa } from "../../types/mesa.types";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import EventSeatIcon from '@mui/icons-material/EventSeat';
 import LocalDiningIcon from '@mui/icons-material/LocalDining';
+import { LOGIN_COLORS } from "../../theme/loginTheme";
 
 interface Props {
   mesa: Mesa;
 }
 
+interface MesaTheme {
+  bg: string;
+  shadow: string;
+  icon: JSX.Element;
+  label: string;
+  isNeutral?: boolean;
+}
+
 export default function MesaCard({ mesa }: Props) {
 
-  const getTheme = () => {
+  const getTheme = (): MesaTheme => {
     switch (mesa.estado) {
-      case "reservado":
-        return {
-          bg: "linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)",
-          shadow: "#27ae60",
-          icon: <EventSeatIcon sx={{ fontSize: 32, color: "white", mb: 1, opacity: 0.9 }} />,
-          label: "Reservado"
-        };
       case "ocupado":
         return {
-          bg: "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)",
-          shadow: "#f57c00",
+          bg: `linear-gradient(135deg, ${LOGIN_COLORS.primary} 0%, ${LOGIN_COLORS.primaryDark} 100%)`,
+          shadow: LOGIN_COLORS.primary,
           icon: <LocalDiningIcon sx={{ fontSize: 32, color: "white", mb: 1, opacity: 0.9 }} />,
           label: "Ocupado"
+        };
+      case "reservado":
+        return {
+          bg: "linear-gradient(135deg, #ffa726 0%, #f57c00 100%)",
+          shadow: "#f57c00",
+          icon: <EventSeatIcon sx={{ fontSize: 32, color: "white", mb: 1, opacity: 0.9 }} />,
+          label: "Reservado"
         };
       case "disponible":
       default:
         return {
-          bg: "linear-gradient(135deg, #4482ff 0%, #2962ff 100%)",
-          shadow: "#2962ff",
-          icon: <CheckCircleOutlineIcon sx={{ fontSize: 32, color: "white", mb: 1, opacity: 0.9 }} />,
-          label: "Disponible"
+          bg: "white",
+          shadow: "rgba(0,0,0,0.06)",
+          icon: <CheckCircleOutlineIcon sx={{ fontSize: 32, color: "grey.400", mb: 1 }} />,
+          label: "Disponible",
+          isNeutral: true
         };
     }
   };
@@ -40,83 +50,73 @@ export default function MesaCard({ mesa }: Props) {
   const theme = getTheme();
 
   return (
-    <Box sx={{ position: "relative", m: 1 }}>
+    <Box sx={{ position: "relative", m: 1.5 }}>
       <Paper
         elevation={0}
         sx={{
-          width: 140,
-          height: 140,
+          width: 145,
+          height: 145,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: "32px",
+          borderRadius: 5,
           cursor: "pointer",
           background: theme.bg,
-          color: "white",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          boxShadow: `0 10px 20px -5px ${alpha(theme.shadow, 0.5)}, 0 4px 10px -4px ${alpha('#000', 0.2)}`,
-          border: "2px solid rgba(255,255,255,0.2)",
+          color: theme.isNeutral ? "text.primary" : "white",
+          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          boxShadow: theme.isNeutral 
+            ? "0 4px 12px rgba(0,0,0,0.05)"
+            : `0 12px 24px ${alpha(theme.shadow, 0.4)}`,
+          border: theme.isNeutral ? "2px solid" : "2px solid transparent",
+          borderColor: theme.isNeutral ? "grey.100" : "transparent",
           position: "relative",
           overflow: "hidden",
           "&:hover": {
-            transform: "translateY(-6px)",
-            boxShadow: `0 14px 28px -6px ${alpha(theme.shadow, 0.6)}, 0 8px 16px -6px ${alpha('#000', 0.2)}`,
-            "&::after": {
-              transform: "translate(-50%, -50%) scale(1)",
-              opacity: 1
+            transform: "translateY(-8px) scale(1.02)",
+            borderColor: theme.isNeutral ? LOGIN_COLORS.primary : "transparent",
+            bgcolor: theme.isNeutral ? LOGIN_COLORS.primarySubtle : "inherit",
+            boxShadow: theme.isNeutral
+              ? `0 12px 20px ${LOGIN_COLORS.numpadHoverShadow}`
+              : `0 16px 32px ${alpha(theme.shadow, 0.5)}`,
+            "& .mesa-icon": {
+              color: theme.isNeutral ? LOGIN_COLORS.primary : "white",
+              transform: "scale(1.1)",
             }
           },
           "&:active": {
-            transform: "translateY(-2px) scale(0.98)",
-          },
-          // Soft shiny overlay effect (glassy top)
-          "&::before": {
-            content: '""',
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: "40%",
-            background: "linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%)",
-            borderRadius: "32px 32px 0 0",
-            pointerEvents: "none"
-          },
-          // Glow effect on hover
-          "&::after": {
-            content: '""',
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: "120%",
-            height: "120%",
-            background: "radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%)",
-            transform: "translate(-50%, -50%) scale(0.8)",
-            opacity: 0,
-            transition: "all 0.4s ease-out",
-            pointerEvents: "none",
-            borderRadius: "50%"
+            transform: "scale(0.96)",
           }
         }}
       >
-        {theme.icon}
-        <Typography variant="h5" fontWeight="800" sx={{ textShadow: "0px 2px 4px rgba(0,0,0,0.3)", zIndex: 1, mt: -0.5 }}>
-          {mesa.id}
+        <Box className="mesa-icon" sx={{ transition: "all 0.2s" }}>
+          {theme.icon}
+        </Box>
+        <Typography variant="h4" fontWeight="800" sx={{ 
+          zIndex: 1, 
+          mt: -0.5,
+          color: theme.isNeutral ? "text.primary" : "white",
+          letterSpacing: -1
+        }}>
+          {mesa.id.replace("M ", "")}
+        </Typography>
+        <Typography variant="caption" sx={{ opacity: 0.5, fontWeight: 700, mt: -0.5 }}>
+          MESA
         </Typography>
       </Paper>
 
       <Box 
         sx={{
           position: "absolute",
-          bottom: -12,
+          bottom: -10,
           left: "50%",
           transform: "translateX(-50%)",
-          background: "white",
-          color: "text.primary",
-          px: 2,
-          py: 0.5,
-          borderRadius: "16px",
-          boxShadow: `0 4px 12px ${alpha(theme.shadow, 0.3)}`,
+          background: theme.isNeutral ? "white" : theme.shadow,
+          color: theme.isNeutral ? "text.secondary" : "white",
+          px: 1.5,
+          py: 0.4,
+          borderRadius: 2,
+          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
           border: "1px solid rgba(0,0,0,0.05)",
           display: "flex",
           alignItems: "center",
@@ -125,7 +125,11 @@ export default function MesaCard({ mesa }: Props) {
           pointerEvents: "none",
         }}
       >
-        <Typography variant="caption" fontWeight="900" sx={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: 0.5, color: theme.shadow }}>
+        <Typography variant="caption" fontWeight="900" sx={{ 
+          fontSize: "0.65rem", 
+          textTransform: "uppercase", 
+          letterSpacing: 0.8
+        }}>
           {theme.label}
         </Typography>
       </Box>
