@@ -1,5 +1,5 @@
 // src/components/CategoryTabs.tsx
-import { Box, Tabs, Tab } from "@mui/material";
+import { Box, Tabs, Tab, IconButton } from "@mui/material";
 import {
   LocalPizza,
   Fastfood,
@@ -7,7 +7,9 @@ import {
   Restaurant,
   LocalDrink,
   Cake,
+  Home,
 } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import { Product } from "../types/product";
 
 // Este mapa de iconos puede vivir aquí o ser importado de un archivo de constantes
@@ -36,22 +38,45 @@ const CategoryTabs = ({
   selectedTab,
   onTabChange,
 }: CategoryTabsProps) => {
+  const navigate = useNavigate();
+
   return (
     <Box
       width="120px"
+      display="flex"
+      flexDirection="column"
+      height="100%"
       bgcolor="#f0f0f0"
       borderRadius={2}
       p={1}
       sx={{
-        overflowY: "auto",
-        maxHeight: "100%",
-        "&::-webkit-scrollbar": { width: "6px" },
-        "&::-webkit-scrollbar-thumb": {
-          backgroundColor: "#ccc",
-          borderRadius: "4px",
-        },
+        boxSizing: "border-box",
       }}
     >
+      <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
+        <IconButton 
+          onClick={() => navigate("/home")}
+          sx={{ 
+            bgcolor: "white", 
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            "&:hover": { bgcolor: "#eee" }
+          }}
+        >
+          <Home color="primary" />
+        </IconButton>
+      </Box>
+
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: "auto",
+          "&::-webkit-scrollbar": { width: "6px" },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#ccc",
+            borderRadius: "4px",
+          },
+        }}
+      >
       <Tabs
         orientation="vertical"
         value={selectedTab}
@@ -73,6 +98,7 @@ const CategoryTabs = ({
           />
         ))}
       </Tabs>
+      </Box>
     </Box>
   );
 };
