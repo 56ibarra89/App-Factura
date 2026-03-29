@@ -12,6 +12,7 @@ import Ordenes from "../pages/Ordenes";
 import AnularFactura from "../pages/AnularFactura";
 import ConsultarFacturas from "../pages/ConsultarFacturas";
 import Reportes from "../pages/Reportes";
+import Administracion from "../pages/Administracion";
 
 const PrivateRoute = ({ element }: { element: JSX.Element }) => {
   const { isLoggedIn } = useAuth();
@@ -32,6 +33,7 @@ const AppRoutes = () => (
     <Route path="/anular-factura" element={<PrivateRoute element={<AnularFactura />} />} />
     <Route path="/consultar-factura" element={<PrivateRoute element={<ConsultarFacturas />} />} />
     <Route path="/reporte" element={<PrivateRoute element={<Reportes />} />} />
+    <Route path="/admin" element={<PrivateRoute element={<Administracion />} />} />
   </Routes>
 );
 
