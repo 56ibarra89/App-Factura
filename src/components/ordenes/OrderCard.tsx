@@ -1,0 +1,143 @@
+import React from "react";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { Order, OrderStatus } from "../../types/order.types";
+import { LOGIN_COLORS } from "../../theme/loginTheme";
+import { statusColors, statusLabels } from "../../config/orderStatusConfig";
+
+interface OrderCardProps {
+  order: Order;
+  onUpdateStatus: (id: string, status: OrderStatus) => void;
+  onDelete: (id: string) => void;
+}
+
+const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }) => {
+  const timeElapsed = Math.floor((new Date().getTime() - new Date(order.timestamp).getTime()) / 60000);
+
+  return (
+    <Card 
+      sx={{ 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        borderRadius: 4,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+        border: `1px solid ${order.status === 'ready' ? LOGIN_COLORS.primary : 'transparent'}`,
+        transition: 'transform 0.2s',
+        '&:hover': { transform: 'translateY(-4px)' }
+      }}
+    >
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+          <Box>
+            <Typography variant="h6" fontWeight="bold" color="text.primary">
+              #{order.id.split('-')[1]}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block">
+              {new Date(order.timestamp).toLocaleTimeString()} ({timeElapsed} min)
+            </Typography>
+            {(order.customerName || order.tableId) && (
+              <Stack direction="row" spacing={1} mt={0.5}>
+                {order.customerName && (
+                  <Chip 
+                    label={order.customerName} 
+                    size="small" 
+                    variant="outlined" 
+                    sx={{ height: 20, fontSize: '0.65rem' }} 
+                  />
+                )}
+                {order.tableId && (
+                  <Chip 
+                    label={`Mesa ${order.tableId}`} 
+                    size="small" 
+                    color="secondary"
+                    variant="outlined"
+                    sx={{ height: 20, fontSize: '0.65rem' }} 
+                  />
+                )}
+              </Stack>
+            )}
+          </Box>
+          <Chip 
+            label={statusLabels[order.status]} 
+            color={statusColors[order.status]} 
+            size="small" 
+            sx={{ fontWeight: 'bold' }}
+          />
+        </Box>
+
+        <Divider sx={{ mb: 2 }} />
+
+        <Stack spacing={1}>
+          {order.items.map((item, idx) => (
+            <Box key={idx} display="flex" justifyContent="space-between">
+              <Typography variant="body2">
+                {item.quantity}x {item.name} ({item.size})
+              </Typography>
+              <Typography variant="body2" fontWeight="bold">
+                ${(item.price * item.quantity).toFixed(2)}
+              </Typography>
+            </Box>
+          ))}
+        </Stack>
+
+        <Box mt={2} pt={2} borderTop="1px dashed #eee" display="flex" justifyContent="space-between">
+          <Typography variant="subtitle1" fontWeight="bold">Total</Typography>
+          <Typography variant="subtitle1" fontWeight="bold" color={LOGIN_COLORS.primary}>
+            ${order.total.toFixed(2)}
+          </Typography>
+        </Box>
+      </CardContent>
+
+      <CardActions sx={{ p: 2, pt: 0, justifyContent: 'space-between' }}>
+        <Box>
+          {order.status === 'pending' && (
+            <Button 
+              size="small" 
+              variant="contained" 
+              onClick={() => onUpdateStatus(order.id, 'preparing')}
+              sx={{ bgcolor: LOGIN_COLORS.primary, '&:hover': { bgcolor: LOGIN_COLORS.primaryDark } }}
+            >
+              Preparar
+            </Button>
+          )}
+          {order.status === 'preparing' && (
+            <Button 
+              size="small" 
+              variant="contained" 
+              color="success"
+              onClick={() => onUpdateStatus(order.id, 'ready')}
+              startIcon={<CheckCircleIcon />}
+            >
+              Listo
+            </Button>
+          )}
+          {order.status === 'ready' && (
+            <Button 
+              size="small" 
+              variant="outlined" 
+              onClick={() => onUpdateStatus(order.id, 'delivered')}
+            >
+              Entregar
+            </Button>
+          )}
+        </Box>
+        <IconButton size="small" color="error" onClick={() => onDelete(order.id)}>
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </CardActions>
+    </Card>
+  );
+};
+
+export default OrderCard;

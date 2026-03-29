@@ -8,6 +8,7 @@ import Login from "../pages/Login";
 import LoginPin from "../pages/LoginPin";
 import AbrirCajaPage from "../pages/AbrirCajaPage";
 import Mesa from "../pages/Mesa";
+import Ordenes from "../pages/Ordenes";
 
 const PrivateRoute = ({ element }: { element: JSX.Element }) => {
   const { isLoggedIn } = useAuth();
@@ -24,6 +25,7 @@ const AppRoutes = () => (
     <Route path="/clave" element={<PrivateRoute element={<ChangePassword />} />} />
     <Route path="/abrircaja" element={<PrivateRoute element={<AbrirCajaPage />} />} />
     <Route path="/mesas" element={<PrivateRoute element={<Mesa />} />} />
+    <Route path="/ordenes" element={<PrivateRoute element={<Ordenes />} />} />
   </Routes>
 );
 

@@ -7,6 +7,7 @@ import appTheme from './theme/appTheme.ts'
 import { AuthProvider } from './context/AuthContext.tsx'
 import { ProductProvider } from './context/ProductContext.tsx'
 import { SalesProvider } from './context/SalesContext.tsx'
+import { OrderProvider } from './context/OrderContext.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <ProductProvider>
           <SalesProvider>
-            <App />
+            <OrderProvider>
+              <App />
+            </OrderProvider>
           </SalesProvider>
         </ProductProvider>
       </AuthProvider>
