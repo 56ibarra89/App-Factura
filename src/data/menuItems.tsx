@@ -58,7 +58,7 @@ export const getMenuItems = (): MenuItem[] => [
   {
     label: "Consultar Facturas",
     icon: <ReceiptIcon fontSize="large" color="primary" />,
-    action: () => console.log("Consultar Facturas"),
+    route: "/consultar-factura",
   },
   {
     label: "Reimprimir Factura",
