@@ -24,8 +24,8 @@ export default function MesasPage() {
   ];
 
   const currentOrder: OrderItem[] = [
-    { id: 1, name: "Bacon", size: "Grande", price: 35, quantity: 1, timestamp: "22/03/25 11:36" },
-    { id: 2, name: "Salami", size: "Personal", price: 20, quantity: 1, timestamp: "22/03/25 11:55" },
+    { id: 1, name: "Bacon", size: "personal", price: 35, quantity: 1, timestamp: "22/03/25 11:36", extras: [] },
+    { id: 2, name: "Salami", size: "personal", price: 20, quantity: 1, timestamp: "22/03/25 11:55", extras: [] },
   ];
 
   return (
