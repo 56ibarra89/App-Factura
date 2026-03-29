@@ -20,6 +20,8 @@ interface FacturaPreviewDialogProps {
   total: number;
   onClose: () => void;
   onConfirm: () => void;
+  title?: string;
+  confirmText?: string;
 }
 
 export default function FacturaPreviewDialog({
@@ -28,10 +30,12 @@ export default function FacturaPreviewDialog({
   total,
   onClose,
   onConfirm,
+  title = "Resumen de Factura",
+  confirmText = "Confirmar pedido",
 }: FacturaPreviewDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Resumen de Factura</DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <List>
           {cart.map((item) => (
@@ -70,10 +74,10 @@ export default function FacturaPreviewDialog({
           <Typography fontWeight="bold">${total.toFixed(2)}</Typography>
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" color="primary" onClick={onConfirm}>
-          Confirmar pedido
+      <DialogActions sx={{ "@media print": { display: "none" } }}>
+        <Button onClick={onClose} sx={{ "@media print": { display: "none" } }}>Cancelar</Button>
+        <Button variant="contained" color="primary" onClick={onConfirm} sx={{ "@media print": { display: "none" } }}>
+          {confirmText}
         </Button>
       </DialogActions>
     </Dialog>

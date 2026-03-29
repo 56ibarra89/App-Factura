@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderStatus } from "../types/order.types";
 import { CartItemType } from "../types/cart";
+import { saveOrderDB } from "../services/db";
 
 interface OrderContextProps {
   orders: Order[];
@@ -53,12 +54,22 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       tableId,
     };
     setOrders(prev => [newOrder, ...prev]);
+    saveOrderDB(newOrder); // Persistir en IndexedDB
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status } : order
-    ));
+    setOrders(prev => {
+      const updatedOrders = prev.map(order => 
+        order.id === orderId ? { ...order, status } : order
+      );
+      
+      const modifiedOrder = updatedOrders.find(o => o.id === orderId);
+      if (modifiedOrder) {
+        saveOrderDB(modifiedOrder); // Actualizar en IndexedDB
+      }
+
+      return updatedOrders;
+    });
   };
 
   const removeOrder = (orderId: string) => {
