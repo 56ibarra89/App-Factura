@@ -9,6 +9,7 @@ import LoginPin from "../pages/LoginPin";
 import AbrirCajaPage from "../pages/AbrirCajaPage";
 import Mesa from "../pages/Mesa";
 import Ordenes from "../pages/Ordenes";
+import AnularFactura from "../pages/AnularFactura";
 
 const PrivateRoute = ({ element }: { element: JSX.Element }) => {
   const { isLoggedIn } = useAuth();
@@ -26,6 +27,7 @@ const AppRoutes = () => (
     <Route path="/abrircaja" element={<PrivateRoute element={<AbrirCajaPage />} />} />
     <Route path="/mesas" element={<PrivateRoute element={<Mesa />} />} />
     <Route path="/ordenes" element={<PrivateRoute element={<Ordenes />} />} />
+    <Route path="/anular-factura" element={<PrivateRoute element={<AnularFactura />} />} />
   </Routes>
 );
 

@@ -53,7 +53,7 @@ export const getMenuItems = (): MenuItem[] => [
   {
     label: "Anular Factura",
     icon: <CancelIcon fontSize="large" color="error" />,
-    action: () => console.log("Anular Factura"),
+    route: "/anular-factura",
   },
   {
     label: "Consultar Facturas",
