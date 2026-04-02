@@ -1,6 +1,7 @@
 import { Box, Grid, Typography } from "@mui/material";
 import { OrderItem } from "../../types/order.types";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import { formatItemName } from "../../utils/formatUtils";
 
 interface Props {
   item: OrderItem;
@@ -34,10 +35,7 @@ export default function OrderItemRow({ item }: Props) {
 
         <Grid size={7} sx={{ pl: 1 }}>
           <Typography fontWeight="700" variant="body1" color="text.primary">
-            {item.name}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {item.size}
+            {formatItemName(item.name, item.size)}
           </Typography>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
             <AccessTimeIcon sx={{ fontSize: 14, color: "text.disabled" }} />

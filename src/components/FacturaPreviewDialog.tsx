@@ -16,6 +16,7 @@ import {
 import { CartItemType } from "../types/cart";
 import { PaymentMethod } from "../types/order.types";
 import PaymentMethodSelector from "./PaymentMethodSelector";
+import { formatItemName } from "../utils/formatUtils";
 
 interface FacturaPreviewDialogProps {
   open: boolean;
@@ -56,7 +57,7 @@ export default function FacturaPreviewDialog({
           {cart.map((item) => (
             <ListItem key={`${item.name}-${item.size}`} disableGutters>
               <ListItemText
-                primary={`${item.name} (${item.size}) x${item.quantity}`}
+                primary={`${formatItemName(item.name, item.size)} x${item.quantity}`}
                 secondary={
                   <Box component="span" display="flex" flexDirection="column">
                     {item.extras?.length > 0 && (
