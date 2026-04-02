@@ -98,6 +98,7 @@ const ConsultarFacturas = () => {
           total={selectedOrder.total}
           title={`Factura #${selectedOrder.id.split("-")[1]} - ${selectedOrder.customerName || "Cliente"}`}
           confirmText="Imprimir"
+          showPaymentMethod={false}
           onConfirm={() => {
             window.print();
             setPreviewOpen(false);

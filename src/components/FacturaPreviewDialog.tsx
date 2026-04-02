@@ -1,4 +1,5 @@
 // src/components/FacturaPreviewDialog.tsx
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -13,15 +14,18 @@ import {
   Box,
 } from "@mui/material";
 import { CartItemType } from "../types/cart";
+import { PaymentMethod } from "../types/order.types";
+import PaymentMethodSelector from "./PaymentMethodSelector";
 
 interface FacturaPreviewDialogProps {
   open: boolean;
   cart: CartItemType[];
   total: number;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (paymentMethod: PaymentMethod, splitAmounts?: { efectivo: number; tarjeta: number }) => void;
   title?: string;
   confirmText?: string;
+  showPaymentMethod?: boolean;
 }
 
 export default function FacturaPreviewDialog({
@@ -32,7 +36,18 @@ export default function FacturaPreviewDialog({
   onConfirm,
   title = "Resumen de Factura",
   confirmText = "Confirmar pedido",
+  showPaymentMethod = true,
 }: FacturaPreviewDialogProps) {
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("EFECTIVO");
+  const [splitAmounts, setSplitAmounts] = useState({ efectivo: 0, tarjeta: 0 });
+
+  useEffect(() => {
+    if (open) {
+      setPaymentMethod("EFECTIVO");
+      setSplitAmounts({ efectivo: 0, tarjeta: total });
+    }
+  }, [open, total]);
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{title}</DialogTitle>
@@ -69,14 +84,30 @@ export default function FacturaPreviewDialog({
           ))}
         </List>
         <Divider sx={{ my: 2 }} />
-        <Box display="flex" justifyContent="space-between">
+        <Box display="flex" justifyContent="space-between" mb={showPaymentMethod ? 2 : 0}>
           <Typography fontWeight="bold">Total:</Typography>
-          <Typography fontWeight="bold">${total.toFixed(2)}</Typography>
+          <Typography fontWeight="bold" color="error.main">${total.toFixed(2)}</Typography>
         </Box>
+
+        {showPaymentMethod && (
+          <PaymentMethodSelector
+            total={total}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            splitAmounts={splitAmounts}
+            setSplitAmounts={setSplitAmounts}
+          />
+        )}
+
       </DialogContent>
       <DialogActions sx={{ "@media print": { display: "none" } }}>
-        <Button onClick={onClose} sx={{ "@media print": { display: "none" } }}>Cancelar</Button>
-        <Button variant="contained" color="primary" onClick={onConfirm} sx={{ "@media print": { display: "none" } }}>
+        <Button onClick={onClose} sx={{ "@media print": { display: "none" }, color: "error.main" }}>Cancelar</Button>
+        <Button 
+          variant="contained" 
+          color="error" 
+          onClick={() => onConfirm(paymentMethod, paymentMethod === "MIXTO" ? splitAmounts : undefined)} 
+          sx={{ "@media print": { display: "none" } }}
+        >
           {confirmText}
         </Button>
       </DialogActions>
