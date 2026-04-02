@@ -7,6 +7,8 @@ export interface OrderItem extends CartItemType {
   timestamp: string;
 }
 
+export type PaymentMethod = 'EFECTIVO' | 'TARJETA' | 'APP' | 'MIXTO';
+
 export interface Order {
   id: string;
   items: CartItemType[];
@@ -15,4 +17,6 @@ export interface Order {
   timestamp: Date;
   customerName?: string;
   tableId?: string;
+  paymentMethod?: PaymentMethod;
+  splitAmounts?: { efectivo: number; tarjeta: number };
 }

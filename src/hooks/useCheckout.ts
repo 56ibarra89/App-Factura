@@ -11,12 +11,12 @@ export function useCheckout(
 ) {
   const { addOrder } = useOrderContext();
 
-  const confirmFactura = useCallback(() => {
+  const confirmFactura = useCallback((paymentMethod?: string, splitAmounts?: { efectivo: number; tarjeta: number }) => {
     // Calcular total
     const total = cart.reduce((acc, item) => acc + item.price * (item.quantity - (item.giftQuantity || 0)), 0);
     
-    // Crear orden
-    addOrder(cart, total);
+    // Crear orden (sin tabla ni cliente para venta directa en módulo de facturación)
+    addOrder(cart, total, undefined, undefined, paymentMethod, splitAmounts);
 
     // Registrar ventas individuales (compatibilidad con lógica existente)
     cart.forEach((item) => addSale && addSale(item));
