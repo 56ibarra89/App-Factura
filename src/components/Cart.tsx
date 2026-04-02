@@ -2,6 +2,7 @@
 import { Box, Typography, Divider, Button } from "@mui/material";
 import CartItem from "../components/CartItem";
 import { CartItemType } from "../types/cart";
+import { formatItemName } from "../utils/formatUtils";
 
 interface CartProps {
   cartItems: CartItemType[];
@@ -42,11 +43,7 @@ const Cart = ({
         {cartItems.map((item, i) => (
           <CartItem
             key={`${item.name}-${item.size}-${i}`}
-            name={
-              item.size === "único"
-                ? item.name
-                : `${item.name} (${item.size})`
-            }
+            name={formatItemName(item.name, item.size)}
             price={item.price}
             quantity={item.quantity}
             extras={item.extras}

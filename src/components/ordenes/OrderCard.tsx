@@ -14,6 +14,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { Order, OrderStatus } from "../../types/order.types";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { statusColors, statusLabels } from "../../config/orderStatusConfig";
+import { formatItemName } from "../../utils/formatUtils";
 
 interface OrderCardProps {
   order: Order;
@@ -82,7 +83,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
           {order.items.map((item, idx) => (
             <Box key={idx} display="flex" justifyContent="space-between">
               <Typography variant="body2">
-                {item.quantity}x {item.name} ({item.size})
+                {item.quantity}x {formatItemName(item.name, item.size)}
               </Typography>
               <Typography variant="body2" fontWeight="bold">
                 ${(item.price * item.quantity).toFixed(2)}
