@@ -7,10 +7,12 @@ import { getMenuItems } from "../data/menuItems";
 import logoImg from "../assets/images/logo.png";
 import { useAuth } from "../context/AuthContext";
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
+import { useCaja } from "../context/CajaContext";
 
 const Home = () => {
   const navigate = useNavigate();
   const { username } = useAuth();
+  const { currentShift } = useCaja();
   const menuItems = getMenuItems();
 
   return (
@@ -51,14 +53,21 @@ const Home = () => {
         gap={3}
         px={2}
       >
-        {menuItems.map((item) => (
-          <MenuCard
-            key={item.label}
-            label={item.label}
-            icon={item.icon}
-            onClick={item.route ? () => navigate(item.route!) : item.action ?? (() => {})}
-          />
-        ))}
+        {menuItems.map((item) => {
+          const isDisabled = 
+            (item.label === "Abrir Caja" && !!currentShift) || 
+            (item.label === "Cerrar Caja" && !currentShift);
+
+          return (
+            <MenuCard
+              key={item.label}
+              label={item.label}
+              icon={item.icon}
+              onClick={item.route ? () => navigate(item.route!) : item.action ?? (() => {})}
+              disabled={isDisabled}
+            />
+          );
+        })}
       </Box>
     </Box>
   );
