@@ -4,6 +4,8 @@ import {
   InputAdornment,
   TextField,
 } from "@mui/material";
+import { LOGIN_COLORS } from "../theme/loginTheme";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 interface Props {
   amount: string;
@@ -21,14 +23,14 @@ export function AbrirCajaForm({
   canSubmit,
 }: Props) {
   return (
-    <>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <TextField
-        label="Monto inicial"
+        label="Monto inicial de apertura"
         type="number"
         value={amount}
         onChange={(e) => onChangeAmount(e.target.value)}
         fullWidth
-        margin="normal"
+        autoFocus
         inputProps={{ min: 0, step: "0.01" }}
         InputProps={{
           startAdornment: (
@@ -37,14 +39,30 @@ export function AbrirCajaForm({
             </InputAdornment>
           ),
         }}
-        helperText="Ej: 150000"
+        helperText="Ingresa el monto en efectivo disponible en gaveta."
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+            '&:hover fieldset': { borderColor: LOGIN_COLORS.primary },
+            '&.Mui-focused fieldset': { borderColor: LOGIN_COLORS.primary },
+          },
+          '& .MuiInputLabel-root.Mui-focused': { color: LOGIN_COLORS.primary },
+        }}
       />
 
-      <Box display="flex" gap={2} mt={3}>
+      <Box display="flex" gap={2} mt={1}>
         <Button
           variant="outlined"
           fullWidth
           onClick={onCancel}
+          startIcon={<ArrowBackIcon />}
+          sx={{ 
+            borderRadius: 2, 
+            py: 1.5,
+            color: 'text.secondary',
+            borderColor: 'divider',
+            '&:hover': { bgcolor: 'action.hover', borderColor: 'text.primary' }
+          }}
         >
           Cancelar
         </Button>
@@ -54,10 +72,18 @@ export function AbrirCajaForm({
           fullWidth
           onClick={onSubmit}
           disabled={!canSubmit}
+          sx={{ 
+            borderRadius: 2, 
+            py: 1.5,
+            bgcolor: LOGIN_COLORS.primary,
+            '&:hover': { bgcolor: LOGIN_COLORS.primaryDark },
+            boxShadow: `0 4px 14px ${LOGIN_COLORS.primaryShadow}`,
+            fontWeight: 'bold'
+          }}
         >
           Abrir caja
         </Button>
       </Box>
-    </>
+    </Box>
   );
 }
