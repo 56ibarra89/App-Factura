@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderStatus, PaymentMethod } from "../types/order.types";
 import { CartItemType } from "../types/cart";
 import { saveOrderDB } from "../services/db";
+import { useAuth } from "./AuthContext";
 
 interface OrderContextProps {
   orders: Order[];
@@ -18,6 +19,7 @@ const OrderContext = createContext<OrderContextProps | undefined>(undefined);
 const LOCAL_STORAGE_KEY = "app_factura_orders";
 
 export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { username } = useAuth();
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!saved) return [];
@@ -54,6 +56,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       tableId,
       paymentMethod: paymentMethod as PaymentMethod,
       splitAmounts,
+      cashierName: username || "Sistema",
     };
     setOrders(prev => [newOrder, ...prev]);
     saveOrderDB(newOrder); // Persistir en IndexedDB

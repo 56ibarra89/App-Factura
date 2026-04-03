@@ -19,4 +19,5 @@ export interface Order {
   tableId?: string;
   paymentMethod?: PaymentMethod;
   splitAmounts?: { efectivo: number; tarjeta: number };
+  cashierName?: string;
 }

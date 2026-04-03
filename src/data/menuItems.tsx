@@ -9,7 +9,7 @@ import ReceiptIcon from "@mui/icons-material/Receipt";
 import LockResetIcon from "@mui/icons-material/LockReset";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import HistoryIcon from "@mui/icons-material/History";
 import { InventorySharp } from "@mui/icons-material";
 
 export interface MenuItem {
@@ -17,6 +17,7 @@ export interface MenuItem {
   icon: ReactNode;
   route?: string;
   action?: () => void;
+  disabled?: boolean;
 }
 
 /**
@@ -73,12 +74,12 @@ export const getMenuItems = (): MenuItem[] => [
   {
     label: "Cerrar Caja",
     icon: <LocalAtmIcon fontSize="large" color="error" />,
-    action: () => console.log("Cerrar Caja"),
+    route: "/cerrarcaja",
   },
   {
-    label: "Cierre de Caja",
-    icon: <AttachMoneyIcon fontSize="large" color="warning" />,
-    action: () => console.log("Cierre de Caja"),
+    label: "Consultar Turnos",
+    icon: <HistoryIcon fontSize="large" color="warning" />,
+    route: "/consultar-turnos",
   },
   {
     label: "Administración Caja",
