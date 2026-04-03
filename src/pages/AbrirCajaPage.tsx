@@ -1,56 +1,51 @@
-import { useState } from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Divider,
-} from "@mui/material";
+import { Box, Typography, Divider } from "@mui/material";
+import { AuthLayout } from "../components/auth/AuthLayout";
+import { BrandingPanel } from "../components/auth/BrandingPanel";
 import { AbrirCajaForm } from "../components/AbrirCajaForm";
-
+import { useAbrirCaja } from "../hooks/useAbrirCaja";
 
 export default function AbrirCajaPage() {
-  const [amount, setAmount] = useState("");
-
-  const canSubmit = Number(amount) > 0;
-
-  const handleSubmit = () => {
-    console.log("Caja abierta con monto:", amount);
-  };
-
-  const handleCancel = () => {
-    setAmount("");
-  };
+  const { amount, setAmount, canSubmit, handleSubmit, handleCancel } = useAbrirCaja();
 
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      minHeight="100vh"
-      bgcolor="background.default"
-    >
-      <Card sx={{ width: 420 }}>
-        <CardContent>
-          <Typography variant="h5" fontWeight="bold" gutterBottom>
-            Apertura de Caja
-          </Typography>
+    <AuthLayout error="" onClearError={() => {}}>
+      <BrandingPanel
+        title={
+          <>
+            Apertura
+            <br />
+            de Caja
+          </>
+        }
+        subtitle="Ingresa el monto inicial en efectivo con el que se comenzará a registrar las operaciones del día."
+      />
+      <Box
+        sx={{
+          flex: 1,
+          p: { xs: 4, md: 8 },
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          bgcolor: "white",
+        }}
+      >
+        <Typography variant="h4" fontWeight="900" color="text.primary" mb={1}>
+          Nueva Caja
+        </Typography>
+        <Typography variant="body1" color="text.secondary" mb={4}>
+          Asegúrate de contar el efectivo inicial para garantizar un arqueo preciso al final del turno.
+        </Typography>
 
-          <Typography variant="body2" color="text.secondary" mb={2}>
-            Ingresa el monto inicial con el que se comenzará a trabajar hoy.
-          </Typography>
+        <Divider sx={{ mb: 4 }} />
 
-          <Divider sx={{ mb: 2 }} />
-
-          <AbrirCajaForm
-            amount={amount}
-            onChangeAmount={setAmount}
-            onSubmit={handleSubmit}
-            onCancel={handleCancel}
-            canSubmit={canSubmit}
-          />
-        </CardContent>
-      </Card>
-    </Box>
+        <AbrirCajaForm
+          amount={amount}
+          onChangeAmount={setAmount}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          canSubmit={canSubmit}
+        />
+      </Box>
+    </AuthLayout>
   );
 }
