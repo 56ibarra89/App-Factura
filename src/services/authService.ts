@@ -26,8 +26,3 @@ export const authService: IAuthService = {
   },
 };
 
-// Deprecated: use authService
-/** @deprecated use authService.login */
-export const fakeAuth = authService.login;
-/** @deprecated use authService.loginWithPin */
-export const fakePinAuth = authService.loginWithPin;

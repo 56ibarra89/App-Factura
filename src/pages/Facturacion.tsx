@@ -65,7 +65,6 @@ const Facturacion = () => {
         onPreviewClick={() => setPreviewOpen(true)}
       />
 
-      {/* Diálogo de selección de tamaño */}
       {selectedProduct && (
         <SelectSizeDialog
           open={!!selectedProduct}
@@ -76,7 +75,6 @@ const Facturacion = () => {
         />
       )}
 
-      {/* Diálogo de extras (aparece después de seleccionar tamaño) */}
       {pendingItem && (
         <ExtrasDialog
           open={!!pendingItem}
