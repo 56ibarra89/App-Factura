@@ -15,6 +15,7 @@ import Reportes from "../pages/Reportes";
 import Administracion from "../pages/Administracion";
 import CerrarCajaPage from "../pages/CerrarCajaPage";
 import ConsultarTurnos from "../pages/ConsultarTurnos";
+import MiCuenta from "../pages/MiCuenta";
 import { CajaProvider } from "../context/CajaContext";
 
 const PrivateRoute = ({ element }: { element: JSX.Element }) => {
@@ -40,6 +41,7 @@ const AppRoutes = () => (
       <Route path="/consultar-factura" element={<PrivateRoute element={<ConsultarFacturas />} />} />
       <Route path="/reporte" element={<PrivateRoute element={<Reportes />} />} />
       <Route path="/admin" element={<PrivateRoute element={<Administracion />} />} />
+      <Route path="/perfil" element={<PrivateRoute element={<MiCuenta />} />} />
     </Routes>
   </CajaProvider>
 );
