@@ -4,6 +4,7 @@ import { Shift, ShiftSales } from "../types/shift.types";
 import { saveShiftDB } from "../services/db";
 import { useOrderContext } from "./OrderContext";
 import { useAuth } from "./AuthContext";
+import { calculateShiftSales } from "../utils/shiftUtils";
 
 interface CajaContextType {
   currentShift: Shift | null;
@@ -53,27 +54,13 @@ export const CajaProvider = ({ children }: { children: ReactNode }) => {
     if (!currentShift) return { cash: 0, card: 0, app: 0, total: 0 };
 
     // Solo órdenes 'delivered' (pagadas) del cajero actual desde que abrió turno
-    const shiftOrders = orders.filter(o => 
-      o.status === 'delivered' && 
+    const shiftOrders = orders.filter(o =>
+      o.status === 'delivered' &&
       o.cashierName === currentShift.cashierName &&
       new Date(o.timestamp).getTime() >= new Date(currentShift.startTime).getTime()
     );
 
-    return shiftOrders.reduce((acc, order) => {
-      const total = order.total;
-      const method = order.paymentMethod;
-
-      if (method === 'EFECTIVO') acc.cash += total;
-      else if (method === 'TARJETA') acc.card += total;
-      else if (method === 'APP') acc.app += total;
-      else if (method === 'MIXTO' && order.splitAmounts) {
-        acc.cash += order.splitAmounts.efectivo;
-        acc.card += order.splitAmounts.tarjeta;
-      }
-
-      acc.total += total;
-      return acc;
-    }, { cash: 0, card: 0, app: 0, total: 0 });
+    return calculateShiftSales(shiftOrders);
   }, [currentShift, orders]);
 
   const abrirCaja = useCallback((amount: number) => {
