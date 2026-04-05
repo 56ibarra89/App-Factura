@@ -7,7 +7,7 @@ import PageHeader from "../components/PageHeader";
 import { LOGIN_COLORS, LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { Order } from "../types/order.types";
 import { useNavigate } from "react-router-dom";
-import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
+import OrderViewDialog from "../components/OrderViewDialog";
 import { useOrderHistory } from "../hooks/useOrderHistory";
 import ConsultarFacturasFilters from "../components/consultar-facturas/ConsultarFacturasFilters";
 import ConsultarFacturasTable from "../components/consultar-facturas/ConsultarFacturasTable";
@@ -33,6 +33,11 @@ const ConsultarFacturas = () => {
   const handlePrint = (order: Order) => {
     setSelectedOrder(order);
     setPreviewOpen(true);
+  };
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false);
+    setSelectedOrder(null);
   };
 
   return (
@@ -86,22 +91,17 @@ const ConsultarFacturas = () => {
         onPrintClick={handlePrint}
       />
 
-      {/* Preview Dialog */}
       {selectedOrder && (
-        <FacturaPreviewDialog
+        <OrderViewDialog
           open={previewOpen}
-          onClose={() => {
-            setPreviewOpen(false);
-            setSelectedOrder(null);
-          }}
+          onClose={handleClosePreview}
           cart={selectedOrder.items}
           total={selectedOrder.total}
           title={`Factura #${selectedOrder.id.split("-")[1]} - ${selectedOrder.customerName || "Cliente"}`}
           confirmText="Imprimir"
-          showPaymentMethod={false}
           onConfirm={() => {
             window.print();
-            setPreviewOpen(false);
+            handleClosePreview();
           }}
         />
       )}

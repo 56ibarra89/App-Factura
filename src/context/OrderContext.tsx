@@ -10,7 +10,6 @@ interface OrderContextProps {
   addOrder: (items: CartItemType[], total: number, customerName?: string, tableId?: string, paymentMethod?: string, splitAmounts?: { efectivo: number; tarjeta: number }) => void;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   removeOrder: (orderId: string) => void;
-  clearOrders: () => void;
   clearHistory: () => void;
 }
 
@@ -81,17 +80,13 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setOrders(prev => prev.filter(order => order.id !== orderId));
   };
 
-  const clearOrders = () => {
-    setOrders([]);
-  };
-
   const clearHistory = () => {
-    // Keeps only orders that are NOT delivered or cancelled
+    // Mantiene solo órdenes que NO están entregadas ni canceladas
     setOrders(prev => prev.filter(order => order.status !== 'delivered' && order.status !== 'cancelled'));
   };
 
   return (
-    <OrderContext.Provider value={{ orders, addOrder, updateOrderStatus, removeOrder, clearOrders, clearHistory }}>
+    <OrderContext.Provider value={{ orders, addOrder, updateOrderStatus, removeOrder, clearHistory }}>
       {children}
     </OrderContext.Provider>
   );

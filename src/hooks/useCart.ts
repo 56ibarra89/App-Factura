@@ -1,16 +1,14 @@
 // src/hooks/useCart.ts
 import { useCallback } from "react";
-import { SaleItem } from "../types/sales";
 import { useCartStore } from "./useCartStore";
 import { useProductSelection } from "./useProductSelection";
 import { useCheckout } from "./useCheckout";
 
 interface UseCartOptions {
-  addSale?: (item: SaleItem) => void;
   navigate?: (path: string) => void;
 }
 
-export function useCart({ addSale, navigate }: UseCartOptions = {}) {
+export function useCart({ navigate }: UseCartOptions = {}) {
   const {
     cart,
     total,
@@ -24,11 +22,8 @@ export function useCart({ addSale, navigate }: UseCartOptions = {}) {
   const handleConfirmProduct = useCallback(
     (item: Parameters<typeof addItem>[0]) => {
       addItem(item);
-      if (addSale) {
-        addSale(item);
-      }
     },
-    [addItem, addSale]
+    [addItem]
   );
 
   const {
@@ -41,7 +36,7 @@ export function useCart({ addSale, navigate }: UseCartOptions = {}) {
     cancelExtras,
   } = useProductSelection(handleConfirmProduct);
 
-  const { confirmFactura } = useCheckout(cart, clearCart, addSale, navigate);
+  const { confirmFactura } = useCheckout(cart, clearCart, navigate);
 
   return {
     // State

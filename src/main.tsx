@@ -6,7 +6,6 @@ import App from './App.tsx'
 import appTheme from './theme/appTheme.ts'
 import { AuthProvider } from './context/AuthContext.tsx'
 import { ProductProvider } from './context/ProductContext.tsx'
-import { SalesProvider } from './context/SalesContext.tsx'
 import { OrderProvider } from './context/OrderContext.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -15,11 +14,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <CssBaseline />
       <AuthProvider>
         <ProductProvider>
-          <SalesProvider>
-            <OrderProvider>
-              <App />
-            </OrderProvider>
-          </SalesProvider>
+          <OrderProvider>
+            <App />
+          </OrderProvider>
         </ProductProvider>
       </AuthProvider>
     </ThemeProvider>

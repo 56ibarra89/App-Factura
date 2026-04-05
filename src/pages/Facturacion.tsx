@@ -2,16 +2,15 @@
 import Box from "@mui/material/Box";
 import { useState } from "react";
 import { useProductContext } from "../context/ProductContext";
-import { useSalesContext } from "../context/SalesContext";
 import { useNavigate } from "react-router-dom";
 import useCart from "../hooks/useCart";
 
-// Importa los nuevos componentes
+// Componentes de UI
 import CategoryTabs from "../components/CategoryTabs";
 import ProductGrid from "../components/ProductGrid";
 import Cart from "../components/Cart";
 
-// Importa los diálogos
+// Diálogos
 import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 import SelectSizeDialog from "../components/SelectSizeDialog";
 import ExtrasDialog from "../components/ExtrasDialog";
@@ -22,7 +21,6 @@ const Facturacion = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const navigate = useNavigate();
-  const { addSale } = useSalesContext();
 
   const {
     cart,
@@ -39,14 +37,13 @@ const Facturacion = () => {
     handleRemoveItem,
     handleConfirmFactura,
     handleChangeGiftQuantity,
-  } = useCart({ addSale, navigate });
+  } = useCart({ navigate });
 
   const currentProducts = categories[selectedTab]?.items || [];
 
-  // --- RENDERIZADO ---
   return (
     <Box display="flex" height="100vh" overflow="hidden">
-      
+
       <CategoryTabs
         categories={categories}
         selectedTab={selectedTab}
@@ -68,7 +65,6 @@ const Facturacion = () => {
         onPreviewClick={() => setPreviewOpen(true)}
       />
 
-      {/* Diálogo de selección de tamaño */}
       {selectedProduct && (
         <SelectSizeDialog
           open={!!selectedProduct}
@@ -79,7 +75,6 @@ const Facturacion = () => {
         />
       )}
 
-      {/* Diálogo de extras (aparece después de seleccionar tamaño) */}
       {pendingItem && (
         <ExtrasDialog
           open={!!pendingItem}
