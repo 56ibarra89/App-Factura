@@ -75,7 +75,7 @@ export default function Cuentas() {
 
       <Grid container spacing={4} sx={{ mt: 2, flex: 1 }}>
         {/* Columna Izquierda: Lista de Usuarios */}
-        <Grid size={{ xs: 12, md: 4, lg: 3 }} sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Grid size={{ xs: 12, md: 4, lg: 3 }} sx={{ display: "flex", flexDirection: "column" }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Typography variant="h6" fontWeight="900" sx={{ opacity: 0.8 }}>
               Usuarios ({users.length})
@@ -85,9 +85,9 @@ export default function Cuentas() {
               size="small"
               startIcon={<PersonAddIcon />}
               onClick={handleCreateNew}
-              sx={{ 
-                borderRadius: 4, 
-                bgcolor: LOGIN_COLORS.primary, 
+              sx={{
+                borderRadius: 4,
+                bgcolor: LOGIN_COLORS.primary,
                 fontWeight: "bold",
                 boxShadow: LOGIN_SHADOWS.title
               }}
@@ -111,13 +111,13 @@ export default function Cuentas() {
               ),
             }}
           />
-          <Box 
-            sx={{ 
-              borderRadius: 4, 
+          <Box
+            sx={{
+              borderRadius: 4,
               flex: 1,
-              overflowY: 'auto',
-              maxHeight: 'calc(100vh - 200px)',
-              pr: 1 // padding for scrollbar
+              overflowY: "auto",
+              maxHeight: "calc(100vh - 200px)",
+              pr: 1
             }}
           >
             <UserList
@@ -138,27 +138,27 @@ export default function Cuentas() {
             sx={{
               bgcolor: "white",
               borderRadius: 6,
-              boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
+              boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
               minHeight: "600px",
               display: "flex",
               flexDirection: "column",
-              overflow: 'hidden'
+              overflow: "hidden"
             }}
           >
-            <Box sx={{ 
-              borderBottom: 1, 
-              borderColor: 'divider', 
-              px: 4, 
-              pt: 2, 
-              background: alpha('#f5f5f5', 0.5) 
+            <Box sx={{
+              borderBottom: 1,
+              borderColor: "divider",
+              px: 4,
+              pt: 2,
+              background: alpha("#f5f5f5", 0.5)
             }}>
-              <Tabs 
-                value={tabIndex} 
+              <Tabs
+                value={tabIndex}
                 onChange={(_, newValue) => setTabIndex(newValue)}
                 textColor="primary"
                 indicatorColor="primary"
                 sx={{
-                  '& .MuiTab-root': {
+                  "& .MuiTab-root": {
                     fontWeight: "bold",
                     textTransform: "none",
                     fontSize: "1rem",
