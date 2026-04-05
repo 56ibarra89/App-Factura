@@ -1,8 +1,13 @@
 import { useState, useMemo } from "react";
-import { Box, Typography, Button, Paper, Tabs, Tab, Grid, alpha, TextField, InputAdornment } from "@mui/material";
+import {
+  Box, Typography, Button, Paper, Tabs, Tab, Grid, alpha,
+  TextField, InputAdornment, Dialog, DialogTitle, DialogContent,
+  DialogContentText, DialogActions
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SearchIcon from "@mui/icons-material/Search";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import AccountMenu from "../components/AccountMenu";
@@ -15,14 +20,16 @@ import { UserActivity } from "../components/cuentas/UserActivity";
 export default function Cuentas() {
   const navigate = useNavigate();
   const { users, saveUser, toggleUserStatus, deleteUser } = useAccountManager();
-  
+
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [tabIndex, setTabIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const selectedUser = users.find(u => u.id === selectedUserId) || null;
+  const userToDelete = users.find(u => u.id === pendingDeleteId);
 
-  // Filtrado de usuarios por nombre o rol
   const filteredUsers = useMemo(() => {
     return users.filter(u => {
       const q = searchQuery.toLowerCase();
@@ -37,6 +44,26 @@ export default function Cuentas() {
   const handleCreateNew = () => {
     setSelectedUserId(null);
     setTabIndex(0);
+  };
+
+  const handleRequestDelete = (id: string) => {
+    setPendingDeleteId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (pendingDeleteId) {
+      deleteUser(pendingDeleteId);
+      setSelectedUserId(null);
+      setTabIndex(0);
+    }
+    setDeleteDialogOpen(false);
+    setPendingDeleteId(null);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setPendingDeleteId(null);
   };
 
   return (
@@ -173,21 +200,14 @@ export default function Cuentas() {
 
             <Box sx={{ p: { xs: 3, md: 5 }, flex: 1, overflowY: "auto" }}>
               {tabIndex === 0 && (
-                <UserForm 
-                  user={selectedUser} 
+                <UserForm
+                  user={selectedUser}
                   onSave={(user) => {
                     saveUser(user);
                     setSelectedUserId(user.id);
                   }}
                   onToggleStatus={toggleUserStatus}
-                  onDelete={(id) => {
-                    const confirm = window.confirm("¿Estás seguro de que deseas eliminar este usuario de forma permanente?");
-                    if (confirm) {
-                      deleteUser(id);
-                      setSelectedUserId(null);
-                      setTabIndex(0);
-                    }
-                  }}
+                  onDelete={handleRequestDelete}
                 />
               )}
               {tabIndex === 1 && selectedUser && (
@@ -197,6 +217,50 @@ export default function Cuentas() {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Dialog de confirmación de eliminación */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCancelDelete}
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            p: 1,
+            maxWidth: 440
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: "900", display: "flex", alignItems: "center", gap: 1.5 }}>
+          <DeleteForeverIcon color="error" sx={{ fontSize: 28 }} />
+          Eliminar Usuario
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Estás a punto de eliminar permanentemente la cuenta de{" "}
+            <strong>{userToDelete?.firstName} {userToDelete?.lastName}</strong> (@{userToDelete?.username}).
+            <br /><br />
+            Esta acción <strong>no se puede deshacer</strong>. Considera suspender la cuenta si deseas conservar el historial.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+          <Button
+            onClick={handleCancelDelete}
+            variant="outlined"
+            sx={{ borderRadius: 3, textTransform: "none", fontWeight: "bold" }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            startIcon={<DeleteForeverIcon />}
+            sx={{ borderRadius: 3, textTransform: "none", fontWeight: "bold" }}
+          >
+            Eliminar Permanentemente
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
