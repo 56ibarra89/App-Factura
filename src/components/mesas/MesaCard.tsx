@@ -50,12 +50,13 @@ export default function MesaCard({ mesa }: Props) {
   const theme = getTheme();
 
   return (
-    <Box sx={{ position: "relative", m: 1.5 }}>
+    <Box sx={{ position: "relative", width: "100%" }}>
       <Paper
         elevation={0}
         sx={{
-          width: 145,
-          height: 145,
+          width: "100%",
+          aspectRatio: "1/1",
+          minHeight: 145,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -101,7 +102,7 @@ export default function MesaCard({ mesa }: Props) {
           {mesa.id.replace("M ", "")}
         </Typography>
         <Typography variant="caption" sx={{ opacity: 0.5, fontWeight: 700, mt: -0.5 }}>
-          MESA
+          MESA (P-{mesa.floor})
         </Typography>
       </Paper>
 

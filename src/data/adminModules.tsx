@@ -18,7 +18,8 @@ export interface AdminModuleItem {
   title: string;
   description: string;
   icon: JSX.Element;
-  action: () => void;
+  path?: string;
+  action?: () => void;
 }
 
 export const adminModules: AdminModuleItem[] = [
@@ -79,7 +80,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Plano de Mesas",
     description: "Edita visualmente el diseño del restaurante, acomodando identificadores y salas libremente.",
     icon: <DashboardCustomizeIcon fontSize="large" />,
-    action: () => console.log("Ir a Planos"),
+    path: "/admin/mesas",
   },
   
   // --- HARDWARE Y SISTEMA ---

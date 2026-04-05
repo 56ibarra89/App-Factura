@@ -28,7 +28,7 @@ const Administracion = () => {
                 title={module.title}
                 description={module.description}
                 icon={module.icon}
-                onClick={module.action}
+                onClick={() => module.path ? navigate(module.path) : module.action?.()}
               />
             </Grid>
           ))}
