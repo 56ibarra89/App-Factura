@@ -59,7 +59,7 @@ export default function MesasPage() {
         bgcolor: "white", 
         borderRadius: 5, 
         boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
-        overflow: "hidden",
+        overflowY: "auto",
         border: "1px solid rgba(0,0,0,0.05)"
       }}>
         <MesaGrid

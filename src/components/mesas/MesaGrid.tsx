@@ -13,10 +13,10 @@ export default function MesaGrid({ mesas, selectedFloor }: Props) {
       sx={{
         flexGrow: 1,
         p: 4,
-        display: "flex",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
         gap: 3,
-        flexWrap: "wrap",
-        alignContent: "flex-start",
+        alignContent: "start",
       }}
     >
       {mesas
