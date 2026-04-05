@@ -7,21 +7,27 @@ import { Mesa } from "../types/mesa.types";
 import { OrderItem } from "../types/order.types";
 
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
-
-const floors = [
-  "Primera Planta", "Segunda Planta", "Tercera Planta", "Cuarta Planta",
-  "Quinta Planta", "Sexta Planta", "Séptima Planta", "Octava Planta"
-];
+import { useMesasConfig } from "../hooks/useMesasConfig";
 
 export default function MesasPage() {
 
+  const { floorsConfig } = useMesasConfig();
+  
+  // Filtrar plantas que tengan mesas asignadas, si no hay ninguna, mostrar la de por defecto para evitar errores.
+  const activeFloors = floorsConfig.filter(f => f.tableCount > 0);
+  const floors = activeFloors.length > 0 ? activeFloors.map(f => f.name) : ["Primera Planta"];
+  
   const [selectedFloor, setSelectedFloor] = useState(1);
 
-  const mesas: Mesa[] = [
-    { id: "M 1", estado: "reservado", floor: 1 },
-    { id: "M 2", estado: "disponible", floor: 1 },
-    { id: "M 7", estado: "disponible", floor: 1 },
-  ];
+  // Generar mesas dinámicamente según la planta seleccionada
+  const activeFloorConfig = activeFloors.find(f => f.id === selectedFloor);
+  const tableCount = activeFloorConfig ? activeFloorConfig.tableCount : 0;
+  
+  const mesas: Mesa[] = Array.from({ length: tableCount }).map((_, idx) => ({
+    id: `M ${idx + 1}`,
+    estado: "disponible", // TODO: Estado guardado dinámicamente a futuro
+    floor: selectedFloor
+  }));
 
   const currentOrder: OrderItem[] = [
     { id: 1, name: "Bacon", size: "personal", price: 35, quantity: 1, timestamp: "22/03/25 11:36", extras: [] },
