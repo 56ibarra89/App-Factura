@@ -7,9 +7,12 @@ import OrderActions from "./OrderActions";
 
 interface Props {
   order: OrderItem[];
+  onSalir: () => void;
+  onReservar: () => void;
+  isReserved?: boolean;
 }
 
-export default function OrderPanel({ order }: Props) {
+export default function OrderPanel({ order, onSalir, onReservar, isReserved = false }: Props) {
   return (
     <Paper
       elevation={0}
@@ -36,7 +39,7 @@ export default function OrderPanel({ order }: Props) {
       }}>
         <OrderSummary order={order} />
         <Box sx={{ mt: 3 }}>
-          <OrderActions />
+          <OrderActions onSalir={onSalir} onReservar={onReservar} isReserved={isReserved} />
         </Box>
       </Box>
     </Paper>

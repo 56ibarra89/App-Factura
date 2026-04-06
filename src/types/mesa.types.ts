@@ -4,4 +4,5 @@ export interface Mesa {
   id: string;
   floor: number;
   estado: MesaEstado;
+  reservationName?: string;
 }
