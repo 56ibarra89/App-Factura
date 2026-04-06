@@ -6,9 +6,16 @@ import EventSeatIcon from '@mui/icons-material/EventSeat';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { LOGIN_COLORS } from "../../theme/loginTheme";
 
-export default function OrderActions() {
+interface Props {
+  onSalir: () => void;
+  onReservar: () => void;
+  isReserved?: boolean;
+}
+
+export default function OrderActions({ onSalir, onReservar, isReserved = false }: Props) {
   const primaryColor = LOGIN_COLORS.primary;
-  const successColor = "#2e7d32"; // Refined green
+  const successColor = "#2e7d32";
+  const cancelColor = "#d32f2f"; // Red for cancel
 
   return (
     <Grid container spacing={1.5}>
@@ -91,21 +98,22 @@ export default function OrderActions() {
           startIcon={<EventSeatIcon />}
           sx={{ 
             py: 1.5,
-            bgcolor: successColor, 
+            bgcolor: isReserved ? cancelColor : successColor, 
             color: "white",
             textTransform: "none",
             fontWeight: "700",
             borderRadius: 2.5,
-            boxShadow: `0 4px 12px ${alpha(successColor, 0.3)}`,
+            boxShadow: `0 4px 12px ${alpha(isReserved ? cancelColor : successColor, 0.3)}`,
             "&:hover": { 
-              bgcolor: "#1b5e20", 
-              boxShadow: `0 6px 16px ${alpha(successColor, 0.4)}`,
+              bgcolor: isReserved ? "#b71c1c" : "#1b5e20", 
+              boxShadow: `0 6px 16px ${alpha(isReserved ? cancelColor : successColor, 0.4)}`,
               transform: "translateY(-2px)"
             },
             transition: "all 0.2s"
           }}
+          onClick={onReservar}
         >
-          Reservar
+          {isReserved ? "Liberar Mesa" : "Reservar"}
         </Button>
       </Grid>
 
@@ -127,6 +135,7 @@ export default function OrderActions() {
             },
             transition: "all 0.2s"
           }}
+          onClick={onSalir}
         >
           Salir
         </Button>
