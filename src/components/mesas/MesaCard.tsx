@@ -99,10 +99,10 @@ export default function MesaCard({ mesa }: Props) {
           color: theme.isNeutral ? "text.primary" : "white",
           letterSpacing: -1
         }}>
-          {mesa.id.replace("M ", "")}
+          {mesa.id.split('-M')[1]}
         </Typography>
-        <Typography variant="caption" sx={{ opacity: 0.5, fontWeight: 700, mt: -0.5 }}>
-          MESA (P-{mesa.floor})
+        <Typography variant="caption" sx={{ opacity: 0.5, fontWeight: 700, mt: -0.5, px: 1, textAlign: "center", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%" }}>
+          {mesa.reservationName || `MESA (P-${mesa.floor})`}
         </Typography>
       </Paper>
 
