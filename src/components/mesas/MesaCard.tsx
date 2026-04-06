@@ -7,6 +7,8 @@ import { LOGIN_COLORS } from "../../theme/loginTheme";
 
 interface Props {
   mesa: Mesa;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
 interface MesaTheme {
@@ -17,7 +19,7 @@ interface MesaTheme {
   isNeutral?: boolean;
 }
 
-export default function MesaCard({ mesa }: Props) {
+export default function MesaCard({ mesa, isSelected = false, onClick }: Props) {
 
   const getTheme = (): MesaTheme => {
     switch (mesa.estado) {
@@ -50,7 +52,7 @@ export default function MesaCard({ mesa }: Props) {
   const theme = getTheme();
 
   return (
-    <Box sx={{ position: "relative", width: "100%" }}>
+    <Box sx={{ position: "relative", width: "100%" }} onClick={onClick}>
       <Paper
         elevation={0}
         sx={{
@@ -66,11 +68,13 @@ export default function MesaCard({ mesa }: Props) {
           background: theme.bg,
           color: theme.isNeutral ? "text.primary" : "white",
           transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-          boxShadow: theme.isNeutral 
-            ? "0 4px 12px rgba(0,0,0,0.05)"
-            : `0 12px 24px ${alpha(theme.shadow, 0.4)}`,
+          boxShadow: isSelected
+            ? `0 0 0 4px ${LOGIN_COLORS.primary}, 0 12px 24px rgba(0,0,0,0.1)` 
+            : theme.isNeutral 
+              ? "0 4px 12px rgba(0,0,0,0.05)"
+              : `0 12px 24px ${alpha(theme.shadow, 0.4)}`,
           border: theme.isNeutral ? "2px solid" : "2px solid transparent",
-          borderColor: theme.isNeutral ? "grey.100" : "transparent",
+          borderColor: isSelected ? LOGIN_COLORS.primary : theme.isNeutral ? "grey.100" : "transparent",
           position: "relative",
           overflow: "hidden",
           "&:hover": {
