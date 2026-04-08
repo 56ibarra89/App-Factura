@@ -7,9 +7,10 @@ import { useProductExtras } from "./useProductExtras";
 interface UseProductFormArgs {
   editing: null | { product: Product; category: string };
   onSubmit: (category: string, product: Product, oldName?: string) => void;
+  open: boolean;
 }
 
-export function useProductForm({ editing, onSubmit }: UseProductFormArgs) {
+export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) {
   const [form, setForm] = useState<ProductFormState>(productMapper.toFormState(null, ""));
 
   const {
@@ -23,14 +24,16 @@ export function useProductForm({ editing, onSubmit }: UseProductFormArgs) {
 
   // Handle initial form load for editing
   useEffect(() => {
-    if (editing) {
-      setForm(productMapper.toFormState(editing.product, editing.category));
-      setExtras(productMapper.toFormExtras(editing.product.extras));
-    } else {
-      setForm(productMapper.toFormState(null, ""));
-      setExtras([]);
+    if (open) {
+      if (editing) {
+        setForm(productMapper.toFormState(editing.product, editing.category));
+        setExtras(productMapper.toFormExtras(editing.product.extras));
+      } else {
+        setForm(productMapper.toFormState(null, ""));
+        setExtras([]);
+      }
     }
-  }, [editing, setExtras]);
+  }, [open, editing, setExtras]);
 
   const handleCategoryChange = (cat: string) => {
     const isPizzaCategory = IS_PIZZA(cat);
