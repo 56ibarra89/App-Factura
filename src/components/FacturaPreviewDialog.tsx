@@ -11,9 +11,12 @@ import {
   Divider,
   Button,
   Box,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import { CartItemType } from "../types/cart";
-import { PaymentMethod } from "../types/order.types";
+import { PaymentMethod, OrderType } from "../types/order.types";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import { formatItemName } from "../utils/formatUtils";
 
@@ -25,6 +28,9 @@ interface FacturaPreviewDialogProps {
   onConfirm: (
     paymentMethod: PaymentMethod,
     splitAmounts?: { efectivo: number; tarjeta: number },
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string,
   ) => void;
   title?: string;
   confirmText?: string;
@@ -41,11 +47,17 @@ export default function FacturaPreviewDialog({
 }: FacturaPreviewDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("EFECTIVO");
   const [splitAmounts, setSplitAmounts] = useState({ efectivo: 0, tarjeta: 0 });
+  const [customerName, setCustomerName] = useState("");
+  const [orderType, setOrderType] = useState<OrderType>("local");
+  const [customerAddress, setCustomerAddress] = useState("");
 
   useEffect(() => {
     if (open) {
       setPaymentMethod("EFECTIVO");
       setSplitAmounts({ efectivo: 0, tarjeta: total });
+      setCustomerName("");
+      setOrderType("local");
+      setCustomerAddress("");
     }
   }, [open, total]);
 
@@ -113,6 +125,64 @@ export default function FacturaPreviewDialog({
           </Typography>
         </Box>
 
+        <Divider sx={{ my: 2 }} />
+
+        <Box sx={{ mb: 3 }}>
+          <TextField
+            fullWidth
+            label="Nombre del Cliente"
+            placeholder="Ej: Juan Pérez"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            sx={{ mb: 2 }}
+            variant="outlined"
+            size="small"
+          />
+
+          <Typography
+            variant="subtitle2"
+            gutterBottom
+            fontWeight="bold"
+            sx={{ color: "text.secondary", mb: 1 }}
+          >
+            Tipo de Pedido:
+          </Typography>
+          <ToggleButtonGroup
+            value={orderType}
+            exclusive
+            onChange={(_, val) => val && setOrderType(val)}
+            fullWidth
+            color="error"
+            size="small"
+          >
+            <ToggleButton value="local" sx={{ py: 1 }}>
+              LOCAL
+            </ToggleButton>
+            <ToggleButton value="llevar" sx={{ py: 1 }}>
+              LLEVAR
+            </ToggleButton>
+            <ToggleButton value="delivery" sx={{ py: 1 }}>
+              DELIVERY
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          {orderType === "delivery" && (
+            <TextField
+              fullWidth
+              label="Dirección de Entrega"
+              placeholder="Ej: barrio la libertad, calle el sol, casa numero 5"
+              value={customerAddress}
+              onChange={(e) => setCustomerAddress(e.target.value)}
+              sx={{ mt: 2 }}
+              variant="outlined"
+              size="small"
+              required
+            />
+          )}
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
         <PaymentMethodSelector
           total={total}
           paymentMethod={paymentMethod}
@@ -135,6 +205,9 @@ export default function FacturaPreviewDialog({
             onConfirm(
               paymentMethod,
               paymentMethod === "MIXTO" ? splitAmounts : undefined,
+              customerName,
+              orderType,
+              customerAddress,
             )
           }
           sx={{ "@media print": { display: "none" } }}

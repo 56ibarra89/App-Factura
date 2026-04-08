@@ -1,13 +1,22 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Order, OrderStatus, PaymentMethod } from "../types/order.types";
+import { Order, OrderStatus, PaymentMethod, OrderType } from "../types/order.types";
 import { CartItemType } from "../types/cart";
 import { saveOrderDB } from "../services/db";
 import { useAuth } from "./AuthContext";
 
 interface OrderContextProps {
   orders: Order[];
-  addOrder: (items: CartItemType[], total: number, customerName?: string, tableId?: string, paymentMethod?: string, splitAmounts?: { efectivo: number; tarjeta: number }) => void;
+  addOrder: (
+    items: CartItemType[],
+    total: number,
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string,
+    tableId?: string,
+    paymentMethod?: string,
+    splitAmounts?: { efectivo: number; tarjeta: number }
+  ) => void;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   removeOrder: (orderId: string) => void;
   clearHistory: () => void;
@@ -44,20 +53,31 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(orders));
   }, [orders]);
 
-  const addOrder = (items: CartItemType[], total: number, customerName?: string, tableId?: string, paymentMethod?: string, splitAmounts?: { efectivo: number; tarjeta: number }) => {
+  const addOrder = (
+    items: CartItemType[],
+    total: number,
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string,
+    tableId?: string,
+    paymentMethod?: string,
+    splitAmounts?: { efectivo: number; tarjeta: number }
+  ) => {
     const newOrder: Order = {
       id: `ORD-${Date.now()}`,
       items: [...items],
       total,
-      status: 'pending',
+      status: "pending",
       timestamp: new Date(),
       customerName,
+      orderType,
+      customerAddress,
       tableId,
       paymentMethod: paymentMethod as PaymentMethod,
       splitAmounts,
       cashierName: username || "Sistema",
     };
-    setOrders(prev => [newOrder, ...prev]);
+    setOrders((prev) => [newOrder, ...prev]);
     saveOrderDB(newOrder); // Persistir en IndexedDB
   };
 
