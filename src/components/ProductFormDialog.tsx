@@ -34,7 +34,7 @@ const ProductFormDialog = ({
     handleExtraNameChange,
     handleExtraPriceChange,
     handleSubmit,
-  } = useProductForm({ editing, onSubmit });
+  } = useProductForm({ editing, onSubmit, open });
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
