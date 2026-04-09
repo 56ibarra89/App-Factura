@@ -20,6 +20,16 @@ interface OrderContextProps {
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   removeOrder: (orderId: string) => void;
   clearHistory: () => void;
+  updateOrderItems: (orderId: string, items: CartItemType[], total: number) => void;
+  getOrderByTable: (tableId: string) => Order | undefined;
+  finalizeOrder: (
+    orderId: string,
+    paymentMethod: PaymentMethod,
+    splitAmounts?: { efectivo: number; tarjeta: number },
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string
+  ) => void;
 }
 
 const OrderContext = createContext<OrderContextProps | undefined>(undefined);
@@ -40,7 +50,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .map((o: Order) => ({ ...o, timestamp: new Date(o.timestamp) }))
         .filter((o: Order) => {
           const isToday = o.timestamp.toDateString() === now.toDateString();
-          const isActive = o.status !== 'delivered' && o.status !== 'cancelled';
+          const isActive = o.status !== "paid" && o.status !== "cancelled";
           return isToday || isActive;
         });
     } catch (e) {
@@ -100,13 +110,81 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setOrders(prev => prev.filter(order => order.id !== orderId));
   };
 
+  const updateOrderItems = (orderId: string, items: CartItemType[], total: number) => {
+    setOrders(prev => {
+      const updatedOrders = prev.map(order => 
+        order.id === orderId ? { ...order, items: [...items], total } : order
+      );
+      
+      const modifiedOrder = updatedOrders.find(o => o.id === orderId);
+      if (modifiedOrder) {
+        saveOrderDB(modifiedOrder); // Actualizar en IndexedDB
+      }
+
+      return updatedOrders;
+    });
+  };
+
+  const getOrderByTable = (tableId: string) => {
+    // La mesa sigue ocupada aunque esté 'delivered', hasta que esté 'paid'
+    return orders.find(
+      (o) =>
+        o.tableId === tableId &&
+        o.status !== "paid" &&
+        o.status !== "cancelled"
+    );
+  };
+
   const clearHistory = () => {
-    // Mantiene solo órdenes que NO están entregadas ni canceladas
-    setOrders(prev => prev.filter(order => order.status !== 'delivered' && order.status !== 'cancelled'));
+    // Mantiene solo órdenes que NO están pagadas ni canceladas
+    setOrders((prev) =>
+      prev.filter((order) => order.status !== "paid" && order.status !== "cancelled")
+    );
+  };
+
+  const finalizeOrder = (
+    orderId: string,
+    paymentMethod: PaymentMethod,
+    splitAmounts?: { efectivo: number; tarjeta: number },
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string
+  ) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
+        order.id === orderId
+          ? {
+              ...order,
+              status: "paid" as OrderStatus,
+              paymentMethod,
+              splitAmounts,
+              customerName: customerName || order.customerName,
+              orderType: orderType || order.orderType,
+              customerAddress: customerAddress || order.customerAddress,
+            }
+          : order
+      );
+
+      const modifiedOrder = updatedOrders.find((o) => o.id === orderId);
+      if (modifiedOrder) {
+        saveOrderDB(modifiedOrder); // Actualizar en IndexedDB
+      }
+
+      return updatedOrders;
+    });
   };
 
   return (
-    <OrderContext.Provider value={{ orders, addOrder, updateOrderStatus, removeOrder, clearHistory }}>
+    <OrderContext.Provider value={{ 
+      orders, 
+      addOrder, 
+      updateOrderStatus, 
+      removeOrder, 
+      clearHistory,
+      updateOrderItems,
+      getOrderByTable,
+      finalizeOrder,
+    }}>
       {children}
     </OrderContext.Provider>
   );

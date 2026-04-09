@@ -100,5 +100,6 @@ export function useCartStore() {
     changeQuantity,
     changeGiftQuantity,
     clearCart,
+    setCart,
   };
 }

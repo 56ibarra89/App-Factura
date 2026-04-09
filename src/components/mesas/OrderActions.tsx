@@ -1,5 +1,6 @@
 import { Grid, Button, alpha } from "@mui/material";
 import PrintIcon from '@mui/icons-material/Print';
+import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import EditIcon from '@mui/icons-material/Edit';
 import MergeTypeIcon from '@mui/icons-material/MergeType';
 import EventSeatIcon from '@mui/icons-material/EventSeat';
@@ -10,41 +11,18 @@ interface Props {
   onSalir: () => void;
   onReservar: () => void;
   isReserved?: boolean;
+  onEditOrder?: () => void;
+  onCheckout?: () => void;
 }
 
-export default function OrderActions({ onSalir, onReservar, isReserved = false }: Props) {
+export default function OrderActions({ onSalir, onReservar, isReserved = false, onEditOrder, onCheckout }: Props) {
   const primaryColor = LOGIN_COLORS.primary;
   const successColor = "#2e7d32";
   const cancelColor = "#d32f2f"; // Red for cancel
 
   return (
     <Grid container spacing={1.5}>
-      <Grid size={6}>
-        <Button
-          fullWidth
-          variant="contained"
-          startIcon={<PrintIcon />}
-          sx={{
-            py: 1.5,
-            bgcolor: primaryColor,
-            color: "white",
-            textTransform: "none",
-            fontWeight: "700",
-            borderRadius: 2.5,
-            boxShadow: `0 4px 12px ${LOGIN_COLORS.primaryShadow}`,
-            "&:hover": { 
-              bgcolor: LOGIN_COLORS.primaryDark, 
-              boxShadow: `0 6px 16px ${LOGIN_COLORS.primaryShadow}`,
-              transform: "translateY(-2px)"
-            },
-            transition: "all 0.2s"
-          }}
-        >
-          Imprimir
-        </Button>
-      </Grid>
-
-      <Grid size={6}>
+      <Grid size={12}>
         <Button
           fullWidth
           variant="outlined"
@@ -63,8 +41,36 @@ export default function OrderActions({ onSalir, onReservar, isReserved = false }
               borderColor: "grey.400"
             }
           }}
+          onClick={onEditOrder}
         >
-          Editar
+          Pedir / Editar
+        </Button>
+      </Grid>
+
+      <Grid size={12}>
+        <Button
+          fullWidth
+          variant="contained"
+          startIcon={<ShoppingCartCheckoutIcon />}
+          sx={{
+            py: 1.5,
+            bgcolor: successColor,
+            color: "white",
+            textTransform: "none",
+            fontWeight: "900",
+            borderRadius: 2.5,
+            fontSize: "1rem",
+            boxShadow: `0 4px 12px ${alpha(successColor, 0.4)}`,
+            "&:hover": { 
+              bgcolor: "#1b5e20", 
+              boxShadow: `0 6px 16px ${alpha(successColor, 0.5)}`,
+              transform: "translateY(-2px)"
+            },
+            transition: "all 0.2s"
+          }}
+          onClick={onCheckout}
+        >
+          Cobrar / Cerrar Mesa
         </Button>
       </Grid>
 

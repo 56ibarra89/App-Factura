@@ -1,10 +1,10 @@
 import { Box, Typography, Divider } from "@mui/material";
-import { OrderItem } from "../../types/order.types";
 import PersonIcon from "@mui/icons-material/Person";
 import { useAuth } from "../../context/AuthContext";
+import { CartItemType } from "../../types/cart";
 
 interface Props {
-  order: OrderItem[];
+  order: CartItemType[];
 }
 
 export default function OrderSummary({ order }: Props) {

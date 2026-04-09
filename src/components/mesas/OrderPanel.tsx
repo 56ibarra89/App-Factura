@@ -1,18 +1,20 @@
 import { Paper, Box } from "@mui/material";
-import { OrderItem } from "../../types/order.types";
 import OrderHeader from "./OrderHeader";
 import OrderList from "./OrderList";
 import OrderSummary from "./OrderSummary";
 import OrderActions from "./OrderActions";
+import { CartItemType } from "../../types/cart";
 
 interface Props {
-  order: OrderItem[];
+  order: CartItemType[];
   onSalir: () => void;
   onReservar: () => void;
   isReserved?: boolean;
+  onEditOrder?: () => void;
+  onCheckout?: () => void;
 }
 
-export default function OrderPanel({ order, onSalir, onReservar, isReserved = false }: Props) {
+export default function OrderPanel({ order, onSalir, onReservar, isReserved = false, onEditOrder, onCheckout }: Props) {
   return (
     <Paper
       elevation={0}
@@ -39,7 +41,13 @@ export default function OrderPanel({ order, onSalir, onReservar, isReserved = fa
       }}>
         <OrderSummary order={order} />
         <Box sx={{ mt: 3 }}>
-          <OrderActions onSalir={onSalir} onReservar={onReservar} isReserved={isReserved} />
+          <OrderActions 
+            onSalir={onSalir} 
+            onReservar={onReservar} 
+            isReserved={isReserved} 
+            onEditOrder={onEditOrder}
+            onCheckout={onCheckout}
+          />
         </Box>
       </Box>
     </Paper>

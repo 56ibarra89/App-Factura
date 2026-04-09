@@ -1,6 +1,6 @@
 import { CartItemType } from "./cart";
 
-export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'paid' | 'cancelled';
 
 export interface OrderItem extends CartItemType {
   id: number;

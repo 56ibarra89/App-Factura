@@ -2,8 +2,11 @@
 import Box from "@mui/material/Box";
 import { useState } from "react";
 import { useProductContext } from "../context/ProductContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import useCart from "../hooks/useCart";
+import { useOrderContext } from "../context/OrderContext";
+import { useEffect } from "react";
+import { PaymentMethod, OrderType } from "../types/order.types";
 
 // Componentes de UI
 import CategoryTabs from "../components/CategoryTabs";
@@ -37,7 +40,62 @@ const Facturacion = () => {
     handleRemoveItem,
     handleConfirmFactura,
     handleChangeGiftQuantity,
+    handleSaveTableOrder,
+    handleFinalizeTableOrder,
+    handleSetCart,
   } = useCart({ navigate });
+
+  const [searchParams] = useSearchParams();
+  const tableId = searchParams.get("tableId");
+  const isCheckoutMode = searchParams.get("checkout") === "true";
+  const { getOrderByTable } = useOrderContext();
+  const activeOrder = tableId ? getOrderByTable(tableId) : null;
+
+  // Cargar carrito si es una mesa con orden activa
+  useEffect(() => {
+    if (activeOrder && cart.length === 0) {
+      handleSetCart(activeOrder.items);
+    }
+  }, [activeOrder, cart.length, handleSetCart]);
+
+  const handleFinalConfirm = (
+    paymentMethod: PaymentMethod,
+    splitAmounts?: { efectivo: number; tarjeta: number },
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string
+  ) => {
+    if (tableId) {
+      if (isCheckoutMode && activeOrder) {
+        // Finalizar y cobrar mesa
+        handleFinalizeTableOrder(
+          activeOrder.id,
+          paymentMethod,
+          splitAmounts,
+          customerName,
+          orderType,
+          customerAddress
+        );
+      } else {
+        // Solo guardar cambios en la mesa
+        handleSaveTableOrder(activeOrder?.id, tableId);
+      }
+    } else {
+      // Venta directa normal
+      handleConfirmFactura(
+        paymentMethod,
+        splitAmounts,
+        customerName,
+        orderType,
+        customerAddress
+      );
+    }
+    
+    // Trigger automated print for the invoice summary
+    window.print();
+    
+    setPreviewOpen(false);
+  };
 
   const currentProducts = categories[selectedTab]?.items || [];
 
@@ -91,7 +149,10 @@ const Facturacion = () => {
         cart={cart}
         total={total}
         onClose={() => setPreviewOpen(false)}
-        onConfirm={handleConfirmFactura}
+        onConfirm={handleFinalConfirm}
+        title={tableId ? (isCheckoutMode ? `Cerrar Cuenta Mesa ${tableId}` : `Pedido Mesa ${tableId}`) : "Resumen de Factura"}
+        confirmText={tableId ? (isCheckoutMode ? "Finalizar y Cobrar" : (activeOrder ? "Actualizar Mesa" : "Abrir Mesa")) : "Confirmar pedido"}
+        isTableMode={!!tableId && !isCheckoutMode}
       />
     </Box>
   );

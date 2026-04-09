@@ -1,10 +1,14 @@
 import { Box, Grid, Typography } from "@mui/material";
-import { OrderItem } from "../../types/order.types";
+import { CartItemType } from "../../types/cart";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { formatItemName } from "../../utils/formatUtils";
 
+interface CartItemWithTimestamp extends CartItemType {
+  timestamp?: string;
+}
+
 interface Props {
-  item: OrderItem;
+  item: CartItemWithTimestamp;
 }
 
 export default function OrderItemRow({ item }: Props) {
@@ -40,7 +44,7 @@ export default function OrderItemRow({ item }: Props) {
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
             <AccessTimeIcon sx={{ fontSize: 14, color: "text.disabled" }} />
             <Typography variant="caption" color="text.disabled" fontWeight="500">
-              {item.timestamp}
+              {item.timestamp || "Recién añadido"}
             </Typography>
           </Box>
         </Grid>

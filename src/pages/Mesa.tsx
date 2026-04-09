@@ -6,10 +6,11 @@ import MesaGrid from "../components/mesas/MesaGrid";
 import OrderPanel from "../components/mesas/OrderPanel";
 import ReservationDialog from "../components/mesas/ReservationDialog";
 import { Mesa } from "../types/mesa.types";
-import { OrderItem } from "../types/order.types";
 
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { useMesasConfig } from "../hooks/useMesasConfig";
+import { useOrderContext } from "../context/OrderContext";
+import { CartItemType } from "../types/cart";
 
 export default function MesasPage() {
 
@@ -29,6 +30,9 @@ export default function MesasPage() {
   // Dialog state
   const [isReservationOpen, setIsReservationOpen] = useState(false);
 
+  // Obtener órdenes activas desde el contexto
+  const { getOrderByTable } = useOrderContext();
+
   // Generar mesas dinámicamente según la planta seleccionada
   const activeFloorConfig = activeFloors.find(f => f.id === selectedFloor);
   const tableCount = activeFloorConfig ? activeFloorConfig.tableCount : 0;
@@ -36,9 +40,14 @@ export default function MesasPage() {
   const mesas: Mesa[] = Array.from({ length: tableCount }).map((_, idx) => {
     const tableNum = idx + 1;
     const uniqueId = `F${selectedFloor}-M${tableNum}`;
+    
+    // Si hay una orden activa en esta mesa, está ocupada
+    const hasActiveOrder = !!getOrderByTable(uniqueId);
+    const estado = hasActiveOrder ? "ocupado" : (tableStatusMap[uniqueId] || "disponible");
+
     return {
       id: uniqueId,
-      estado: tableStatusMap[uniqueId] || "disponible",
+      estado: estado,
       floor: selectedFloor,
       reservationName: reservationDetails[uniqueId]?.nombre
     };
@@ -83,14 +92,23 @@ export default function MesasPage() {
   };
 
   const navigate = useNavigate();
+
+  const handleEditOrder = () => {
+    if (!selectedMesaId) return;
+    navigate(`/facturacion?tableId=${selectedMesaId}`);
+  };
+
+  const handleCheckoutTable = () => {
+    if (!selectedMesaId) return;
+    navigate(`/facturacion?tableId=${selectedMesaId}&checkout=true`);
+  };
   const handleSalir = () => {
     navigate("/home");
   };
 
-  const currentOrder: OrderItem[] = [
-    { id: 1, name: "Bacon", size: "personal", price: 35, quantity: 1, timestamp: "22/03/25 11:36", extras: [] },
-    { id: 2, name: "Salami", size: "personal", price: 20, quantity: 1, timestamp: "22/03/25 11:55", extras: [] },
-  ];
+  // Obtener la orden de la mesa seleccionada para el panel lateral
+  const activeOrder = selectedMesaId ? getOrderByTable(selectedMesaId) : null;
+  const currentOrder: CartItemType[] = activeOrder ? activeOrder.items : [];
 
   return (
     <Box sx={{ 
@@ -135,6 +153,8 @@ export default function MesasPage() {
           onSalir={handleSalir} 
           onReservar={handleReservar} 
           isReserved={isReserved}
+          onEditOrder={handleEditOrder}
+          onCheckout={handleCheckoutTable}
         />
       </Box>
 
