@@ -11,6 +11,8 @@ import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { useMesasConfig } from "../hooks/useMesasConfig";
 import { useOrderContext } from "../context/OrderContext";
 import { CartItemType } from "../types/cart";
+import { PaymentMethod, OrderType } from "../types/order.types";
+import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 
 export default function MesasPage() {
 
@@ -29,6 +31,7 @@ export default function MesasPage() {
   
   // Dialog state
   const [isReservationOpen, setIsReservationOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Obtener órdenes activas desde el contexto
   const { getOrderByTable } = useOrderContext();
@@ -99,8 +102,32 @@ export default function MesasPage() {
   };
 
   const handleCheckoutTable = () => {
-    if (!selectedMesaId) return;
-    navigate(`/facturacion?tableId=${selectedMesaId}&checkout=true`);
+    if (!selectedMesaId || !activeOrder) return;
+    setIsPreviewOpen(true);
+  };
+
+  const { finalizeOrder } = useOrderContext();
+
+  const handleFinalConfirm = (
+    paymentMethod: PaymentMethod,
+    splitAmounts?: { efectivo: number; tarjeta: number },
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string
+  ) => {
+    if (!activeOrder) return;
+
+    finalizeOrder(
+      activeOrder.id,
+      paymentMethod,
+      splitAmounts,
+      customerName,
+      orderType,
+      customerAddress
+    );
+    
+    window.print();
+    setIsPreviewOpen(false);
   };
   const handleSalir = () => {
     navigate("/home");
@@ -158,13 +185,25 @@ export default function MesasPage() {
         />
       </Box>
 
-      {/* Modal de Reserva */}
       <ReservationDialog 
         open={isReservationOpen}
         mesaId={selectedMesaId}
         onClose={() => setIsReservationOpen(false)}
         onConfirm={handleConfirmReservation}
       />
+
+      {activeOrder && (
+        <FacturaPreviewDialog
+          open={isPreviewOpen}
+          cart={currentOrder}
+          total={activeOrder.total}
+          onClose={() => setIsPreviewOpen(false)}
+          onConfirm={handleFinalConfirm}
+          title={`Cerrar Cuenta Mesa ${selectedMesaId}`}
+          confirmText="Finalizar y Cobrar"
+          isTableMode={false}
+        />
+      )}
     </Box>
   );
 }
