@@ -9,7 +9,7 @@ export function useCheckout(
   clearCart: () => void,
   navigate?: (path: string) => void
 ) {
-  const { addOrder, updateOrderItems, finalizeOrder } = useOrderContext();
+  const { addOrder, updateOrderItems, finalizeOrder, markAsSentToKitchen } = useOrderContext();
 
   const confirmFactura = useCallback(
     (
@@ -95,5 +95,6 @@ export function useCheckout(
     confirmFactura,
     saveTableOrder,
     finalizeTableOrder,
+    sendToKitchen: markAsSentToKitchen,
   };
 }

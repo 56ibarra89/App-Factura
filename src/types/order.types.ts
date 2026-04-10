@@ -23,4 +23,5 @@ export interface Order {
   paymentMethod?: PaymentMethod;
   splitAmounts?: { efectivo: number; tarjeta: number };
   cashierName?: string;
+  isSentToKitchen?: boolean;
 }

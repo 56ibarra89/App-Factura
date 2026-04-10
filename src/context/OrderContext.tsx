@@ -30,6 +30,8 @@ interface OrderContextProps {
     orderType?: OrderType,
     customerAddress?: string
   ) => void;
+  markAsSentToKitchen: (orderId: string) => void;
+  markAsSentToKitchenByTable: (tableId: string) => void;
 }
 
 const OrderContext = createContext<OrderContextProps | undefined>(undefined);
@@ -86,6 +88,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       paymentMethod: paymentMethod as PaymentMethod,
       splitAmounts,
       cashierName: username || "Sistema",
+      isSentToKitchen: !tableId, // Si no hay mesa (venta directa), va directo a cocina
     };
     setOrders((prev) => [newOrder, ...prev]);
     saveOrderDB(newOrder); // Persistir en IndexedDB
@@ -174,6 +177,40 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const markAsSentToKitchen = (orderId: string) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
+        order.id === orderId ? { ...order, isSentToKitchen: true } : order
+      );
+
+      const modifiedOrder = updatedOrders.find((o) => o.id === orderId);
+      if (modifiedOrder) {
+        saveOrderDB(modifiedOrder);
+      }
+
+      return updatedOrders;
+    });
+  };
+
+  const markAsSentToKitchenByTable = (tableId: string) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
+        (order.tableId === tableId && order.status !== 'paid' && order.status !== 'cancelled') 
+          ? { ...order, isSentToKitchen: true } 
+          : order
+      );
+
+      const modifiedOrder = updatedOrders.find(
+        (o) => o.tableId === tableId && o.status !== 'paid' && o.status !== 'cancelled'
+      );
+      if (modifiedOrder) {
+        saveOrderDB(modifiedOrder);
+      }
+
+      return updatedOrders;
+    });
+  };
+
   return (
     <OrderContext.Provider value={{ 
       orders, 
@@ -184,6 +221,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateOrderItems,
       getOrderByTable,
       finalizeOrder,
+      markAsSentToKitchen,
+      markAsSentToKitchenByTable,
     }}>
       {children}
     </OrderContext.Provider>

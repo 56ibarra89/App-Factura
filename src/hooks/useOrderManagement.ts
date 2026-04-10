@@ -5,7 +5,7 @@ export const useOrderManagement = () => {
   const { orders, updateOrderStatus, removeOrder, clearHistory } = useOrderContext();
 
   const activeOrders = useMemo(() => 
-    orders.filter(o => o.status === 'pending' || o.status === 'preparing' || o.status === 'ready'),
+    orders.filter(o => (o.status === 'pending' || o.status === 'preparing' || o.status === 'ready') && o.isSentToKitchen),
     [orders]
   );
 

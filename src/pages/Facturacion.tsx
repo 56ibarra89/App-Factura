@@ -63,7 +63,7 @@ const Facturacion = () => {
     splitAmounts?: { efectivo: number; tarjeta: number },
     customerName?: string,
     orderType?: OrderType,
-    customerAddress?: string
+    customerAddress?: string,
   ) => {
     if (tableId) {
       if (isCheckoutMode && activeOrder) {
@@ -74,7 +74,7 @@ const Facturacion = () => {
           splitAmounts,
           customerName,
           orderType,
-          customerAddress
+          customerAddress,
         );
         window.print();
       } else {
@@ -88,19 +88,32 @@ const Facturacion = () => {
         splitAmounts,
         customerName,
         orderType,
-        customerAddress
+        customerAddress,
       );
       window.print();
     }
-    
+
     setPreviewOpen(false);
+  };
+
+  const { markAsSentToKitchenByTable } = useOrderContext();
+
+  const handleKitchenDispatch = () => {
+    if (!tableId) return;
+
+    // Primero guardamos el estado actual para no perder nada
+    handleSaveTableOrder(activeOrder?.id, tableId);
+
+    // Luego marcamos la mesa como enviada a cocina
+    markAsSentToKitchenByTable(tableId);
+
+    alert("Pedido enviado a cocina");
   };
 
   const currentProducts = categories[selectedTab]?.items || [];
 
   return (
     <Box display="flex" height="100vh" overflow="hidden">
-
       <CategoryTabs
         categories={categories}
         selectedTab={selectedTab}
@@ -120,6 +133,8 @@ const Facturacion = () => {
         onChangeQuantity={handleChangeQuantity}
         onChangeGiftQuantity={handleChangeGiftQuantity}
         onPreviewClick={() => setPreviewOpen(true)}
+        onSendToKitchen={handleKitchenDispatch}
+        isTableOrder={!!tableId}
       />
 
       {selectedProduct && (
@@ -149,8 +164,22 @@ const Facturacion = () => {
         total={total}
         onClose={() => setPreviewOpen(false)}
         onConfirm={handleFinalConfirm}
-        title={tableId ? (isCheckoutMode ? `Cerrar Cuenta Mesa ${tableId}` : `Pedido Mesa ${tableId}`) : "Resumen de Factura"}
-        confirmText={tableId ? (isCheckoutMode ? "Finalizar y Cobrar" : (activeOrder ? "Actualizar Mesa" : "Abrir Mesa")) : "Confirmar pedido"}
+        title={
+          tableId
+            ? isCheckoutMode
+              ? `Cerrar Cuenta Mesa ${tableId}`
+              : `Pedido Mesa ${tableId}`
+            : "Resumen de Factura"
+        }
+        confirmText={
+          tableId
+            ? isCheckoutMode
+              ? "Finalizar y Cobrar"
+              : activeOrder
+                ? "Actualizar Mesa"
+                : "Abrir Mesa"
+            : "Confirmar pedido"
+        }
         isTableMode={!!tableId && !isCheckoutMode}
       />
     </Box>

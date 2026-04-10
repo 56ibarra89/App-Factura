@@ -37,7 +37,7 @@ export function useCart({ navigate }: UseCartOptions = {}) {
     cancelExtras,
   } = useProductSelection(handleConfirmProduct);
  
-  const { confirmFactura, saveTableOrder, finalizeTableOrder } = useCheckout(cart, clearCart, navigate);
+  const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } = useCheckout(cart, clearCart, navigate);
  
   return {
     // State
@@ -60,6 +60,7 @@ export function useCart({ navigate }: UseCartOptions = {}) {
     handleSaveTableOrder: saveTableOrder,
     handleFinalizeTableOrder: finalizeTableOrder,
     handleSetCart: setCart,
+    handleSendToKitchen: sendToKitchen,
   };
 }
 
