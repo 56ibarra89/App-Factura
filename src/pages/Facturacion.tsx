@@ -76,6 +76,7 @@ const Facturacion = () => {
           orderType,
           customerAddress
         );
+        window.print();
       } else {
         // Solo guardar cambios en la mesa
         handleSaveTableOrder(activeOrder?.id, tableId);
@@ -89,10 +90,8 @@ const Facturacion = () => {
         orderType,
         customerAddress
       );
+      window.print();
     }
-    
-    // Trigger automated print for the invoice summary
-    window.print();
     
     setPreviewOpen(false);
   };

@@ -1,5 +1,4 @@
 import { Grid, Button, alpha } from "@mui/material";
-import PrintIcon from '@mui/icons-material/Print';
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import EditIcon from '@mui/icons-material/Edit';
 import MergeTypeIcon from '@mui/icons-material/MergeType';
@@ -16,7 +15,6 @@ interface Props {
 }
 
 export default function OrderActions({ onSalir, onReservar, isReserved = false, onEditOrder, onCheckout }: Props) {
-  const primaryColor = LOGIN_COLORS.primary;
   const successColor = "#2e7d32";
   const cancelColor = "#d32f2f"; // Red for cancel
 
