@@ -20,6 +20,7 @@ import MiCuenta from "../pages/MiCuenta";
 import Cuentas from "../pages/Cuentas";
 import ConfigurarMesas from "../pages/admin/ConfigurarMesas";
 import AdminCajas from "../pages/admin/AdminCajas";
+import AdminImpuestos from "../pages/admin/AdminImpuestos";
 import { CajaProvider } from "../context/CajaContext";
 
 const PrivateRoute = ({ element }: { element: JSX.Element }) => {
@@ -50,6 +51,7 @@ const AppRoutes = () => (
       <Route path="/cuentas" element={<PrivateRoute element={<Cuentas />} />} />
       <Route path="/admin/mesas" element={<PrivateRoute element={<ConfigurarMesas />} />} />
       <Route path="/admin/cajas" element={<PrivateRoute element={<AdminCajas />} />} />
+      <Route path="/admin/impuestos" element={<PrivateRoute element={<AdminImpuestos />} />} />
     </Routes>
   </CajaProvider>
 );
