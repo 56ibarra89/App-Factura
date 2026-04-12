@@ -12,9 +12,22 @@ interface Props {
   isReserved?: boolean;
   onEditOrder?: () => void;
   onCheckout?: () => void;
+  onUnirMesas?: () => void;
+  onMoverPedido?: () => void;
+  hasActiveOrder?: boolean;
 }
 
-export default function OrderPanel({ order, onSalir, onReservar, isReserved = false, onEditOrder, onCheckout }: Props) {
+export default function OrderPanel({ 
+  order, 
+  onSalir, 
+  onReservar, 
+  isReserved = false, 
+  onEditOrder, 
+  onCheckout,
+  onUnirMesas,
+  onMoverPedido,
+  hasActiveOrder = false
+}: Props) {
   return (
     <Paper
       elevation={0}
@@ -47,6 +60,9 @@ export default function OrderPanel({ order, onSalir, onReservar, isReserved = fa
             isReserved={isReserved} 
             onEditOrder={onEditOrder}
             onCheckout={onCheckout}
+            onUnirMesas={onUnirMesas}
+            onMoverPedido={onMoverPedido}
+            hasActiveOrder={hasActiveOrder}
           />
         </Box>
       </Box>

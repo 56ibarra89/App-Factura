@@ -32,6 +32,8 @@ interface OrderContextProps {
   ) => void;
   markAsSentToKitchen: (orderId: string) => void;
   markAsSentToKitchenByTable: (tableId: string) => void;
+  moveOrder: (sourceTableId: string, destTableId: string) => void;
+  unirMesas: (sourceTableId: string, destTableId: string) => void;
 }
 
 const OrderContext = createContext<OrderContextProps | undefined>(undefined);
@@ -132,7 +134,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // La mesa sigue ocupada aunque esté 'delivered', hasta que esté 'paid'
     return orders.find(
       (o) =>
-        o.tableId === tableId &&
+        (o.tableId === tableId || (o.linkedTables && o.linkedTables.includes(tableId))) &&
         o.status !== "paid" &&
         o.status !== "cancelled"
     );
@@ -211,6 +213,40 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
+  const moveOrder = (sourceTableId: string, destTableId: string) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
+        order.tableId === sourceTableId && order.status !== "paid" && order.status !== "cancelled"
+          ? { ...order, tableId: destTableId }
+          : order
+      );
+      const modifiedOrder = updatedOrders.find((o) => o.tableId === destTableId && o.status !== "paid" && o.status !== "cancelled");
+      if (modifiedOrder) saveOrderDB(modifiedOrder);
+      return updatedOrders;
+    });
+  };
+
+  const unirMesas = (sourceTableId: string, destTableId: string) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) => {
+        // If it's the order with sourceTableId, we add destTableId to linkedTables
+        if (order.tableId === sourceTableId && order.status !== "paid" && order.status !== "cancelled") {
+          const linkedTables = order.linkedTables || [];
+          if (!linkedTables.includes(destTableId)) {
+            return {
+              ...order,
+              linkedTables: [...linkedTables, destTableId]
+            };
+          }
+        }
+        return order;
+      });
+      const modifiedOrder = updatedOrders.find((o) => o.tableId === sourceTableId && o.status !== "paid" && o.status !== "cancelled");
+      if (modifiedOrder) saveOrderDB(modifiedOrder);
+      return updatedOrders;
+    });
+  };
+
   return (
     <OrderContext.Provider value={{ 
       orders, 
@@ -223,6 +259,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       finalizeOrder,
       markAsSentToKitchen,
       markAsSentToKitchenByTable,
+      moveOrder,
+      unirMesas,
     }}>
       {children}
     </OrderContext.Provider>

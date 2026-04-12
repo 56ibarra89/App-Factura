@@ -24,4 +24,5 @@ export interface Order {
   splitAmounts?: { efectivo: number; tarjeta: number };
   cashierName?: string;
   isSentToKitchen?: boolean;
+  linkedTables?: string[];
 }

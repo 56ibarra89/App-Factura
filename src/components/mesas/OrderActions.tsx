@@ -2,6 +2,7 @@ import { Grid, Button, alpha } from "@mui/material";
 import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
 import EditIcon from '@mui/icons-material/Edit';
 import MergeTypeIcon from '@mui/icons-material/MergeType';
+import MoveUpIcon from '@mui/icons-material/MoveUp';
 import EventSeatIcon from '@mui/icons-material/EventSeat';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { LOGIN_COLORS } from "../../theme/loginTheme";
@@ -12,9 +13,21 @@ interface Props {
   isReserved?: boolean;
   onEditOrder?: () => void;
   onCheckout?: () => void;
+  onUnirMesas?: () => void;
+  onMoverPedido?: () => void;
+  hasActiveOrder?: boolean;
 }
 
-export default function OrderActions({ onSalir, onReservar, isReserved = false, onEditOrder, onCheckout }: Props) {
+export default function OrderActions({ 
+  onSalir, 
+  onReservar, 
+  isReserved = false, 
+  onEditOrder, 
+  onCheckout,
+  onUnirMesas,
+  onMoverPedido,
+  hasActiveOrder = false
+}: Props) {
   const successColor = "#2e7d32";
   const cancelColor = "#d32f2f"; // Red for cancel
 
@@ -67,16 +80,18 @@ export default function OrderActions({ onSalir, onReservar, isReserved = false, 
             transition: "all 0.2s"
           }}
           onClick={onCheckout}
+          disabled={!hasActiveOrder}
         >
           Cobrar / Cerrar Mesa
         </Button>
       </Grid>
 
-      <Grid size={12}>
+      <Grid size={6}>
         <Button
           fullWidth
           variant="contained"
           startIcon={<MergeTypeIcon />}
+          onClick={onUnirMesas}
           sx={{
             py: 1.5,
             bgcolor: LOGIN_COLORS.primarySubtle,
@@ -91,7 +106,32 @@ export default function OrderActions({ onSalir, onReservar, isReserved = false, 
             }
           }}
         >
-          Unir Mesa o Mover Pedido
+          Unir Mesa
+        </Button>
+      </Grid>
+
+      <Grid size={6}>
+        <Button
+          fullWidth
+          variant="contained"
+          startIcon={<MoveUpIcon />}
+          onClick={onMoverPedido}
+          disabled={!hasActiveOrder}
+          sx={{
+            py: 1.5,
+            bgcolor: alpha("#ff9800", 0.1),
+            color: "#ed6c02",
+            textTransform: "none",
+            fontWeight: "700",
+            borderRadius: 2.5,
+            boxShadow: "none",
+            "&:hover": { 
+              bgcolor: alpha("#ff9800", 0.2), 
+              boxShadow: "none" 
+            }
+          }}
+        >
+          Mover Pedido
         </Button>
       </Grid>
 

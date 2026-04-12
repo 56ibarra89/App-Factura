@@ -5,6 +5,7 @@ import SectionSidebar from "../components/mesas/SectionSidebar";
 import MesaGrid from "../components/mesas/MesaGrid";
 import OrderPanel from "../components/mesas/OrderPanel";
 import ReservationDialog from "../components/mesas/ReservationDialog";
+import TableSelectDialog from "../components/mesas/TableSelectDialog";
 import { Mesa } from "../types/mesa.types";
 
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
@@ -32,9 +33,11 @@ export default function MesasPage() {
   // Dialog state
   const [isReservationOpen, setIsReservationOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isTableSelectOpen, setIsTableSelectOpen] = useState(false);
+  const [tableSelectMode, setTableSelectMode] = useState<"unir" | "mover" | null>(null);
 
   // Obtener órdenes activas desde el contexto
-  const { getOrderByTable } = useOrderContext();
+  const { getOrderByTable, moveOrder, unirMesas, finalizeOrder } = useOrderContext();
 
   // Generar mesas dinámicamente según la planta seleccionada
   const activeFloorConfig = activeFloors.find(f => f.id === selectedFloor);
@@ -106,7 +109,35 @@ export default function MesasPage() {
     setIsPreviewOpen(true);
   };
 
-  const { finalizeOrder } = useOrderContext();
+  const handleUnirMesas = () => {
+    if (!selectedMesaId || !activeOrder) return;
+    setTableSelectMode("unir");
+    setIsTableSelectOpen(true);
+  };
+
+  const handleMoverPedido = () => {
+    if (!selectedMesaId || !activeOrder) return;
+    setTableSelectMode("mover");
+    setIsTableSelectOpen(true);
+  };
+
+  const handleTableSelectConfirm = (targetTableId: string) => {
+    if (!selectedMesaId) return;
+    if (tableSelectMode === "unir") {
+      unirMesas(selectedMesaId, targetTableId);
+    } else if (tableSelectMode === "mover") {
+      moveOrder(selectedMesaId, targetTableId);
+      setSelectedMesaId(targetTableId);
+    }
+    setIsTableSelectOpen(false);
+  };
+
+  const getAvailableTables = () => {
+    // Only empty/available tables can be selected for "Unir" or "Mover" based on the user's rules
+    return mesas
+      .filter((m) => m.estado === "disponible" && m.id !== selectedMesaId)
+      .map((m) => ({ id: m.id, label: `Planta ${m.floor} - Mesa ${m.id.split('-M')[1]}` }));
+  };
 
   const handleFinalConfirm = (
     paymentMethod: PaymentMethod,
@@ -182,6 +213,9 @@ export default function MesasPage() {
           isReserved={isReserved}
           onEditOrder={handleEditOrder}
           onCheckout={handleCheckoutTable}
+          onUnirMesas={handleUnirMesas}
+          onMoverPedido={handleMoverPedido}
+          hasActiveOrder={!!activeOrder}
         />
       </Box>
 
@@ -190,6 +224,16 @@ export default function MesasPage() {
         mesaId={selectedMesaId}
         onClose={() => setIsReservationOpen(false)}
         onConfirm={handleConfirmReservation}
+      />
+
+      <TableSelectDialog
+        open={isTableSelectOpen}
+        onClose={() => setIsTableSelectOpen(false)}
+        onConfirm={handleTableSelectConfirm}
+        options={getAvailableTables()}
+        title={tableSelectMode === "unir" 
+          ? `Unir Mesa ${selectedMesaId?.split('-M')[1]} con...` 
+          : `Mover Pedido de Mesa ${selectedMesaId?.split('-M')[1]} a...`}
       />
 
       {activeOrder && (
