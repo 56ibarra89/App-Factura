@@ -12,6 +12,8 @@ interface CartProps {
   onChangeQuantity: (index: number, quantity: number) => void;
   onChangeGiftQuantity: (index: number, quantity: number) => void;
   onPreviewClick: () => void;
+  onSendToKitchen?: () => void;
+  isTableOrder?: boolean;
 }
 
 const Cart = ({
@@ -22,6 +24,8 @@ const Cart = ({
   onChangeQuantity,
   onChangeGiftQuantity,
   onPreviewClick,
+  onSendToKitchen,
+  isTableOrder,
 }: CartProps) => {
   return (
     <Box
@@ -76,9 +80,22 @@ const Cart = ({
           fullWidth
           disabled={cartItems.length === 0}
           onClick={onPreviewClick}
+          sx={{ mb: 1 }}
         >
           Vista previa
         </Button>
+
+        {isTableOrder && onSendToKitchen && (
+          <Button
+            variant="contained"
+            color="success"
+            fullWidth
+            disabled={cartItems.length === 0}
+            onClick={onSendToKitchen}
+          >
+            Enviar a Cocina
+          </Button>
+        )}
       </Box>
     </Box>
   );

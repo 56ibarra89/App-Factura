@@ -17,6 +17,7 @@ export function useCart({ navigate }: UseCartOptions = {}) {
     changeQuantity,
     changeGiftQuantity,
     clearCart,
+    setCart,
   } = useCartStore();
 
   const handleConfirmProduct = useCallback(
@@ -35,9 +36,9 @@ export function useCart({ navigate }: UseCartOptions = {}) {
     confirmExtras,
     cancelExtras,
   } = useProductSelection(handleConfirmProduct);
-
-  const { confirmFactura } = useCheckout(cart, clearCart, navigate);
-
+ 
+  const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } = useCheckout(cart, clearCart, navigate);
+ 
   return {
     // State
     cart,
@@ -45,7 +46,7 @@ export function useCart({ navigate }: UseCartOptions = {}) {
     selectedProduct,
     setSelectedProduct,
     pendingItem,
-
+ 
     // Actions
     handleChangeQuantity: changeQuantity,
     handleChangeGiftQuantity: changeGiftQuantity,
@@ -56,6 +57,10 @@ export function useCart({ navigate }: UseCartOptions = {}) {
     handleCancelExtras: cancelExtras,
     handleRemoveItem: removeItem,
     handleConfirmFactura: confirmFactura,
+    handleSaveTableOrder: saveTableOrder,
+    handleFinalizeTableOrder: finalizeTableOrder,
+    handleSetCart: setCart,
+    handleSendToKitchen: sendToKitchen,
   };
 }
 

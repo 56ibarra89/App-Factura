@@ -34,6 +34,7 @@ interface FacturaPreviewDialogProps {
   ) => void;
   title?: string;
   confirmText?: string;
+  isTableMode?: boolean;
 }
 
 export default function FacturaPreviewDialog({
@@ -44,6 +45,7 @@ export default function FacturaPreviewDialog({
   onConfirm,
   title = "Resumen de Factura",
   confirmText = "Confirmar pedido",
+  isTableMode = false,
 }: FacturaPreviewDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("EFECTIVO");
   const [splitAmounts, setSplitAmounts] = useState({ efectivo: 0, tarjeta: 0 });
@@ -125,71 +127,74 @@ export default function FacturaPreviewDialog({
           </Typography>
         </Box>
 
-        <Divider sx={{ my: 2 }} />
+        {!isTableMode && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <Box sx={{ mb: 3 }}>
+              <TextField
+                fullWidth
+                label="Nombre del Cliente"
+                placeholder="Ej: Juan Pérez"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                sx={{ mb: 2 }}
+                variant="outlined"
+                size="small"
+              />
 
-        <Box sx={{ mb: 3 }}>
-          <TextField
-            fullWidth
-            label="Nombre del Cliente"
-            placeholder="Ej: Juan Pérez"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            sx={{ mb: 2 }}
-            variant="outlined"
-            size="small"
-          />
+              <Typography
+                variant="subtitle2"
+                gutterBottom
+                fontWeight="bold"
+                sx={{ color: "text.secondary", mb: 1 }}
+              >
+                Tipo de Pedido:
+              </Typography>
+              <ToggleButtonGroup
+                value={orderType}
+                exclusive
+                onChange={(_, val) => val && setOrderType(val)}
+                fullWidth
+                color="error"
+                size="small"
+              >
+                <ToggleButton value="local" sx={{ py: 1 }}>
+                  LOCAL
+                </ToggleButton>
+                <ToggleButton value="llevar" sx={{ py: 1 }}>
+                  LLEVAR
+                </ToggleButton>
+                <ToggleButton value="delivery" sx={{ py: 1 }}>
+                  DELIVERY
+                </ToggleButton>
+              </ToggleButtonGroup>
 
-          <Typography
-            variant="subtitle2"
-            gutterBottom
-            fontWeight="bold"
-            sx={{ color: "text.secondary", mb: 1 }}
-          >
-            Tipo de Pedido:
-          </Typography>
-          <ToggleButtonGroup
-            value={orderType}
-            exclusive
-            onChange={(_, val) => val && setOrderType(val)}
-            fullWidth
-            color="error"
-            size="small"
-          >
-            <ToggleButton value="local" sx={{ py: 1 }}>
-              LOCAL
-            </ToggleButton>
-            <ToggleButton value="llevar" sx={{ py: 1 }}>
-              LLEVAR
-            </ToggleButton>
-            <ToggleButton value="delivery" sx={{ py: 1 }}>
-              DELIVERY
-            </ToggleButton>
-          </ToggleButtonGroup>
+              {orderType === "delivery" && (
+                <TextField
+                  fullWidth
+                  label="Dirección de Entrega"
+                  placeholder="Ej: barrio la libertad, calle el sol, casa numero 5"
+                  value={customerAddress}
+                  onChange={(e) => setCustomerAddress(e.target.value)}
+                  sx={{ mt: 2 }}
+                  variant="outlined"
+                  size="small"
+                  required
+                />
+              )}
+            </Box>
 
-          {orderType === "delivery" && (
-            <TextField
-              fullWidth
-              label="Dirección de Entrega"
-              placeholder="Ej: barrio la libertad, calle el sol, casa numero 5"
-              value={customerAddress}
-              onChange={(e) => setCustomerAddress(e.target.value)}
-              sx={{ mt: 2 }}
-              variant="outlined"
-              size="small"
-              required
+            <Divider sx={{ my: 2 }} />
+
+            <PaymentMethodSelector
+              total={total}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              splitAmounts={splitAmounts}
+              setSplitAmounts={setSplitAmounts}
             />
-          )}
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        <PaymentMethodSelector
-          total={total}
-          paymentMethod={paymentMethod}
-          setPaymentMethod={setPaymentMethod}
-          splitAmounts={splitAmounts}
-          setSplitAmounts={setSplitAmounts}
-        />
+          </>
+        )}
       </DialogContent>
       <DialogActions sx={{ "@media print": { display: "none" } }}>
         <Button

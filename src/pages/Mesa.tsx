@@ -5,11 +5,15 @@ import SectionSidebar from "../components/mesas/SectionSidebar";
 import MesaGrid from "../components/mesas/MesaGrid";
 import OrderPanel from "../components/mesas/OrderPanel";
 import ReservationDialog from "../components/mesas/ReservationDialog";
+import TableSelectDialog from "../components/mesas/TableSelectDialog";
 import { Mesa } from "../types/mesa.types";
-import { OrderItem } from "../types/order.types";
 
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { useMesasConfig } from "../hooks/useMesasConfig";
+import { useOrderContext } from "../context/OrderContext";
+import { CartItemType } from "../types/cart";
+import { PaymentMethod, OrderType } from "../types/order.types";
+import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 
 export default function MesasPage() {
 
@@ -28,6 +32,12 @@ export default function MesasPage() {
   
   // Dialog state
   const [isReservationOpen, setIsReservationOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isTableSelectOpen, setIsTableSelectOpen] = useState(false);
+  const [tableSelectMode, setTableSelectMode] = useState<"unir" | "mover" | null>(null);
+
+  // Obtener órdenes activas desde el contexto
+  const { getOrderByTable, moveOrder, unirMesas, finalizeOrder } = useOrderContext();
 
   // Generar mesas dinámicamente según la planta seleccionada
   const activeFloorConfig = activeFloors.find(f => f.id === selectedFloor);
@@ -36,9 +46,14 @@ export default function MesasPage() {
   const mesas: Mesa[] = Array.from({ length: tableCount }).map((_, idx) => {
     const tableNum = idx + 1;
     const uniqueId = `F${selectedFloor}-M${tableNum}`;
+    
+    // Si hay una orden activa en esta mesa, está ocupada
+    const hasActiveOrder = !!getOrderByTable(uniqueId);
+    const estado = hasActiveOrder ? "ocupado" : (tableStatusMap[uniqueId] || "disponible");
+
     return {
       id: uniqueId,
-      estado: tableStatusMap[uniqueId] || "disponible",
+      estado: estado,
       floor: selectedFloor,
       reservationName: reservationDetails[uniqueId]?.nombre
     };
@@ -83,14 +98,75 @@ export default function MesasPage() {
   };
 
   const navigate = useNavigate();
+
+  const handleEditOrder = () => {
+    if (!selectedMesaId) return;
+    navigate(`/facturacion?tableId=${selectedMesaId}`);
+  };
+
+  const handleCheckoutTable = () => {
+    if (!selectedMesaId || !activeOrder) return;
+    setIsPreviewOpen(true);
+  };
+
+  const handleUnirMesas = () => {
+    if (!selectedMesaId || !activeOrder) return;
+    setTableSelectMode("unir");
+    setIsTableSelectOpen(true);
+  };
+
+  const handleMoverPedido = () => {
+    if (!selectedMesaId || !activeOrder) return;
+    setTableSelectMode("mover");
+    setIsTableSelectOpen(true);
+  };
+
+  const handleTableSelectConfirm = (targetTableId: string) => {
+    if (!selectedMesaId) return;
+    if (tableSelectMode === "unir") {
+      unirMesas(selectedMesaId, targetTableId);
+    } else if (tableSelectMode === "mover") {
+      moveOrder(selectedMesaId, targetTableId);
+      setSelectedMesaId(targetTableId);
+    }
+    setIsTableSelectOpen(false);
+  };
+
+  const getAvailableTables = () => {
+    // Only empty/available tables can be selected for "Unir" or "Mover" based on the user's rules
+    return mesas
+      .filter((m) => m.estado === "disponible" && m.id !== selectedMesaId)
+      .map((m) => ({ id: m.id, label: `Planta ${m.floor} - Mesa ${m.id.split('-M')[1]}` }));
+  };
+
+  const handleFinalConfirm = (
+    paymentMethod: PaymentMethod,
+    splitAmounts?: { efectivo: number; tarjeta: number },
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string
+  ) => {
+    if (!activeOrder) return;
+
+    finalizeOrder(
+      activeOrder.id,
+      paymentMethod,
+      splitAmounts,
+      customerName,
+      orderType,
+      customerAddress
+    );
+    
+    window.print();
+    setIsPreviewOpen(false);
+  };
   const handleSalir = () => {
     navigate("/home");
   };
 
-  const currentOrder: OrderItem[] = [
-    { id: 1, name: "Bacon", size: "personal", price: 35, quantity: 1, timestamp: "22/03/25 11:36", extras: [] },
-    { id: 2, name: "Salami", size: "personal", price: 20, quantity: 1, timestamp: "22/03/25 11:55", extras: [] },
-  ];
+  // Obtener la orden de la mesa seleccionada para el panel lateral
+  const activeOrder = selectedMesaId ? getOrderByTable(selectedMesaId) : null;
+  const currentOrder: CartItemType[] = activeOrder ? activeOrder.items : [];
 
   return (
     <Box sx={{ 
@@ -135,16 +211,43 @@ export default function MesasPage() {
           onSalir={handleSalir} 
           onReservar={handleReservar} 
           isReserved={isReserved}
+          onEditOrder={handleEditOrder}
+          onCheckout={handleCheckoutTable}
+          onUnirMesas={handleUnirMesas}
+          onMoverPedido={handleMoverPedido}
+          hasActiveOrder={!!activeOrder}
         />
       </Box>
 
-      {/* Modal de Reserva */}
       <ReservationDialog 
         open={isReservationOpen}
         mesaId={selectedMesaId}
         onClose={() => setIsReservationOpen(false)}
         onConfirm={handleConfirmReservation}
       />
+
+      <TableSelectDialog
+        open={isTableSelectOpen}
+        onClose={() => setIsTableSelectOpen(false)}
+        onConfirm={handleTableSelectConfirm}
+        options={getAvailableTables()}
+        title={tableSelectMode === "unir" 
+          ? `Unir Mesa ${selectedMesaId?.split('-M')[1]} con...` 
+          : `Mover Pedido de Mesa ${selectedMesaId?.split('-M')[1]} a...`}
+      />
+
+      {activeOrder && (
+        <FacturaPreviewDialog
+          open={isPreviewOpen}
+          cart={currentOrder}
+          total={activeOrder.total}
+          onClose={() => setIsPreviewOpen(false)}
+          onConfirm={handleFinalConfirm}
+          title={`Cerrar Cuenta Mesa ${selectedMesaId}`}
+          confirmText="Finalizar y Cobrar"
+          isTableMode={false}
+        />
+      )}
     </Box>
   );
 }

@@ -1,10 +1,10 @@
 import { Box } from "@mui/material";
-import { OrderItem } from "../../types/order.types";
+import { CartItemType } from "../../types/cart";
 import OrderItemRow from "./OrderItemRow";
 
 
 interface Props {
-  order: OrderItem[];
+  order: CartItemType[];
 }
 
 export default function OrderList({ order }: Props) {
@@ -16,8 +16,8 @@ export default function OrderList({ order }: Props) {
         p: 2,
       }}
     >
-      {order.map((item) => (
-        <OrderItemRow key={item.id} item={item} />
+      {order.map((item, index) => (
+        <OrderItemRow key={index} item={item} />
       ))}
     </Box>
   );

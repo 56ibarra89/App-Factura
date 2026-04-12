@@ -20,6 +20,20 @@ interface OrderContextProps {
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   removeOrder: (orderId: string) => void;
   clearHistory: () => void;
+  updateOrderItems: (orderId: string, items: CartItemType[], total: number) => void;
+  getOrderByTable: (tableId: string) => Order | undefined;
+  finalizeOrder: (
+    orderId: string,
+    paymentMethod: PaymentMethod,
+    splitAmounts?: { efectivo: number; tarjeta: number },
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string
+  ) => void;
+  markAsSentToKitchen: (orderId: string) => void;
+  markAsSentToKitchenByTable: (tableId: string) => void;
+  moveOrder: (sourceTableId: string, destTableId: string) => void;
+  unirMesas: (sourceTableId: string, destTableId: string) => void;
 }
 
 const OrderContext = createContext<OrderContextProps | undefined>(undefined);
@@ -40,7 +54,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .map((o: Order) => ({ ...o, timestamp: new Date(o.timestamp) }))
         .filter((o: Order) => {
           const isToday = o.timestamp.toDateString() === now.toDateString();
-          const isActive = o.status !== 'delivered' && o.status !== 'cancelled';
+          const isActive = o.status !== "paid" && o.status !== "cancelled";
           return isToday || isActive;
         });
     } catch (e) {
@@ -76,6 +90,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       paymentMethod: paymentMethod as PaymentMethod,
       splitAmounts,
       cashierName: username || "Sistema",
+      isSentToKitchen: !tableId, // Si no hay mesa (venta directa), va directo a cocina
     };
     setOrders((prev) => [newOrder, ...prev]);
     saveOrderDB(newOrder); // Persistir en IndexedDB
@@ -100,13 +115,153 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setOrders(prev => prev.filter(order => order.id !== orderId));
   };
 
+  const updateOrderItems = (orderId: string, items: CartItemType[], total: number) => {
+    setOrders(prev => {
+      const updatedOrders = prev.map(order => 
+        order.id === orderId ? { ...order, items: [...items], total } : order
+      );
+      
+      const modifiedOrder = updatedOrders.find(o => o.id === orderId);
+      if (modifiedOrder) {
+        saveOrderDB(modifiedOrder); // Actualizar en IndexedDB
+      }
+
+      return updatedOrders;
+    });
+  };
+
+  const getOrderByTable = (tableId: string) => {
+    // La mesa sigue ocupada aunque esté 'delivered', hasta que esté 'paid'
+    return orders.find(
+      (o) =>
+        (o.tableId === tableId || (o.linkedTables && o.linkedTables.includes(tableId))) &&
+        o.status !== "paid" &&
+        o.status !== "cancelled"
+    );
+  };
+
   const clearHistory = () => {
-    // Mantiene solo órdenes que NO están entregadas ni canceladas
-    setOrders(prev => prev.filter(order => order.status !== 'delivered' && order.status !== 'cancelled'));
+    // Mantiene solo órdenes que NO están pagadas ni canceladas
+    setOrders((prev) =>
+      prev.filter((order) => order.status !== "paid" && order.status !== "cancelled")
+    );
+  };
+
+  const finalizeOrder = (
+    orderId: string,
+    paymentMethod: PaymentMethod,
+    splitAmounts?: { efectivo: number; tarjeta: number },
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string
+  ) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
+        order.id === orderId
+          ? {
+              ...order,
+              status: "paid" as OrderStatus,
+              paymentMethod,
+              splitAmounts,
+              customerName: customerName || order.customerName,
+              orderType: orderType || order.orderType,
+              customerAddress: customerAddress || order.customerAddress,
+            }
+          : order
+      );
+
+      const modifiedOrder = updatedOrders.find((o) => o.id === orderId);
+      if (modifiedOrder) {
+        saveOrderDB(modifiedOrder); // Actualizar en IndexedDB
+      }
+
+      return updatedOrders;
+    });
+  };
+
+  const markAsSentToKitchen = (orderId: string) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
+        order.id === orderId ? { ...order, isSentToKitchen: true } : order
+      );
+
+      const modifiedOrder = updatedOrders.find((o) => o.id === orderId);
+      if (modifiedOrder) {
+        saveOrderDB(modifiedOrder);
+      }
+
+      return updatedOrders;
+    });
+  };
+
+  const markAsSentToKitchenByTable = (tableId: string) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
+        (order.tableId === tableId && order.status !== 'paid' && order.status !== 'cancelled') 
+          ? { ...order, isSentToKitchen: true } 
+          : order
+      );
+
+      const modifiedOrder = updatedOrders.find(
+        (o) => o.tableId === tableId && o.status !== 'paid' && o.status !== 'cancelled'
+      );
+      if (modifiedOrder) {
+        saveOrderDB(modifiedOrder);
+      }
+
+      return updatedOrders;
+    });
+  };
+
+  const moveOrder = (sourceTableId: string, destTableId: string) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
+        order.tableId === sourceTableId && order.status !== "paid" && order.status !== "cancelled"
+          ? { ...order, tableId: destTableId }
+          : order
+      );
+      const modifiedOrder = updatedOrders.find((o) => o.tableId === destTableId && o.status !== "paid" && o.status !== "cancelled");
+      if (modifiedOrder) saveOrderDB(modifiedOrder);
+      return updatedOrders;
+    });
+  };
+
+  const unirMesas = (sourceTableId: string, destTableId: string) => {
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) => {
+        // If it's the order with sourceTableId, we add destTableId to linkedTables
+        if (order.tableId === sourceTableId && order.status !== "paid" && order.status !== "cancelled") {
+          const linkedTables = order.linkedTables || [];
+          if (!linkedTables.includes(destTableId)) {
+            return {
+              ...order,
+              linkedTables: [...linkedTables, destTableId]
+            };
+          }
+        }
+        return order;
+      });
+      const modifiedOrder = updatedOrders.find((o) => o.tableId === sourceTableId && o.status !== "paid" && o.status !== "cancelled");
+      if (modifiedOrder) saveOrderDB(modifiedOrder);
+      return updatedOrders;
+    });
   };
 
   return (
-    <OrderContext.Provider value={{ orders, addOrder, updateOrderStatus, removeOrder, clearHistory }}>
+    <OrderContext.Provider value={{ 
+      orders, 
+      addOrder, 
+      updateOrderStatus, 
+      removeOrder, 
+      clearHistory,
+      updateOrderItems,
+      getOrderByTable,
+      finalizeOrder,
+      markAsSentToKitchen,
+      markAsSentToKitchenByTable,
+      moveOrder,
+      unirMesas,
+    }}>
       {children}
     </OrderContext.Provider>
   );

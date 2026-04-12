@@ -2,8 +2,11 @@
 import Box from "@mui/material/Box";
 import { useState } from "react";
 import { useProductContext } from "../context/ProductContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import useCart from "../hooks/useCart";
+import { useOrderContext } from "../context/OrderContext";
+import { useEffect } from "react";
+import { PaymentMethod, OrderType } from "../types/order.types";
 
 // Componentes de UI
 import CategoryTabs from "../components/CategoryTabs";
@@ -37,13 +40,80 @@ const Facturacion = () => {
     handleRemoveItem,
     handleConfirmFactura,
     handleChangeGiftQuantity,
+    handleSaveTableOrder,
+    handleFinalizeTableOrder,
+    handleSetCart,
   } = useCart({ navigate });
+
+  const [searchParams] = useSearchParams();
+  const tableId = searchParams.get("tableId");
+  const isCheckoutMode = searchParams.get("checkout") === "true";
+  const { getOrderByTable } = useOrderContext();
+  const activeOrder = tableId ? getOrderByTable(tableId) : null;
+
+  // Cargar carrito si es una mesa con orden activa
+  useEffect(() => {
+    if (activeOrder && cart.length === 0) {
+      handleSetCart(activeOrder.items);
+    }
+  }, [activeOrder, cart.length, handleSetCart]);
+
+  const handleFinalConfirm = (
+    paymentMethod: PaymentMethod,
+    splitAmounts?: { efectivo: number; tarjeta: number },
+    customerName?: string,
+    orderType?: OrderType,
+    customerAddress?: string,
+  ) => {
+    if (tableId) {
+      if (isCheckoutMode && activeOrder) {
+        // Finalizar y cobrar mesa
+        handleFinalizeTableOrder(
+          activeOrder.id,
+          paymentMethod,
+          splitAmounts,
+          customerName,
+          orderType,
+          customerAddress,
+        );
+        window.print();
+      } else {
+        // Solo guardar cambios en la mesa
+        handleSaveTableOrder(activeOrder?.id, tableId);
+      }
+    } else {
+      // Venta directa normal
+      handleConfirmFactura(
+        paymentMethod,
+        splitAmounts,
+        customerName,
+        orderType,
+        customerAddress,
+      );
+      window.print();
+    }
+
+    setPreviewOpen(false);
+  };
+
+  const { markAsSentToKitchenByTable } = useOrderContext();
+
+  const handleKitchenDispatch = () => {
+    if (!tableId) return;
+
+    // Primero guardamos el estado actual para no perder nada
+    handleSaveTableOrder(activeOrder?.id, tableId);
+
+    // Luego marcamos la mesa como enviada a cocina
+    markAsSentToKitchenByTable(tableId);
+
+    alert("Pedido enviado a cocina");
+  };
 
   const currentProducts = categories[selectedTab]?.items || [];
 
   return (
     <Box display="flex" height="100vh" overflow="hidden">
-
       <CategoryTabs
         categories={categories}
         selectedTab={selectedTab}
@@ -63,6 +133,8 @@ const Facturacion = () => {
         onChangeQuantity={handleChangeQuantity}
         onChangeGiftQuantity={handleChangeGiftQuantity}
         onPreviewClick={() => setPreviewOpen(true)}
+        onSendToKitchen={handleKitchenDispatch}
+        isTableOrder={!!tableId}
       />
 
       {selectedProduct && (
@@ -91,7 +163,24 @@ const Facturacion = () => {
         cart={cart}
         total={total}
         onClose={() => setPreviewOpen(false)}
-        onConfirm={handleConfirmFactura}
+        onConfirm={handleFinalConfirm}
+        title={
+          tableId
+            ? isCheckoutMode
+              ? `Cerrar Cuenta Mesa ${tableId}`
+              : `Pedido Mesa ${tableId}`
+            : "Resumen de Factura"
+        }
+        confirmText={
+          tableId
+            ? isCheckoutMode
+              ? "Finalizar y Cobrar"
+              : activeOrder
+                ? "Actualizar Mesa"
+                : "Abrir Mesa"
+            : "Confirmar pedido"
+        }
+        isTableMode={!!tableId && !isCheckoutMode}
       />
     </Box>
   );
