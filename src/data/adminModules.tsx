@@ -72,7 +72,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Cajas y Turnos",
     description: "Define perfiles de turnos laborales y fija los montos de apertura en efectivo predeterminados.",
     icon: <AccessTimeIcon fontSize="large" />,
-    action: () => console.log("Ir a Turnos"),
+    path: "/admin/cajas",
   },
   {
     id: "mesas",
