@@ -84,7 +84,7 @@ export const getMenuItems = (): MenuItem[] => [
   {
     label: "Administración Caja",
     icon: <AdminPanelSettingsIcon fontSize="large" color="primary" />,
-    route: "/admincaja",
+    route: "/admin/cajas",
   },
   {
     label: "Cuentas",
