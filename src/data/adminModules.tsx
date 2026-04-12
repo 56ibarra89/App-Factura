@@ -46,7 +46,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Impuestos",
     description: "Gestiona múltiples tasas impositivas y reglas especiales aisladas de la configuración habitual.",
     icon: <PercentIcon fontSize="large" />,
-    action: () => console.log("Ir a Impuestos"),
+    path: "/admin/impuestos",
   },
 
   // --- OPERATIVA ---
