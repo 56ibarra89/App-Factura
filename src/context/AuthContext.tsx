@@ -2,10 +2,12 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { authService as defaultAuthService } from "../services/authService";
 import { IAuthService } from "../types/authService";
+import { UserRole } from "../types/user";
 
 interface AuthContextType {
   isLoggedIn: boolean;
   username: string;
+  role: UserRole | null;
   loading: boolean;
   error: string;
   login: (username: string, password: string, remember?: boolean) => Promise<boolean>;
@@ -34,6 +36,9 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
   const [username, setUsername] = useState(
     () => sessionStorage.getItem("username") || ""
   );
+  const [role, setRole] = useState<UserRole | null>(
+    () => (sessionStorage.getItem("role") as UserRole | null)
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -44,14 +49,16 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
       setLoading(true);
       setError("");
       try {
-        const isValid = await service.login(user, password);
+        const result = await service.login(user, password);
         setLoading(false);
 
-        if (isValid) {
+        if (result.success && result.role) {
           sessionStorage.setItem("loggedIn", "true");
           sessionStorage.setItem("username", user);
+          sessionStorage.setItem("role", result.role);
           setIsLoggedIn(true);
           setUsername(user);
+          setRole(result.role);
 
           if (remember) {
             localStorage.setItem("rememberedUser", user);
@@ -63,7 +70,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
 
         setError("Credenciales incorrectas");
         return false;
-      } catch (err) {
+      } catch {
         setLoading(false);
         setError("Error en la autenticación");
         return false;
@@ -76,20 +83,22 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
     setLoading(true);
     setError("");
     try {
-      const user = await service.loginWithPin(pin);
+      const result = await service.loginWithPin(pin);
       setLoading(false);
 
-      if (user) {
+      if (result) {
         sessionStorage.setItem("loggedIn", "true");
-        sessionStorage.setItem("username", user);
+        sessionStorage.setItem("username", result.username);
+        sessionStorage.setItem("role", result.role);
         setIsLoggedIn(true);
-        setUsername(user);
+        setUsername(result.username);
+        setRole(result.role);
         return true;
       }
 
       setError("PIN incorrecto");
       return false;
-    } catch (err) {
+    } catch {
       setLoading(false);
       setError("Error en la autenticación");
       return false;
@@ -100,6 +109,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
     sessionStorage.clear();
     setIsLoggedIn(false);
     setUsername("");
+    setRole(null);
   }, []);
 
   return (
@@ -107,6 +117,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
       value={{
         isLoggedIn,
         username,
+        role,
         loading,
         error,
         login,
