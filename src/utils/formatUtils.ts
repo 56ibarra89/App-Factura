@@ -6,8 +6,8 @@ export const formatItemName = (name: string, size?: string) => {
 };
 
 export const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('es-MX', {
+  return new Intl.NumberFormat('es-NI', {
     style: 'currency',
-    currency: 'MXN',
+    currency: 'NIO',
   }).format(value);
 };
