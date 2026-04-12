@@ -23,6 +23,7 @@ import ConfigurarMesas from "../pages/admin/ConfigurarMesas";
 import AdminCajas from "../pages/admin/AdminCajas";
 import AdminImpuestos from "../pages/admin/AdminImpuestos";
 import AdminConfiguracion from "../pages/admin/AdminConfiguracion";
+import AdminEmpresa from "../pages/admin/AdminEmpresa";
 import { CajaProvider } from "../context/CajaContext";
 
 const AppRoutes = () => (
@@ -55,6 +56,7 @@ const AppRoutes = () => (
       <Route path="/admin/cajas"          element={<AdminRoute element={<AdminCajas />} />} />
       <Route path="/admin/impuestos"      element={<AdminRoute element={<AdminImpuestos />} />} />
       <Route path="/admin/configuracion"  element={<AdminRoute element={<AdminConfiguracion />} />} />
+      <Route path="/admin/empresa"        element={<AdminRoute element={<AdminEmpresa />} />} />
     </Routes>
   </CajaProvider>
 );

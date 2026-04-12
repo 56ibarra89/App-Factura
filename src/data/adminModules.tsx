@@ -30,7 +30,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Datos de la Empresa",
     description: "Personaliza el logotipo, nombre de negocio, dirección, teléfono y pie de página de los tickets.",
     icon: <BusinessIcon fontSize="large" />,
-    action: () => console.log("Ir a Empresa"),
+    path: "/admin/empresa",
   },
   {
     id: "configuracion",
