@@ -38,7 +38,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Control General",
     description: "Ajusta las preferencias del sistema, moneda local y comportamiento en la apertura de caja.",
     icon: <SettingsIcon fontSize="large" />,
-    action: () => console.log("Ir a Configuración"),
+    path: "/admin/configuracion",
   },
   {
     id: "impuestos",
