@@ -101,9 +101,7 @@ export const LoginForm = ({
         <Button
           size="small"
           color="primary"
-          onClick={() =>
-            alert("Función de recuperar contraseña no implementada")
-          }
+          onClick={() => navigate("/forgot-password")}
           sx={{ fontWeight: 600 }}
         >
           ¿Olvidaste tu contraseña?

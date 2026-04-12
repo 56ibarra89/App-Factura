@@ -5,6 +5,7 @@ import Facturacion from "../pages/Facturacion";
 import Producto from "../pages/Producto";
 import ChangePassword from "../pages/ChangePassword";
 import Login from "../pages/Login";
+import ForgotPassword from "../pages/ForgotPassword";
 import LoginPin from "../pages/LoginPin";
 import AbrirCajaPage from "../pages/AbrirCajaPage";
 import Mesa from "../pages/Mesa";
@@ -29,6 +30,7 @@ const AppRoutes = () => (
   <CajaProvider>
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/login-pin" element={<LoginPin />} />
       <Route path="/home" element={<PrivateRoute element={<Home />} />} />
       <Route path="/producto" element={<PrivateRoute element={<Producto />} />} />

@@ -4,11 +4,11 @@ import { LOGIN_GRADIENTS, LOGIN_SHADOWS } from "../../theme/loginTheme";
 
 interface AuthLayoutProps {
   children: ReactNode;
-  error: string;
-  onClearError: () => void;
+  error?: string;
+  onClearError?: () => void;
 }
 
-export const AuthLayout = ({ children, error, onClearError }: AuthLayoutProps) => (
+export const AuthLayout = ({ children, error = "", onClearError = () => {} }: AuthLayoutProps) => (
   <Box
     sx={{
       minHeight: "100vh",
