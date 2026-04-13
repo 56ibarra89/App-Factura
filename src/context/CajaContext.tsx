@@ -30,12 +30,23 @@ export const CajaProvider = ({ children }: { children: ReactNode }) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        console.log("[CajaContext] Restaurando turno desde localStorage:", parsed);
+        
+        // Verificación de integridad de fecha
+        const startTime = new Date(parsed.startTime);
+        if (isNaN(startTime.getTime())) {
+          console.error("[CajaContext] Fecha de inicio inválida detectada. Limpiando localStorage.");
+          localStorage.removeItem("currentShift");
+          return null;
+        }
+
         return {
           ...parsed,
-          startTime: new Date(parsed.startTime),
+          startTime,
           endTime: parsed.endTime ? new Date(parsed.endTime) : undefined
         };
       } catch (e) {
+        console.error("[CajaContext] Error al parsear shift guardado:", e);
         return null;
       }
     }
@@ -44,8 +55,10 @@ export const CajaProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (currentShift) {
+      console.log("[CajaContext] Guardando turno en localStorage:", currentShift.id);
       localStorage.setItem("currentShift", JSON.stringify(currentShift));
     } else {
+      console.log("[CajaContext] Limpiando turno de localStorage");
       localStorage.removeItem("currentShift");
     }
   }, [currentShift]);
@@ -53,6 +66,7 @@ export const CajaProvider = ({ children }: { children: ReactNode }) => {
   const calculateCurrentShiftSales = useCallback((): ShiftSales => {
     if (!currentShift) return { cash: 0, card: 0, app: 0, total: 0 };
 
+    console.log("[CajaContext] Calculando ventas para el turno actual de:", currentShift.cashierName);
     // Solo órdenes 'delivered' (pagadas) del cajero actual desde que abrió turno
     const shiftOrders = orders.filter(o =>
       o.status === 'delivered' &&
@@ -64,6 +78,7 @@ export const CajaProvider = ({ children }: { children: ReactNode }) => {
   }, [currentShift, orders]);
 
   const abrirCaja = useCallback((amount: number) => {
+    console.log("[CajaContext] Intentando abrir caja con monto:", amount);
     const newShift: Shift = {
       id: `SHIFT-${Date.now()}`,
       cashierName: username || "Sistema",
@@ -72,6 +87,8 @@ export const CajaProvider = ({ children }: { children: ReactNode }) => {
       totalSales: { cash: 0, card: 0, app: 0, total: 0 },
       status: 'open',
     };
+    
+    console.log("[CajaContext] Nuevo turno creado:", newShift);
     setCurrentShift(newShift);
   }, [username]);
 

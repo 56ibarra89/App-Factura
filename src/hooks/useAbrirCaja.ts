@@ -10,7 +10,9 @@ export function useAbrirCaja() {
   const canSubmit = Number(amount) > 0;
 
   const handleSubmit = () => {
+    console.log("[useAbrirCaja] Ejecutando handleSubmit con monto:", amount);
     abrirCaja(Number(amount));
+    console.log("[useAbrirCaja] Navegando a /home...");
     navigate("/home");
   };
 
