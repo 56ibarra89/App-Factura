@@ -40,7 +40,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
       // Verificamos el PIN con el servicio
       const user = await authService.loginWithPin(pin);
       
-      if (user === "admin") {
+      if (user && (user.role === "admin" || user.username === "admin")) {
         setPin("");
         onSuccess();
       } else if (user) {
