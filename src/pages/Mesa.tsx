@@ -10,72 +10,78 @@ import { Mesa } from "../types/mesa.types";
 
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { useMesasConfig } from "../hooks/useMesasConfig";
+import { useTableReservations } from "../hooks/useTableReservations";
 import { useOrderContext } from "../context/OrderContext";
 import { CartItemType } from "../types/cart";
 import { PaymentMethod, OrderType } from "../types/order.types";
 import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 
 export default function MesasPage() {
-
   const { floorsConfig } = useMesasConfig();
-  
+  const { tableStatusMap, reservationDetails, reserveTable, releaseTable } =
+    useTableReservations();
+
   // Filtrar plantas que tengan mesas asignadas, si no hay ninguna, mostrar la de por defecto para evitar errores.
-  const activeFloors = floorsConfig.filter(f => f.tableCount > 0);
-  const floors = activeFloors.length > 0 ? activeFloors.map(f => f.name) : ["Primera Planta"];
-  
-  // Guardaríamos el estado de las mesas en backend/localStorage, mock por ahora
-  const [tableStatusMap, setTableStatusMap] = useState<Record<string, "disponible" | "reservado" | "ocupado">>({});
-  const [reservationDetails, setReservationDetails] = useState<Record<string, { nombre: string; monto: number }>>({});
-  
+  const activeFloors = floorsConfig.filter((f) => f.tableCount > 0);
+  const floors =
+    activeFloors.length > 0
+      ? activeFloors.map((f) => f.name)
+      : ["Primera Planta"];
+
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [selectedMesaId, setSelectedMesaId] = useState<string | null>(null);
-  
+
   // Dialog state
   const [isReservationOpen, setIsReservationOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isTableSelectOpen, setIsTableSelectOpen] = useState(false);
-  const [tableSelectMode, setTableSelectMode] = useState<"unir" | "mover" | null>(null);
+  const [tableSelectMode, setTableSelectMode] = useState<
+    "unir" | "mover" | null
+  >(null);
 
   // Obtener órdenes activas desde el contexto
-  const { getOrderByTable, moveOrder, unirMesas, finalizeOrder } = useOrderContext();
+  const { getOrderByTable, moveOrder, unirMesas, finalizeOrder } =
+    useOrderContext();
 
   // Generar mesas dinámicamente según la planta seleccionada
-  const activeFloorConfig = activeFloors.find(f => f.id === selectedFloor);
+  const activeFloorConfig = activeFloors.find((f) => f.id === selectedFloor);
   const tableCount = activeFloorConfig ? activeFloorConfig.tableCount : 0;
-  
+
   const mesas: Mesa[] = Array.from({ length: tableCount }).map((_, idx) => {
     const tableNum = idx + 1;
     const uniqueId = `F${selectedFloor}-M${tableNum}`;
-    
+
     // Si hay una orden activa en esta mesa, está ocupada
     const hasActiveOrder = !!getOrderByTable(uniqueId);
-    const estado = hasActiveOrder ? "ocupado" : (tableStatusMap[uniqueId] || "disponible");
+    const estado = hasActiveOrder
+      ? "ocupado"
+      : tableStatusMap[uniqueId] || "disponible";
 
     return {
       id: uniqueId,
       estado: estado,
       floor: selectedFloor,
-      reservationName: reservationDetails[uniqueId]?.nombre
+      reservationName: reservationDetails[uniqueId]?.nombre,
     };
   });
 
-  const selectedMesaStatus = selectedMesaId ? tableStatusMap[selectedMesaId] || "disponible" : null;
+  const selectedMesaStatus = selectedMesaId
+    ? tableStatusMap[selectedMesaId] || "disponible"
+    : null;
   const isReserved = selectedMesaStatus === "reservado";
 
   const handleReservar = () => {
     if (!selectedMesaId) return;
-    
+
+    // Si la mesa ya está ocupada por una orden, no permitir reservar (Regla de negocio)
+    if (getOrderByTable(selectedMesaId)) {
+      console.warn("No se puede reservar una mesa con pedido activo.");
+      return;
+    }
+
     if (isReserved) {
-      // Liberar mesa
-      setTableStatusMap(prev => ({
-        ...prev,
-        [selectedMesaId]: "disponible"
-      }));
-      setReservationDetails(prev => {
-        const next = { ...prev };
-        delete next[selectedMesaId];
-        return next;
-      });
+      // Liberar mesa usando el hook
+      releaseTable(selectedMesaId);
     } else {
       setIsReservationOpen(true);
     }
@@ -83,17 +89,8 @@ export default function MesasPage() {
 
   const handleConfirmReservation = (nombre: string, monto: number) => {
     if (!selectedMesaId) return;
-    
-    setTableStatusMap(prev => ({
-      ...prev,
-      [selectedMesaId]: "reservado"
-    }));
-    
-    setReservationDetails(prev => ({
-      ...prev,
-      [selectedMesaId]: { nombre, monto }
-    }));
-    
+
+    reserveTable(selectedMesaId, { nombre, monto });
     setIsReservationOpen(false);
   };
 
@@ -101,6 +98,11 @@ export default function MesasPage() {
 
   const handleEditOrder = () => {
     if (!selectedMesaId) return;
+
+    if (isReserved) {
+      releaseTable(selectedMesaId);
+    }
+
     navigate(`/facturacion?tableId=${selectedMesaId}`);
   };
 
@@ -136,7 +138,10 @@ export default function MesasPage() {
     // Only empty/available tables can be selected for "Unir" or "Mover" based on the user's rules
     return mesas
       .filter((m) => m.estado === "disponible" && m.id !== selectedMesaId)
-      .map((m) => ({ id: m.id, label: `Planta ${m.floor} - Mesa ${m.id.split('-M')[1]}` }));
+      .map((m) => ({
+        id: m.id,
+        label: `Planta ${m.floor} - Mesa ${m.id.split("-M")[1]}`,
+      }));
   };
 
   const handleFinalConfirm = (
@@ -144,7 +149,7 @@ export default function MesasPage() {
     splitAmounts?: { efectivo: number; tarjeta: number },
     customerName?: string,
     orderType?: OrderType,
-    customerAddress?: string
+    customerAddress?: string,
   ) => {
     if (!activeOrder) return;
 
@@ -154,9 +159,9 @@ export default function MesasPage() {
       splitAmounts,
       customerName,
       orderType,
-      customerAddress
+      customerAddress,
     );
-    
+
     window.print();
     setIsPreviewOpen(false);
   };
@@ -169,15 +174,16 @@ export default function MesasPage() {
   const currentOrder: CartItemType[] = activeOrder ? activeOrder.items : [];
 
   return (
-    <Box sx={{ 
-      display: "flex", 
-      height: "100vh", 
-      background: LOGIN_GRADIENTS.pageBackground, 
-      p: 2.5, 
-      gap: 2.5, 
-      boxSizing: "border-box" 
-    }}>
-
+    <Box
+      sx={{
+        display: "flex",
+        height: "100vh",
+        background: LOGIN_GRADIENTS.pageBackground,
+        p: 2.5,
+        gap: 2.5,
+        boxSizing: "border-box",
+      }}
+    >
       {/* Sidebar with branding style */}
       <Box sx={{ width: 260, flexShrink: 0 }}>
         <SectionSidebar
@@ -188,14 +194,16 @@ export default function MesasPage() {
       </Box>
 
       {/* Main Grid Area */}
-      <Box sx={{ 
-        flexGrow: 1, 
-        bgcolor: "white", 
-        borderRadius: 5, 
-        boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
-        overflowY: "auto",
-        border: "1px solid rgba(0,0,0,0.05)"
-      }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          bgcolor: "white",
+          borderRadius: 5,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
+          overflowY: "auto",
+          border: "1px solid rgba(0,0,0,0.05)",
+        }}
+      >
         <MesaGrid
           mesas={mesas}
           selectedFloor={selectedFloor}
@@ -206,10 +214,10 @@ export default function MesasPage() {
 
       {/* Right side Order Panel */}
       <Box sx={{ width: 400, flexShrink: 0 }}>
-        <OrderPanel 
-          order={currentOrder} 
-          onSalir={handleSalir} 
-          onReservar={handleReservar} 
+        <OrderPanel
+          order={currentOrder}
+          onSalir={handleSalir}
+          onReservar={handleReservar}
           isReserved={isReserved}
           onEditOrder={handleEditOrder}
           onCheckout={handleCheckoutTable}
@@ -219,7 +227,7 @@ export default function MesasPage() {
         />
       </Box>
 
-      <ReservationDialog 
+      <ReservationDialog
         open={isReservationOpen}
         mesaId={selectedMesaId}
         onClose={() => setIsReservationOpen(false)}
@@ -231,9 +239,11 @@ export default function MesasPage() {
         onClose={() => setIsTableSelectOpen(false)}
         onConfirm={handleTableSelectConfirm}
         options={getAvailableTables()}
-        title={tableSelectMode === "unir" 
-          ? `Unir Mesa ${selectedMesaId?.split('-M')[1]} con...` 
-          : `Mover Pedido de Mesa ${selectedMesaId?.split('-M')[1]} a...`}
+        title={
+          tableSelectMode === "unir"
+            ? `Unir Mesa ${selectedMesaId?.split("-M")[1]} con...`
+            : `Mover Pedido de Mesa ${selectedMesaId?.split("-M")[1]} a...`
+        }
       />
 
       {activeOrder && (

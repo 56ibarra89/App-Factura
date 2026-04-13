@@ -153,9 +153,14 @@ export default function OrderActions({
               boxShadow: `0 6px 16px ${alpha(isReserved ? cancelColor : successColor, 0.4)}`,
               transform: "translateY(-2px)"
             },
-            transition: "all 0.2s"
+            transition: "all 0.2s",
+            "&.Mui-disabled": {
+              bgcolor: "grey.200",
+              color: "grey.500"
+            }
           }}
           onClick={onReservar}
+          disabled={hasActiveOrder && !isReserved}
         >
           {isReserved ? "Liberar Mesa" : "Reservar"}
         </Button>

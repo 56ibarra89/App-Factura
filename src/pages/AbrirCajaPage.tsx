@@ -4,8 +4,17 @@ import { BrandingPanel } from "../components/auth/BrandingPanel";
 import { AbrirCajaForm } from "../components/AbrirCajaForm";
 import { useAbrirCaja } from "../hooks/useAbrirCaja";
 
+import { useEffect } from "react";
+import { useCaja } from "../context/CajaContext";
+import Alert from "@mui/material/Alert";
+
 export default function AbrirCajaPage() {
+  const { currentShift } = useCaja();
   const { amount, setAmount, canSubmit, handleSubmit, handleCancel } = useAbrirCaja();
+
+  useEffect(() => {
+    console.log("[AbrirCajaPage] Montado. Estado actual de la caja:", currentShift ? "ABIERTA" : "CERRADA");
+  }, [currentShift]);
 
   return (
     <AuthLayout error="" onClearError={() => {}}>
@@ -37,6 +46,13 @@ export default function AbrirCajaPage() {
         </Typography>
 
         <Divider sx={{ mb: 4 }} />
+
+        {currentShift && (
+          <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
+            Ya existe un turno abierto para <strong>{currentShift.cashierName}</strong>. 
+            No es necesario abrir una nueva caja.
+          </Alert>
+        )}
 
         <AbrirCajaForm
           amount={amount}
