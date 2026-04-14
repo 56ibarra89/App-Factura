@@ -54,7 +54,7 @@ export const ForgotPasswordForm = () => {
           },
           transition: "all 0.2s ease-in-out",
         }}
-        onClick={() => alert("Función de recuperación no implementada todavía")}
+        onClick={() => console.log("Función de recuperación no implementada todavía")}
       >
         Enviar Instrucciones
       </Button>

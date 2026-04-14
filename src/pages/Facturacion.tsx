@@ -7,6 +7,7 @@ import useCart from "../hooks/useCart";
 import { useOrderContext } from "../context/OrderContext";
 import { useEffect } from "react";
 import { PaymentMethod, OrderType } from "../types/order.types";
+import { Snackbar, Alert } from "@mui/material";
 
 // Componentes de UI
 import CategoryTabs from "../components/CategoryTabs";
@@ -17,11 +18,14 @@ import Cart from "../components/Cart";
 import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 import SelectSizeDialog from "../components/SelectSizeDialog";
 import ExtrasDialog from "../components/ExtrasDialog";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const Facturacion = () => {
   const { categories } = useProductContext();
   const [selectedTab, setSelectedTab] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [isKitchenConfirmOpen, setIsKitchenConfirmOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -100,6 +104,11 @@ const Facturacion = () => {
 
   const handleKitchenDispatch = () => {
     if (!tableId) return;
+    setIsKitchenConfirmOpen(true);
+  };
+
+  const handleConfirmKitchenDispatch = () => {
+    if (!tableId) return;
 
     // Primero guardamos el estado actual para no perder nada
     handleSaveTableOrder(activeOrder?.id, tableId);
@@ -107,7 +116,8 @@ const Facturacion = () => {
     // Luego marcamos la mesa como enviada a cocina
     markAsSentToKitchenByTable(tableId);
 
-    alert("Pedido enviado a cocina");
+    setSnackbarOpen(true);
+    setIsKitchenConfirmOpen(false);
   };
 
   const currentProducts = categories[selectedTab]?.items || [];
@@ -181,6 +191,34 @@ const Facturacion = () => {
             : "Confirmar pedido"
         }
         isTableMode={!!tableId && !isCheckoutMode}
+        disableRestoreFocus
+        disableEnforceFocus
+      />
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="success"
+          variant="filled"
+          sx={{ width: "100%", borderRadius: 3, fontWeight: "bold" }}
+        >
+          Pedido enviado a cocina correctamente
+        </Alert>
+      </Snackbar>
+
+      <ConfirmDialog
+        open={isKitchenConfirmOpen}
+        title="Enviar a Cocina"
+        message="¿Estás seguro de que quieres enviar este pedido a cocina? Asegúrate de que todos los productos sean correctos."
+        onClose={() => setIsKitchenConfirmOpen(false)}
+        onConfirm={handleConfirmKitchenDispatch}
+        disableRestoreFocus
+        disableEnforceFocus
       />
     </Box>
   );

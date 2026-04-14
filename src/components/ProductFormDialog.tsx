@@ -18,11 +18,13 @@ const ProductFormDialog = ({
   onClose,
   onSubmit,
   editing,
+  disableRestoreFocus,
 }: {
   open: boolean;
   onClose: () => void;
   onSubmit: (category: string, product: Product, oldName?: string) => void;
   editing: null | { product: Product; category: string };
+  disableRestoreFocus?: boolean;
 }) => {
   const {
     form,
@@ -38,7 +40,13 @@ const ProductFormDialog = ({
   } = useProductForm({ editing, onSubmit, open });
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      fullWidth 
+      maxWidth="sm"
+      disableRestoreFocus={disableRestoreFocus}
+    >
       <DialogTitle>
         {editing ? "Editar producto" : "Agregar producto"}
       </DialogTitle>

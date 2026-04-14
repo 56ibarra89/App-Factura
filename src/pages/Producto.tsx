@@ -1,15 +1,17 @@
 import { Box, Button, Paper, Stack } from "@mui/material";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useProductContext } from "../context/ProductContext";
 import { Product } from "../types/product";
 import { useNavigate } from "react-router-dom";
 import ProductsTable from "../components/ProductsTable";
 import ProductFormDialog from "../components/ProductFormDialog";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 
 const Producto = () => {
   const { categories, addProduct, updateProduct, deleteProduct } = useProductContext();
   const navigate = useNavigate();
+  const addButtonRef = useRef<HTMLButtonElement>(null);
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<null | {
@@ -17,22 +19,43 @@ const Producto = () => {
     category: string;
   }>(null);
 
+  // Estados para el diálogo de confirmación de eliminación
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    name: string;
+    category: string;
+  }>({
+    open: false,
+    name: "",
+    category: "",
+  });
+
   const handleAdd = () => {
-    (document.activeElement as HTMLElement)?.blur();
     setEditing(null);
     setShowForm(true);
   };
 
   const handleEdit = (product: Product, category: string) => {
-    (document.activeElement as HTMLElement)?.blur();
     setEditing({ product, category });
     setShowForm(true);
   };
 
-  const handleDelete = (name: string, category: string) => {
-    if (confirm(`¿Eliminar "${name}" de la categoría ${category}?`)) {
-      deleteProduct(category, name);
-    }
+  const handleDeleteClick = (name: string, category: string) => {
+    setDeleteConfirm({
+      open: true,
+      name,
+      category,
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    deleteProduct(deleteConfirm.category, deleteConfirm.name);
+    setDeleteConfirm({ ...deleteConfirm, open: false });
+    
+    // Asegurar que el foco regrese a un elemento estable después de borrar
+    setTimeout(() => {
+      addButtonRef.current?.focus();
+    }, 100);
   };
 
   const handleSubmit = (category: string, newProduct: Product, oldName?: string) => {
@@ -43,6 +66,11 @@ const Producto = () => {
     }
     setShowForm(false);
     setEditing(null);
+    
+    // Devolver el foco al botón de agregar para consistencia
+    setTimeout(() => {
+      addButtonRef.current?.focus();
+    }, 100);
   };
 
   return (
@@ -52,12 +80,16 @@ const Producto = () => {
           <ProductsTable
             categories={categories}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            onDelete={handleDeleteClick}
           />
         </Paper>
 
         <Stack direction="row" justifyContent="flex-end" spacing={2}>
-          <Button variant="contained" onClick={handleAdd}>
+          <Button 
+            ref={addButtonRef}
+            variant="contained" 
+            onClick={handleAdd}
+          >
             Agregar Producto
           </Button>
 
@@ -72,9 +104,20 @@ const Producto = () => {
         onClose={() => setShowForm(false)}
         onSubmit={handleSubmit}
         editing={editing}
+        disableRestoreFocus
+      />
+
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        title="Confirmar eliminación"
+        message={`¿Estás seguro de que deseas eliminar "${deleteConfirm.name}" de la categoría "${deleteConfirm.category}"?`}
+        onClose={() => setDeleteConfirm({ ...deleteConfirm, open: false })}
+        onConfirm={handleConfirmDelete}
+        disableRestoreFocus
+        disableEnforceFocus
       />
     </>
   );
 };
 
-export default Producto;
+export default Producto;

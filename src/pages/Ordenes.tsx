@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
@@ -11,6 +12,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import PageHeader from "../components/PageHeader";
 import OrderGrid from "../components/ordenes/OrderGrid";
 import OrderEmptyState from "../components/ordenes/OrderEmptyState";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 // Hooks & Theme
 import { useOrderManagement } from "../hooks/useOrderManagement";
@@ -26,6 +28,12 @@ const Ordenes = () => {
   } = useOrderManagement();
   
   const navigate = useNavigate();
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+
+  const handleClearHistory = () => {
+    clearHistory();
+    setIsClearConfirmOpen(false);
+  };
 
   return (
     <Box
@@ -50,11 +58,7 @@ const Ordenes = () => {
             <Button 
               variant="outlined" 
               size="small"
-              onClick={() => {
-                if (window.confirm("¿Estás seguro de que quieres limpiar todo el historial de hoy? Esta acción no se puede deshacer.")) {
-                  clearHistory();
-                }
-              }}
+              onClick={() => setIsClearConfirmOpen(true)}
               startIcon={<DeleteIcon />}
               sx={{ 
                 color: LOGIN_COLORS.primary, 
@@ -110,8 +114,19 @@ const Ordenes = () => {
           />
         </>
       )}
+
+      <ConfirmDialog
+        open={isClearConfirmOpen}
+        title="Limpiar Historial"
+        message="¿Estás seguro de que quieres limpiar todo el historial de hoy? Esta acción no se puede deshacer."
+        onClose={() => setIsClearConfirmOpen(false)}
+        onConfirm={handleClearHistory}
+        disableRestoreFocus
+        disableEnforceFocus
+      />
     </Box>
   );
 };
 
 export default Ordenes;
+

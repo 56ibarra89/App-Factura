@@ -26,6 +26,8 @@ interface Props {
   onConfirm: (tableId: string) => void;
   options: TableOption[];
   title: string;
+  disableRestoreFocus?: boolean;
+  disableEnforceFocus?: boolean;
 }
 
 export default function TableSelectDialog({
@@ -34,6 +36,8 @@ export default function TableSelectDialog({
   onConfirm,
   options,
   title,
+  disableRestoreFocus,
+  disableEnforceFocus,
 }: Props) {
   const [selectedTable, setSelectedTable] = useState<string>("");
 
@@ -55,6 +59,8 @@ export default function TableSelectDialog({
       onClose={handleClose} 
       maxWidth="sm" 
       fullWidth
+      disableRestoreFocus={disableRestoreFocus}
+      disableEnforceFocus={disableEnforceFocus}
       PaperProps={{
         sx: {
           borderRadius: 4,
