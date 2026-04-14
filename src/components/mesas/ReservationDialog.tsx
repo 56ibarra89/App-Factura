@@ -100,6 +100,7 @@ export default function ReservationDialog({
         </Box>
       </DialogContent>
 
+
       <DialogActions sx={{ px: 3, pb: 3 }}>
         <Button 
           onClick={handleCancel} 
