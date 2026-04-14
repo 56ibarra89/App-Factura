@@ -34,6 +34,7 @@ const ProductFormDialog = ({
     handleExtraNameChange,
     handleExtraPriceChange,
     handleSubmit,
+    isFormValid,
   } = useProductForm({ editing, onSubmit, open });
 
   return (
@@ -90,10 +91,15 @@ const ProductFormDialog = ({
                   sx={{ mb: 2 }}
                   label={`Precio ${p.size}`}
                   type="number"
+                  inputProps={{ min: 0, step: "0.01" }}
+                  error={p.price !== "" && parseFloat(p.price) <= 0}
+                  helperText={p.price !== "" && parseFloat(p.price) <= 0 ? "El precio debe ser mayor a 0" : ""}
                   value={p.price}
                   onChange={(e) => {
+                    const val = e.target.value;
+                    if (val !== "" && parseFloat(val) < 0) return;
                     const arr = [...form.prices];
-                    arr[i].price = e.target.value;
+                    arr[i].price = val;
                     setForm({ ...form, prices: arr });
                   }}
                 />
@@ -104,10 +110,15 @@ const ProductFormDialog = ({
                 label="Precio"
                 sx={{ mb: 2 }}
                 type="number"
+                inputProps={{ min: 0, step: "0.01" }}
+                error={form.singlePrice !== "" && parseFloat(form.singlePrice) <= 0}
+                helperText={form.singlePrice !== "" && parseFloat(form.singlePrice) <= 0 ? "El precio debe ser mayor a 0" : ""}
                 value={form.singlePrice}
-                onChange={(e) =>
-                  setForm({ ...form, singlePrice: e.target.value })
-                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val !== "" && parseFloat(val) < 0) return;
+                  setForm({ ...form, singlePrice: val });
+                }}
               />
             )}
 
@@ -126,7 +137,7 @@ const ProductFormDialog = ({
           )}
 
           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-            <Button type="submit" variant="contained" fullWidth>
+            <Button type="submit" variant="contained" fullWidth disabled={!isFormValid}>
               {editing ? "Actualizar" : "Guardar"}
             </Button>
             <Button fullWidth variant="outlined" onClick={onClose}>

@@ -51,8 +51,17 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     }
   };
 
+  const isFormValid =
+    form.name.trim() !== "" &&
+    form.category !== "" &&
+    (IS_PIZZA(form.category)
+      ? form.prices.every((p) => p.price !== "" && parseFloat(p.price) > 0)
+      : form.singlePrice !== "" && parseFloat(form.singlePrice) > 0);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid) return;
+
     const newProduct = productMapper.toDomainProduct(form, extras);
     onSubmit(
       form.category,
@@ -74,5 +83,6 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     handleExtraNameChange: changeExtraName,
     handleExtraPriceChange: changeExtraPrice,
     handleSubmit,
+    isFormValid,
   };
 }
