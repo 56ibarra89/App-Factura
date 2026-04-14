@@ -18,11 +18,13 @@ const Producto = () => {
   }>(null);
 
   const handleAdd = () => {
+    (document.activeElement as HTMLElement)?.blur();
     setEditing(null);
     setShowForm(true);
   };
 
   const handleEdit = (product: Product, category: string) => {
+    (document.activeElement as HTMLElement)?.blur();
     setEditing({ product, category });
     setShowForm(true);
   };
