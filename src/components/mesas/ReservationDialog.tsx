@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions, 
   Button, TextField, Typography, Box, InputAdornment 
@@ -11,11 +11,31 @@ interface Props {
   mesaId: string | null;
   onClose: () => void;
   onConfirm: (nombre: string, monto: number) => void;
+  disableRestoreFocus?: boolean;
+  disableEnforceFocus?: boolean;
 }
 
-export default function ReservationDialog({ open, mesaId, onClose, onConfirm }: Props) {
+export default function ReservationDialog({ 
+  open, 
+  mesaId, 
+  onClose, 
+  onConfirm,
+  disableRestoreFocus,
+  disableEnforceFocus
+}: Props) {
   const [nombre, setNombre] = useState("");
   const [monto, setMonto] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Efecto para forzar el foco en el campo de nombre al abrir el diálogo en Electron
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 150); // Un pequeño retraso para permitir que la animación de MUI termine
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const handleConfirm = () => {
     if (!nombre.trim()) return; // Validar que se ingrese un nombre
@@ -38,6 +58,8 @@ export default function ReservationDialog({ open, mesaId, onClose, onConfirm }: 
     <Dialog 
       open={open} 
       onClose={handleCancel}
+      disableRestoreFocus={disableRestoreFocus}
+      disableEnforceFocus={disableEnforceFocus}
       PaperProps={{
         sx: { borderRadius: 4, p: 1, minWidth: 400 }
       }}
@@ -54,7 +76,7 @@ export default function ReservationDialog({ open, mesaId, onClose, onConfirm }: 
 
         <Box display="flex" flexDirection="column" gap={3}>
           <TextField
-            autoFocus
+            inputRef={nameInputRef}
             fullWidth
             label="Nombre del Cliente *"
             variant="outlined"

@@ -35,6 +35,8 @@ interface FacturaPreviewDialogProps {
   title?: string;
   confirmText?: string;
   isTableMode?: boolean;
+  disableRestoreFocus?: boolean;
+  disableEnforceFocus?: boolean;
 }
 
 export default function FacturaPreviewDialog({
@@ -46,6 +48,8 @@ export default function FacturaPreviewDialog({
   title = "Resumen de Factura",
   confirmText = "Confirmar pedido",
   isTableMode = false,
+  disableRestoreFocus = false,
+  disableEnforceFocus = false,
 }: FacturaPreviewDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("EFECTIVO");
   const [splitAmounts, setSplitAmounts] = useState({ efectivo: 0, tarjeta: 0 });
@@ -64,7 +68,14 @@ export default function FacturaPreviewDialog({
   }, [open, total]);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="sm" 
+      fullWidth
+      disableRestoreFocus={disableRestoreFocus}
+      disableEnforceFocus={disableEnforceFocus}
+    >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <List>
