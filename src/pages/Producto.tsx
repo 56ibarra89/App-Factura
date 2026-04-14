@@ -110,10 +110,11 @@ const Producto = () => {
       <ConfirmDialog
         open={deleteConfirm.open}
         title="Confirmar eliminación"
-        description={`¿Estás seguro de que deseas eliminar "${deleteConfirm.name}" de la categoría "${deleteConfirm.category}"?`}
+        message={`¿Estás seguro de que deseas eliminar "${deleteConfirm.name}" de la categoría "${deleteConfirm.category}"?`}
         onClose={() => setDeleteConfirm({ ...deleteConfirm, open: false })}
         onConfirm={handleConfirmDelete}
         disableRestoreFocus
+        disableEnforceFocus
       />
     </>
   );
