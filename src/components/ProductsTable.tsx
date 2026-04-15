@@ -4,6 +4,8 @@ import { Paper, IconButton, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Category, Product } from "../types/product";
+import RoleGuard from "./auth/RoleGuard";
+import React from 'react';
 
 interface ProductsTableProps {
   categories: Category[];
@@ -46,6 +48,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
       width: 150,
       renderCell: (params) => (
         <>
+        <RoleGuard allowedRoles={["admin"]}>
           <IconButton
             color="primary"
             onClick={() => onEdit(params.row.rawProduct, params.row.category)}
@@ -59,6 +62,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
           >
             <DeleteIcon />
           </IconButton>
+        </RoleGuard>
         </>
       ),
     },

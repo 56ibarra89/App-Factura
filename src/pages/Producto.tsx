@@ -6,10 +6,14 @@ import { useNavigate } from "react-router-dom";
 import ProductsTable from "../components/ProductsTable";
 import ProductFormDialog from "../components/ProductFormDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
+import RoleGuard from "../components/auth/RoleGuard";
+import { logService } from "../services/logService";
+import { useAuth } from "../context/AuthContext";
 
 
 const Producto = () => {
   const { categories, addProduct, updateProduct, deleteProduct } = useProductContext();
+  const { username, role } = useAuth();
   const navigate = useNavigate();
   const addButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -50,6 +54,7 @@ const Producto = () => {
 
   const handleConfirmDelete = () => {
     deleteProduct(deleteConfirm.category, deleteConfirm.name);
+    logService.log(username, role, "PRODUCT_DELETE", `Producto "${deleteConfirm.name}" eliminado de la categoría "${deleteConfirm.category}"`);
     setDeleteConfirm({ ...deleteConfirm, open: false });
     
     // Asegurar que el foco regrese a un elemento estable después de borrar
@@ -61,8 +66,10 @@ const Producto = () => {
   const handleSubmit = (category: string, newProduct: Product, oldName?: string) => {
     if (oldName) {
       updateProduct(category, oldName, newProduct);
+      logService.log(username, role, "PRODUCT_UPDATE", `Producto "${oldName}" actualizado en la categoría "${category}"`);
     } else {
       addProduct(category, newProduct);
+      logService.log(username, role, "PRODUCT_CREATE", `Producto "${newProduct.name}" creado en la categoría "${category}"`);
     }
     setShowForm(false);
     setEditing(null);
@@ -85,13 +92,15 @@ const Producto = () => {
         </Paper>
 
         <Stack direction="row" justifyContent="flex-end" spacing={2}>
-          <Button 
-            ref={addButtonRef}
-            variant="contained" 
-            onClick={handleAdd}
-          >
-            Agregar Producto
-          </Button>
+          <RoleGuard allowedRoles={["admin"]}>
+            <Button 
+              ref={addButtonRef}
+              variant="contained" 
+              onClick={handleAdd}
+            >
+              Agregar Producto
+            </Button>
+          </RoleGuard>
 
           <Button variant="outlined" onClick={() => navigate("/home")}>
             Volver al inicio

@@ -2,9 +2,10 @@ import { Order } from "../types/order.types";
 import { Shift } from "../types/shift.types";
 
 const DB_NAME = "AppFacturaDB";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_NAME = "orders";
 const SHIFTS_STORE = "shifts";
+const LOGS_STORE = "logs";
 
 export const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -52,6 +53,13 @@ export const initDB = (): Promise<IDBDatabase> => {
         store.createIndex("cashierName", "cashierName", { unique: false });
         store.createIndex("startTime", "startTime", { unique: false });
         store.createIndex("status", "status", { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains(LOGS_STORE)) {
+        const store = db.createObjectStore(LOGS_STORE, { keyPath: "id", autoIncrement: true });
+        store.createIndex("timestamp", "timestamp", { unique: false });
+        store.createIndex("user", "user", { unique: false });
+        store.createIndex("action", "action", { unique: false });
       }
     };
   });

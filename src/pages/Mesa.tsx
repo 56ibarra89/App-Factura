@@ -12,6 +12,8 @@ import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { useMesasConfig } from "../hooks/useMesasConfig";
 import { useTableReservations } from "../hooks/useTableReservations";
 import { useOrderContext } from "../context/OrderContext";
+import { useAuth } from "../context/AuthContext";
+import { logService } from "../services/logService";
 import { CartItemType } from "../types/cart";
 import { PaymentMethod, OrderType } from "../types/order.types";
 import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
@@ -20,6 +22,7 @@ export default function MesasPage() {
   const { floorsConfig } = useMesasConfig();
   const { tableStatusMap, reservationDetails, reserveTable, releaseTable } =
     useTableReservations();
+  const { username, role } = useAuth();
   
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -93,18 +96,20 @@ export default function MesasPage() {
 
     if (isReserved) {
       releaseTable(selectedMesaId);
+      logService.log(username, role, "CANCEL_RESERVATION", `Reserva cancelada para Mesa ${selectedMesaId.split("-M")[1]}`);
     } else {
       setIsReservationOpen(true);
     }
-  }, [selectedMesaId, getOrderByTable, isReserved, releaseTable]);
+  }, [selectedMesaId, getOrderByTable, isReserved, releaseTable, username, role]);
 
   const handleConfirmReservation = useCallback((nombre: string, monto: number) => {
     if (!selectedMesaId) return;
 
     reserveTable(selectedMesaId, { nombre, monto });
+    logService.log(username, role, "CREATE_RESERVATION", `Nueva reserva para ${nombre} en Mesa ${selectedMesaId.split("-M")[1]} por monto: ${monto}`);
     setIsReservationOpen(false);
     restoreFocus();
-  }, [selectedMesaId, reserveTable, restoreFocus]);
+  }, [selectedMesaId, reserveTable, restoreFocus, username, role]);
 
   const navigate = useNavigate();
 

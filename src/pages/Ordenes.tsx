@@ -13,9 +13,12 @@ import PageHeader from "../components/PageHeader";
 import OrderGrid from "../components/ordenes/OrderGrid";
 import OrderEmptyState from "../components/ordenes/OrderEmptyState";
 import ConfirmDialog from "../components/ConfirmDialog";
+import RoleGuard from "../components/auth/RoleGuard";
 
 // Hooks & Theme
 import { useOrderManagement } from "../hooks/useOrderManagement";
+import { useAuth } from "../context/AuthContext";
+import { logService } from "../services/logService";
 import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../theme/loginTheme";
 
 const Ordenes = () => {
@@ -28,10 +31,12 @@ const Ordenes = () => {
   } = useOrderManagement();
   
   const navigate = useNavigate();
+  const { username, role: userRole } = useAuth();
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
 
   const handleClearHistory = () => {
     clearHistory();
+    logService.log(username, userRole, "CLEAR_HISTORY", "Vaciado manual de todo el historial de órdenes");
     setIsClearConfirmOpen(false);
   };
 
@@ -55,21 +60,23 @@ const Ordenes = () => {
                 {activeOrders.length} activas
               </Typography>
             </Stack>
-            <Button 
-              variant="outlined" 
-              size="small"
-              onClick={() => setIsClearConfirmOpen(true)}
-              startIcon={<DeleteIcon />}
-              sx={{ 
-                color: LOGIN_COLORS.primary, 
-                borderColor: LOGIN_COLORS.primary,
-                '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' },
-                borderRadius: 2,
-                px: 2
-              }}
-            >
-              Limpiar Historial
-            </Button>
+            <RoleGuard allowedRoles={["admin"]}>
+              <Button 
+                variant="outlined" 
+                size="small"
+                onClick={() => setIsClearConfirmOpen(true)}
+                startIcon={<DeleteIcon />}
+                sx={{ 
+                  color: LOGIN_COLORS.primary, 
+                  borderColor: LOGIN_COLORS.primary,
+                  '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' },
+                  borderRadius: 2,
+                  px: 2
+                }}
+              >
+                Limpiar Historial
+              </Button>
+            </RoleGuard>
             <Button 
               variant="contained" 
               size="small"

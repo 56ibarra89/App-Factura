@@ -8,6 +8,8 @@ import { useOrderContext } from "../context/OrderContext";
 import { useEffect } from "react";
 import { PaymentMethod, OrderType } from "../types/order.types";
 import { Snackbar, Alert } from "@mui/material";
+import { useAuth } from "../context/AuthContext";
+import { logService } from "../services/logService";
 
 // Componentes de UI
 import CategoryTabs from "../components/CategoryTabs";
@@ -22,6 +24,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 
 const Facturacion = () => {
   const { categories } = useProductContext();
+  const { username, role } = useAuth();
   const [selectedTab, setSelectedTab] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -115,6 +118,8 @@ const Facturacion = () => {
 
     // Luego marcamos la mesa como enviada a cocina
     markAsSentToKitchenByTable(tableId);
+
+    logService.log(username, role, "KITCHEN_DISPATCH", `Pedido enviado a cocina para Mesa ${tableId.split("-M")[1]}`);
 
     setSnackbarOpen(true);
     setIsKitchenConfirmOpen(false);

@@ -24,6 +24,7 @@ import AdminCajas from "../pages/admin/AdminCajas";
 import AdminImpuestos from "../pages/admin/AdminImpuestos";
 import AdminConfiguracion from "../pages/admin/AdminConfiguracion";
 import AdminEmpresa from "../pages/admin/AdminEmpresa";
+import Bitacora from "../pages/admin/Bitacora";
 import { CajaProvider } from "../context/CajaContext";
 
 const AppRoutes = () => (
@@ -57,6 +58,7 @@ const AppRoutes = () => (
       <Route path="/admin/impuestos"      element={<AdminRoute element={<AdminImpuestos />} />} />
       <Route path="/admin/configuracion"  element={<AdminRoute element={<AdminConfiguracion />} />} />
       <Route path="/admin/empresa"        element={<AdminRoute element={<AdminEmpresa />} />} />
+      <Route path="/admin/bitacora"       element={<AdminRoute element={<Bitacora />} />} />
     </Routes>
   </CajaProvider>
 );
