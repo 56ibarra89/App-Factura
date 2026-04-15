@@ -12,7 +12,10 @@ function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs")
+      preload: path.join(__dirname$1, "preload.mjs"),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false
     }
   });
   win.setMenu(null);

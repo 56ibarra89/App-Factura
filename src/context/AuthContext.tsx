@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useCallback, ReactNode } from "rea
 import { authService as defaultAuthService } from "../services/authService";
 import { IAuthService } from "../types/authService";
 import { UserRole } from "../types/user";
+import { logService } from "../services/logService";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -60,6 +61,9 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           setUsername(user);
           setRole(result.role);
 
+          // Log de auditoría (ISO 27001)
+          logService.log(user, result.role, "LOGIN_PASSWORD", "Inicio de sesión con contraseña");
+
           if (remember) {
             localStorage.setItem("rememberedUser", user);
           } else {
@@ -93,6 +97,10 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         setIsLoggedIn(true);
         setUsername(result.username);
         setRole(result.role);
+
+        // Log de auditoría (ISO 27001)
+        logService.log(result.username, result.role, "LOGIN_PIN", "Inicio de sesión con PIN");
+
         return true;
       }
 
@@ -106,11 +114,16 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
   }, [service]);
 
   const logout = useCallback(() => {
+    // Log antes de limpiar la sesión para tener los datos del usuario
+    if (username) {
+      logService.log(username, role, "LOGOUT", "Cierre de sesión de usuario");
+    }
+
     sessionStorage.clear();
     setIsLoggedIn(false);
     setUsername("");
     setRole(null);
-  }, []);
+  }, [username, role]);
 
   return (
     <AuthContext.Provider

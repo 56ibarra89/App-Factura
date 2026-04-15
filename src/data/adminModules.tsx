@@ -98,7 +98,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Bitácora de Auditoría",
     description: "Revisa el registro de auditoría de arqueos, cancelaciones de factura y movimientos sensibles.",
     icon: <SecurityIcon fontSize="large" />,
-    action: () => console.log("Ir a Auditoría"),
+    path: "/admin/bitacora",
   },
   {
     id: "facturacion_electronica",
