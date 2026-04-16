@@ -4,7 +4,6 @@ import AdminRoute from "./AdminRoute";
 import Home from "../pages/Home";
 import Facturacion from "../pages/Facturacion";
 import Producto from "../pages/Producto";
-import ChangePassword from "../pages/ChangePassword";
 import Login from "../pages/Login";
 import ForgotPassword from "../pages/ForgotPassword";
 import LoginPin from "../pages/LoginPin";
@@ -39,7 +38,7 @@ const AppRoutes = () => (
       <Route path="/home"              element={<PrivateRoute element={<Home />} />} />
       <Route path="/producto"          element={<PrivateRoute element={<Producto />} />} />
       <Route path="/facturacion"       element={<PrivateRoute element={<Facturacion />} />} />
-      <Route path="/clave"             element={<PrivateRoute element={<ChangePassword />} />} />
+
       <Route path="/abrircaja"         element={<PrivateRoute element={<AbrirCajaPage />} />} />
       <Route path="/cerrarcaja"        element={<PrivateRoute element={<CerrarCajaPage />} />} />
       <Route path="/consultar-turnos"  element={<PrivateRoute element={<ConsultarTurnos />} />} />
