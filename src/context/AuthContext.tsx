@@ -118,6 +118,11 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           sessionStorage.setItem("loggedIn", "true");
           sessionStorage.setItem("username", user);
           sessionStorage.setItem("role", result.role);
+          
+          // Reset de intentos
+          sessionStorage.setItem("login_attempts", "0");
+          setLoginAttempts(0);
+
           setIsLoggedIn(true);
           setUsername(user);
           setRole(result.role);
@@ -133,7 +138,22 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           return true;
         }
 
-        setError("Credenciales incorrectas");
+        // Manejo de intentos fallidos
+        const newAttempts = loginAttempts + 1;
+        setLoginAttempts(newAttempts);
+        sessionStorage.setItem("login_attempts", newAttempts.toString());
+
+        if (newAttempts >= 5) {
+          const lockoutUntil = Date.now() + 60000; // 60 segundos
+          sessionStorage.setItem("login_lockout_until", lockoutUntil.toString());
+          setLoginLockoutTime(60);
+          setError("Demasiados intentos. Bloqueado por 60 segundos.");
+          logService.log(user || "unknown", null, "SECURITY_ALERT_LOGIN", "Bloqueo de login clásico activado tras 5 intentos fallidos", "warn");
+        } else {
+          setError(`Credenciales incorrectas. Intentos restantes: ${5 - newAttempts}`);
+          logService.log(user || "unknown", null, "LOGIN_FAILED", `Intento de login fallido (${newAttempts}/5)`, "info");
+        }
+
         return false;
       } catch {
         setLoading(false);
@@ -141,10 +161,17 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         return false;
       }
     },
-    [service]
+    [service, loginAttempts]
   );
 
   const loginWithPin = useCallback(async (pin: string): Promise<boolean> => {
+    // Verificar si el sistema está bloqueado
+    const until = Number(sessionStorage.getItem("pin_lockout_until") || 0);
+    if (until > Date.now()) {
+      setError(`Sistema bloqueado por seguridad.`);
+      return false;
+    }
+
     setLoading(true);
     setError("");
     try {
