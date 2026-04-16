@@ -20,7 +20,8 @@ interface LoginFormProps {
   handleChange: (e: ChangeEvent<HTMLInputElement>) => void;
   handleLogin: () => void;
   setRemember: (value: boolean) => void;
-  togglePasswordVisibility: () => void;
+  togglePasswordVisibility: (value: void) => void;
+  lockoutTime: number;
 }
 
 const inputSx = {
@@ -36,6 +37,7 @@ export const LoginForm = ({
   handleLogin,
   setRemember,
   togglePasswordVisibility,
+  lockoutTime,
 }: LoginFormProps) => {
   const navigate = useNavigate();
 
@@ -53,8 +55,10 @@ export const LoginForm = ({
       <Typography variant="h4" fontWeight="800" color="text.primary" mb={1}>
         Bienvenido
       </Typography>
-      <Typography variant="body1" color="text.secondary" mb={4}>
-        Ingresa tus credenciales para continuar
+      <Typography variant="body1" color="text.secondary" mb={4} sx={{ fontWeight: lockoutTime > 0 ? "bold" : "normal", color: lockoutTime > 0 ? "error.main" : "text.secondary" }}>
+        {lockoutTime > 0 
+          ? `SISTEMA BLOQUEADO: Reintenta en ${lockoutTime}s` 
+          : "Ingresa tus credenciales para continuar"}
       </Typography>
 
       <TextField
@@ -66,6 +70,7 @@ export const LoginForm = ({
         fullWidth
         margin="normal"
         sx={inputSx}
+        disabled={lockoutTime > 0}
       />
 
       <PasswordField
@@ -75,6 +80,7 @@ export const LoginForm = ({
         onChange={handleChange}
         showPassword={showPassword}
         onToggleVisibility={togglePasswordVisibility}
+        disabled={lockoutTime > 0}
       />
 
       {/* Recordarme + Olvidé contraseña */}
@@ -119,15 +125,17 @@ export const LoginForm = ({
           fontSize: "1.05rem",
           fontWeight: 700,
           position: "relative",
-          boxShadow: "0 4px 14px 0 rgba(211, 47, 47, 0.39)",
+          boxShadow: lockoutTime > 0 ? "none" : "0 4px 14px 0 rgba(211, 47, 47, 0.39)",
+          bgcolor: lockoutTime > 0 ? "grey.400" : "primary.main",
           "&:hover": {
-            boxShadow: "0 6px 20px rgba(211, 47, 47, 0.23)",
-            transform: "translateY(-1px)",
+            boxShadow: lockoutTime > 0 ? "none" : "0 6px 20px rgba(211, 47, 47, 0.23)",
+            transform: lockoutTime > 0 ? "none" : "translateY(-1px)",
+            bgcolor: lockoutTime > 0 ? "grey.400" : "primary.dark",
           },
           transition: "all 0.2s ease-in-out",
         }}
         onClick={handleLogin}
-        disabled={loading}
+        disabled={loading || lockoutTime > 0}
       >
         {loading ? (
           <CircularProgress
@@ -135,6 +143,8 @@ export const LoginForm = ({
             color="inherit"
             sx={{ position: "absolute" }}
           />
+        ) : lockoutTime > 0 ? (
+          `Bloqueado (${lockoutTime}s)`
         ) : (
           "Iniciar Sesión"
         )}
