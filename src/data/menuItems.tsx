@@ -6,7 +6,6 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 import LocalAtmIcon from "@mui/icons-material/LocalAtm";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ReceiptIcon from "@mui/icons-material/Receipt";
-import LockResetIcon from "@mui/icons-material/LockReset";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import HistoryIcon from "@mui/icons-material/History";
@@ -61,11 +60,7 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <ReceiptIcon fontSize="large" color="primary" />,
     route: "/consultar-factura",
   },
-  {
-    label: "Reimprimir Factura",
-    icon: <ReceiptIcon fontSize="large" color="secondary" />,
-    route: "/Reimprimir",
-  },
+
   {
     label: "Abrir Caja",
     icon: <LocalAtmIcon fontSize="large" color="success" />,
@@ -101,9 +96,5 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <LocalAtmIcon fontSize="large" color="secondary" />,
     action: () => console.log("Abrir Caja de Dinero"),
   },
-  {
-    label: "Cambiar Clave",
-    icon: <LockResetIcon fontSize="large" color="error" />,
-    route: "/clave",
-  },
+
 ];

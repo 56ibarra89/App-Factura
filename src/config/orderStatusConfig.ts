@@ -6,6 +6,7 @@ export const statusColors: Record<OrderStatus, "default" | "primary" | "secondar
   ready: "success",
   delivered: "default",
   cancelled: "error",
+  paid: "success",
 };
 
 export const statusLabels: Record<OrderStatus, string> = {
@@ -14,4 +15,5 @@ export const statusLabels: Record<OrderStatus, string> = {
   ready: "Listo",
   delivered: "Entregado",
   cancelled: "Cancelado",
+  paid: "Pagado",
 };

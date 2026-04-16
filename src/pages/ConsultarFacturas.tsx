@@ -11,6 +11,8 @@ import OrderViewDialog from "../components/OrderViewDialog";
 import { useOrderHistory } from "../hooks/useOrderHistory";
 import ConsultarFacturasFilters from "../components/consultar-facturas/ConsultarFacturasFilters";
 import ConsultarFacturasTable from "../components/consultar-facturas/ConsultarFacturasTable";
+import PinValidationDialog from "../components/auth/PinValidationDialog";
+import { useAuth } from "../context/AuthContext";
 
 const ConsultarFacturas = () => {
   const navigate = useNavigate();
@@ -27,12 +29,31 @@ const ConsultarFacturas = () => {
     handleSearchClick
   } = useOrderHistory();
 
+  const { role } = useAuth();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
 
   const handlePrint = (order: Order) => {
-    setSelectedOrder(order);
-    setPreviewOpen(true);
+    // Si es admin, mostramos el diálogo de previsualización directamente
+    if (role === "admin") {
+      setSelectedOrder(order);
+      setPreviewOpen(true);
+    } else {
+      // Si no es admin, pedimos autorización por PIN
+      setOrderToPrint(order);
+      setPinDialogOpen(true);
+    }
+  };
+
+  const handlePinSuccess = () => {
+    if (orderToPrint) {
+      setSelectedOrder(orderToPrint);
+      setPreviewOpen(true);
+    }
+    setPinDialogOpen(false);
+    setOrderToPrint(null);
   };
 
   const handleClosePreview = () => {
@@ -105,6 +126,17 @@ const ConsultarFacturas = () => {
           }}
         />
       )}
+
+      {/* Security Dialog for Reprinting */}
+      <PinValidationDialog
+        open={pinDialogOpen}
+        onClose={() => {
+          setPinDialogOpen(false);
+          setOrderToPrint(null);
+        }}
+        onSuccess={handlePinSuccess}
+        title="Autorización de Reimpresión"
+      />
     </Box>
   );
 };
