@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 export const useLoginPin = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, loading, error, loginWithPin, clearError } = useAuth();
+  const { isLoggedIn, loading, error, loginWithPin, clearError, lockoutTime } = useAuth();
 
   const [pin, setPin] = useState<string>("");
   const MAX_PIN_LENGTH = 4;
@@ -49,5 +49,6 @@ export const useLoginPin = () => {
     deleteDigit,
     clearError,
     MAX_PIN_LENGTH,
+    lockoutTime,
   };
 };
