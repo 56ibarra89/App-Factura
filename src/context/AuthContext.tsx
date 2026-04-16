@@ -182,6 +182,11 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         sessionStorage.setItem("loggedIn", "true");
         sessionStorage.setItem("username", result.username);
         sessionStorage.setItem("role", result.role);
+        
+        // Reset de intentos en éxito
+        sessionStorage.setItem("pin_attempts", "0");
+        setAttempts(0);
+
         setIsLoggedIn(true);
         setUsername(result.username);
         setRole(result.role);
@@ -192,14 +197,28 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         return true;
       }
 
-      setError("PIN incorrecto");
+      // Manejo de intentos fallidos (Global)
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      sessionStorage.setItem("pin_attempts", newAttempts.toString());
+
+      if (newAttempts >= 3) {
+        const untilTime = Date.now() + 30000; // 30 segundos
+        sessionStorage.setItem("pin_lockout_until", untilTime.toString());
+        setLockoutTime(30);
+        setError("Demasiados intentos fallidos. Bloqueado por 30 segundos.");
+        logService.log("system", null, "SECURITY_ALERT_PIN", "Bloqueo global de PIN activado tras 3 intentos", "warn");
+      } else {
+        setError(`PIN incorrecto. Intentos restantes: ${3 - newAttempts}`);
+      }
+
       return false;
     } catch {
       setLoading(false);
       setError("Error en la autenticación");
       return false;
     }
-  }, [service]);
+  }, [service, attempts]);
 
   const logout = useCallback(() => {
     // Log antes de limpiar la sesión para tener los datos del usuario
