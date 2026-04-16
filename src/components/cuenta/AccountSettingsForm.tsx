@@ -84,7 +84,7 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
             type="password"
             value={data.nuevaPassword}
             onChange={(e) => onChange("nuevaPassword", e.target.value)}
-            helperText="Déjelo en blanco si no desea cambiarla"
+            helperText="Debe incluir: 8+ caracteres, Mayúscula, Minúscula, Número y Especial (@$!%*?&)"
           />
           <TextField
             fullWidth

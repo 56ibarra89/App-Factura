@@ -12,7 +12,7 @@ export interface AccountData {
 
 export function useAccountSettings() {
   const { username } = useAuth();
-  
+
   const [data, setData] = useState<AccountData>({
     nombreCompleto: "",
     nombreUsuario: username || "",
@@ -32,7 +32,7 @@ export function useAccountSettings() {
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        setData(prev => ({
+        setData((prev) => ({
           ...prev,
           nombreCompleto: parsed.nombreCompleto || "",
           pin: parsed.pin || "",
@@ -42,9 +42,10 @@ export function useAccountSettings() {
       }
     } else {
       // Valores por defecto
-      setData(prev => ({
+      setData((prev) => ({
         ...prev,
-        nombreCompleto: username === "admin" ? "Administrador Principal" : "Usuario Creado",
+        nombreCompleto:
+          username === "admin" ? "Administrador Principal" : "Usuario Creado",
         pin: username === "admin" ? "1234" : "0000",
       }));
     }
@@ -58,10 +59,34 @@ export function useAccountSettings() {
 
   const handleSave = async () => {
     setLoading(true);
-    setError("");
     setSuccess("");
 
+    // Validaciones de Complejidad de Contraseña
+    const validatePassword = (pass: string) => {
+      const requirements = [
+        { regex: /.{8,}/, msg: "mínimo 8 caracteres" },
+        { regex: /[A-Z]/, msg: "al menos una mayúscula" },
+        { regex: /[a-z]/, msg: "al menos una minúscula" },
+        { regex: /[0-9]/, msg: "al menos un número" },
+        { regex: /[@$!%*?&]/, msg: "al menos un carácter especial (@$!%*?&)" },
+      ];
+
+      for (const req of requirements) {
+        if (!req.regex.test(pass)) return req.msg;
+      }
+      return null;
+    };
+
     // Validaciones
+    if (data.nuevaPassword) {
+      const passwordError = validatePassword(data.nuevaPassword);
+      if (passwordError) {
+        setError(`La contraseña no es válida: ${passwordError}`);
+        setLoading(false);
+        return;
+      }
+    }
+
     if (data.nuevaPassword && data.nuevaPassword !== data.confirmarPassword) {
       setError("Las nuevas contraseñas no coinciden");
       setLoading(false);
@@ -87,13 +112,13 @@ export function useAccountSettings() {
     const toSave = {
       nombreCompleto: data.nombreCompleto,
       pin: data.pin,
-      password: data.nuevaPassword || "123456" // Mantener la anterior en la vida real
+      password: data.nuevaPassword || "123456", // Mantener la anterior en la vida real
     };
-    
+
     localStorage.setItem(`account_data_${username}`, JSON.stringify(toSave));
 
     // Limpiar campos de contraseña
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       passwordActual: "",
       nuevaPassword: "",
