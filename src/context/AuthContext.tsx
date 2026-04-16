@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 import { authService as defaultAuthService } from "../services/authService";
 import { IAuthService } from "../types/authService";
 import { UserRole } from "../types/user";
@@ -15,6 +15,9 @@ interface AuthContextType {
   loginWithPin: (pin: string) => Promise<boolean>;
   logout: () => void;
   clearError: () => void;
+  validatePinForAction: (pin: string) => Promise<{ success: boolean; error?: string }>;
+  lockoutTime: number;
+  loginLockoutTime: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,11 +45,69 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // Seguridad Global de PIN (ISO 27001)
+  const [attempts, setAttempts] = useState(() => 
+    Number(sessionStorage.getItem("pin_attempts") || 0)
+  );
+  const [lockoutTime, setLockoutTime] = useState(0);
+
+  // Seguridad Global de Login Clásico (ISO 27001)
+  const [loginAttempts, setLoginAttempts] = useState(() => 
+    Number(sessionStorage.getItem("login_attempts") || 0)
+  );
+  const [loginLockoutTime, setLoginLockoutTime] = useState(0);
+
+  // Efecto para manejar el bloqueo persistente de PIN y Login
+  useEffect(() => {
+    const checkLockouts = () => {
+      const now = Date.now();
+
+      // Sincronización PIN
+      const pinUntil = Number(sessionStorage.getItem("pin_lockout_until") || 0);
+      const pinRemaining = Math.ceil((pinUntil - now) / 1000);
+      if (pinRemaining > 0) {
+        setLockoutTime(pinRemaining);
+      } else {
+        setLockoutTime(0);
+        if (pinUntil > 0) {
+          sessionStorage.removeItem("pin_lockout_until");
+          sessionStorage.setItem("pin_attempts", "0");
+          setAttempts(0);
+        }
+      }
+
+      // Sincronización Login Clásico
+      const loginUntil = Number(sessionStorage.getItem("login_lockout_until") || 0);
+      const loginRemaining = Math.ceil((loginUntil - now) / 1000);
+      if (loginRemaining > 0) {
+        setLoginLockoutTime(loginRemaining);
+      } else {
+        setLoginLockoutTime(0);
+        if (loginUntil > 0) {
+          sessionStorage.removeItem("login_lockout_until");
+          sessionStorage.setItem("login_attempts", "0");
+          setLoginAttempts(0);
+        }
+      }
+    };
+
+    checkLockouts();
+    const timer = setInterval(checkLockouts, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const clearError = useCallback(() => setError(""), []);
 
   const login = useCallback(
     async (user: string, password: string, remember = false): Promise<boolean> => {
+      // Verificar bloqueo comercial
+      const until = Number(sessionStorage.getItem("login_lockout_until") || 0);
+      if (until > Date.now()) {
+        setError("Sistema bloqueado por múltiples intentos fallidos.");
+        return false;
+      }
+
       setLoading(true);
       setError("");
       try {
@@ -137,6 +198,9 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         loginWithPin,
         logout,
         clearError,
+        validatePinForAction,
+        lockoutTime,
+        loginLockoutTime,
       }}
     >
       {children}
