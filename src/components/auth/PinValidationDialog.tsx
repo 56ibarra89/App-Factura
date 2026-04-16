@@ -7,8 +7,9 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { authService } from "../../services/authService";
+import { useAuth } from "../../context/AuthContext";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
+
 
 interface PinValidationDialogProps {
   open: boolean;
@@ -23,6 +24,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
   onSuccess,
   title = "Autorización Requerida"
 }) => {
+  const { validatePinForAction, lockoutTime } = useAuth();
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,16 +39,14 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
     setError("");
     
     try {
-      // Verificamos el PIN con el servicio
-      const user = await authService.loginWithPin(pin);
+      const result = await validatePinForAction(pin);
       
-      if (user && (user.role === "admin" || user.username === "admin")) {
+      if (result.success) {
         setPin("");
         onSuccess();
-      } else if (user) {
-        setError("Este usuario no tiene permisos para realizar esta acción.");
       } else {
-        setError("PIN incorrecto");
+        setPin("");
+        setError(result.error || "Error en la validación");
       }
     } catch (err) {
       setError("Error en la validación");

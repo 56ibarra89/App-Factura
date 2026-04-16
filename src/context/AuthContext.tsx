@@ -232,6 +232,40 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
     setRole(null);
   }, [username, role]);
 
+  const validatePinForAction = useCallback(async (pin: string): Promise<{ success: boolean; error?: string }> => {
+    const until = Number(sessionStorage.getItem("pin_lockout_until") || 0);
+    if (until > Date.now()) return { success: false, error: "Sistema bloqueado por seguridad" };
+
+    try {
+      const result = await service.loginWithPin(pin);
+      
+      if (result && (result.role === "admin" || result.username === "admin")) {
+        // Reset en éxito
+        sessionStorage.setItem("pin_attempts", "0");
+        setAttempts(0);
+        return { success: true };
+      }
+
+      // Fallo de autorización o rol insuficiente
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      sessionStorage.setItem("pin_attempts", newAttempts.toString());
+
+      if (newAttempts >= 3) {
+        const untilTime = Date.now() + 30000;
+        sessionStorage.setItem("pin_lockout_until", untilTime.toString());
+        setLockoutTime(30);
+        logService.log("system", null, "SECURITY_ALERT_PIN", "Bloqueo global de PIN activado tras intento de autorización fallido", "warn");
+        return { success: false, error: "Demasiados intentos fallidos. Bloqueado por 30 segundos." };
+      }
+
+      const errorMsg = result ? "Este usuario no tiene permisos de administrador." : `PIN incorrecto. Intentos restantes: ${3 - newAttempts}`;
+      return { success: false, error: errorMsg };
+    } catch {
+      return { success: false, error: "Error en la validación" };
+    }
+  }, [service, attempts]);
+
   return (
     <AuthContext.Provider
       value={{
