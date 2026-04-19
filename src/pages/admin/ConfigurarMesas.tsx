@@ -7,16 +7,30 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/PageHeader";
 import { useMesasConfig } from "../../hooks/useMesasConfig";
 import { LOGIN_COLORS, LOGIN_GRADIENTS } from "../../theme/loginTheme";
+import { useAuth } from "../../context/AuthContext";
+import { logService } from "../../services/logService";
 
 export default function ConfigurarMesas() {
   const navigate = useNavigate();
+  const { username, role } = useAuth();
   const { floorsConfig, updateFloorTables } = useMesasConfig();
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleUpdate = (floorId: number, val: string) => {
     const count = parseInt(val) || 0;
+    const floor = floorsConfig.find(f => f.id === floorId);
+    
     updateFloorTables(floorId, Math.max(0, count));
     setShowSuccess(true);
+
+    if (floor) {
+      logService.log(
+        username, 
+        role, 
+        "CONFIG_CHANGE", 
+        `Cambio en plano de mesas: Area "${floor.name}" actualizada a ${count} mesas`
+      );
+    }
   };
 
   return (

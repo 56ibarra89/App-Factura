@@ -9,6 +9,7 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useAuth } from "../../context/AuthContext";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
+import { logService } from "../../services/logService";
 
 
 interface PinValidationDialogProps {
@@ -24,7 +25,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
   onSuccess,
   title = "Autorización Requerida"
 }) => {
-  const { validatePinForAction, lockoutTime } = useAuth();
+  const { validatePinForAction, lockoutTime, username, role } = useAuth();
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -47,6 +48,15 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
       } else {
         setPin("");
         setError(result.error || "Error en la validación");
+        
+        // Registrar intento fallido en la bitácora (ISO 27001 A.12.4.3)
+        logService.log(
+          username || "unknown", 
+          role || "unknown", 
+          "FAILED_PIN_ATTEMPT", 
+          `Intento fallido de PIN para la acción: "${title}"`,
+          "error"
+        );
       }
     } catch (err) {
       setError("Error en la validación");
