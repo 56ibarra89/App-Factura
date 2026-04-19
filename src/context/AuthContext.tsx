@@ -33,6 +33,8 @@ interface AuthProviderProps {
   service?: IAuthService;
 }
 
+const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 Minutos
+
 export const AuthProvider = ({ children, service = defaultAuthService }: AuthProviderProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => sessionStorage.getItem("loggedIn") === "true"
@@ -97,6 +99,12 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
     return () => clearInterval(timer);
   }, []);
 
+  const resetInactivityTimer = useCallback(() => {
+    if (!isLoggedIn) return;
+    const now = Date.now();
+    sessionStorage.setItem("lastActivity", now.toString());
+  }, [isLoggedIn]);
+
   const clearError = useCallback(() => setError(""), []);
 
   const login = useCallback(
@@ -126,6 +134,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           setIsLoggedIn(true);
           setUsername(user);
           setRole(result.role);
+          sessionStorage.setItem("lastActivity", Date.now().toString());
 
           // Log de auditoría (ISO 27001)
           logService.log(user, result.role, "LOGIN_PASSWORD", "Inicio de sesión con contraseña");
@@ -190,6 +199,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         setIsLoggedIn(true);
         setUsername(result.username);
         setRole(result.role);
+        sessionStorage.setItem("lastActivity", Date.now().toString());
 
         // Log de auditoría (ISO 27001)
         logService.log(result.username, result.role, "LOGIN_PIN", "Inicio de sesión con PIN");
@@ -231,6 +241,29 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
     setUsername("");
     setRole(null);
   }, [username, role]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const checkInactivity = () => {
+      const last = Number(sessionStorage.getItem("lastActivity") || Date.now());
+      if (Date.now() - last > INACTIVITY_LIMIT) {
+        logService.log(username, role, "SESSION_EXPIRED", "Cierre de sesión automático por inactividad");
+        logout();
+      }
+    };
+
+    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
+    const handleActivity = () => resetInactivityTimer();
+
+    events.forEach(event => window.addEventListener(event, handleActivity));
+    const interval = setInterval(checkInactivity, 30000); // Revisar cada 30s
+
+    return () => {
+      events.forEach(event => window.removeEventListener(event, handleActivity));
+      clearInterval(interval);
+    };
+  }, [isLoggedIn, username, role, logout, resetInactivityTimer]);
 
   const validatePinForAction = useCallback(async (pin: string): Promise<{ success: boolean; error?: string }> => {
     const until = Number(sessionStorage.getItem("pin_lockout_until") || 0);
