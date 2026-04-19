@@ -91,10 +91,5 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <AdminPanelSettingsIcon fontSize="large" color="success" />,
     route: "/admin",
   },
-  {
-    label: "Abrir Caja Dinero",
-    icon: <LocalAtmIcon fontSize="large" color="secondary" />,
-    action: () => console.log("Abrir Caja de Dinero"),
-  },
-
 ];
+

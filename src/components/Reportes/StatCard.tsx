@@ -8,9 +8,10 @@ interface StatCardProps {
   icon?: React.ReactNode;
   subtitle?: string;
   color?: string;
+  masked?: boolean;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, subtitle }) => {
+export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, subtitle, masked }) => {
   return (
     <Card
       sx={{
@@ -33,7 +34,7 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, subtitle
               {title}
             </Typography>
             <Typography variant="h4" fontWeight={800} sx={{ mt: 1, mb: 0.5, color: "text.primary" }}>
-              {value}
+              {masked ? "********" : value}
             </Typography>
             {subtitle && (
               <Typography variant="caption" color="text.secondary">
