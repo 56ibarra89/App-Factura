@@ -30,7 +30,7 @@ export default function MesasPage() {
   const restoreFocus = useCallback(() => {
     setTimeout(() => {
       containerRef.current?.focus();
-    }, 150);
+    }, 300);
   }, []);
 
   // Filtrar plantas que tengan mesas asignadas
