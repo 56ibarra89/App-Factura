@@ -76,7 +76,7 @@ export default function TableSelectDialog({
         justifyContent: 'space-between', 
         alignItems: 'center' 
       }}>
-        <Typography variant="h6" fontWeight="bold" color="text.primary">
+        <Typography component="div" variant="h6" fontWeight="bold" color="text.primary">
           {title}
         </Typography>
         <IconButton
