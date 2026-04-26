@@ -15,6 +15,7 @@ interface PasswordFieldProps {
   /** Si se proporciona, el toggle externo controla la visibilidad */
   showPassword?: boolean;
   onToggleVisibility?: () => void;
+  disabled?: boolean;
 }
 
 export function PasswordField({
@@ -25,6 +26,7 @@ export function PasswordField({
   helperText,
   showPassword: externalShow,
   onToggleVisibility,
+  disabled,
 }: PasswordFieldProps) {
   const [internalShow, setInternalShow] = useState(false);
 
@@ -46,13 +48,18 @@ export function PasswordField({
         input: {
           endAdornment: (
             <InputAdornment position="end">
-              <IconButton onClick={toggleShow} edge="end">
+              <IconButton 
+                onClick={toggleShow} 
+                edge="end"
+                disabled={disabled}
+              >
                 {show ? <VisibilityOff /> : <Visibility />}
               </IconButton>
             </InputAdornment>
           ),
         },
       }}
+      disabled={disabled}
     />
   );
 }

@@ -20,6 +20,8 @@ export interface AdminModuleItem {
   icon: JSX.Element;
   path?: string;
   action?: () => void;
+  /** Si true, la tarjeta se muestra deshabilitada (módulo pendiente de implementar) */
+  disabled?: boolean;
 }
 
 export const adminModules: AdminModuleItem[] = [
@@ -56,7 +58,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Usuarios y Roles",
     description: "Administra el acceso al sistema, crea empleados y asigna permisos específicos por rol.",
     icon: <PeopleIcon fontSize="large" />,
-    action: () => console.log("Ir a Usuarios"),
+    disabled: true,
   },
   {
     id: "promociones",
@@ -64,7 +66,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Promociones",
     description: "Configura reglas automáticas de descuento, horas felices (Happy Hour) o cupones manuales.",
     icon: <LocalOfferIcon fontSize="large" />,
-    action: () => console.log("Ir a Promociones"),
+    disabled: true,
   },
   {
     id: "turnos",
@@ -90,7 +92,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Periféricos",
     description: "Administra impresoras térmicas (Múltiples), gavetas de dinero conectadas o básculas compatibles.",
     icon: <PrintIcon fontSize="large" />,
-    action: () => console.log("Ir a Periféricos"),
+    disabled: true,
   },
   {
     id: "auditoria",
@@ -106,7 +108,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Correlativos Factura",
     description: "Gestiona los números de comprobante, rangos de folio autorizados y secuencias de facturación.",
     icon: <ReceiptLongIcon fontSize="large" />,
-    action: () => console.log("Ir a Correlativos"),
+    disabled: true,
   },
   {
     id: "respaldos",
@@ -114,6 +116,6 @@ export const adminModules: AdminModuleItem[] = [
     title: "Respaldos de Datos",
     description: "Exporta la configuración, menú e histórico. Crea y restaura copias de seguridad totales.",
     icon: <SaveIcon fontSize="large" />,
-    action: () => console.log("Ir a Respaldos"),
+    disabled: true,
   }
 ];

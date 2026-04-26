@@ -29,6 +29,7 @@ const Administracion = () => {
                 description={module.description}
                 icon={module.icon}
                 onClick={() => module.path ? navigate(module.path) : module.action?.()}
+                disabled={module.disabled}
               />
             </Grid>
           ))}

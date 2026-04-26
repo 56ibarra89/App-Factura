@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { UserAccount } from "../types/user";
+import { logService } from "../services/logService";
+import { useAuth } from "../context/AuthContext";
 
 // Simulación de datos iniciales
 const MOCK_INITIAL_USERS: UserAccount[] = [
@@ -52,6 +54,7 @@ const MOCK_INITIAL_USERS: UserAccount[] = [
 ];
 
 export function useAccountManager() {
+  const { username: adminUser, role: adminRole } = useAuth();
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,8 +87,10 @@ export function useAccountManager() {
       let updatedUsers;
       if (exists) {
         updatedUsers = users.map(u => u.id === user.id ? user : u);
+        logService.log(adminUser, adminRole, "USER_UPDATE", `Usuario actualizado: @${user.username} (${user.firstName} ${user.lastName})`);
       } else {
         updatedUsers = [...users, { ...user, createdAt: new Date().toISOString() }];
+        logService.log(adminUser, adminRole, "USER_CREATE", `Nuevo usuario creado: @${user.username} (${user.firstName} ${user.lastName})`);
       }
       saveToStorage(updatedUsers);
       setLoading(false);
@@ -93,16 +98,24 @@ export function useAccountManager() {
   };
 
   const toggleUserStatus = (userId: string) => {
+    const user = users.find(u => u.id === userId);
     const updatedUsers = users.map(u => 
       u.id === userId ? { ...u, isActive: !u.isActive } : u
     );
+    if (user) {
+      logService.log(adminUser, adminRole, "USER_UPDATE_STATUS", `Usuario @${user.username} ${!user.isActive ? "ACTIVADO" : "DESACTIVADO"}`);
+    }
     saveToStorage(updatedUsers);
   };
 
   const deleteUser = (userId: string) => {
     // Evitar eliminar al admin principal
     if (userId === "admin") return;
+    const user = users.find(u => u.id === userId);
     const updatedUsers = users.filter(u => u.id !== userId);
+    if (user) {
+      logService.log(adminUser, adminRole, "USER_DELETE", `Usuario eliminado permanentemente: @${user.username}`);
+    }
     saveToStorage(updatedUsers);
   };
 

@@ -7,8 +7,10 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { authService } from "../../services/authService";
+import { useAuth } from "../../context/AuthContext";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
+import { logService } from "../../services/logService";
+
 
 interface PinValidationDialogProps {
   open: boolean;
@@ -23,6 +25,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
   onSuccess,
   title = "Autorización Requerida"
 }) => {
+  const { validatePinForAction, lockoutTime, username, role } = useAuth();
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,16 +40,23 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
     setError("");
     
     try {
-      // Verificamos el PIN con el servicio
-      const user = await authService.loginWithPin(pin);
+      const result = await validatePinForAction(pin);
       
-      if (user && (user.role === "admin" || user.username === "admin")) {
+      if (result.success) {
         setPin("");
         onSuccess();
-      } else if (user) {
-        setError("Este usuario no tiene permisos para realizar esta acción.");
       } else {
-        setError("PIN incorrecto");
+        setPin("");
+        setError(result.error || "Error en la validación");
+        
+        // Registrar intento fallido en la bitácora (ISO 27001 A.12.4.3)
+        logService.log(
+          username || "unknown", 
+          role || "unknown", 
+          "FAILED_PIN_ATTEMPT", 
+          `Intento fallido de PIN para la acción: "${title}"`,
+          "error"
+        );
       }
     } catch (err) {
       setError("Error en la validación");
@@ -78,12 +88,12 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
                 key={num}
                 variant="outlined"
                 onClick={() => {
-                  if (pin.length < 4) {
+                  if (pin.length < 4 && lockoutTime === 0) {
                     setPin(p => p + num.toString());
                     setError("");
                   }
                 }}
-                disabled={loading}
+                disabled={loading || lockoutTime > 0}
                 sx={{ height: 60, fontSize: 24, borderRadius: 2 }}
               >
                 {num}
@@ -93,7 +103,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
               variant="outlined"
               color="error"
               onClick={() => setPin(p => p.slice(0, -1))}
-              disabled={loading || pin.length === 0}
+              disabled={loading || pin.length === 0 || lockoutTime > 0}
               sx={{ height: 60, borderRadius: 2 }}
             >
               Borrar
@@ -101,12 +111,12 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
             <Button
               variant="outlined"
               onClick={() => {
-                if (pin.length < 4) {
+                if (pin.length < 4 && lockoutTime === 0) {
                   setPin(p => p + "0");
                   setError("");
                 }
               }}
-              disabled={loading}
+              disabled={loading || lockoutTime > 0}
               sx={{ height: 60, fontSize: 24, borderRadius: 2 }}
             >
               0
@@ -115,10 +125,10 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
               variant="contained"
               color="primary"
               onClick={handleValidation}
-              disabled={loading || pin.length === 0}
-              sx={{ height: 60, borderRadius: 2, bgcolor: LOGIN_COLORS.primary }}
+              disabled={loading || pin.length === 0 || lockoutTime > 0}
+              sx={{ height: 60, borderRadius: 2, bgcolor: lockoutTime > 0 ? "grey.400" : LOGIN_COLORS.primary }}
             >
-              {loading ? <CircularProgress size={24} color="inherit" /> : "OK"}
+              {loading ? <CircularProgress size={24} color="inherit" /> : lockoutTime > 0 ? "❌" : "OK"}
             </Button>
           </Box>
 
@@ -140,8 +150,8 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
           </Box>
 
           {error && (
-            <Typography color="error" variant="body2" textAlign="center" mt={1}>
-              {error}
+            <Typography color="error" variant="body2" textAlign="center" mt={1} fontWeight={lockoutTime > 0 ? "bold" : "normal"}>
+              {lockoutTime > 0 ? `BLOQUEADO: Intenta en ${lockoutTime}s` : error}
             </Typography>
           )}
         </Box>

@@ -62,10 +62,23 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     e.preventDefault();
     if (!isFormValid) return;
 
-    const newProduct = productMapper.toDomainProduct(form, extras);
+    // Sanitización proactiva (ISO 27001 A.12.2.1)
+    const sanitize = (text: string, limit: number) => {
+      return text
+        .replace(/<[^>]*>?/gm, "") // Remover etiquetas HTML
+        .substring(0, limit)
+        .trim();
+    };
+
+    const sanitizedProduct = {
+      ...productMapper.toDomainProduct(form, extras),
+      name: sanitize(form.name, 100),
+      description: sanitize(form.description, 300)
+    };
+
     onSubmit(
       form.category,
-      newProduct,
+      sanitizedProduct,
       editing ? editing.product.name : undefined
     );
   };

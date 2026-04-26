@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 export const useLogin = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, loading, error, login, clearError } = useAuth();
+  const { isLoggedIn, loading, error, login, clearError, loginLockoutTime } = useAuth();
 
   const [credentials, setCredentials] = useState({
     username: "",
@@ -55,5 +55,6 @@ export const useLogin = () => {
     setRemember,
     togglePasswordVisibility,
     clearError,
+    loginLockoutTime,
   };
 };

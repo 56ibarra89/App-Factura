@@ -29,7 +29,7 @@ const numpadButtonSx = {
 
 const LoginPin = () => {
   const navigate = useNavigate();
-  const { pin, loading, error, appendDigit, deleteDigit, clearError, MAX_PIN_LENGTH } = useLoginPin();
+  const { pin, loading, error, appendDigit, deleteDigit, clearError, MAX_PIN_LENGTH, lockoutTime } = useLoginPin();
 
   return (
     <AuthLayout error={error} onClearError={clearError}>
@@ -79,7 +79,9 @@ const LoginPin = () => {
           Ingresa tu PIN
         </Typography>
         <Typography variant="body1" color="text.secondary" mb={5} align="center">
-          Para acceder al sistema
+          {lockoutTime > 0 
+            ? `SISTEMA BLOQUEADO: Intenta de nuevo en ${lockoutTime}s` 
+            : "Para acceder al sistema"}
         </Typography>
 
         <PinDots pin={pin} MAX_PIN_LENGTH={MAX_PIN_LENGTH} />
@@ -91,8 +93,16 @@ const LoginPin = () => {
               key={num}
               variant="outlined"
               onClick={() => appendDigit(num.toString())}
-              disabled={loading}
-              sx={numpadButtonSx}
+              disabled={loading || lockoutTime > 0}
+              sx={{
+                ...numpadButtonSx,
+                ...(lockoutTime > 0 && {
+                  bgcolor: "grey.100",
+                  borderColor: "grey.200",
+                  color: "grey.400",
+                  "&:hover": { transform: "none", boxShadow: "none", bgcolor: "grey.100" }
+                })
+              }}
             >
               {num}
             </Button>
@@ -101,15 +111,23 @@ const LoginPin = () => {
           <Button
             variant="outlined"
             onClick={() => appendDigit("0")}
-            disabled={loading}
-            sx={numpadButtonSx}
+            disabled={loading || lockoutTime > 0}
+            sx={{
+              ...numpadButtonSx,
+              ...(lockoutTime > 0 && {
+                bgcolor: "grey.100",
+                borderColor: "grey.200",
+                color: "grey.400",
+                "&:hover": { transform: "none", boxShadow: "none", bgcolor: "grey.100" }
+              })
+            }}
           >
             0
           </Button>
           <Button
             variant="text"
             onClick={deleteDigit}
-            disabled={loading || pin.length === 0}
+            disabled={loading || pin.length === 0 || lockoutTime > 0}
             sx={{
               height: 90,
               borderRadius: 4,

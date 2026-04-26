@@ -7,23 +7,28 @@ import appTheme from './theme/appTheme.ts'
 import { AuthProvider } from './context/AuthContext.tsx'
 import { ProductProvider } from './context/ProductContext.tsx'
 import { OrderProvider } from './context/OrderContext.tsx'
+import ErrorBoundary from './components/ErrorBoundary.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider theme={appTheme}>
       <CssBaseline />
-      <AuthProvider>
-        <ProductProvider>
-          <OrderProvider>
-            <App />
-          </OrderProvider>
-        </ProductProvider>
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <ProductProvider>
+            <OrderProvider>
+              <App />
+            </OrderProvider>
+          </ProductProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </ThemeProvider>
   </React.StrictMode>
 )
 
 // Use contextBridge
-window.ipcRenderer.on('main-process-message', (_event, message) => {
-  console.log(message)
-})
+if (window.ipcRenderer) {
+  window.ipcRenderer.on('main-process-message', (_event, message) => {
+    console.log(message)
+  })
+}

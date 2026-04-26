@@ -12,13 +12,17 @@ export function useCartStore() {
 
   const addItem = useCallback(
     (newItem: { name: string; price: number; size: ProductSize; extras: SelectedExtra[]; note?: string }) => {
+      // Sanitización y Validación (ISO 27001)
+      const sanitizedPrice = Math.max(0, newItem.price);
+      const sanitizedNote = newItem.note ? newItem.note.substring(0, 200).replace(/[<>]/g, "") : "";
+
       setCart((prev) => {
         const existingIndex = prev.findIndex(
           (item) =>
             item.name === newItem.name &&
             item.size === newItem.size &&
             extrasKey(item.extras) === extrasKey(newItem.extras) &&
-            item.note === newItem.note
+            item.note === sanitizedNote
         );
 
         if (existingIndex !== -1) {
@@ -30,12 +34,13 @@ export function useCartStore() {
           return updated;
         }
 
-        const extrasTotal = newItem.extras.reduce((sum, e) => sum + e.price, 0);
+        const extrasTotal = newItem.extras.reduce((sum, e) => sum + Math.max(0, e.price), 0);
         return [
           ...prev,
           {
             ...newItem,
-            price: newItem.price + extrasTotal,
+            price: sanitizedPrice + extrasTotal,
+            note: sanitizedNote,
             quantity: 1,
           },
         ];
@@ -57,8 +62,10 @@ export function useCartStore() {
 
   const changeQuantity = useCallback((index: number, quantity: number) => {
     setCart((prev) => {
+      if (!prev[index]) return prev;
       const updated = [...prev];
-      const newQuantity = Math.max(1, quantity);
+      // Limitar cantidad máxima por seguridad operativa
+      const newQuantity = Math.max(1, Math.min(999, quantity));
       const currentGiftQuantity = updated[index].giftQuantity || 0;
       updated[index] = {
         ...updated[index],

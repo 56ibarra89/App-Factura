@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Box, Grid, CircularProgress, Typography, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import LocalPrintshopIcon from "@mui/icons-material/LocalPrintshop";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useNavigate } from "react-router-dom";
 import { useDailyReport } from "../hooks/useDailyReport";
 import { StatCard } from "../components/Reportes/StatCard";
@@ -14,6 +17,7 @@ import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 const Reportes = () => {
   const navigate = useNavigate();
   const { data, isLoading, error } = useDailyReport();
+  const [privacyMode, setPrivacyMode] = useState(false);
 
   return (
     <Box
@@ -39,9 +43,18 @@ const Reportes = () => {
           </IconButton>
         }
         actions={
-          <IconButton sx={{ bgcolor: "white", boxShadow: 1 }}>
-            <LocalPrintshopIcon color="primary" />
-          </IconButton>
+          <Box display="flex" gap={1}>
+            <IconButton 
+              onClick={() => setPrivacyMode(!privacyMode)}
+              sx={{ bgcolor: "white", boxShadow: 1 }}
+              title={privacyMode ? "Mostrar montos" : "Ocultar montos (Privacidad)"}
+            >
+              {privacyMode ? <VisibilityIcon color="primary" /> : <VisibilityOffIcon color="primary" />}
+            </IconButton>
+            <IconButton sx={{ bgcolor: "white", boxShadow: 1 }}>
+              <LocalPrintshopIcon color="primary" />
+            </IconButton>
+          </Box>
         }
       />
 
@@ -62,6 +75,7 @@ const Reportes = () => {
               value={`$${data.totalSales.toFixed(2)}`}
               icon={<AttachMoneyIcon fontSize="large" />}
               subtitle="Ingresos del día"
+              masked={privacyMode}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
@@ -70,6 +84,7 @@ const Reportes = () => {
               value={data.totalOrders}
               icon={<ReceiptIcon fontSize="large" />}
               subtitle="Facturas exitosas"
+              masked={privacyMode}
             />
           </Grid>
 

@@ -1,4 +1,4 @@
-import { Box, Typography, TextField, Button } from "@mui/material";
+import { Box, Typography, TextField, Button, Alert } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
@@ -27,34 +27,32 @@ export const ForgotPasswordForm = () => {
         Ingresa tu usuario o correo para enviarte las instrucciones de recuperación.
       </Typography>
 
+      <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>
+        Esta función estará disponible próximamente. Contacta al administrador del sistema para restablecer tu contraseña.
+      </Alert>
+
       <TextField
         label="Usuario o Correo"
         variant="outlined"
         name="username"
         fullWidth
         margin="normal"
+        disabled
         sx={inputSx}
       />
 
-      {/* Botón principal */}
+      {/* Botón principal — deshabilitado hasta implementación */}
       <Button
         variant="contained"
         fullWidth
+        disabled
         sx={{
           mt: 4,
           borderRadius: 3,
           height: 52,
           fontSize: "1.05rem",
           fontWeight: 700,
-          position: "relative",
-          boxShadow: "0 4px 14px 0 rgba(211, 47, 47, 0.39)",
-          "&:hover": {
-            boxShadow: "0 6px 20px rgba(211, 47, 47, 0.23)",
-            transform: "translateY(-1px)",
-          },
-          transition: "all 0.2s ease-in-out",
         }}
-        onClick={() => console.log("Función de recuperación no implementada todavía")}
       >
         Enviar Instrucciones
       </Button>

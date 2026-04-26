@@ -56,11 +56,6 @@ const Producto = () => {
     deleteProduct(deleteConfirm.category, deleteConfirm.name);
     logService.log(username, role, "PRODUCT_DELETE", `Producto "${deleteConfirm.name}" eliminado de la categoría "${deleteConfirm.category}"`);
     setDeleteConfirm({ ...deleteConfirm, open: false });
-    
-    // Asegurar que el foco regrese a un elemento estable después de borrar
-    setTimeout(() => {
-      addButtonRef.current?.focus();
-    }, 100);
   };
 
   const handleSubmit = (category: string, newProduct: Product, oldName?: string) => {
@@ -73,11 +68,6 @@ const Producto = () => {
     }
     setShowForm(false);
     setEditing(null);
-    
-    // Devolver el foco al botón de agregar para consistencia
-    setTimeout(() => {
-      addButtonRef.current?.focus();
-    }, 100);
   };
 
   return (
@@ -113,7 +103,7 @@ const Producto = () => {
         onClose={() => setShowForm(false)}
         onSubmit={handleSubmit}
         editing={editing}
-        disableRestoreFocus
+        disableRestoreFocus={true}
       />
 
       <ConfirmDialog
@@ -122,8 +112,7 @@ const Producto = () => {
         message={`¿Estás seguro de que deseas eliminar "${deleteConfirm.name}" de la categoría "${deleteConfirm.category}"?`}
         onClose={() => setDeleteConfirm({ ...deleteConfirm, open: false })}
         onConfirm={handleConfirmDelete}
-        disableRestoreFocus
-        disableEnforceFocus
+        disableRestoreFocus={true}
       />
     </>
   );

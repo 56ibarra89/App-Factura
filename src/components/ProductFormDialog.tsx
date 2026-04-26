@@ -7,6 +7,9 @@ import {
   Button,
   Stack,
   Divider,
+  FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
 import { Product } from "../types/product";
 import { useProductForm } from "../hooks/useProductForm";
@@ -75,21 +78,22 @@ const ProductFormDialog = ({
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
-          <TextField
-            select
-            fullWidth
-            label="Categoría"
-            name="category"
-            sx={{ mb: 2 }}
-            value={form.category}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-          >
-            {categoriesList.map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
-              </MenuItem>
-            ))}
-          </TextField>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="category-label">Categoría</InputLabel>
+            <Select
+              labelId="category-label"
+              value={form.category}
+              name="category"
+              label="Categoría"
+              onChange={(e) => handleCategoryChange(e.target.value as string)}
+            >
+              {categoriesList.map((c) => (
+                <MenuItem key={c} value={c}>
+                  {c}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           {isPizza(form.category)
             ? form.prices.map((p, i) => (
