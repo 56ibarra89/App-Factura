@@ -103,6 +103,7 @@ const Producto = () => {
         onClose={() => setShowForm(false)}
         onSubmit={handleSubmit}
         editing={editing}
+        disableRestoreFocus={true}
       />
 
       <ConfirmDialog
@@ -111,6 +112,7 @@ const Producto = () => {
         message={`¿Estás seguro de que deseas eliminar "${deleteConfirm.name}" de la categoría "${deleteConfirm.category}"?`}
         onClose={() => setDeleteConfirm({ ...deleteConfirm, open: false })}
         onConfirm={handleConfirmDelete}
+        disableRestoreFocus={true}
       />
     </>
   );
