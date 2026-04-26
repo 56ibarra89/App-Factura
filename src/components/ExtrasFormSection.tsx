@@ -46,6 +46,7 @@ const ExtrasFormSection = ({
         <Box display="flex" alignItems="center" gap={1} mb={1}>
           <TextField
             size="small"
+            id={`extra-name-${extraIdx}`}
             label="Nombre del extra"
             value={extra.name}
             onChange={(e) => onNameChange(extraIdx, e.target.value)}
@@ -61,6 +62,7 @@ const ExtrasFormSection = ({
             <TextField
               key={p.size}
               size="small"
+              id={`extra-price-${extraIdx}-${p.size}`}
               label={p.size}
               type="number"
               value={p.price}

@@ -55,6 +55,7 @@ const ProductFormDialog = ({
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
+            id="product-name"
             label="Nombre"
             name="name"
             sx={{ mb: 2 }}
@@ -64,6 +65,7 @@ const ProductFormDialog = ({
 
           <TextField
             fullWidth
+            id="product-description"
             label="Descripción"
             name="description"
             multiline
@@ -78,6 +80,7 @@ const ProductFormDialog = ({
           <TextField
             select
             fullWidth
+            id="product-category"
             label="Categoría"
             name="category"
             sx={{ mb: 2 }}
@@ -96,6 +99,7 @@ const ProductFormDialog = ({
                 <TextField
                   key={p.size}
                   fullWidth
+                  id={`product-price-${p.size}`}
                   sx={{ mb: 2 }}
                   label={`Precio ${p.size}`}
                   type="number"
@@ -115,6 +119,7 @@ const ProductFormDialog = ({
             : (
               <TextField
                 fullWidth
+                id="product-single-price"
                 label="Precio"
                 sx={{ mb: 2 }}
                 type="number"
