@@ -1,4 +1,11 @@
-import { Box, Container, IconButton, Typography, Divider, Grid } from "@mui/material";
+import {
+  Box,
+  Container,
+  IconButton,
+  Typography,
+  Divider,
+  Grid,
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 
@@ -12,12 +19,17 @@ const Administracion = () => {
 
   // Helper para renderizar categorías
   const renderCategory = (categoryName: AdminCategory) => {
-    const modules = adminModules.filter(m => m.category === categoryName);
+    const modules = adminModules.filter((m) => m.category === categoryName);
     if (modules.length === 0) return null;
 
     return (
       <Box key={categoryName} sx={{ mb: 6 }}>
-        <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
+        <Typography
+          variant="h5"
+          fontWeight={800}
+          color="text.primary"
+          sx={{ mb: 1 }}
+        >
           {categoryName}
         </Typography>
         <Divider sx={{ mb: 3 }} />
@@ -28,7 +40,9 @@ const Administracion = () => {
                 title={module.title}
                 description={module.description}
                 icon={module.icon}
-                onClick={() => module.path ? navigate(module.path) : module.action?.()}
+                onClick={() =>
+                  module.path ? navigate(module.path) : module.action?.()
+                }
                 disabled={module.disabled}
               />
             </Grid>
@@ -46,8 +60,8 @@ const Administracion = () => {
         pt: 4,
         pb: 8,
         px: { xs: 2, md: 6 },
-        position: 'relative',
-        overflowX: 'hidden'
+        position: "relative",
+        overflowX: "hidden",
       }}
     >
       {/* Fondo decorativo enorme para darle "aire" de Control Center */}
@@ -61,7 +75,7 @@ const Administracion = () => {
           background: `radial-gradient(circle, ${LOGIN_COLORS.primarySubtle} 0%, rgba(255,255,255,0) 70%)`,
           borderRadius: "50%",
           zIndex: 0,
-          pointerEvents: "none"
+          pointerEvents: "none",
         }}
       />
 
@@ -69,9 +83,14 @@ const Administracion = () => {
         <PageHeader
           title="Centro de Control"
           startContent={
-            <IconButton 
-              onClick={() => navigate("/home")} 
-              sx={{ bgcolor: "white", boxShadow: 1, mr: 2, "&:hover": { bgcolor: "grey.100" } }}
+            <IconButton
+              onClick={() => navigate("/home")}
+              sx={{
+                bgcolor: "white",
+                boxShadow: 1,
+                mr: 2,
+                "&:hover": { bgcolor: "grey.100" },
+              }}
             >
               <ArrowBackIcon color="primary" />
             </IconButton>
@@ -79,9 +98,21 @@ const Administracion = () => {
         />
 
         {/* Hero Section */}
-        <Box sx={{ mt: 2, mb: 5, pl: 1 }}>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600 }}>
-            Bienvenido al panel de administración avanzado. Agrupamos todas las herramientas necesarias para que tengas el **control absoluto** sobre la configuración, escalabilidad y hardware de tu negocio, con un diseño intuitivo.
+        <Box sx={{ mt: 2, mb: 6, pl: 1 }}>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{
+              maxWidth: "100%",
+              lineHeight: 1.8,
+              fontSize: "1.1rem",
+              "& b": { color: LOGIN_COLORS.primary, fontWeight: 800 },
+            }}
+          >
+            Bienvenido al panel de administración avanzado. Agrupamos todas las
+            herramientas necesarias para que tengas el <b>control absoluto</b>{" "}
+            sobre la configuración, escalabilidad y hardware de tu negocio, con
+            un diseño intuitivo.
           </Typography>
         </Box>
 
