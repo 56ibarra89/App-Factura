@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Box, Typography, Button, Paper, Tabs, Tab, Grid, alpha,
   TextField, InputAdornment, Dialog, DialogTitle, DialogContent,
@@ -20,6 +20,11 @@ import { UserActivity } from "../components/cuentas/UserActivity";
 export default function Cuentas() {
   const navigate = useNavigate();
   const { users, saveUser, toggleUserStatus, deleteUser } = useAccountManager();
+
+  // Scroll to top upon mounting to prevent inheriting scroll position from previous page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [tabIndex, setTabIndex] = useState(0);
