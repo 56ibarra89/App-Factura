@@ -58,7 +58,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Usuarios y Roles",
     description: "Administra el acceso al sistema, crea empleados y asigna permisos específicos por rol.",
     icon: <PeopleIcon fontSize="large" />,
-    disabled: true,
+    path: "/admin/cuentas",
   },
   {
     id: "promociones",

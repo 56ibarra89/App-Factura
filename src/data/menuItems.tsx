@@ -7,7 +7,6 @@ import LocalAtmIcon from "@mui/icons-material/LocalAtm";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import HistoryIcon from "@mui/icons-material/History";
 import { InventorySharp } from "@mui/icons-material";
 
@@ -81,15 +80,10 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <AdminPanelSettingsIcon fontSize="large" color="primary" />,
     route: "/admin/cajas",
   },
-  {
-    label: "Cuentas",
-    icon: <AccountBalanceWalletIcon fontSize="large" color="action" />,
-    route: "/cuentas",
-  },
+
   {
     label: "Administración",
     icon: <AdminPanelSettingsIcon fontSize="large" color="success" />,
     route: "/admin",
   },
 ];
-

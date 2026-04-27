@@ -48,10 +48,10 @@ const AppRoutes = () => (
       <Route path="/consultar-factura" element={<PrivateRoute element={<ConsultarFacturas />} />} />
       <Route path="/reporte"           element={<PrivateRoute element={<Reportes />} />} />
       <Route path="/perfil"            element={<PrivateRoute element={<MiCuenta />} />} />
-      <Route path="/cuentas"           element={<PrivateRoute element={<Cuentas />} />} />
 
       {/* ── Rutas de Administración (solo rol 'admin') ── */}
       <Route path="/admin"                element={<AdminRoute element={<Administracion />} />} />
+      <Route path="/admin/cuentas"        element={<AdminRoute element={<Cuentas />} />} />
       <Route path="/admin/mesas"          element={<AdminRoute element={<ConfigurarMesas />} />} />
       <Route path="/admin/cajas"          element={<AdminRoute element={<AdminCajas />} />} />
       <Route path="/admin/impuestos"      element={<AdminRoute element={<AdminImpuestos />} />} />

@@ -1,35 +1,46 @@
-import { Box, Typography, Stepper, Step, StepLabel, StepContent, Paper } from "@mui/material";
+import { useEffect, useState } from "react";
+import { Box, Typography, Stepper, Step, StepLabel, StepContent, Paper, CircularProgress } from "@mui/material";
 import { UserAccount } from "../../types/user";
+import { logService, SystemLog } from "../../services/logService";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface UserActivityProps {
   user: UserAccount;
 }
 
 export function UserActivity({ user }: UserActivityProps) {
-  // En un escenario real, esto vendría de un endpoint o del OrderContext filtrado.
-  // Por ahora generaremos actividad simulada atractiva.
-  const activities = [
-    {
-      date: new Date().toLocaleDateString() + " 10:30 AM",
-      action: "Inició sesión en el sistema",
-      description: "Acceso mediante PIN desde Caja Principal."
-    },
-    {
-      date: new Date().toLocaleDateString() + " 11:15 AM",
-      action: "Cobró Orden #ORD-8493",
-      description: "Monto total: $45.50 (Pago Mixto)"
-    },
-    {
-      date: new Date(Date.now() - 86400000).toLocaleDateString() + " 09:00 PM",
-      action: "Cerró Turno de Caja",
-      description: "Cierre exitoso con un desfase de $0.00"
-    },
-    {
-      date: new Date(user.createdAt).toLocaleDateString(),
-      action: "Cuenta Creada",
-      description: `El usuario ${user.username} fue registrado en el sistema.`
-    }
-  ];
+  const [activities, setActivities] = useState<SystemLog[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchLogs = async () => {
+      setLoading(true);
+      // Extraemos más logs para asegurar encontrar los del usuario
+      const allLogs = await logService.getLogs(500); 
+      if (isMounted) {
+        const userLogs = allLogs.filter(log => log.user === user.username).slice(0, 50);
+        setActivities(userLogs);
+        setLoading(false);
+      }
+    };
+
+    fetchLogs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user.username]);
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 2 }}>
@@ -40,31 +51,37 @@ export function UserActivity({ user }: UserActivityProps) {
         Últimos registros de acciones realizadas por <b>{user.firstName} {user.lastName}</b>.
       </Typography>
 
-      <Paper elevation={0} sx={{ p: 3, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200" }}>
-        <Stepper orientation="vertical">
-          {activities.map((step, index) => (
-            <Step key={index} active={true}>
-              <StepLabel 
-                StepIconProps={{ 
-                  sx: { color: index === 0 ? "primary.main" : "grey.500" } 
-                }}
-              >
-                <Typography component="span" fontWeight="bold" color={index === 0 ? "text.primary" : "text.secondary"}>
-                  {step.action}
-                </Typography>
-                <Typography component="span" variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                  {step.date}
-                </Typography>
-              </StepLabel>
-              <StepContent>
-                <Typography variant="body2" color="text.secondary">
-                  {step.description}
-                </Typography>
-              </StepContent>
-            </Step>
-          ))}
-        </Stepper>
-      </Paper>
+      {activities.length === 0 ? (
+        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
+          No hay actividad reciente registrada para este usuario.
+        </Typography>
+      ) : (
+        <Paper elevation={0} sx={{ p: 3, bgcolor: "grey.50", borderRadius: 2, border: "1px solid", borderColor: "grey.200", maxHeight: "60vh", overflowY: "auto" }}>
+          <Stepper orientation="vertical">
+            {activities.map((step, index) => (
+              <Step key={step.id || index} active={true}>
+                <StepLabel 
+                  StepIconProps={{ 
+                    sx: { color: index === 0 ? "primary.main" : "grey.500" } 
+                  }}
+                >
+                  <Typography component="span" fontWeight="bold" color={index === 0 ? "text.primary" : "text.secondary"}>
+                    {step.action}
+                  </Typography>
+                  <Typography component="span" variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    {format(step.timestamp, "dd MMM yyyy, hh:mm a", { locale: es })}
+                  </Typography>
+                </StepLabel>
+                <StepContent>
+                  <Typography variant="body2" color="text.secondary">
+                    {step.details || "Sin detalles adicionales."}
+                  </Typography>
+                </StepContent>
+              </Step>
+            ))}
+          </Stepper>
+        </Paper>
+      )}
     </Box>
   );
 }
