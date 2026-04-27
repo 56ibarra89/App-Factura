@@ -57,21 +57,21 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, pb: 4 }}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, pb: 1 }}>
       
       {/* Banner Superior Estilizado */}
       <Box sx={{ 
         display: 'flex', 
         alignItems: 'center', 
-        gap: 3, 
-        mb: 4, 
+        gap: 2, 
+        mb: 1.5, 
         background: `linear-gradient(135deg, ${alpha(LOGIN_COLORS.primary, 0.1)} 0%, ${alpha(LOGIN_COLORS.primaryDark, 0.05)} 100%)`, 
-        p: 3, 
+        p: 1.5, 
         borderRadius: 4,
         border: '1px solid',
         borderColor: alpha(LOGIN_COLORS.primary, 0.2)
       }}>
-        <Avatar sx={{ bgcolor: LOGIN_COLORS.primary, width: 56, height: 56, boxShadow: `0 4px 12px ${LOGIN_COLORS.primaryShadow}` }}>
+        <Avatar sx={{ bgcolor: LOGIN_COLORS.primary, width: 48, height: 48, boxShadow: `0 4px 12px ${LOGIN_COLORS.primaryShadow}` }}>
           {isEditing ? <BadgeIcon fontSize="large" /> : <PersonAddAlt1Icon />}
         </Avatar>
         <Box>
@@ -85,24 +85,24 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
       </Box>
 
       {/* Bloque 1: Información Personal */}
-      <Paper elevation={0} sx={{ p: 4, mb: 4, borderRadius: 4, border: '1px solid', borderColor: 'grey.100', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-        <Box display="flex" alignItems="center" gap={1} mb={3}>
+      <Paper elevation={0} sx={{ p: 1.5, mb: 1, borderRadius: 4, border: '1px solid', borderColor: 'grey.100', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+        <Box display="flex" alignItems="center" gap={1} mb={1.5}>
           <BadgeIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight="bold">Identidad del Usuario</Typography>
+          <Typography variant="subtitle2" fontWeight="bold">Identidad del Usuario</Typography>
         </Box>
-        <Divider sx={{ mb: 3 }} />
-        <Grid container spacing={3}>
+        <Divider sx={{ mb: 1.5 }} />
+        <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth label="Nombre(s)" value={formData.firstName || ""} onChange={e => handleChange("firstName", e.target.value)} required variant="filled" />
+            <TextField fullWidth size="small" label="Nombre(s)" value={formData.firstName || ""} onChange={e => handleChange("firstName", e.target.value)} required variant="filled" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth label="Apellido(s)" value={formData.lastName || ""} onChange={e => handleChange("lastName", e.target.value)} variant="filled" />
+            <TextField fullWidth size="small" label="Apellido(s)" value={formData.lastName || ""} onChange={e => handleChange("lastName", e.target.value)} variant="filled" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing} required variant="filled" helperText={isEditing ? "El nombre de usuario es permanente." : "Usado para iniciar sesión."} />
+            <TextField fullWidth size="small" label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing} required variant="filled" helperText={isEditing ? "El nombre de usuario es permanente." : "Usado para iniciar sesión."} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth select label="Rol en la Empresa" value={formData.role || "cajero"} onChange={e => handleChange("role", e.target.value)} variant="filled">
+            <TextField fullWidth size="small" select label="Rol en la Empresa" value={formData.role || "cajero"} onChange={e => handleChange("role", e.target.value)} variant="filled">
               {(Object.keys(ROLE_LABELS) as UserRole[]).map(role => (
                 <MenuItem key={role} value={role}>{ROLE_LABELS[role]}</MenuItem>
               ))}
@@ -112,16 +112,17 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
       </Paper>
 
       {/* Bloque 2: Credenciales */}
-      <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: '1px solid', borderColor: 'grey.100', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-        <Box display="flex" alignItems="center" gap={1} mb={3}>
+      <Paper elevation={0} sx={{ p: 1.5, borderRadius: 4, border: '1px solid', borderColor: 'grey.100', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+        <Box display="flex" alignItems="center" gap={1} mb={1.5}>
           <VpnKeyIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight="bold">Seguridad y Acceso</Typography>
+          <Typography variant="subtitle2" fontWeight="bold">Seguridad y Acceso</Typography>
         </Box>
-        <Divider sx={{ mb: 3 }} />
-        <Grid container spacing={3}>
+        <Divider sx={{ mb: 1.5 }} />
+        <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField 
               fullWidth 
+              size="small"
               label="PIN Numérico" 
               type="text" 
               value={formData.pin || ""} 
@@ -146,6 +147,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField 
               fullWidth 
+              size="small"
               label="Contraseña Principal" 
               type="text" 
               value={formData.password || ""} 
@@ -169,7 +171,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
         </Grid>
       </Paper>
 
-      <Box display="flex" justifyContent="space-between" alignItems="center" mt={5}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
         <Box display="flex" gap={2}>
           {isEditing && formData.id !== "admin" ? (
             <>

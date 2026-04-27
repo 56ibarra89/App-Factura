@@ -1,8 +1,20 @@
 import { useState, useMemo, useEffect } from "react";
 import {
-  Box, Typography, Button, Paper, Tabs, Tab, Grid, alpha,
-  TextField, InputAdornment, Dialog, DialogTitle, DialogContent,
-  DialogContentText, DialogActions
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Tabs,
+  Tab,
+  Grid,
+  alpha,
+  TextField,
+  InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -11,7 +23,11 @@ import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import AccountMenu from "../components/AccountMenu";
-import { LOGIN_COLORS, LOGIN_GRADIENTS, LOGIN_SHADOWS } from "../theme/loginTheme";
+import {
+  LOGIN_COLORS,
+  LOGIN_GRADIENTS,
+  LOGIN_SHADOWS,
+} from "../theme/loginTheme";
 import { useAccountManager } from "../hooks/useAccountManager";
 import { UserList } from "../components/cuentas/UserList";
 import { UserForm } from "../components/cuentas/UserForm";
@@ -32,11 +48,11 @@ export default function Cuentas() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const selectedUser = users.find(u => u.id === selectedUserId) || null;
-  const userToDelete = users.find(u => u.id === pendingDeleteId);
+  const selectedUser = users.find((u) => u.id === selectedUserId) || null;
+  const userToDelete = users.find((u) => u.id === pendingDeleteId);
 
   const filteredUsers = useMemo(() => {
-    return users.filter(u => {
+    return users.filter((u) => {
       const q = searchQuery.toLowerCase();
       return (
         u.firstName.toLowerCase().includes(q) ||
@@ -76,8 +92,8 @@ export default function Cuentas() {
       minHeight="100vh"
       sx={{
         background: LOGIN_GRADIENTS.pageBackground,
-        pt: 4,
-        pb: 4,
+        pt: 2,
+        pb: 2,
         px: { xs: 2, md: 6 },
         display: "flex",
         flexDirection: "column",
@@ -89,7 +105,7 @@ export default function Cuentas() {
           <Button
             variant="contained"
             size="small"
-            onClick={() => navigate("/home")}
+            onClick={() => navigate("/admin")}
             startIcon={<ArrowBackIcon />}
             sx={{
               bgcolor: LOGIN_COLORS.primary,
@@ -105,61 +121,83 @@ export default function Cuentas() {
         actions={<AccountMenu />}
       />
 
-      <Grid container spacing={4} sx={{ mt: 2, flex: 1 }}>
+      <Grid container spacing={2} sx={{ mt: 1, flex: 1 }}>
         {/* Columna Izquierda: Lista de Usuarios */}
-        <Grid size={{ xs: 12, md: 4, lg: 3 }} sx={{ display: "flex", flexDirection: "column" }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6" fontWeight="900" sx={{ opacity: 0.8 }}>
-              Usuarios ({users.length})
-            </Typography>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<PersonAddIcon />}
-              onClick={handleCreateNew}
-              sx={{
-                borderRadius: 4,
-                bgcolor: LOGIN_COLORS.primary,
-                fontWeight: "bold",
-                boxShadow: LOGIN_SHADOWS.title
-              }}
-            >
-              Nuevo
-            </Button>
-          </Box>
-          <TextField
-            fullWidth
-            placeholder="Buscar por nombre o rol..."
-            variant="outlined"
-            size="small"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            sx={{ mb: 2, bgcolor: "white", borderRadius: 2 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
+        <Grid
+          size={{ xs: 12, md: 4, lg: 3 }}
+          sx={{ position: "relative", minHeight: { xs: 400, md: "auto" } }}
+        >
           <Box
             sx={{
-              borderRadius: 4,
-              flex: 1,
-              overflowY: "auto",
-              maxHeight: "calc(100vh - 200px)",
-              pr: 1
+              position: { md: "absolute" },
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
-            <UserList
-              users={filteredUsers}
-              selectedUserId={selectedUserId}
-              onSelectUser={(id) => {
-                setSelectedUserId(id);
-                if (tabIndex !== 0 && tabIndex !== 1) setTabIndex(0);
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              mb={2}
+            >
+              <Typography variant="h6" fontWeight="900" sx={{ opacity: 0.8 }}>
+                Usuarios ({users.length})
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<PersonAddIcon />}
+                onClick={handleCreateNew}
+                sx={{
+                  borderRadius: 4,
+                  bgcolor: LOGIN_COLORS.primary,
+                  fontWeight: "bold",
+                  boxShadow: LOGIN_SHADOWS.title,
+                }}
+              >
+                Nuevo
+              </Button>
+            </Box>
+            <TextField
+              fullWidth
+              placeholder="Buscar por nombre o rol..."
+              variant="outlined"
+              size="small"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              sx={{ mb: 2, bgcolor: "white", borderRadius: 2 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
               }}
             />
+            <Box
+              sx={{
+                borderRadius: 4,
+                flex: 1,
+                minHeight: 0,
+                overflowY: "auto",
+                pr: 1,
+              }}
+            >
+              <UserList
+                users={filteredUsers}
+                selectedUserId={selectedUserId}
+                onSelectUser={(id) => {
+                  setSelectedUserId(id);
+                  if (tabIndex !== 0 && tabIndex !== 1) setTabIndex(0);
+                }}
+              />
+            </Box>
           </Box>
         </Grid>
 
@@ -171,19 +209,20 @@ export default function Cuentas() {
               bgcolor: "white",
               borderRadius: 6,
               boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
-              minHeight: "600px",
               display: "flex",
               flexDirection: "column",
-              overflow: "hidden"
+              minHeight: { xs: "auto", md: "660px" },
             }}
           >
-            <Box sx={{
-              borderBottom: 1,
-              borderColor: "divider",
-              px: 4,
-              pt: 2,
-              background: alpha("#f5f5f5", 0.5)
-            }}>
+            <Box
+              sx={{
+                borderBottom: 1,
+                borderColor: "divider",
+                px: 4,
+                pt: 2,
+                background: alpha("#f5f5f5", 0.5),
+              }}
+            >
               <Tabs
                 value={tabIndex}
                 onChange={(_, newValue) => setTabIndex(newValue)}
@@ -194,16 +233,20 @@ export default function Cuentas() {
                     fontWeight: "bold",
                     textTransform: "none",
                     fontSize: "1rem",
-                    transition: "0.2s"
-                  }
+                    transition: "0.2s",
+                  },
                 }}
               >
-                <Tab label={selectedUser ? "Información de Cuenta" : "Ficha de Registro"} />
+                <Tab
+                  label={
+                    selectedUser ? "Información de Cuenta" : "Ficha de Registro"
+                  }
+                />
                 <Tab label="Actividad Reciente" disabled={!selectedUser} />
               </Tabs>
             </Box>
 
-            <Box sx={{ p: { xs: 3, md: 5 }, flex: 1, overflowY: "auto" }}>
+            <Box sx={{ p: { xs: 1.5, md: 2 }, flex: 1 }}>
               {tabIndex === 0 && (
                 <UserForm
                   user={selectedUser}
@@ -231,20 +274,32 @@ export default function Cuentas() {
           sx: {
             borderRadius: 4,
             p: 1,
-            maxWidth: 440
-          }
+            maxWidth: 440,
+          },
         }}
       >
-        <DialogTitle sx={{ fontWeight: "900", display: "flex", alignItems: "center", gap: 1.5 }}>
+        <DialogTitle
+          sx={{
+            fontWeight: "900",
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+          }}
+        >
           <DeleteForeverIcon color="error" sx={{ fontSize: 28 }} />
           Eliminar Usuario
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
             Estás a punto de eliminar permanentemente la cuenta de{" "}
-            <strong>{userToDelete?.firstName} {userToDelete?.lastName}</strong> (@{userToDelete?.username}).
-            <br /><br />
-            Esta acción <strong>no se puede deshacer</strong>. Considera suspender la cuenta si deseas conservar el historial.
+            <strong>
+              {userToDelete?.firstName} {userToDelete?.lastName}
+            </strong>{" "}
+            (@{userToDelete?.username}).
+            <br />
+            <br />
+            Esta acción <strong>no se puede deshacer</strong>. Considera
+            suspender la cuenta si deseas conservar el historial.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
