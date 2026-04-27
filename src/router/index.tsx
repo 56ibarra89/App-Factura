@@ -25,6 +25,7 @@ import AdminConfiguracion from "../pages/admin/AdminConfiguracion";
 import AdminEmpresa from "../pages/admin/AdminEmpresa";
 import Bitacora from "../pages/admin/Bitacora";
 import { CajaProvider } from "../context/CajaContext";
+import AdminPerifericos from "../pages/admin/AdminPerifericos";
 
 const AppRoutes = () => (
   <CajaProvider>
@@ -35,29 +36,81 @@ const AppRoutes = () => (
       <Route path="/login-pin" element={<LoginPin />} />
 
       {/* ── Rutas Privadas (cualquier usuario autenticado) ── */}
-      <Route path="/home"              element={<PrivateRoute element={<Home />} />} />
-      <Route path="/producto"          element={<PrivateRoute element={<Producto />} />} />
-      <Route path="/facturacion"       element={<PrivateRoute element={<Facturacion />} />} />
+      <Route path="/home" element={<PrivateRoute element={<Home />} />} />
+      <Route
+        path="/producto"
+        element={<PrivateRoute element={<Producto />} />}
+      />
+      <Route
+        path="/facturacion"
+        element={<PrivateRoute element={<Facturacion />} />}
+      />
 
-      <Route path="/abrircaja"         element={<PrivateRoute element={<AbrirCajaPage />} />} />
-      <Route path="/cerrarcaja"        element={<PrivateRoute element={<CerrarCajaPage />} />} />
-      <Route path="/consultar-turnos"  element={<PrivateRoute element={<ConsultarTurnos />} />} />
-      <Route path="/mesas"             element={<PrivateRoute element={<Mesa />} />} />
-      <Route path="/ordenes"           element={<PrivateRoute element={<Ordenes />} />} />
-      <Route path="/anular-factura"    element={<PrivateRoute element={<AnularFactura />} />} />
-      <Route path="/consultar-factura" element={<PrivateRoute element={<ConsultarFacturas />} />} />
-      <Route path="/reporte"           element={<PrivateRoute element={<Reportes />} />} />
-      <Route path="/perfil"            element={<PrivateRoute element={<MiCuenta />} />} />
+      <Route
+        path="/abrircaja"
+        element={<PrivateRoute element={<AbrirCajaPage />} />}
+      />
+      <Route
+        path="/cerrarcaja"
+        element={<PrivateRoute element={<CerrarCajaPage />} />}
+      />
+      <Route
+        path="/consultar-turnos"
+        element={<PrivateRoute element={<ConsultarTurnos />} />}
+      />
+      <Route path="/mesas" element={<PrivateRoute element={<Mesa />} />} />
+      <Route path="/ordenes" element={<PrivateRoute element={<Ordenes />} />} />
+      <Route
+        path="/anular-factura"
+        element={<PrivateRoute element={<AnularFactura />} />}
+      />
+      <Route
+        path="/consultar-factura"
+        element={<PrivateRoute element={<ConsultarFacturas />} />}
+      />
+      <Route
+        path="/reporte"
+        element={<PrivateRoute element={<Reportes />} />}
+      />
+      <Route path="/perfil" element={<PrivateRoute element={<MiCuenta />} />} />
 
       {/* ── Rutas de Administración (solo rol 'admin') ── */}
-      <Route path="/admin"                element={<AdminRoute element={<Administracion />} />} />
-      <Route path="/admin/cuentas"        element={<AdminRoute element={<Cuentas />} />} />
-      <Route path="/admin/mesas"          element={<AdminRoute element={<ConfigurarMesas />} />} />
-      <Route path="/admin/cajas"          element={<AdminRoute element={<AdminCajas />} />} />
-      <Route path="/admin/impuestos"      element={<AdminRoute element={<AdminImpuestos />} />} />
-      <Route path="/admin/configuracion"  element={<AdminRoute element={<AdminConfiguracion />} />} />
-      <Route path="/admin/empresa"        element={<AdminRoute element={<AdminEmpresa />} />} />
-      <Route path="/admin/bitacora"       element={<AdminRoute element={<Bitacora />} />} />
+      <Route
+        path="/admin"
+        element={<AdminRoute element={<Administracion />} />}
+      />
+      <Route
+        path="/admin/cuentas"
+        element={<AdminRoute element={<Cuentas />} />}
+      />
+      <Route
+        path="/admin/mesas"
+        element={<AdminRoute element={<ConfigurarMesas />} />}
+      />
+      <Route
+        path="/admin/cajas"
+        element={<AdminRoute element={<AdminCajas />} />}
+      />
+      <Route
+        path="/admin/impuestos"
+        element={<AdminRoute element={<AdminImpuestos />} />}
+      />
+      <Route
+        path="/admin/configuracion"
+        element={<AdminRoute element={<AdminConfiguracion />} />}
+      />
+      <Route
+        path="/admin/empresa"
+        element={<AdminRoute element={<AdminEmpresa />} />}
+      />
+      <Route
+        path="/admin/bitacora"
+        element={<AdminRoute element={<Bitacora />} />}
+      />
+      <Route
+        path="/admin/perifericos"
+        element={<AdminRoute element={<AdminPerifericos />} />}
+      />
     </Routes>
   </CajaProvider>
 );

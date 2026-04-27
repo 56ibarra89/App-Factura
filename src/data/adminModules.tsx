@@ -90,9 +90,9 @@ export const adminModules: AdminModuleItem[] = [
     id: "perifericos",
     category: "Hardware y Sistema",
     title: "Periféricos",
-    description: "Administra impresoras térmicas (Múltiples), gavetas de dinero conectadas o básculas compatibles.",
+    description: "Administra impresoras térmicas (Múltiples) y gavetas de dinero conectadas al sistema.",
     icon: <PrintIcon fontSize="large" />,
-    disabled: true,
+    path: "/admin/perifericos",
   },
   {
     id: "auditoria",
