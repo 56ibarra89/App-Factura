@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Typography, TextField, Button, MenuItem, Paper, Avatar, Divider, alpha, Grid, IconButton, InputAdornment, Tooltip } from "@mui/material";
+import { Box, Typography, TextField, Button, Paper, Avatar, Divider, alpha, Grid, IconButton, InputAdornment, Tooltip } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import BlockIcon from "@mui/icons-material/Block";
 import SettingsBackupRestoreIcon from "@mui/icons-material/SettingsBackupRestore";
@@ -93,18 +93,18 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
         <Divider sx={{ mb: 1.5 }} />
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth size="small" label="Nombre(s)" value={formData.firstName || ""} onChange={e => handleChange("firstName", e.target.value)} required variant="filled" />
+            <TextField id="user-firstname" fullWidth size="small" label="Nombre(s)" value={formData.firstName || ""} onChange={e => handleChange("firstName", e.target.value)} required variant="filled" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth size="small" label="Apellido(s)" value={formData.lastName || ""} onChange={e => handleChange("lastName", e.target.value)} variant="filled" />
+            <TextField id="user-lastname" fullWidth size="small" label="Apellido(s)" value={formData.lastName || ""} onChange={e => handleChange("lastName", e.target.value)} variant="filled" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth size="small" label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing} required variant="filled" helperText={isEditing ? "El nombre de usuario es permanente." : "Usado para iniciar sesión."} />
+            <TextField id="user-username" fullWidth size="small" label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing} required variant="filled" helperText={isEditing ? "El nombre de usuario es permanente." : "Usado para iniciar sesión."} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField fullWidth size="small" select label="Rol en la Empresa" value={formData.role || "cajero"} onChange={e => handleChange("role", e.target.value)} variant="filled">
+            <TextField id="user-role" fullWidth size="small" select label="Rol en la Empresa" value={formData.role || "cajero"} onChange={e => handleChange("role", e.target.value)} variant="filled" SelectProps={{ native: true }}>
               {(Object.keys(ROLE_LABELS) as UserRole[]).map(role => (
-                <MenuItem key={role} value={role}>{ROLE_LABELS[role]}</MenuItem>
+                <option key={role} value={role}>{ROLE_LABELS[role]}</option>
               ))}
             </TextField>
           </Grid>
@@ -121,6 +121,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField 
+              id="user-pin"
               fullWidth 
               size="small"
               label="PIN Numérico" 
@@ -146,6 +147,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField 
+              id="user-password"
               fullWidth 
               size="small"
               label="Contraseña Principal" 
