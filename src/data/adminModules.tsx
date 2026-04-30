@@ -66,7 +66,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Promociones",
     description: "Configura reglas automáticas de descuento, horas felices (Happy Hour) o cupones manuales.",
     icon: <LocalOfferIcon fontSize="large" />,
-    disabled: true,
+    path: "/admin/promociones",
   },
   {
     id: "turnos",
