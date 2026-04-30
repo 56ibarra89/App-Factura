@@ -15,6 +15,12 @@ import DescuentosTab from "../../components/Admin/Promociones/DescuentosTab";
 import HappyHourTab from "../../components/Admin/Promociones/HappyHourTab";
 import CuponesTab from "../../components/Admin/Promociones/CuponesTab";
 import CertificacionesTab from "../../components/Admin/Promociones/CertificacionesTab";
+import {
+  MOCK_HAPPY_HOURS,
+  MOCK_DESCUENTOS,
+  MOCK_CUPONES,
+  MOCK_CERTIFICADOS,
+} from "../../data/promocionesMockData";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -52,6 +58,13 @@ const AdminPromociones = () => {
   const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
+
+  // OCP: cuando se conecte una API real, solo cambia aquí — los tabs no se tocan
+  const handleAdd = () => console.log("TODO: abrir formulario de creación");
+  const handleEdit = (item: unknown) => console.log("TODO: editar", item);
+  const handleDelete = (id: number) => console.log("TODO: eliminar", id);
+  const handleCopy = (code: string) => navigator.clipboard?.writeText(code);
+  const handleView = (item: unknown) => console.log("TODO: ver detalle", item);
 
   return (
     <Box
@@ -105,12 +118,11 @@ const AdminPromociones = () => {
 
         <Box sx={{ mb: 5, pl: 1 }}>
           <Typography variant="body1" color="text.secondary">
-            Desde esta sección centralizada, tienes el control total para
-            gestionar <b>descuentos inteligentes</b> aplicables a tus productos,
-            programar horarios de <b>Happy Hour</b> dinámicos, lanzar campañas
-            de <b>cupones personalizados</b> para atraer nuevos clientes y
-            emitir <b>certificados de producto</b> exclusivos como parte de tus
-            programas de regalías y beneficios corporativos.
+            Desde esta sección centralizada, tienes el control total para gestionar{" "}
+            <b>descuentos inteligentes</b> aplicables a tus productos, programar horarios de{" "}
+            <b>Happy Hour</b> dinámicos, lanzar campañas de <b>cupones personalizados</b> para
+            atraer nuevos clientes y emitir <b>certificados de producto</b> exclusivos como
+            parte de tus programas de regalías y beneficios corporativos.
           </Typography>
         </Box>
 
@@ -150,16 +162,35 @@ const AdminPromociones = () => {
 
             <Box sx={{ p: { xs: 2, md: 4 } }}>
               <CustomTabPanel value={tabValue} index={0}>
-                <DescuentosTab />
+                <DescuentosTab
+                  rules={MOCK_DESCUENTOS}
+                  onAdd={handleAdd}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
               </CustomTabPanel>
               <CustomTabPanel value={tabValue} index={1}>
-                <HappyHourTab />
+                <HappyHourTab
+                  rules={MOCK_HAPPY_HOURS}
+                  onAdd={handleAdd}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
               </CustomTabPanel>
               <CustomTabPanel value={tabValue} index={2}>
-                <CuponesTab />
+                <CuponesTab
+                  cupones={MOCK_CUPONES}
+                  onAdd={handleAdd}
+                  onCopy={handleCopy}
+                  onDelete={handleDelete}
+                />
               </CustomTabPanel>
               <CustomTabPanel value={tabValue} index={3}>
-                <CertificacionesTab />
+                <CertificacionesTab
+                  certificados={MOCK_CERTIFICADOS}
+                  onAdd={handleAdd}
+                  onView={handleView}
+                />
               </CustomTabPanel>
             </Box>
           </Paper>

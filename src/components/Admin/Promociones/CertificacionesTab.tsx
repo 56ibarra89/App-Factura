@@ -14,35 +14,16 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import { CertificadoRule } from "../../../data/promocionesMockData";
 
-const MOCK_CERTIFICADOS = [
-  {
-    id: 1,
-    serial: "VC-847291",
-    origin: "Agencia de Viajes Sol",
-    product: "Pizza Familiar Pepperoni",
-    issueDate: "2026-01-15",
-    status: "Entregado",
-  },
-  {
-    id: 2,
-    serial: "VC-109344",
-    origin: "Cliente Frecuente (Premio)",
-    product: "Hamburguesa Doble c/ Papas",
-    issueDate: "2026-04-20",
-    status: "Disponible",
-  },
-  {
-    id: 3,
-    serial: "VC-554212",
-    origin: "Empresa Coca-Cola",
-    product: "Refresco 2L",
-    issueDate: "2026-04-25",
-    status: "Disponible",
-  },
-];
+interface CertificacionesTabProps {
+  /** OCP: el componente renderiza datos recibidos por props, sin conocer su origen */
+  certificados: CertificadoRule[];
+  onAdd?: () => void;
+  onView?: (certificado: CertificadoRule) => void;
+}
 
-const CertificacionesTab = () => {
+const CertificacionesTab = ({ certificados, onAdd, onView }: CertificacionesTabProps) => {
   return (
     <Box>
       <Box
@@ -58,10 +39,11 @@ const CertificacionesTab = () => {
             Certificados y Vales de Producto
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Emite certificados únicos canjeables por un producto. Cada código es válido por un solo uso.
+            Emite certificados únicos canjeables por un producto. Cada código es válido por
+            un solo uso.
           </Typography>
         </Box>
-        <Button variant="contained" color="primary" startIcon={<AddIcon />}>
+        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={onAdd}>
           Emitir Certificado
         </Button>
       </Box>
@@ -75,13 +57,11 @@ const CertificacionesTab = () => {
               <TableCell sx={{ fontWeight: 600 }}>Producto a Canjear</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Emisión</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600 }}>
-                Acciones
-              </TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_CERTIFICADOS.map((cert) => (
+            {certificados.map((cert) => (
               <TableRow key={cert.id} hover>
                 <TableCell>
                   <Typography variant="body2" fontWeight={700} color="primary.main">
@@ -102,16 +82,16 @@ const CertificacionesTab = () => {
                 <TableCell>
                   <Chip
                     label={cert.status}
-                    color={
-                      cert.status === "Disponible"
-                        ? "success"
-                        : "default"
-                    }
+                    color={cert.status === "Disponible" ? "success" : "default"}
                     size="small"
                   />
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton color="primary" size="small">
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    onClick={() => onView?.(cert)}
+                  >
                     <VisibilityIcon fontSize="small" />
                   </IconButton>
                 </TableCell>
@@ -125,4 +105,3 @@ const CertificacionesTab = () => {
 };
 
 export default CertificacionesTab;
-// End of file
