@@ -1,9 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode } from "react";
 import { authService as defaultAuthService } from "../services/authService";
 import { IAuthService } from "../types/authService";
 import { UserRole } from "../types/user";
 import { logService } from "../services/logService";
+import { usePinLockout } from "../hooks/usePinLockout";
+import { useLoginLockout } from "../hooks/useLoginLockout";
+import { useInactivityTimer } from "../hooks/useInactivityTimer";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -33,8 +36,6 @@ interface AuthProviderProps {
   service?: IAuthService;
 }
 
-const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 Minutos
-
 export const AuthProvider = ({ children, service = defaultAuthService }: AuthProviderProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => sessionStorage.getItem("loggedIn") === "true"
@@ -47,71 +48,29 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
-  // Seguridad Global de PIN (ISO 27001)
-  const [attempts, setAttempts] = useState(() => 
-    Number(sessionStorage.getItem("pin_attempts") || 0)
-  );
-  const [lockoutTime, setLockoutTime] = useState(0);
 
-  // Seguridad Global de Login Clásico (ISO 27001)
-  const [loginAttempts, setLoginAttempts] = useState(() => 
-    Number(sessionStorage.getItem("login_attempts") || 0)
-  );
-  const [loginLockoutTime, setLoginLockoutTime] = useState(0);
-
-  // Efecto para manejar el bloqueo persistente de PIN y Login
-  useEffect(() => {
-    const checkLockouts = () => {
-      const now = Date.now();
-
-      // Sincronización PIN
-      const pinUntil = Number(sessionStorage.getItem("pin_lockout_until") || 0);
-      const pinRemaining = Math.ceil((pinUntil - now) / 1000);
-      if (pinRemaining > 0) {
-        setLockoutTime(pinRemaining);
-      } else {
-        setLockoutTime(0);
-        if (pinUntil > 0) {
-          sessionStorage.removeItem("pin_lockout_until");
-          sessionStorage.setItem("pin_attempts", "0");
-          setAttempts(0);
-        }
-      }
-
-      // Sincronización Login Clásico
-      const loginUntil = Number(sessionStorage.getItem("login_lockout_until") || 0);
-      const loginRemaining = Math.ceil((loginUntil - now) / 1000);
-      if (loginRemaining > 0) {
-        setLoginLockoutTime(loginRemaining);
-      } else {
-        setLoginLockoutTime(0);
-        if (loginUntil > 0) {
-          sessionStorage.removeItem("login_lockout_until");
-          sessionStorage.setItem("login_attempts", "0");
-          setLoginAttempts(0);
-        }
-      }
-    };
-
-    checkLockouts();
-    const timer = setInterval(checkLockouts, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const resetInactivityTimer = useCallback(() => {
-    if (!isLoggedIn) return;
-    const now = Date.now();
-    sessionStorage.setItem("lastActivity", now.toString());
-  }, [isLoggedIn]);
+  // SRP: lógica de seguridad delegada a hooks especializados
+  const pinLockout = usePinLockout();
+  const loginLockout = useLoginLockout();
 
   const clearError = useCallback(() => setError(""), []);
 
+  const logout = useCallback(() => {
+    if (username) {
+      logService.log(username, role, "LOGOUT", "Cierre de sesión de usuario");
+    }
+    sessionStorage.clear();
+    setIsLoggedIn(false);
+    setUsername("");
+    setRole(null);
+  }, [username, role]);
+
+  // SRP: timer de inactividad delegado a su propio hook
+  useInactivityTimer({ isLoggedIn, username, role, onExpire: logout });
+
   const login = useCallback(
     async (user: string, password: string, remember = false): Promise<boolean> => {
-      // Verificar bloqueo comercial
-      const until = Number(sessionStorage.getItem("login_lockout_until") || 0);
-      if (until > Date.now()) {
+      if (loginLockout.isLoginLocked) {
         setError("Sistema bloqueado por múltiples intentos fallidos.");
         return false;
       }
@@ -126,17 +85,13 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           sessionStorage.setItem("loggedIn", "true");
           sessionStorage.setItem("username", user);
           sessionStorage.setItem("role", result.role);
-          
-          // Reset de intentos
-          sessionStorage.setItem("login_attempts", "0");
-          setLoginAttempts(0);
+          loginLockout.resetLoginAttempts();
 
           setIsLoggedIn(true);
           setUsername(user);
           setRole(result.role);
           sessionStorage.setItem("lastActivity", Date.now().toString());
 
-          // Log de auditoría (ISO 27001)
           logService.log(user, result.role, "LOGIN_PASSWORD", "Inicio de sesión con contraseña");
 
           if (remember) {
@@ -147,22 +102,15 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           return true;
         }
 
-        // Manejo de intentos fallidos
-        const newAttempts = loginAttempts + 1;
-        setLoginAttempts(newAttempts);
-        sessionStorage.setItem("login_attempts", newAttempts.toString());
-
-        if (newAttempts >= 5) {
-          const lockoutUntil = Date.now() + 60000; // 60 segundos
-          sessionStorage.setItem("login_lockout_until", lockoutUntil.toString());
-          setLoginLockoutTime(60);
+        // Registrar intento fallido (el hook maneja contadores y logs)
+        const locked = loginLockout.registerFailedLogin(user);
+        if (locked) {
           setError("Demasiados intentos. Bloqueado por 60 segundos.");
-          logService.log(user || "unknown", null, "SECURITY_ALERT_LOGIN", "Bloqueo de login clásico activado tras 5 intentos fallidos", "warn");
         } else {
-          setError(`Credenciales incorrectas. Intentos restantes: ${5 - newAttempts}`);
-          logService.log(user || "unknown", null, "LOGIN_FAILED", `Intento de login fallido (${newAttempts}/5)`, "info");
+          setError(
+            `Credenciales incorrectas. Intentos restantes: ${5 - loginLockout.loginAttempts - 1}`
+          );
         }
-
         return false;
       } catch {
         setLoading(false);
@@ -170,14 +118,12 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         return false;
       }
     },
-    [service, loginAttempts]
+    [service, loginLockout]
   );
 
   const loginWithPin = useCallback(async (pin: string): Promise<boolean> => {
-    // Verificar si el sistema está bloqueado
-    const until = Number(sessionStorage.getItem("pin_lockout_until") || 0);
-    if (until > Date.now()) {
-      setError(`Sistema bloqueado por seguridad.`);
+    if (pinLockout.isLocked) {
+      setError("Sistema bloqueado por seguridad.");
       return false;
     }
 
@@ -191,113 +137,63 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         sessionStorage.setItem("loggedIn", "true");
         sessionStorage.setItem("username", result.username);
         sessionStorage.setItem("role", result.role);
-        
-        // Reset de intentos en éxito
-        sessionStorage.setItem("pin_attempts", "0");
-        setAttempts(0);
+        pinLockout.resetAttempts();
 
         setIsLoggedIn(true);
         setUsername(result.username);
         setRole(result.role);
         sessionStorage.setItem("lastActivity", Date.now().toString());
 
-        // Log de auditoría (ISO 27001)
         logService.log(result.username, result.role, "LOGIN_PIN", "Inicio de sesión con PIN");
-
         return true;
       }
 
-      // Manejo de intentos fallidos (Global)
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      sessionStorage.setItem("pin_attempts", newAttempts.toString());
-
-      if (newAttempts >= 3) {
-        const untilTime = Date.now() + 30000; // 30 segundos
-        sessionStorage.setItem("pin_lockout_until", untilTime.toString());
-        setLockoutTime(30);
+      const locked = pinLockout.registerFailedAttempt();
+      if (locked) {
         setError("Demasiados intentos fallidos. Bloqueado por 30 segundos.");
-        logService.log("system", null, "SECURITY_ALERT_PIN", "Bloqueo global de PIN activado tras 3 intentos", "warn");
       } else {
-        setError(`PIN incorrecto. Intentos restantes: ${3 - newAttempts}`);
+        setError(`PIN incorrecto. Intentos restantes: ${3 - pinLockout.attempts - 1}`);
       }
-
       return false;
     } catch {
       setLoading(false);
       setError("Error en la autenticación");
       return false;
     }
-  }, [service, attempts]);
+  }, [service, pinLockout]);
 
-  const logout = useCallback(() => {
-    // Log antes de limpiar la sesión para tener los datos del usuario
-    if (username) {
-      logService.log(username, role, "LOGOUT", "Cierre de sesión de usuario");
-    }
-
-    sessionStorage.clear();
-    setIsLoggedIn(false);
-    setUsername("");
-    setRole(null);
-  }, [username, role]);
-
-  useEffect(() => {
-    if (!isLoggedIn) return;
-
-    const checkInactivity = () => {
-      const last = Number(sessionStorage.getItem("lastActivity") || Date.now());
-      if (Date.now() - last > INACTIVITY_LIMIT) {
-        logService.log(username, role, "SESSION_EXPIRED", "Cierre de sesión automático por inactividad");
-        logout();
-      }
-    };
-
-    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
-    const handleActivity = () => resetInactivityTimer();
-
-    events.forEach(event => window.addEventListener(event, handleActivity));
-    const interval = setInterval(checkInactivity, 30000); // Revisar cada 30s
-
-    return () => {
-      events.forEach(event => window.removeEventListener(event, handleActivity));
-      clearInterval(interval);
-    };
-  }, [isLoggedIn, username, role, logout, resetInactivityTimer]);
-
-  const validatePinForAction = useCallback(async (pin: string): Promise<{ success: boolean; error?: string }> => {
-    const until = Number(sessionStorage.getItem("pin_lockout_until") || 0);
-    if (until > Date.now()) return { success: false, error: "Sistema bloqueado por seguridad" };
-
-    try {
-      const result = await service.loginWithPin(pin);
-      
-      if (result && (result.role === "admin" || result.username === "admin")) {
-        // Reset en éxito
-        sessionStorage.setItem("pin_attempts", "0");
-        setAttempts(0);
-        return { success: true };
+  const validatePinForAction = useCallback(
+    async (pin: string): Promise<{ success: boolean; error?: string }> => {
+      if (pinLockout.isLocked) {
+        return { success: false, error: "Sistema bloqueado por seguridad" };
       }
 
-      // Fallo de autorización o rol insuficiente
-      const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
-      sessionStorage.setItem("pin_attempts", newAttempts.toString());
+      try {
+        const result = await service.loginWithPin(pin);
 
-      if (newAttempts >= 3) {
-        const untilTime = Date.now() + 30000;
-        sessionStorage.setItem("pin_lockout_until", untilTime.toString());
-        setLockoutTime(30);
-        logService.log("system", null, "SECURITY_ALERT_PIN", "Bloqueo global de PIN activado tras intento de autorización fallido", "warn");
-        return { success: false, error: "Demasiados intentos fallidos. Bloqueado por 30 segundos." };
+        if (result && (result.role === "admin" || result.username === "admin")) {
+          pinLockout.resetAttempts();
+          return { success: true };
+        }
+
+        const locked = pinLockout.registerFailedAttempt();
+        if (locked) {
+          return {
+            success: false,
+            error: "Demasiados intentos fallidos. Bloqueado por 30 segundos.",
+          };
+        }
+
+        const errorMsg = result
+          ? "Este usuario no tiene permisos de administrador."
+          : `PIN incorrecto. Intentos restantes: ${3 - pinLockout.attempts - 1}`;
+        return { success: false, error: errorMsg };
+      } catch {
+        return { success: false, error: "Error en la validación" };
       }
-
-      const errorMsg = result ? "Este usuario no tiene permisos de administrador." : `PIN incorrecto. Intentos restantes: ${3 - newAttempts}`;
-      return { success: false, error: errorMsg };
-    } catch {
-      return { success: false, error: "Error en la validación" };
-    }
-  }, [service, attempts]);
+    },
+    [service, pinLockout]
+  );
 
   return (
     <AuthContext.Provider
@@ -312,8 +208,8 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         logout,
         clearError,
         validatePinForAction,
-        lockoutTime,
-        loginLockoutTime,
+        lockoutTime: pinLockout.lockoutTime,
+        loginLockoutTime: loginLockout.loginLockoutTime,
       }}
     >
       {children}
