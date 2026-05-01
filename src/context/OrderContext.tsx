@@ -2,7 +2,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Order, OrderStatus, PaymentMethod, OrderType } from "../types/order.types";
 import { CartItemType } from "../types/cart";
-import { saveOrderDB } from "../services/db";
+import { IOrderRepository } from "../types/repositories";
+import { orderRepository as defaultOrderRepository } from "../repositories/OrderRepository";
 import { useAuth } from "./AuthContext";
 
 interface OrderContextProps {
@@ -40,7 +41,16 @@ const OrderContext = createContext<OrderContextProps | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY = "app_factura_orders";
 
-export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface OrderProviderProps {
+  children: React.ReactNode;
+  /** DIP: permite inyectar un repositorio alternativo (e.g. mock para tests) */
+  repository?: IOrderRepository;
+}
+
+export const OrderProvider: React.FC<OrderProviderProps> = ({
+  children,
+  repository = defaultOrderRepository,
+}) => {
   const { username } = useAuth();
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -48,8 +58,6 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const parsed = JSON.parse(saved);
       const now = new Date();
-      // Filter out orders that are:
-      // (delivered OR cancelled) AND NOT from today
       return parsed
         .map((o: Order) => ({ ...o, timestamp: new Date(o.timestamp) }))
         .filter((o: Order) => {
@@ -90,58 +98,48 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       paymentMethod: paymentMethod as PaymentMethod,
       splitAmounts,
       cashierName: username || "Sistema",
-      isSentToKitchen: !tableId, // Si no hay mesa (venta directa), va directo a cocina
+      isSentToKitchen: !tableId,
     };
     setOrders((prev) => [newOrder, ...prev]);
-    saveOrderDB(newOrder); // Persistir en IndexedDB
+    repository.save(newOrder);
   };
 
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-    setOrders(prev => {
-      const updatedOrders = prev.map(order => 
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
         order.id === orderId ? { ...order, status } : order
       );
-      
-      const modifiedOrder = updatedOrders.find(o => o.id === orderId);
-      if (modifiedOrder) {
-        saveOrderDB(modifiedOrder); // Actualizar en IndexedDB
-      }
-
+      const modified = updatedOrders.find((o) => o.id === orderId);
+      if (modified) repository.save(modified);
       return updatedOrders;
     });
   };
 
   const removeOrder = (orderId: string) => {
-    setOrders(prev => prev.filter(order => order.id !== orderId));
+    setOrders((prev) => prev.filter((order) => order.id !== orderId));
   };
 
   const updateOrderItems = (orderId: string, items: CartItemType[], total: number) => {
-    setOrders(prev => {
-      const updatedOrders = prev.map(order => 
+    setOrders((prev) => {
+      const updatedOrders = prev.map((order) =>
         order.id === orderId ? { ...order, items: [...items], total } : order
       );
-      
-      const modifiedOrder = updatedOrders.find(o => o.id === orderId);
-      if (modifiedOrder) {
-        saveOrderDB(modifiedOrder); // Actualizar en IndexedDB
-      }
-
+      const modified = updatedOrders.find((o) => o.id === orderId);
+      if (modified) repository.save(modified);
       return updatedOrders;
     });
   };
 
-  const getOrderByTable = (tableId: string) => {
-    // La mesa sigue ocupada aunque esté 'delivered', hasta que esté 'paid'
-    return orders.find(
+  const getOrderByTable = (tableId: string) =>
+    orders.find(
       (o) =>
-        (o.tableId === tableId || (o.linkedTables && o.linkedTables.includes(tableId))) &&
+        (o.tableId === tableId ||
+          (o.linkedTables && o.linkedTables.includes(tableId))) &&
         o.status !== "paid" &&
         o.status !== "cancelled"
     );
-  };
 
   const clearHistory = () => {
-    // Mantiene solo órdenes que NO están pagadas ni canceladas
     setOrders((prev) =>
       prev.filter((order) => order.status !== "paid" && order.status !== "cancelled")
     );
@@ -169,12 +167,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
           : order
       );
-
-      const modifiedOrder = updatedOrders.find((o) => o.id === orderId);
-      if (modifiedOrder) {
-        saveOrderDB(modifiedOrder); // Actualizar en IndexedDB
-      }
-
+      const modified = updatedOrders.find((o) => o.id === orderId);
+      if (modified) repository.save(modified);
       return updatedOrders;
     });
   };
@@ -184,12 +178,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const updatedOrders = prev.map((order) =>
         order.id === orderId ? { ...order, isSentToKitchen: true } : order
       );
-
-      const modifiedOrder = updatedOrders.find((o) => o.id === orderId);
-      if (modifiedOrder) {
-        saveOrderDB(modifiedOrder);
-      }
-
+      const modified = updatedOrders.find((o) => o.id === orderId);
+      if (modified) repository.save(modified);
       return updatedOrders;
     });
   };
@@ -197,18 +187,19 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const markAsSentToKitchenByTable = (tableId: string) => {
     setOrders((prev) => {
       const updatedOrders = prev.map((order) =>
-        (order.tableId === tableId && order.status !== 'paid' && order.status !== 'cancelled') 
-          ? { ...order, isSentToKitchen: true } 
+        order.tableId === tableId &&
+        order.status !== "paid" &&
+        order.status !== "cancelled"
+          ? { ...order, isSentToKitchen: true }
           : order
       );
-
-      const modifiedOrder = updatedOrders.find(
-        (o) => o.tableId === tableId && o.status !== 'paid' && o.status !== 'cancelled'
+      const modified = updatedOrders.find(
+        (o) =>
+          o.tableId === tableId &&
+          o.status !== "paid" &&
+          o.status !== "cancelled"
       );
-      if (modifiedOrder) {
-        saveOrderDB(modifiedOrder);
-      }
-
+      if (modified) repository.save(modified);
       return updatedOrders;
     });
   };
@@ -216,12 +207,19 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const moveOrder = (sourceTableId: string, destTableId: string) => {
     setOrders((prev) => {
       const updatedOrders = prev.map((order) =>
-        order.tableId === sourceTableId && order.status !== "paid" && order.status !== "cancelled"
+        order.tableId === sourceTableId &&
+        order.status !== "paid" &&
+        order.status !== "cancelled"
           ? { ...order, tableId: destTableId }
           : order
       );
-      const modifiedOrder = updatedOrders.find((o) => o.tableId === destTableId && o.status !== "paid" && o.status !== "cancelled");
-      if (modifiedOrder) saveOrderDB(modifiedOrder);
+      const modified = updatedOrders.find(
+        (o) =>
+          o.tableId === destTableId &&
+          o.status !== "paid" &&
+          o.status !== "cancelled"
+      );
+      if (modified) repository.save(modified);
       return updatedOrders;
     });
   };
@@ -229,39 +227,46 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const unirMesas = (sourceTableId: string, destTableId: string) => {
     setOrders((prev) => {
       const updatedOrders = prev.map((order) => {
-        // If it's the order with sourceTableId, we add destTableId to linkedTables
-        if (order.tableId === sourceTableId && order.status !== "paid" && order.status !== "cancelled") {
+        if (
+          order.tableId === sourceTableId &&
+          order.status !== "paid" &&
+          order.status !== "cancelled"
+        ) {
           const linkedTables = order.linkedTables || [];
           if (!linkedTables.includes(destTableId)) {
-            return {
-              ...order,
-              linkedTables: [...linkedTables, destTableId]
-            };
+            return { ...order, linkedTables: [...linkedTables, destTableId] };
           }
         }
         return order;
       });
-      const modifiedOrder = updatedOrders.find((o) => o.tableId === sourceTableId && o.status !== "paid" && o.status !== "cancelled");
-      if (modifiedOrder) saveOrderDB(modifiedOrder);
+      const modified = updatedOrders.find(
+        (o) =>
+          o.tableId === sourceTableId &&
+          o.status !== "paid" &&
+          o.status !== "cancelled"
+      );
+      if (modified) repository.save(modified);
       return updatedOrders;
     });
   };
 
   return (
-    <OrderContext.Provider value={{ 
-      orders, 
-      addOrder, 
-      updateOrderStatus, 
-      removeOrder, 
-      clearHistory,
-      updateOrderItems,
-      getOrderByTable,
-      finalizeOrder,
-      markAsSentToKitchen,
-      markAsSentToKitchenByTable,
-      moveOrder,
-      unirMesas,
-    }}>
+    <OrderContext.Provider
+      value={{
+        orders,
+        addOrder,
+        updateOrderStatus,
+        removeOrder,
+        clearHistory,
+        updateOrderItems,
+        getOrderByTable,
+        finalizeOrder,
+        markAsSentToKitchen,
+        markAsSentToKitchenByTable,
+        moveOrder,
+        unirMesas,
+      }}
+    >
       {children}
     </OrderContext.Provider>
   );

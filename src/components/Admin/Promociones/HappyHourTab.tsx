@@ -12,27 +12,17 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { HappyHourRule } from "../../../data/promocionesMockData";
 
-const MOCK_HAPPY_HOURS = [
-  {
-    id: 1,
-    name: "Happy Hour Cervezas",
-    days: "Jue, Vie, Sab",
-    time: "18:00 - 21:00",
-    promotion: "2x1",
-    status: "Activo",
-  },
-  {
-    id: 2,
-    name: "Almuerzo Ejecutivo",
-    days: "Lun - Vie",
-    time: "12:00 - 15:00",
-    promotion: "-20% en Platos Fuertes",
-    status: "Inactivo",
-  },
-];
+interface HappyHourTabProps {
+  /** OCP: el componente renderiza datos recibidos por props, sin conocer su origen */
+  rules: HappyHourRule[];
+  onAdd?: () => void;
+  onEdit?: (rule: HappyHourRule) => void;
+  onDelete?: (id: number) => void;
+}
 
-const HappyHourTab = () => {
+const HappyHourTab = ({ rules, onAdd, onEdit, onDelete }: HappyHourTabProps) => {
   return (
     <Box>
       <Box
@@ -51,15 +41,23 @@ const HappyHourTab = () => {
             Configura descuentos automáticos basados en días de la semana y rango de horas.
           </Typography>
         </Box>
-        <Button variant="contained" color="secondary" startIcon={<AddIcon />}>
+        <Button
+          variant="contained"
+          color="secondary"
+          startIcon={<AddIcon />}
+          onClick={onAdd}
+        >
           Nueva Regla
         </Button>
       </Box>
 
       <Grid container spacing={3}>
-        {MOCK_HAPPY_HOURS.map((hh) => (
+        {rules.map((hh) => (
           <Grid size={{ xs: 12, md: 6, lg: 4 }} key={hh.id}>
-            <Card variant="outlined" sx={{ borderRadius: 2, opacity: hh.status === "Inactivo" ? 0.7 : 1 }}>
+            <Card
+              variant="outlined"
+              sx={{ borderRadius: 2, opacity: hh.status === "Inactivo" ? 0.7 : 1 }}
+            >
               <CardContent>
                 <Box
                   sx={{
@@ -104,15 +102,25 @@ const HappyHourTab = () => {
                   </Box>
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                     <Typography variant="body2" color="text.secondary">Promoción:</Typography>
-                    <Typography variant="body2" color="secondary.main" fontWeight={700}>{hh.promotion}</Typography>
+                    <Typography variant="body2" color="secondary.main" fontWeight={700}>
+                      {hh.promotion}
+                    </Typography>
                   </Box>
                 </Box>
 
-                <Box sx={{ display: "flex", justifyContent: "flex-end", borderTop: 1, borderColor: "divider", pt: 1 }}>
-                  <IconButton size="small" color="primary">
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    borderTop: 1,
+                    borderColor: "divider",
+                    pt: 1,
+                  }}
+                >
+                  <IconButton size="small" color="primary" onClick={() => onEdit?.(hh)}>
                     <EditIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" color="error">
+                  <IconButton size="small" color="error" onClick={() => onDelete?.(hh.id)}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Box>
@@ -126,4 +134,3 @@ const HappyHourTab = () => {
 };
 
 export default HappyHourTab;
-// End of file

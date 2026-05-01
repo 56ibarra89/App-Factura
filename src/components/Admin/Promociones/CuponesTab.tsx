@@ -15,35 +15,17 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { CuponRule } from "../../../data/promocionesMockData";
 
-const MOCK_CUPONES = [
-  {
-    id: 1,
-    code: "VERANO2026",
-    discount: "15%",
-    usage: "14 / 50",
-    expires: "2026-08-31",
-    status: "Activo",
-  },
-  {
-    id: 2,
-    code: "BIENVENIDA",
-    discount: "$50.00",
-    usage: "120 / ∞",
-    expires: "Sin límite",
-    status: "Activo",
-  },
-  {
-    id: 3,
-    code: "FLASH50",
-    discount: "50%",
-    usage: "10 / 10",
-    expires: "2026-04-01",
-    status: "Agotado",
-  },
-];
+interface CuponesTabProps {
+  /** OCP: el componente renderiza datos recibidos por props, sin conocer su origen */
+  cupones: CuponRule[];
+  onAdd?: () => void;
+  onCopy?: (code: string) => void;
+  onDelete?: (id: number) => void;
+}
 
-const CuponesTab = () => {
+const CuponesTab = ({ cupones, onAdd, onCopy, onDelete }: CuponesTabProps) => {
   return (
     <Box>
       <Box
@@ -59,11 +41,10 @@ const CuponesTab = () => {
             Cupones Manuales
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Crea códigos alfanuméricos para que los clientes o cajeros los
-            rediman.
+            Crea códigos alfanuméricos para que los clientes o cajeros los rediman.
           </Typography>
         </Box>
-        <Button variant="contained" color="primary" startIcon={<AddIcon />}>
+        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={onAdd}>
           Crear Cupón
         </Button>
       </Box>
@@ -77,13 +58,11 @@ const CuponesTab = () => {
               <TableCell sx={{ fontWeight: 600 }}>Uso</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Vencimiento</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Estado</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 600 }}>
-                Acciones
-              </TableCell>
+              <TableCell align="right" sx={{ fontWeight: 600 }}>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {MOCK_CUPONES.map((cupon) => (
+            {cupones.map((cupon) => (
               <TableRow key={cupon.id} hover>
                 <TableCell>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -101,7 +80,7 @@ const CuponesTab = () => {
                     >
                       {cupon.code}
                     </Typography>
-                    <IconButton size="small">
+                    <IconButton size="small" onClick={() => onCopy?.(cupon.code)}>
                       <ContentCopyIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                   </Box>
@@ -123,7 +102,7 @@ const CuponesTab = () => {
                   />
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton color="error" size="small">
+                  <IconButton color="error" size="small" onClick={() => onDelete?.(cupon.id)}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </TableCell>
@@ -137,4 +116,3 @@ const CuponesTab = () => {
 };
 
 export default CuponesTab;
-// End of file
