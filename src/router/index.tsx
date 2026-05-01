@@ -27,7 +27,7 @@ import Bitacora from "../pages/admin/Bitacora";
 import { CajaProvider } from "../context/CajaContext";
 import Perifericos from "../pages/admin/AdminPerifericos";
 import AdminPromociones from "../pages/admin/AdminPromociones";
-
+import AdminCorrelativos from "../pages/admin/AdminCorrelativos";
 const AppRoutes = () => (
   <CajaProvider>
     <Routes>
@@ -115,6 +115,10 @@ const AppRoutes = () => (
       <Route
         path="/admin/promociones"
         element={<AdminRoute element={<AdminPromociones />} />}
+      />
+      <Route
+        path="/admin/correlativos"
+        element={<AdminRoute element={<AdminCorrelativos />} />}
       />
     </Routes>
   </CajaProvider>

@@ -5,12 +5,13 @@
  */
 
 export const DB_NAME = "AppFacturaDB";
-export const DB_VERSION = 4;
+export const DB_VERSION = 5;
 
 export const STORES = {
   ORDERS: "orders",
   SHIFTS: "shifts",
   LOGS: "logs",
+  CORRELATIVOS: "correlativos",
 } as const;
 
 export const initDB = (): Promise<IDBDatabase> => {
@@ -75,6 +76,12 @@ export const initDB = (): Promise<IDBDatabase> => {
         store.createIndex("timestamp", "timestamp", { unique: false });
         store.createIndex("user", "user", { unique: false });
         store.createIndex("action", "action", { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains(STORES.CORRELATIVOS)) {
+        const store = db.createObjectStore(STORES.CORRELATIVOS, { keyPath: "id" });
+        store.createIndex("documentType", "documentType", { unique: false });
+        store.createIndex("status", "status", { unique: false });
       }
     };
   });

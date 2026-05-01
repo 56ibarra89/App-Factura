@@ -108,7 +108,7 @@ export const adminModules: AdminModuleItem[] = [
     title: "Correlativos Factura",
     description: "Gestiona los números de comprobante, rangos de folio autorizados y secuencias de facturación.",
     icon: <ReceiptLongIcon fontSize="large" />,
-    disabled: true,
+    path: "/admin/correlativos",
   },
   {
     id: "respaldos",
