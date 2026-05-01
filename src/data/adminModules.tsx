@@ -116,6 +116,6 @@ export const adminModules: AdminModuleItem[] = [
     title: "Respaldos de Datos",
     description: "Exporta la configuración, menú e histórico. Crea y restaura copias de seguridad totales.",
     icon: <SaveIcon fontSize="large" />,
-    disabled: true,
+    path: "/admin/respaldos",
   }
 ];

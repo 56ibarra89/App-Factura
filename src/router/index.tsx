@@ -28,6 +28,7 @@ import { CajaProvider } from "../context/CajaContext";
 import Perifericos from "../pages/admin/AdminPerifericos";
 import AdminPromociones from "../pages/admin/AdminPromociones";
 import AdminCorrelativos from "../pages/admin/AdminCorrelativos";
+import AdminRespaldos from "../pages/admin/AdminRespaldos";
 const AppRoutes = () => (
   <CajaProvider>
     <Routes>
@@ -119,6 +120,10 @@ const AppRoutes = () => (
       <Route
         path="/admin/correlativos"
         element={<AdminRoute element={<AdminCorrelativos />} />}
+      />
+      <Route
+        path="/admin/respaldos"
+        element={<AdminRoute element={<AdminRespaldos />} />}
       />
     </Routes>
   </CajaProvider>
