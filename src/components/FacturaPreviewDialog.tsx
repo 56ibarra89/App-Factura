@@ -23,6 +23,8 @@ import { formatItemName } from "../utils/formatUtils";
 interface FacturaPreviewDialogProps {
   open: boolean;
   cart: CartItemType[];
+  subTotal: number;
+  taxAmount: number;
   total: number;
   onClose: () => void;
   onConfirm: (
@@ -42,6 +44,8 @@ interface FacturaPreviewDialogProps {
 export default function FacturaPreviewDialog({
   open,
   cart,
+  subTotal,
+  taxAmount,
   total,
   onClose,
   onConfirm,
@@ -131,6 +135,14 @@ export default function FacturaPreviewDialog({
           ))}
         </List>
         <Divider sx={{ my: 2 }} />
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography>Subtotal:</Typography>
+          <Typography>${subTotal.toFixed(2)}</Typography>
+        </Box>
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography>Impuestos:</Typography>
+          <Typography>${taxAmount.toFixed(2)}</Typography>
+        </Box>
         <Box display="flex" justifyContent="space-between" mb={2}>
           <Typography fontWeight="bold">Total:</Typography>
           <Typography fontWeight="bold" color="error.main">
