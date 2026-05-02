@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { CartItemType } from "../types/cart";
 import { SelectedExtra } from "../types/extras";
 import { ProductSize } from "../types/product";
+import { useImpuestosConfig } from "./useImpuestosConfig";
 
 /** Compara extras para determinar si dos items del carrito son iguales */
 const extrasKey = (extras: SelectedExtra[]) =>
@@ -9,6 +10,7 @@ const extrasKey = (extras: SelectedExtra[]) =>
 
 export function useCartStore() {
   const [cart, setCart] = useState<CartItemType[]>([]);
+  const { taxes, isExonerated } = useImpuestosConfig();
 
   const addItem = useCallback(
     (newItem: { name: string; price: number; size: ProductSize; extras: SelectedExtra[]; note?: string }) => {
@@ -89,7 +91,7 @@ export function useCartStore() {
 
   const clearCart = useCallback(() => setCart([]), []);
 
-  const total = useMemo(
+  const subTotal = useMemo(
     () =>
       cart.reduce((sum, item) => {
         const giftQty = item.giftQuantity || 0;
@@ -99,8 +101,18 @@ export function useCartStore() {
     [cart]
   );
 
+  const taxAmount = useMemo(() => {
+    if (isExonerated) return 0;
+    const activeTax = taxes[0]?.percentage || 0;
+    return subTotal * (activeTax / 100);
+  }, [subTotal, isExonerated, taxes]);
+
+  const total = subTotal + taxAmount;
+
   return {
     cart,
+    subTotal,
+    taxAmount,
     total,
     addItem,
     removeItem,
