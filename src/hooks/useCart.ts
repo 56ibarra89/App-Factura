@@ -11,6 +11,8 @@ interface UseCartOptions {
 export function useCart({ navigate }: UseCartOptions = {}) {
   const {
     cart,
+    subTotal,
+    taxAmount,
     total,
     addItem,
     removeItem,
@@ -42,6 +44,8 @@ export function useCart({ navigate }: UseCartOptions = {}) {
   return {
     // State
     cart,
+    subTotal,
+    taxAmount,
     total,
     selectedProduct,
     setSelectedProduct,
