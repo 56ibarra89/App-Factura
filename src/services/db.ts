@@ -1,6 +1,6 @@
 /**
- * SRP: db.ts ahora es una fachada delgada que re-exporta desde los repositorios.
- * Mantiene compatibilidad total con cualquier import existente en el proyecto.
+ * SRP: db.ts es una fachada delgada que re-exporta desde los repositorios.
+ * Mantiene compatibilidad con los hooks que la importan (useDailyReport, useOrderHistory, useTurnosHistory).
  * La lógica real vive en src/repositories/.
  */
 

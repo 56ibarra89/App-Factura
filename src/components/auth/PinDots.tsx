@@ -30,5 +30,3 @@ export const PinDots = ({ pin, MAX_PIN_LENGTH }: PinDotsProps) => {
     </Box>
   );
 };
-
-export default PinDots;

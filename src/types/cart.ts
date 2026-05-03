@@ -1,6 +1,7 @@
 // src/types/cart.ts
 import { ProductSize } from "./product";
 import { SelectedExtra } from "./extras";
+import { KitchenStatus } from "./order.types";
 
 export interface CartItemType {
   name: string;
@@ -10,6 +11,9 @@ export interface CartItemType {
   extras: SelectedExtra[];
   note?: string;
   giftQuantity?: number;
+  isSentToKitchen?: boolean;
+  sentAt?: number;
+  kitchenStatus?: KitchenStatus;
 }
 
 

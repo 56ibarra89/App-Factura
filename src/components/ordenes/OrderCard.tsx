@@ -18,12 +18,15 @@ import { formatItemName } from "../../utils/formatUtils";
 
 interface OrderCardProps {
   order: Order;
-  onUpdateStatus: (id: string, status: OrderStatus) => void;
+  onUpdateStatus: (id: string, status: OrderStatus, sentAt?: number) => void;
   onDelete: (id: string) => void;
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }) => {
   const timeElapsed = Math.floor((new Date().getTime() - new Date(order.timestamp).getTime()) / 60000);
+
+  // Obtener el sentAt del primer ítem (todos los ítems del ticket comparten el mismo sentAt)
+  const ticketSentAt = order.items[0]?.sentAt;
 
   return (
     <Card 
@@ -79,9 +82,9 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
 
         <Divider sx={{ mb: 2 }} />
 
-        <Stack spacing={1}>
+        <Stack spacing={0.5}>
           {order.items.map((item, idx) => (
-            <Box key={idx} display="flex" justifyContent="space-between">
+            <Box key={idx} display="flex" justifyContent="space-between" alignItems="center" sx={{ p: 0.5 }}>
               <Typography variant="body2">
                 {item.quantity}x {formatItemName(item.name, item.size)}
               </Typography>
@@ -106,7 +109,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
             <Button 
               size="small" 
               variant="contained" 
-              onClick={() => onUpdateStatus(order.id, 'preparing')}
+              onClick={() => onUpdateStatus(order.id, 'preparing', ticketSentAt)}
               sx={{ bgcolor: LOGIN_COLORS.primary, '&:hover': { bgcolor: LOGIN_COLORS.primaryDark } }}
             >
               Preparar
@@ -117,7 +120,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
               size="small" 
               variant="contained" 
               color="success"
-              onClick={() => onUpdateStatus(order.id, 'ready')}
+              onClick={() => onUpdateStatus(order.id, 'ready', ticketSentAt)}
               startIcon={<CheckCircleIcon />}
             >
               Listo
@@ -127,7 +130,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
             <Button 
               size="small" 
               variant="outlined" 
-              onClick={() => onUpdateStatus(order.id, 'delivered')}
+              onClick={() => onUpdateStatus(order.id, 'delivered', ticketSentAt)}
             >
               Entregar
             </Button>

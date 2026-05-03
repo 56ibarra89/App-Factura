@@ -24,7 +24,8 @@ export function useCartStore() {
             item.name === newItem.name &&
             item.size === newItem.size &&
             extrasKey(item.extras) === extrasKey(newItem.extras) &&
-            item.note === sanitizedNote
+            item.note === sanitizedNote &&
+            !item.isSentToKitchen // No fusionar si ya se envió a cocina
         );
 
         if (existingIndex !== -1) {
