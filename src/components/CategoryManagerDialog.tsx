@@ -11,10 +11,14 @@ import {
   TextField,
   Box,
   Typography,
+  Select,
+  MenuItem,
+  FormControl,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useProductContext } from "../context/ProductContext";
+import { AVAILABLE_ICONS } from "../config/icons";
 
 interface CategoryManagerDialogProps {
   open: boolean;
@@ -24,8 +28,10 @@ interface CategoryManagerDialogProps {
 const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onClose }) => {
   const { categories, addCategory, updateCategory, deleteCategory } = useProductContext();
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryIcon, setNewCategoryIcon] = useState("Restaurant");
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [editingIcon, setEditingIcon] = useState("Restaurant");
   const [error, setError] = useState<string | null>(null);
 
   const handleAdd = () => {
@@ -37,8 +43,9 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
       return;
     }
 
-    addCategory(trimmedName);
+    addCategory(trimmedName, newCategoryIcon);
     setNewCategoryName("");
+    setNewCategoryIcon("Restaurant");
     setError(null);
   };
 
@@ -54,9 +61,10 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
       return;
     }
 
-    updateCategory(editingCategory, trimmedName);
+    updateCategory(editingCategory, trimmedName, editingIcon);
     setEditingCategory(null);
     setEditingName("");
+    setEditingIcon("Restaurant");
     setError(null);
   };
 
@@ -74,7 +82,22 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Gestionar Categorías</DialogTitle>
       <DialogContent dividers>
-        <Box display="flex" gap={1} mb={2}>
+        <Box display="flex" gap={1} mb={2} alignItems="center">
+          <FormControl size="small" sx={{ minWidth: 80 }}>
+            <Select
+              value={newCategoryIcon}
+              onChange={(e) => setNewCategoryIcon(e.target.value as string)}
+              displayEmpty
+            >
+              {Object.keys(AVAILABLE_ICONS).map((iconKey) => (
+                <MenuItem key={iconKey} value={iconKey}>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    {AVAILABLE_ICONS[iconKey]}
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
             size="small"
             fullWidth
@@ -107,6 +130,7 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                     onClick={() => {
                       setEditingCategory(cat.label);
                       setEditingName(cat.label);
+                      setEditingIcon(cat.icon || "Restaurant");
                       setError(null);
                     }}
                   >
@@ -125,7 +149,21 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
               }
             >
               {editingCategory === cat.label ? (
-                <Box display="flex" gap={1} width="100%" mr={8}>
+                <Box display="flex" gap={1} width="100%" mr={8} alignItems="center">
+                  <FormControl size="small" sx={{ minWidth: 80 }}>
+                    <Select
+                      value={editingIcon}
+                      onChange={(e) => setEditingIcon(e.target.value as string)}
+                    >
+                      {Object.keys(AVAILABLE_ICONS).map((iconKey) => (
+                        <MenuItem key={iconKey} value={iconKey}>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            {AVAILABLE_ICONS[iconKey]}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                   <TextField
                     size="small"
                     fullWidth
@@ -150,10 +188,13 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                   </Button>
                 </Box>
               ) : (
-                <ListItemText
-                  primary={cat.label}
-                  secondary={`${cat.items.length} productos`}
-                />
+                <Box display="flex" alignItems="center" gap={2}>
+                  {AVAILABLE_ICONS[cat.icon || "Restaurant"]}
+                  <ListItemText
+                    primary={cat.label}
+                    secondary={`${cat.items.length} productos`}
+                  />
+                </Box>
               )}
             </ListItem>
           ))}

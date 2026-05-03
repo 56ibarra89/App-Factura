@@ -9,8 +9,8 @@ interface ProductContextType {
   addProduct: (category: string, product: Product) => void;
   updateProduct: (category: string, oldName: string, updatedProduct: Product) => void;
   deleteProduct: (category: string, productName: string) => void;
-  addCategory: (categoryName: string) => void;
-  updateCategory: (oldName: string, newName: string) => void;
+  addCategory: (categoryName: string, icon?: string) => void;
+  updateCategory: (oldName: string, newName: string, icon?: string) => void;
   deleteCategory: (categoryName: string) => void;
 }
 
@@ -90,18 +90,18 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const addCategory = (categoryName: string) => {
+  const addCategory = (categoryName: string, icon?: string) => {
     setCategories((prev) => {
       if (prev.some(cat => cat.label === categoryName)) return prev;
-      return [...prev, { label: categoryName, items: [] }];
+      return [...prev, { label: categoryName, icon, items: [] }];
     });
   };
 
-  const updateCategory = (oldName: string, newName: string) => {
+  const updateCategory = (oldName: string, newName: string, icon?: string) => {
     setCategories((prev) =>
       prev.map((cat) =>
         cat.label === oldName
-          ? { ...cat, label: newName }
+          ? { ...cat, label: newName, icon: icon !== undefined ? icon : cat.icon }
           : cat
       )
     );

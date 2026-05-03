@@ -1,31 +1,18 @@
 // src/components/CategoryTabs.tsx
 import { Box, Tabs, Tab, IconButton } from "@mui/material";
-import {
-  LocalPizza,
-  Fastfood,
-  LunchDining,
-  Restaurant,
-  LocalDrink,
-  Cake,
-  Home,
-} from "@mui/icons-material";
+import { Home } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { Product } from "../types/product";
+import { Category } from "../types/product";
+import { AVAILABLE_ICONS } from "../config/icons";
 
-// Este mapa de iconos puede vivir aquí o ser importado de un archivo de constantes
-const iconMap: Record<string, JSX.Element> = {
-  Pizzas: <LocalPizza fontSize="large" />,
-  Mexicanos: <Fastfood fontSize="large" />,
-  Submarinos: <LunchDining fontSize="large" />,
-  Alitas: <Restaurant fontSize="large" />,
-  Postres: <Cake fontSize="large" />,
-  Bebidas: <LocalDrink fontSize="large" />,
+const defaultIconMap: Record<string, JSX.Element> = {
+  Pizzas: AVAILABLE_ICONS.LocalPizza,
+  Mexicanos: AVAILABLE_ICONS.Fastfood,
+  Submarinos: AVAILABLE_ICONS.LunchDining,
+  Alitas: AVAILABLE_ICONS.Restaurant,
+  Postres: AVAILABLE_ICONS.Cake,
+  Bebidas: AVAILABLE_ICONS.LocalDrink,
 };
-
-interface Category {
-  label: string;
-  items: Product[];
-}
 
 interface CategoryTabsProps {
   categories: Category[];
@@ -87,7 +74,11 @@ const CategoryTabs = ({
         {categories.map((cat) => (
           <Tab
             key={cat.label}
-            icon={iconMap[cat.label] ?? null}
+            icon={
+              (cat.icon && AVAILABLE_ICONS[cat.icon]) ||
+              defaultIconMap[cat.label] ||
+              AVAILABLE_ICONS.Restaurant
+            }
             label={cat.label}
             sx={{
               alignItems: "center",

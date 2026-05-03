@@ -19,6 +19,7 @@ export interface Product {
 
 export interface Category {
   label: string;
+  icon?: string;
   items: Product[];
 }
 
