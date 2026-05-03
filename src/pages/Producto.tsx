@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import ProductsTable from "../components/ProductsTable";
 import ProductFormDialog from "../components/ProductFormDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
+import CategoryManagerDialog from "../components/CategoryManagerDialog";
 import RoleGuard from "../components/auth/RoleGuard";
 import { logService } from "../services/logService";
 import { useAuth } from "../context/AuthContext";
@@ -18,6 +19,7 @@ const Producto = () => {
   const addButtonRef = useRef<HTMLButtonElement>(null);
 
   const [showForm, setShowForm] = useState(false);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [editing, setEditing] = useState<null | {
     product: Product;
     category: string;
@@ -84,6 +86,12 @@ const Producto = () => {
         <Stack direction="row" justifyContent="flex-end" spacing={2}>
           <RoleGuard allowedRoles={["admin"]}>
             <Button 
+              variant="outlined" 
+              onClick={() => setShowCategoryManager(true)}
+            >
+              Gestionar Categorías
+            </Button>
+            <Button 
               ref={addButtonRef}
               variant="contained" 
               onClick={handleAdd}
@@ -113,6 +121,11 @@ const Producto = () => {
         onClose={() => setDeleteConfirm({ ...deleteConfirm, open: false })}
         onConfirm={handleConfirmDelete}
         disableRestoreFocus={true}
+      />
+
+      <CategoryManagerDialog
+        open={showCategoryManager}
+        onClose={() => setShowCategoryManager(false)}
       />
     </>
   );

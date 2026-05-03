@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 // src/context/ProductContext.tsx
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Category, Product } from "../types/product";
 
 // Contexto y métodos disponibles
@@ -9,7 +9,12 @@ interface ProductContextType {
   addProduct: (category: string, product: Product) => void;
   updateProduct: (category: string, oldName: string, updatedProduct: Product) => void;
   deleteProduct: (category: string, productName: string) => void;
+  addCategory: (categoryName: string) => void;
+  updateCategory: (oldName: string, newName: string) => void;
+  deleteCategory: (categoryName: string) => void;
 }
+
+const CATEGORIES_STORAGE_KEY = 'app_factura_categories';
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
@@ -26,7 +31,23 @@ import { initialCategories } from "../data/initialData";
 
 // Componente Provider
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const loadInitialCategories = () => {
+    try {
+      const stored = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error("Error parsing categories from localStorage", e);
+    }
+    return initialCategories;
+  };
+
+  const [categories, setCategories] = useState<Category[]>(loadInitialCategories());
+
+  useEffect(() => {
+    localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categories));
+  }, [categories]);
 
   const addProduct = (category: string, product: Product) => {
     setCategories((prev) =>
@@ -69,9 +90,30 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const addCategory = (categoryName: string) => {
+    setCategories((prev) => {
+      if (prev.some(cat => cat.label === categoryName)) return prev;
+      return [...prev, { label: categoryName, items: [] }];
+    });
+  };
+
+  const updateCategory = (oldName: string, newName: string) => {
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.label === oldName
+          ? { ...cat, label: newName }
+          : cat
+      )
+    );
+  };
+
+  const deleteCategory = (categoryName: string) => {
+    setCategories((prev) => prev.filter(cat => cat.label !== categoryName));
+  };
+
   return (
     <ProductContext.Provider
-      value={{ categories, addProduct, updateProduct, deleteProduct }}
+      value={{ categories, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory }}
     >
       {children}
     </ProductContext.Provider>

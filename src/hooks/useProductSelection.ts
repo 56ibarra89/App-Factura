@@ -16,12 +16,20 @@ export function useProductSelection(onConfirm: (item: { name: string; price: num
     if (item?.prices?.length) {
       const isUniquePrice = item.prices.length === 1 && item.prices[0].size === "único";
       if (isUniquePrice) {
-        onConfirm({
-          name: item.name,
-          price: item.prices[0].price,
-          size: "único",
-          extras: [],
-        });
+        if (item.extras?.length) {
+          setPendingItem({
+            product: item,
+            size: "único",
+            price: item.prices[0].price,
+          });
+        } else {
+          onConfirm({
+            name: item.name,
+            price: item.prices[0].price,
+            size: "único",
+            extras: [],
+          });
+        }
       } else {
         const validPrices = item.prices.filter((p) =>
           ["familiar", "mediana", "personal"].includes(p.size)

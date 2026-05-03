@@ -10,10 +10,12 @@ import {
   FormControl,
   InputLabel,
   Select,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { Product } from "../types/product";
 import { useProductForm } from "../hooks/useProductForm";
-import { IS_PIZZA as isPizza, PRODUCT_CATEGORIES as categoriesList } from "../config/constants";
+import { useProductContext } from "../context/ProductContext";
 import ExtrasFormSection from "./ExtrasFormSection";
 
 const ProductFormDialog = ({
@@ -29,11 +31,14 @@ const ProductFormDialog = ({
   editing: null | { product: Product; category: string };
   disableRestoreFocus?: boolean;
 }) => {
+  const { categories } = useProductContext();
+
   const {
     form,
     setForm,
     extras,
     handleCategoryChange,
+    handleMultipleSizesToggle,
     handleAddExtra,
     handleRemoveExtra,
     handleExtraNameChange,
@@ -87,15 +92,27 @@ const ProductFormDialog = ({
               label="Categoría"
               onChange={(e) => handleCategoryChange(e.target.value as string)}
             >
-              {categoriesList.map((c) => (
-                <MenuItem key={c} value={c}>
-                  {c}
+              {categories.map((c) => (
+                <MenuItem key={c.label} value={c.label}>
+                  {c.label}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
 
-          {isPizza(form.category)
+          <FormControlLabel
+            control={
+              <Switch
+                checked={form.hasMultipleSizes}
+                onChange={(e) => handleMultipleSizesToggle(e.target.checked)}
+                disabled={!!editing}
+              />
+            }
+            label="El producto tiene múltiples tamaños"
+            sx={{ mb: 2 }}
+          />
+
+          {form.hasMultipleSizes
             ? form.prices.map((p, i) => (
                 <TextField
                   key={p.size}
@@ -134,19 +151,17 @@ const ProductFormDialog = ({
               />
             )}
 
-          {/* Sección de extras (solo Pizzas) */}
-          {isPizza(form.category) && (
-            <>
-              <Divider sx={{ my: 2 }} />
-              <ExtrasFormSection
-                extras={extras}
-                onAdd={handleAddExtra}
-                onRemove={handleRemoveExtra}
-                onNameChange={handleExtraNameChange}
-                onPriceChange={handleExtraPriceChange}
-              />
-            </>
-          )}
+          {/* Sección de extras (disponible para todos los productos) */}
+          <>
+            <Divider sx={{ my: 2 }} />
+            <ExtrasFormSection
+              extras={extras}
+              onAdd={handleAddExtra}
+              onRemove={handleRemoveExtra}
+              onNameChange={handleExtraNameChange}
+              onPriceChange={handleExtraPriceChange}
+            />
+          </>
 
           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
             <Button type="submit" variant="contained" fullWidth disabled={!isFormValid}>
