@@ -13,7 +13,9 @@ export interface CustomerAddress {
 }
 
 export interface Customer {
-  /** Clave primaria en IndexedDB: nombre en minúsculas y sin espacios extra */
+  /** Identificador único (UUID) */
+  id: string;
+  /** Nombre en minúsculas para búsquedas de prefijo (indexado) */
   nameLower: string;
   name: string;
   phone?: string;
