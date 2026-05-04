@@ -5,13 +5,14 @@
  */
 
 export const DB_NAME = "AppFacturaDB";
-export const DB_VERSION = 5;
+export const DB_VERSION = 6;
 
 export const STORES = {
   ORDERS: "orders",
   SHIFTS: "shifts",
   LOGS: "logs",
   CORRELATIVOS: "correlativos",
+  CUSTOMERS: "customers",
 } as const;
 
 export const initDB = (): Promise<IDBDatabase> => {
@@ -82,6 +83,13 @@ export const initDB = (): Promise<IDBDatabase> => {
         const store = db.createObjectStore(STORES.CORRELATIVOS, { keyPath: "id" });
         store.createIndex("documentType", "documentType", { unique: false });
         store.createIndex("status", "status", { unique: false });
+      }
+
+      // Store de clientes: nameLower es la clave primaria para búsquedas de prefijo
+      if (!db.objectStoreNames.contains(STORES.CUSTOMERS)) {
+        const store = db.createObjectStore(STORES.CUSTOMERS, { keyPath: "nameLower" });
+        store.createIndex("name", "name", { unique: false });
+        store.createIndex("updatedAt", "updatedAt", { unique: false });
       }
     };
   });
