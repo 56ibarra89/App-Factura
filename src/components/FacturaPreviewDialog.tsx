@@ -18,7 +18,6 @@ import {
   InputAdornment,
   Snackbar,
   Alert,
-  Chip,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
@@ -296,58 +295,6 @@ export default function FacturaPreviewDialog({
                 {/* ── Dirección de Entrega ── */}
                 {orderType === "delivery" && (
                   <Box sx={{ mt: 2 }}>
-                    {/* Lista rápida de direcciones guardadas */}
-                    {selectedCustomer && selectedCustomer.addresses.length > 0 && (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography
-                          variant="caption"
-                          fontWeight="bold"
-                          sx={{ color: "text.secondary", display: "block", mb: 0.5 }}
-                        >
-                          DIRECCIONES GUARDADAS (CLIC PARA SELECCIONAR):
-                        </Typography>
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                          {selectedCustomer.addresses
-                            .slice()
-                            .sort(
-                              (a, b) =>
-                                new Date(b.lastUsed).getTime() -
-                                new Date(a.lastUsed).getTime()
-                            )
-                            .map((addr) => (
-                              <Chip
-                                key={addr.id}
-                                label={addr.address}
-                                size="small"
-                                onClick={() => setCustomerAddress(addr.address)}
-                                color={
-                                  customerAddress === addr.address
-                                    ? "error"
-                                    : "default"
-                                }
-                                variant={
-                                  customerAddress === addr.address
-                                    ? "filled"
-                                    : "outlined"
-                                }
-                                icon={
-                                  <LocationOnIcon
-                                    sx={{ fontSize: "14px !important" }}
-                                  />
-                                }
-                                sx={{
-                                  maxWidth: "250px",
-                                  "& .MuiChip-label": {
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                  },
-                                }}
-                              />
-                            ))}
-                        </Box>
-                      </Box>
-                    )}
-
                     {savedAddresses.length > 0 ? (
                       <Autocomplete
                         freeSolo

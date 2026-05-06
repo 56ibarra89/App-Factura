@@ -32,7 +32,10 @@ interface Props {
   onClose: () => void;
   onSave: (data: CustomerFormData) => Promise<void>;
   addAddress: (addresses: CustomerAddress[], text: string) => CustomerAddress[];
-  removeAddress: (addresses: CustomerAddress[], id: string) => CustomerAddress[];
+  removeAddress: (
+    addresses: CustomerAddress[],
+    id: string,
+  ) => CustomerAddress[];
 }
 
 const emptyForm = (): CustomerFormData => ({
@@ -176,7 +179,7 @@ const CustomerFormModal: React.FC<Props> = ({
             value={form.phone}
             onChange={handleChange("phone")}
             disabled={saving}
-            placeholder="Ej: +504 9999-9999"
+            placeholder="Ej: +505 9999-9999"
           />
 
           <Divider sx={{ my: 0.5 }} />
@@ -207,9 +210,15 @@ const CustomerFormModal: React.FC<Props> = ({
           onClick={handleSubmit}
           disabled={saving}
           variant="contained"
-          startIcon={saving ? <CircularProgress size={16} color="inherit" /> : undefined}
+          startIcon={
+            saving ? <CircularProgress size={16} color="inherit" /> : undefined
+          }
         >
-          {saving ? "Guardando..." : isEditing ? "Guardar Cambios" : "Crear Cliente"}
+          {saving
+            ? "Guardando..."
+            : isEditing
+              ? "Guardar Cambios"
+              : "Crear Cliente"}
         </Button>
       </DialogActions>
     </Dialog>
