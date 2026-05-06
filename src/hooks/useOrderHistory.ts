@@ -32,7 +32,8 @@ export const useOrderHistory = () => {
     }
 
     const fetched = await getOrdersByDateRange(startObj, endObj);
-    setOrders(fetched);
+    const completedOrders = fetched.filter(o => o.status === "paid" || o.status === "cancelled");
+    setOrders(completedOrders);
     setLoading(false);
   };
 
