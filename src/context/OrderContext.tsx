@@ -158,19 +158,28 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
             );
 
             let globalStatus = order.status;
-            if (allDelivered && updatedItems.length > 0)
-              globalStatus = "delivered";
-            else if (anyPending) globalStatus = "pending";
-            else if (anyPreparing) globalStatus = "preparing";
-            else if (anyReady) globalStatus = "ready";
+            // No cambiar el estado global si la orden ya fue pagada o cancelada
+            if (globalStatus !== "paid" && globalStatus !== "cancelled") {
+              if (allDelivered && updatedItems.length > 0)
+                globalStatus = "delivered";
+              else if (anyPending) globalStatus = "pending";
+              else if (anyPreparing) globalStatus = "preparing";
+              else if (anyReady) globalStatus = "ready";
+            }
 
             return { ...order, status: globalStatus, items: updatedItems };
           }
           // Si no hay sentAt, actualizamos toda la orden y todos sus ítems
           const kitchenStatus = status as KitchenStatus;
+          
+          let newGlobalStatus = status;
+          if (order.status === "paid" || order.status === "cancelled") {
+            newGlobalStatus = order.status;
+          }
+
           return {
             ...order,
-            status,
+            status: newGlobalStatus,
             items: order.items.map((item) => ({ ...item, kitchenStatus })),
           };
         }
