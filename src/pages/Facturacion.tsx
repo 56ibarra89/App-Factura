@@ -34,6 +34,8 @@ const Facturacion = () => {
 
   const {
     cart,
+    subTotal,
+    taxAmount,
     total,
     selectedProduct,
     setSelectedProduct,
@@ -142,6 +144,8 @@ const Facturacion = () => {
 
       <Cart
         cartItems={cart}
+        subTotal={subTotal}
+        taxAmount={taxAmount}
         total={total}
         onAddItem={handleAddToCartItem}
         onRemoveItem={handleRemoveItem}
@@ -176,6 +180,8 @@ const Facturacion = () => {
       <FacturaPreviewDialog
         open={previewOpen}
         cart={cart}
+        subTotal={subTotal}
+        taxAmount={taxAmount}
         total={total}
         onClose={() => setPreviewOpen(false)}
         onConfirm={handleFinalConfirm}

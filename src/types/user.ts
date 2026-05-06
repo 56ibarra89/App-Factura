@@ -13,12 +13,6 @@ export interface UserAccount {
   lastVisit?: string; // ISO string
 }
 
-export const ROLE_COLORS: Record<UserRole, "error" | "success" | "info" | "warning"> = {
-  admin: "error",     // Rojo - Alto privilegio
-  cajero: "success",  // Verde - Finanzas
-  mesero: "info",     // Azul - Atención
-  cocinero: "warning" // Naranja - Cocina
-};
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",

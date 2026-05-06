@@ -2,6 +2,7 @@ import BusinessIcon from "@mui/icons-material/Business";
 import SettingsIcon from "@mui/icons-material/Settings";
 import PercentIcon from "@mui/icons-material/Percent";
 import PeopleIcon from "@mui/icons-material/People";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import DashboardCustomizeIcon from "@mui/icons-material/DashboardCustomize";
@@ -59,6 +60,14 @@ export const adminModules: AdminModuleItem[] = [
     description: "Administra el acceso al sistema, crea empleados y asigna permisos específicos por rol.",
     icon: <PeopleIcon fontSize="large" />,
     path: "/admin/cuentas",
+  },
+  {
+    id: "clientes",
+    category: "Operativa",
+    title: "Clientes",
+    description: "Consulta, crea, edita y elimina la información de tus clientes: nombre, teléfono y direcciones.",
+    icon: <PeopleAltIcon fontSize="large" />,
+    path: "/admin/clientes",
   },
   {
     id: "promociones",

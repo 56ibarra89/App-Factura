@@ -2,6 +2,7 @@ import { Box, Typography, Divider } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import { useAuth } from "../../context/AuthContext";
 import { CartItemType } from "../../types/cart";
+import { useImpuestosConfig } from "../../hooks/useImpuestosConfig";
 
 interface Props {
   order: CartItemType[];
@@ -9,10 +10,20 @@ interface Props {
 
 export default function OrderSummary({ order }: Props) {
   const { username } = useAuth();
+  const { taxes, isExonerated } = useImpuestosConfig();
+
   const subTotal = order.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item) => {
+      const giftQty = item.giftQuantity || 0;
+      const paidQty = Math.max(0, item.quantity - giftQty);
+      return acc + item.price * paidQty;
+    },
     0,
   );
+
+  const activeTax = taxes[0]?.percentage || 0;
+  const taxAmount = isExonerated ? 0 : subTotal * (activeTax / 100);
+  const total = subTotal + taxAmount;
 
   return (
     <Box>
@@ -32,21 +43,41 @@ export default function OrderSummary({ order }: Props) {
         </Typography>
       </Box>
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mb: 2,
-          color: "text.secondary",
-        }}
-      >
-        <Typography variant="body2" fontWeight="500">
-          IVA 15%
-        </Typography>
-        <Typography variant="body2" fontWeight="700">
-          $0.00
-        </Typography>
-      </Box>
+      {!isExonerated && activeTax > 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            color: "text.secondary",
+          }}
+        >
+          <Typography variant="body2" fontWeight="500">
+            {taxes[0]?.name || "IVA"} {activeTax}%
+          </Typography>
+          <Typography variant="body2" fontWeight="700">
+            ${taxAmount.toFixed(2)}
+          </Typography>
+        </Box>
+      )}
+
+      {isExonerated && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 2,
+            color: "success.main",
+          }}
+        >
+          <Typography variant="body2" fontWeight="500">
+            Exoneración de Impuestos
+          </Typography>
+          <Typography variant="body2" fontWeight="700">
+            -$0.00
+          </Typography>
+        </Box>
+      )}
 
       <Divider sx={{ borderStyle: "dashed", opacity: 0.6, my: 2 }} />
 
@@ -62,7 +93,7 @@ export default function OrderSummary({ order }: Props) {
           Total
         </Typography>
         <Typography variant="h4" fontWeight="900" color="text.primary">
-          ${subTotal.toFixed(2)}
+          ${total.toFixed(2)}
         </Typography>
       </Box>
 

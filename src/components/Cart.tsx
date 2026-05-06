@@ -6,6 +6,8 @@ import { formatItemName } from "../utils/formatUtils";
 
 interface CartProps {
   cartItems: CartItemType[];
+  subTotal: number;
+  taxAmount: number;
   total: number;
   onAddItem: (item: Omit<CartItemType, "quantity">) => void;
   onRemoveItem: (index: number) => void;
@@ -18,6 +20,8 @@ interface CartProps {
 
 const Cart = ({
   cartItems,
+  subTotal,
+  taxAmount,
   total,
   onAddItem,
   onRemoveItem,
@@ -71,7 +75,15 @@ const Cart = ({
 
       <Divider sx={{ my: 1 }} />
       <Box position="sticky" bottom={0} bgcolor="#f9f9f9" pt={1}>
-        <Typography fontWeight="bold" mb={1}>
+        <Box display="flex" justifyContent="space-between" mb={0.5}>
+          <Typography variant="body2" color="text.secondary">Subtotal:</Typography>
+          <Typography variant="body2">${subTotal.toFixed(2)}</Typography>
+        </Box>
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography variant="body2" color="text.secondary">Impuestos:</Typography>
+          <Typography variant="body2">${taxAmount.toFixed(2)}</Typography>
+        </Box>
+        <Typography fontWeight="bold" mb={1} textAlign="right" variant="h6">
           Total: ${total.toFixed(2)}
         </Typography>
         <Button

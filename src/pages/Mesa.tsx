@@ -17,12 +17,14 @@ import { logService } from "../services/logService";
 import { CartItemType } from "../types/cart";
 import { PaymentMethod, OrderType } from "../types/order.types";
 import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
+import { useImpuestosConfig } from "../hooks/useImpuestosConfig";
 
 export default function MesasPage() {
   const { floorsConfig } = useMesasConfig();
   const { tableStatusMap, reservationDetails, reserveTable, releaseTable } =
     useTableReservations();
   const { username, role } = useAuth();
+  const { taxes, isExonerated } = useImpuestosConfig();
   
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -161,6 +163,21 @@ export default function MesasPage() {
   const activeOrder = useMemo(() => selectedMesaId ? getOrderByTable(selectedMesaId) : null, [selectedMesaId, getOrderByTable]);
   const currentOrder: CartItemType[] = useMemo(() => activeOrder ? activeOrder.items : [], [activeOrder]);
 
+  const orderSubTotal = useMemo(() => {
+    return currentOrder.reduce((acc, item) => {
+        const giftQty = item.giftQuantity || 0;
+        const paidQty = Math.max(0, item.quantity - giftQty);
+        return acc + item.price * paidQty;
+    }, 0);
+  }, [currentOrder]);
+
+  const orderTaxAmount = useMemo(() => {
+    const activeTax = taxes[0]?.percentage || 0;
+    return isExonerated ? 0 : orderSubTotal * (activeTax / 100);
+  }, [orderSubTotal, taxes, isExonerated]);
+
+  const orderTotal = orderSubTotal + orderTaxAmount;
+
   const handleFinalConfirm = useCallback((
     paymentMethod: PaymentMethod,
     splitAmounts?: { efectivo: number; tarjeta: number },
@@ -285,7 +302,9 @@ export default function MesasPage() {
         <FacturaPreviewDialog
           open={isPreviewOpen}
           cart={currentOrder}
-          total={activeOrder.total}
+          subTotal={orderSubTotal}
+          taxAmount={orderTaxAmount}
+          total={orderTotal}
           onClose={closePreview}
           onConfirm={handleFinalConfirm}
           title={`Cerrar Cuenta Mesa ${selectedMesaId}`}

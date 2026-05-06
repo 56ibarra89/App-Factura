@@ -1,17 +1,19 @@
 /**
+/**
  * Configuración compartida de IndexedDB.
  * Centraliza los nombres de stores y la inicialización de la base de datos
  * para que los repositorios no dupliquen esta lógica.
  */
 
 export const DB_NAME = "AppFacturaDB";
-export const DB_VERSION = 5;
+export const DB_VERSION = 7;
 
 export const STORES = {
   ORDERS: "orders",
   SHIFTS: "shifts",
   LOGS: "logs",
   CORRELATIVOS: "correlativos",
+  CUSTOMERS: "customers",
 } as const;
 
 export const initDB = (): Promise<IDBDatabase> => {
@@ -45,6 +47,7 @@ export const initDB = (): Promise<IDBDatabase> => {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      const transaction = (event.target as IDBOpenDBRequest).transaction;
 
       db.onversionchange = () => {
         db.close();
@@ -82,6 +85,28 @@ export const initDB = (): Promise<IDBDatabase> => {
         const store = db.createObjectStore(STORES.CORRELATIVOS, { keyPath: "id" });
         store.createIndex("documentType", "documentType", { unique: false });
         store.createIndex("status", "status", { unique: false });
+      }
+
+      // Store de clientes: 'id' es la clave primaria.
+      // Implementación segura: no borra datos si el store ya existe.
+      if (db.objectStoreNames.contains(STORES.CUSTOMERS)) {
+        if (transaction) {
+          const store = transaction.objectStore(STORES.CUSTOMERS);
+          if (!store.indexNames.contains("nameLower")) {
+            store.createIndex("nameLower", "nameLower", { unique: false });
+          }
+          if (!store.indexNames.contains("name")) {
+            store.createIndex("name", "name", { unique: false });
+          }
+          if (!store.indexNames.contains("updatedAt")) {
+            store.createIndex("updatedAt", "updatedAt", { unique: false });
+          }
+        }
+      } else {
+        const store = db.createObjectStore(STORES.CUSTOMERS, { keyPath: "id" });
+        store.createIndex("nameLower", "nameLower", { unique: false });
+        store.createIndex("name", "name", { unique: false });
+        store.createIndex("updatedAt", "updatedAt", { unique: false });
       }
     };
   });

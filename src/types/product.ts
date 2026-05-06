@@ -13,11 +13,13 @@ export interface Product {
   name: string;
   description?: string;
   prices: ProductPrice[];
+  hasMultipleSizes?: boolean;
   extras?: ExtraIngredientDef[];
 }
 
 export interface Category {
   label: string;
+  icon?: string;
   items: Product[];
 }
 
@@ -30,6 +32,7 @@ export interface ProductFormState {
   name: string;
   description: string;
   category: string;
+  hasMultipleSizes: boolean;
   prices: { size: string; price: string }[];
   singlePrice: string;
 }

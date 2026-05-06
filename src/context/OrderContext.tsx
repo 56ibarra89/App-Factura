@@ -1,6 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Order, OrderStatus, PaymentMethod, OrderType } from "../types/order.types";
+import {
+  Order,
+  OrderStatus,
+  KitchenStatus,
+  PaymentMethod,
+  OrderType,
+} from "../types/order.types";
 import { CartItemType } from "../types/cart";
 import { IOrderRepository } from "../types/repositories";
 import { orderRepository as defaultOrderRepository } from "../repositories/OrderRepository";
@@ -16,12 +22,20 @@ interface OrderContextProps {
     customerAddress?: string,
     tableId?: string,
     paymentMethod?: string,
-    splitAmounts?: { efectivo: number; tarjeta: number }
+    splitAmounts?: { efectivo: number; tarjeta: number },
   ) => void;
-  updateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  updateOrderStatus: (
+    orderId: string,
+    status: OrderStatus,
+    sentAt?: number,
+  ) => void;
   removeOrder: (orderId: string) => void;
   clearHistory: () => void;
-  updateOrderItems: (orderId: string, items: CartItemType[], total: number) => void;
+  updateOrderItems: (
+    orderId: string,
+    items: CartItemType[],
+    total: number,
+  ) => void;
   getOrderByTable: (tableId: string) => Order | undefined;
   finalizeOrder: (
     orderId: string,
@@ -29,7 +43,7 @@ interface OrderContextProps {
     splitAmounts?: { efectivo: number; tarjeta: number },
     customerName?: string,
     orderType?: OrderType,
-    customerAddress?: string
+    customerAddress?: string,
   ) => void;
   markAsSentToKitchen: (orderId: string) => void;
   markAsSentToKitchenByTable: (tableId: string) => void;
@@ -83,7 +97,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     customerAddress?: string,
     tableId?: string,
     paymentMethod?: string,
-    splitAmounts?: { efectivo: number; tarjeta: number }
+    splitAmounts?: { efectivo: number; tarjeta: number },
   ) => {
     const newOrder: Order = {
       id: `ORD-${Date.now()}`,
@@ -100,15 +114,68 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       cashierName: username || "Sistema",
       isSentToKitchen: !tableId,
     };
+
+    if (newOrder.isSentToKitchen) {
+      newOrder.items = newOrder.items.map((item) => ({
+        ...item,
+        isSentToKitchen: true,
+        sentAt: Date.now(),
+        kitchenStatus: "pending",
+      }));
+    }
+
     setOrders((prev) => [newOrder, ...prev]);
     repository.save(newOrder);
   };
 
-  const updateOrderStatus = (orderId: string, status: OrderStatus) => {
+  const updateOrderStatus = (
+    orderId: string,
+    status: OrderStatus,
+    sentAt?: number,
+  ) => {
     setOrders((prev) => {
-      const updatedOrders = prev.map((order) =>
-        order.id === orderId ? { ...order, status } : order
-      );
+      const updatedOrders = prev.map((order) => {
+        if (order.id === orderId) {
+          if (sentAt) {
+            // Actualizar solo los ítems de ese envío
+            const kitchenStatus = status as KitchenStatus;
+            const updatedItems = order.items.map((item) =>
+              item.sentAt === sentAt ? { ...item, kitchenStatus } : item,
+            );
+
+            // Recalcular estado global de la orden
+            const allDelivered = updatedItems.every(
+              (i) => i.kitchenStatus === "delivered" || !i.isSentToKitchen,
+            );
+            const anyPending = updatedItems.some(
+              (i) => i.kitchenStatus === "pending" && i.isSentToKitchen,
+            );
+            const anyPreparing = updatedItems.some(
+              (i) => i.kitchenStatus === "preparing" && i.isSentToKitchen,
+            );
+            const anyReady = updatedItems.some(
+              (i) => i.kitchenStatus === "ready" && i.isSentToKitchen,
+            );
+
+            let globalStatus = order.status;
+            if (allDelivered && updatedItems.length > 0)
+              globalStatus = "delivered";
+            else if (anyPending) globalStatus = "pending";
+            else if (anyPreparing) globalStatus = "preparing";
+            else if (anyReady) globalStatus = "ready";
+
+            return { ...order, status: globalStatus, items: updatedItems };
+          }
+          // Si no hay sentAt, actualizamos toda la orden y todos sus ítems
+          const kitchenStatus = status as KitchenStatus;
+          return {
+            ...order,
+            status,
+            items: order.items.map((item) => ({ ...item, kitchenStatus })),
+          };
+        }
+        return order;
+      });
       const modified = updatedOrders.find((o) => o.id === orderId);
       if (modified) repository.save(modified);
       return updatedOrders;
@@ -119,11 +186,42 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     setOrders((prev) => prev.filter((order) => order.id !== orderId));
   };
 
-  const updateOrderItems = (orderId: string, items: CartItemType[], total: number) => {
+  const updateOrderItems = (
+    orderId: string,
+    items: CartItemType[],
+    total: number,
+  ) => {
     setOrders((prev) => {
-      const updatedOrders = prev.map((order) =>
-        order.id === orderId ? { ...order, items: [...items], total } : order
-      );
+      const updatedOrders = prev.map((order) => {
+        if (order.id === orderId) {
+          const hasNewItems = items.some((item) => !item.isSentToKitchen);
+
+          // Determinar el estado global en base a los kitchenStatus de los ítems enviados
+          const sentItems = items.filter((i) => i.isSentToKitchen);
+          const allDelivered =
+            sentItems.length > 0 &&
+            sentItems.every((i) => i.kitchenStatus === "delivered");
+          const anyPreparing = sentItems.some(
+            (i) => i.kitchenStatus === "preparing",
+          );
+          const anyReady = sentItems.some((i) => i.kitchenStatus === "ready");
+
+          let newStatus = order.status;
+          if (hasNewItems) {
+            // Hay nuevos ítems → siempre vuelve a pendiente
+            newStatus = "pending";
+          } else if (allDelivered) {
+            newStatus = "delivered";
+          } else if (anyReady) {
+            newStatus = "ready";
+          } else if (anyPreparing) {
+            newStatus = "preparing";
+          }
+
+          return { ...order, items: [...items], total, status: newStatus };
+        }
+        return order;
+      });
       const modified = updatedOrders.find((o) => o.id === orderId);
       if (modified) repository.save(modified);
       return updatedOrders;
@@ -136,12 +234,14 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         (o.tableId === tableId ||
           (o.linkedTables && o.linkedTables.includes(tableId))) &&
         o.status !== "paid" &&
-        o.status !== "cancelled"
+        o.status !== "cancelled",
     );
 
   const clearHistory = () => {
     setOrders((prev) =>
-      prev.filter((order) => order.status !== "paid" && order.status !== "cancelled")
+      prev.filter(
+        (order) => order.status !== "paid" && order.status !== "cancelled",
+      ),
     );
   };
 
@@ -151,7 +251,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     splitAmounts?: { efectivo: number; tarjeta: number },
     customerName?: string,
     orderType?: OrderType,
-    customerAddress?: string
+    customerAddress?: string,
   ) => {
     setOrders((prev) => {
       const updatedOrders = prev.map((order) =>
@@ -165,7 +265,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
               orderType: orderType || order.orderType,
               customerAddress: customerAddress || order.customerAddress,
             }
-          : order
+          : order,
       );
       const modified = updatedOrders.find((o) => o.id === orderId);
       if (modified) repository.save(modified);
@@ -175,9 +275,24 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
 
   const markAsSentToKitchen = (orderId: string) => {
     setOrders((prev) => {
-      const updatedOrders = prev.map((order) =>
-        order.id === orderId ? { ...order, isSentToKitchen: true } : order
-      );
+      const updatedOrders = prev.map((order) => {
+        if (order.id === orderId) {
+          const now = Date.now();
+          return {
+            ...order,
+            isSentToKitchen: true,
+            items: order.items.map((item) => ({
+              ...item,
+              isSentToKitchen: true,
+              sentAt: item.isSentToKitchen ? item.sentAt : now,
+              kitchenStatus: item.isSentToKitchen
+                ? item.kitchenStatus
+                : "pending",
+            })),
+          };
+        }
+        return order;
+      });
       const modified = updatedOrders.find((o) => o.id === orderId);
       if (modified) repository.save(modified);
       return updatedOrders;
@@ -186,18 +301,33 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
 
   const markAsSentToKitchenByTable = (tableId: string) => {
     setOrders((prev) => {
-      const updatedOrders = prev.map((order) =>
-        order.tableId === tableId &&
-        order.status !== "paid" &&
-        order.status !== "cancelled"
-          ? { ...order, isSentToKitchen: true }
-          : order
-      );
+      const updatedOrders = prev.map((order) => {
+        if (
+          order.tableId === tableId &&
+          order.status !== "paid" &&
+          order.status !== "cancelled"
+        ) {
+          const now = Date.now();
+          return {
+            ...order,
+            isSentToKitchen: true,
+            items: order.items.map((item) => ({
+              ...item,
+              isSentToKitchen: true,
+              sentAt: item.isSentToKitchen ? item.sentAt : now,
+              kitchenStatus: item.isSentToKitchen
+                ? item.kitchenStatus
+                : "pending",
+            })),
+          };
+        }
+        return order;
+      });
       const modified = updatedOrders.find(
         (o) =>
           o.tableId === tableId &&
           o.status !== "paid" &&
-          o.status !== "cancelled"
+          o.status !== "cancelled",
       );
       if (modified) repository.save(modified);
       return updatedOrders;
@@ -211,13 +341,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         order.status !== "paid" &&
         order.status !== "cancelled"
           ? { ...order, tableId: destTableId }
-          : order
+          : order,
       );
       const modified = updatedOrders.find(
         (o) =>
           o.tableId === destTableId &&
           o.status !== "paid" &&
-          o.status !== "cancelled"
+          o.status !== "cancelled",
       );
       if (modified) repository.save(modified);
       return updatedOrders;
@@ -243,7 +373,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         (o) =>
           o.tableId === sourceTableId &&
           o.status !== "paid" &&
-          o.status !== "cancelled"
+          o.status !== "cancelled",
       );
       if (modified) repository.save(modified);
       return updatedOrders;
@@ -274,6 +404,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
 
 export const useOrderContext = () => {
   const context = useContext(OrderContext);
-  if (!context) throw new Error("useOrderContext debe usarse dentro de <OrderProvider>");
+  if (!context)
+    throw new Error("useOrderContext debe usarse dentro de <OrderProvider>");
   return context;
 };

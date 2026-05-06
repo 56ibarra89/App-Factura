@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import { useEffect } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 import Backspace from "@mui/icons-material/Backspace";
 import ArrowBack from "@mui/icons-material/ArrowBack";
@@ -30,6 +31,23 @@ const numpadButtonSx = {
 const LoginPin = () => {
   const navigate = useNavigate();
   const { pin, loading, error, appendDigit, deleteDigit, clearError, MAX_PIN_LENGTH, lockoutTime } = useLoginPin();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (loading || lockoutTime > 0) return;
+
+      if (/^[0-9]$/.test(e.key)) {
+        appendDigit(e.key);
+      } else if (e.key === "Backspace") {
+        if (pin.length > 0) {
+          deleteDigit();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [loading, lockoutTime, pin.length, appendDigit, deleteDigit]);
 
   return (
     <AuthLayout error={error} onClearError={clearError}>
