@@ -5,7 +5,7 @@ import { initDB, STORES } from "./db.config";
 /**
  * DIP: Implementación concreta de IShiftRepository usando IndexedDB.
  */
-export class ShiftRepository implements IShiftRepository {
+class ShiftRepository implements IShiftRepository {
   async save(shift: Shift): Promise<void> {
     try {
       const db = await initDB();

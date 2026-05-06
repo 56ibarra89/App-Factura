@@ -6,7 +6,7 @@ import { initDB, STORES } from "./db.config";
  * DIP: Implementación concreta de IOrderRepository usando IndexedDB.
  * Los contextos dependen de IOrderRepository (abstracción), no de esta clase.
  */
-export class OrderRepository implements IOrderRepository {
+class OrderRepository implements IOrderRepository {
   async save(order: Order): Promise<void> {
     try {
       const db = await initDB();

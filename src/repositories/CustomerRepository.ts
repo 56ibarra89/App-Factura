@@ -9,7 +9,7 @@ import { Customer } from "../types/customer.types";
 const generateId = (): string =>
   Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-export class CustomerRepository {
+class CustomerRepository {
   /**
    * Búsqueda por prefijo de nombre (case-insensitive).
    * Ej: "juan" devuelve "Juan Pérez", "Juan Dávila", etc.

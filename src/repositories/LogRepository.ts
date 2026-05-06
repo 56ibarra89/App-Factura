@@ -5,7 +5,7 @@ import { initDB, STORES } from "./db.config";
 /**
  * DIP: Implementación concreta de ILogRepository usando IndexedDB.
  */
-export class LogRepository implements ILogRepository {
+class LogRepository implements ILogRepository {
   async add(
     user: string,
     role: string | null,

@@ -8,7 +8,7 @@ interface UseCartOptions {
   navigate?: (path: string) => void;
 }
 
-export function useCart({ navigate }: UseCartOptions = {}) {
+function useCart({ navigate }: UseCartOptions = {}) {
   const {
     cart,
     subTotal,

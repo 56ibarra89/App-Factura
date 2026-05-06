@@ -5,8 +5,8 @@
  * para que los repositorios no dupliquen esta lógica.
  */
 
-export const DB_NAME = "AppFacturaDB";
-export const DB_VERSION = 7;
+const DB_NAME = "AppFacturaDB";
+const DB_VERSION = 7;
 
 export const STORES = {
   ORDERS: "orders",
