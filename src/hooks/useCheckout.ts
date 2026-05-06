@@ -59,7 +59,7 @@ export function useCheckout(
         updateOrderItems(orderId, cart, total);
       } else {
         // Crear nueva orden para la mesa
-        addOrder(cart, total, "Mesa", "local", undefined, tableId);
+        addOrder(cart, total, undefined, "local", undefined, tableId);
       }
 
       clearCart();

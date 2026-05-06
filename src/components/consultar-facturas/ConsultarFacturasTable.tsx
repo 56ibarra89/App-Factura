@@ -76,8 +76,9 @@ const ConsultarFacturasTable = ({ orders, loading, onPrintClick }: ConsultarFact
                   </TableCell>
                   <TableCell>#{order.id.split("-")[1]}</TableCell>
                   <TableCell>
-                    {order.customerName ||
-                      (order.tableId ? `Mesa ${order.tableId}` : "--")}
+                    {order.customerName && order.customerName !== "Mesa"
+                      ? order.customerName
+                      : (order.tableId ? `Mesa ${order.tableId}` : "--")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>
                     ${order.total.toFixed(2)}
