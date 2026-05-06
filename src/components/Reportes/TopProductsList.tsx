@@ -56,7 +56,7 @@ export const TopProductsList: React.FC<TopProductsListProps> = ({ products }) =>
                   <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.5}>
                     <Chip size="small" label={`${product.quantity} uds`} color="primary" variant={index < 3 ? "filled" : "outlined"} />
                     <Typography variant="caption" fontWeight={600} color="text.secondary">
-                      ${product.totalRevenue.toFixed(2)}
+                      C${product.totalRevenue.toFixed(2)}
                     </Typography>
                   </Box>
                 </ListItem>

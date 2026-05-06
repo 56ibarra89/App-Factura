@@ -37,7 +37,7 @@ export function CerrarCajaForm({
           Monto de apertura:
         </Typography>
         <Typography variant="h6" fontWeight="bold">
-          ${openingAmount.toFixed(2)}
+          C${openingAmount.toFixed(2)}
         </Typography>
       </Box>
 
@@ -53,7 +53,7 @@ export function CerrarCajaForm({
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              $
+              C$
             </InputAdornment>
           ),
         }}
@@ -73,7 +73,7 @@ export function CerrarCajaForm({
           color={diff >= 0 ? "success.main" : "error.main"}
           sx={{ textAlign: 'right' }}
         >
-          Diferencia: {diff >= 0 ? "+" : ""}${diff.toFixed(2)}
+          Diferencia: {diff >= 0 ? "+" : ""}C${diff.toFixed(2)}
         </Typography>
       )}
 

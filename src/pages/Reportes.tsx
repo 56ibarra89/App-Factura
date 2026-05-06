@@ -72,7 +72,7 @@ const Reportes = () => {
           <Grid size={{ xs: 12, md: 6 }}>
             <StatCard
               title="Ventas Totales (Entregadas)"
-              value={`$${data.totalSales.toFixed(2)}`}
+              value={`C$${data.totalSales.toFixed(2)}`}
               icon={<AttachMoneyIcon fontSize="large" />}
               subtitle="Ingresos del día"
               masked={privacyMode}

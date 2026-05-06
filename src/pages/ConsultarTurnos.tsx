@@ -91,12 +91,12 @@ export default function ConsultarTurnos() {
                 <TableCell>{shift.endTime ? formatDate(shift.endTime) : "---"}</TableCell>
                 <TableCell align="right">
                   <Typography variant="body2" fontWeight="bold" color="primary.main">
-                    ${shift.totalSales.total.toFixed(2)}
+                    C${shift.totalSales.total.toFixed(2)}
                   </Typography>
                 </TableCell>
                 <TableCell align="right">
                   <Typography variant="body2" fontWeight="bold">
-                    ${shift.closingAmount?.toFixed(2) || "---"}
+                    C${shift.closingAmount?.toFixed(2) || "---"}
                   </Typography>
                 </TableCell>
                 <TableCell align="center">

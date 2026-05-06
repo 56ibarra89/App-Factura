@@ -111,7 +111,7 @@ const AnularFactura = () => {
                   <TableCell>
                     {order.customerName || (order.tableId ? `Mesa ${order.tableId}` : "--")}
                   </TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>${order.total.toFixed(2)}</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>C${order.total.toFixed(2)}</TableCell>
                   <TableCell align="center">
                     <Chip
                       label={statusLabels[order.status]}

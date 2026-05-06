@@ -63,21 +63,21 @@ export default function CerrarCajaPage() {
             <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 3 }}>
               <LocalAtmIcon color="success" />
               <Typography variant="caption" display="block">Ventas Efectivo</Typography>
-              <Typography variant="h6" fontWeight="bold">${sales.cash.toFixed(2)}</Typography>
+              <Typography variant="h6" fontWeight="bold">C${sales.cash.toFixed(2)}</Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
             <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 3 }}>
               <CreditCardIcon color="primary" />
               <Typography variant="caption" display="block">Ventas Tarjeta</Typography>
-              <Typography variant="h6" fontWeight="bold">${sales.card.toFixed(2)}</Typography>
+              <Typography variant="h6" fontWeight="bold">C${sales.card.toFixed(2)}</Typography>
             </Paper>
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
             <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 3 }}>
               <SmartphoneIcon color="info" />
               <Typography variant="caption" display="block">Ventas App</Typography>
-              <Typography variant="h6" fontWeight="bold">${sales.app.toFixed(2)}</Typography>
+              <Typography variant="h6" fontWeight="bold">C${sales.app.toFixed(2)}</Typography>
             </Paper>
           </Grid>
         </Grid>
@@ -86,11 +86,11 @@ export default function CerrarCajaPage() {
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="body1" fontWeight="bold">Total Teórico en Efectivo:</Typography>
             <Typography variant="h5" fontWeight="900" color="primary.main">
-              ${expectedCash.toFixed(2)}
+              C${expectedCash.toFixed(2)}
             </Typography>
           </Box>
           <Typography variant="caption" color="text.secondary">
-            (Apertura: ${currentShift.openingAmount.toFixed(2)} + Ventas: ${sales.cash.toFixed(2)})
+            (Apertura: C${currentShift.openingAmount.toFixed(2)} + Ventas: C${sales.cash.toFixed(2)})
           </Typography>
         </Box>
 

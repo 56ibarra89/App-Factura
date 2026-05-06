@@ -48,12 +48,12 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
                 axisLine={false} 
                 tickLine={false} 
                 tick={{ fill: "#666" }} 
-                tickFormatter={(value) => `$${value}`} 
+                tickFormatter={(value) => `C$${value}`} 
               />
               <Tooltip 
                 cursor={{ fill: LOGIN_COLORS.numpadHoverShadow }}
                 contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                formatter={(value: unknown) => [`$${Number(value).toFixed(2)}`, "Ventas"]}
+                formatter={(value: unknown) => [`C$${Number(value).toFixed(2)}`, "Ventas"]}
                 labelStyle={{ color: LOGIN_COLORS.primaryDark, fontWeight: 'bold', marginBottom: 4 }}
               />
               <Bar 

@@ -89,7 +89,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
                 {item.quantity}x {formatItemName(item.name, item.size)}
               </Typography>
               <Typography variant="body2" fontWeight="bold">
-                ${(item.price * item.quantity).toFixed(2)}
+                C${(item.price * item.quantity).toFixed(2)}
               </Typography>
             </Box>
           ))}
@@ -98,7 +98,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
         <Box mt={2} pt={2} borderTop="1px dashed #eee" display="flex" justifyContent="space-between">
           <Typography variant="subtitle1" fontWeight="bold">Total</Typography>
           <Typography variant="subtitle1" fontWeight="bold" color={LOGIN_COLORS.primary}>
-            ${order.total.toFixed(2)}
+            C${order.total.toFixed(2)}
           </Typography>
         </Box>
       </CardContent>
