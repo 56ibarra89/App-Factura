@@ -27,8 +27,8 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
       prices: product.prices
         .map((p) =>
           p.size === "único"
-            ? `$${p.price.toFixed(2)}`
-            : `${p.size}: $${p.price.toFixed(2)}`
+            ? `C$${p.price.toFixed(2)}`
+            : `${p.size}: C$${p.price.toFixed(2)}`
         )
         .join(" | "),
       rawProduct: product,

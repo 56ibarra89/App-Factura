@@ -62,11 +62,11 @@ const CartItem = ({
           </Typography>
         )}
         <Typography variant="body2" color="text.secondary">
-          ${price.toFixed(2)} x {quantity} = ${(price * Math.max(0, quantity - giftQuantity)).toFixed(2)}
+          C${price.toFixed(2)} x {quantity} = C${(price * Math.max(0, quantity - giftQuantity)).toFixed(2)}
         </Typography>
         {giftQuantity > 0 && (
           <Typography variant="caption" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <CardGiftcardIcon fontSize="small" /> {giftQuantity} de regalo (-${(price * giftQuantity).toFixed(2)})
+            <CardGiftcardIcon fontSize="small" /> {giftQuantity} de regalo (-C${(price * giftQuantity).toFixed(2)})
           </Typography>
         )}
       </Box>

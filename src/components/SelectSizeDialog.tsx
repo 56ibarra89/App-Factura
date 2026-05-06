@@ -63,7 +63,7 @@ export default function SelectSizeDialog({
                   fontWeight: 500,
                 }}
               >
-                {p.size} - ${p.price.toFixed(2)}
+                {p.size} - C${p.price.toFixed(2)}
               </Button>
             );
           })}

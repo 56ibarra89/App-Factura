@@ -37,8 +37,8 @@ export const useDailyReport = () => {
       // 2. Fetch de DB
       const orders = await getOrdersByDateRange(startOfDay, endOfDay);
 
-      // 3. Filtrar a solo órdenes "delivered"
-      const deliveredOrders = orders.filter((o) => o.status === "delivered");
+      // 3. Filtrar a órdenes completadas ("delivered" o "paid")
+      const deliveredOrders = orders.filter((o) => o.status === "delivered" || o.status === "paid");
 
       // 4. Calcular métricas principales
       let totalSales = 0;

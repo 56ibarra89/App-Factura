@@ -178,7 +178,7 @@ export default function FacturaPreviewDialog({
                         >
                           Extras:{" "}
                           {item.extras
-                            .map((e) => `${e.name} (+$${e.price.toFixed(2)})`)
+                            .map((e) => `${e.name} (+C$${e.price.toFixed(2)})`)
                             .join(", ")}
                         </Typography>
                       )}
@@ -197,7 +197,7 @@ export default function FacturaPreviewDialog({
                         variant="body2"
                         color="text.secondary"
                       >
-                        {`$${item.price.toFixed(2)} c/u — Subtotal: $${(
+                        {`C$${item.price.toFixed(2)} c/u — Subtotal: C$${(
                           item.price *
                           Math.max(0, item.quantity - (item.giftQuantity || 0))
                         ).toFixed(2)}`}
@@ -208,7 +208,7 @@ export default function FacturaPreviewDialog({
                           variant="caption"
                           color="success.main"
                         >
-                          Regalo: {item.giftQuantity} item(s) (-$
+                          Regalo: {item.giftQuantity} item(s) (-C$
                           {(item.price * item.giftQuantity).toFixed(2)})
                         </Typography>
                       ) : null}
@@ -221,19 +221,18 @@ export default function FacturaPreviewDialog({
           <Divider sx={{ my: 2 }} />
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography>Subtotal:</Typography>
-            <Typography>${subTotal.toFixed(2)}</Typography>
+            <Typography>C${subTotal.toFixed(2)}</Typography>
           </Box>
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography>Impuestos:</Typography>
-            <Typography>${taxAmount.toFixed(2)}</Typography>
+            <Typography>C${taxAmount.toFixed(2)}</Typography>
           </Box>
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography fontWeight="bold">Total:</Typography>
             <Typography fontWeight="bold" color="error.main">
-              ${total.toFixed(2)}
+              C${total.toFixed(2)}
             </Typography>
           </Box>
-
           {!isTableMode && (
             <>
               <Divider sx={{ my: 2 }} />

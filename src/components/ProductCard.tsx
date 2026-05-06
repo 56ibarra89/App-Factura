@@ -57,7 +57,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ name, price, description, onC
           {name}
         </Typography>
         <Typography align="center" color="text.secondary">
-          ${price.toFixed(2)}
+          C${price.toFixed(2)}
         </Typography>
       </CardContent>
     </Card>

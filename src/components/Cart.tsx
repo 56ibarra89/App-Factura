@@ -77,14 +77,14 @@ const Cart = ({
       <Box position="sticky" bottom={0} bgcolor="#f9f9f9" pt={1}>
         <Box display="flex" justifyContent="space-between" mb={0.5}>
           <Typography variant="body2" color="text.secondary">Subtotal:</Typography>
-          <Typography variant="body2">${subTotal.toFixed(2)}</Typography>
+          <Typography variant="body2">C${subTotal.toFixed(2)}</Typography>
         </Box>
         <Box display="flex" justifyContent="space-between" mb={1}>
           <Typography variant="body2" color="text.secondary">Impuestos:</Typography>
-          <Typography variant="body2">${taxAmount.toFixed(2)}</Typography>
+          <Typography variant="body2">C${taxAmount.toFixed(2)}</Typography>
         </Box>
         <Typography fontWeight="bold" mb={1} textAlign="right" variant="h6">
-          Total: ${total.toFixed(2)}
+          Total: C${total.toFixed(2)}
         </Typography>
         <Button
           variant="contained"

@@ -81,7 +81,7 @@ const ConsultarFacturasTable = ({ orders, loading, onPrintClick }: ConsultarFact
                       : (order.tableId ? `Mesa ${order.tableId}` : "--")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>
-                    ${order.total.toFixed(2)}
+                    C${order.total.toFixed(2)}
                   </TableCell>
                   <TableCell align="center">
                     <Chip

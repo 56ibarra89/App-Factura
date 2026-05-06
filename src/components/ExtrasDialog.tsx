@@ -113,7 +113,7 @@ export default function ExtrasDialog({
                   <Box display="flex" justifyContent="space-between" width="100%">
                     <Typography>{extra.name}</Typography>
                     <Typography color="text.secondary" sx={{ ml: 2 }}>
-                      +${price.toFixed(2)}
+                      +C${price.toFixed(2)}
                     </Typography>
                   </Box>
                 }
@@ -129,7 +129,7 @@ export default function ExtrasDialog({
             <Box display="flex" justifyContent="space-between">
               <Typography fontWeight="bold">Extras seleccionados:</Typography>
               <Typography fontWeight="bold" color="primary">
-                +${extrasTotal.toFixed(2)}
+                +C${extrasTotal.toFixed(2)}
               </Typography>
             </Box>
           </>

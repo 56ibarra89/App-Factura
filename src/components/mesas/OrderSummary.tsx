@@ -39,7 +39,7 @@ export default function OrderSummary({ order }: Props) {
           Subtotal
         </Typography>
         <Typography variant="body2" fontWeight="700">
-          ${subTotal.toFixed(2)}
+          C${subTotal.toFixed(2)}
         </Typography>
       </Box>
 
@@ -56,7 +56,7 @@ export default function OrderSummary({ order }: Props) {
             {taxes[0]?.name || "IVA"} {activeTax}%
           </Typography>
           <Typography variant="body2" fontWeight="700">
-            ${taxAmount.toFixed(2)}
+            C${taxAmount.toFixed(2)}
           </Typography>
         </Box>
       )}
@@ -74,7 +74,7 @@ export default function OrderSummary({ order }: Props) {
             Exoneración de Impuestos
           </Typography>
           <Typography variant="body2" fontWeight="700">
-            -$0.00
+            -C$0.00
           </Typography>
         </Box>
       )}
@@ -93,7 +93,7 @@ export default function OrderSummary({ order }: Props) {
           Total
         </Typography>
         <Typography variant="h4" fontWeight="900" color="text.primary">
-          ${total.toFixed(2)}
+          C${total.toFixed(2)}
         </Typography>
       </Box>
 
