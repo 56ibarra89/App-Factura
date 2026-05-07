@@ -1,4 +1,7 @@
-import { Box, Button, Paper, Stack } from "@mui/material";
+import { Box, Button, Paper, Stack, IconButton } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CategoryIcon from "@mui/icons-material/Category";
+import AddIcon from "@mui/icons-material/Add";
 import { useState, useRef } from "react";
 import { useProductContext } from "../context/ProductContext";
 import { Product } from "../types/product";
@@ -10,6 +13,8 @@ import CategoryManagerDialog from "../components/CategoryManagerDialog";
 import RoleGuard from "../components/auth/RoleGuard";
 import { logService } from "../services/logService";
 import { useAuth } from "../context/AuthContext";
+import PageHeader from "../components/PageHeader";
+import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../theme/loginTheme";
 
 
 const Producto = () => {
@@ -71,40 +76,69 @@ const Producto = () => {
     setShowForm(false);
     setEditing(null);
   };
-
   return (
-    <>
-      <Box p={4}>
-        <Paper sx={{ width: "100%", mb: 3, p: 2 }}>
-          <ProductsTable
-            categories={categories}
-            onEdit={handleEdit}
-            onDelete={handleDeleteClick}
-          />
-        </Paper>
-
-        <Stack direction="row" justifyContent="flex-end" spacing={2}>
+    <Box
+      minHeight="100vh"
+      sx={{
+        background: LOGIN_GRADIENTS.pageBackground,
+        pt: 4,
+        pb: 4,
+        px: { xs: 2, md: 6 },
+      }}
+    >
+      <PageHeader
+        title="Inventario de Productos"
+        startContent={
+          <IconButton 
+            onClick={() => navigate("/home")} 
+            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
+          >
+            <ArrowBackIcon color="primary" />
+          </IconButton>
+        }
+        actions={
           <RoleGuard allowedRoles={["admin"]}>
-            <Button 
-              variant="outlined" 
-              onClick={() => setShowCategoryManager(true)}
-            >
-              Gestionar Categorías
-            </Button>
-            <Button 
-              ref={addButtonRef}
-              variant="contained" 
-              onClick={handleAdd}
-            >
-              Agregar Producto
-            </Button>
+            <Stack direction="row" spacing={2}>
+              <Button 
+                variant="outlined" 
+                size="small"
+                onClick={() => setShowCategoryManager(true)}
+                startIcon={<CategoryIcon />}
+                sx={{ 
+                  borderRadius: 2, 
+                  borderColor: LOGIN_COLORS.primary, 
+                  color: LOGIN_COLORS.primary,
+                  '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
+                }}
+              >
+                Gestionar Categorías
+              </Button>
+              <Button 
+                ref={addButtonRef}
+                variant="contained" 
+                size="small"
+                onClick={handleAdd}
+                startIcon={<AddIcon />}
+                sx={{ 
+                  borderRadius: 2, 
+                  bgcolor: LOGIN_COLORS.primary,
+                  '&:hover': { bgcolor: LOGIN_COLORS.primaryDark }
+                }}
+              >
+                Agregar Producto
+              </Button>
+            </Stack>
           </RoleGuard>
+        }
+      />
 
-          <Button variant="outlined" onClick={() => navigate("/home")}>
-            Volver al inicio
-          </Button>
-        </Stack>
-      </Box>
+      <Paper sx={{ width: "100%", mb: 3, p: 2, borderRadius: 4, boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
+        <ProductsTable
+          categories={categories}
+          onEdit={handleEdit}
+          onDelete={handleDeleteClick}
+        />
+      </Paper>
 
       <ProductFormDialog
         open={showForm}
@@ -127,7 +161,7 @@ const Producto = () => {
         open={showCategoryManager}
         onClose={() => setShowCategoryManager(false)}
       />
-    </>
+    </Box>
   );
 };
 

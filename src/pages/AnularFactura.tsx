@@ -1,13 +1,12 @@
 import { useState, useMemo } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PageHeader from "../components/PageHeader";
 import { useOrderManagement } from "../hooks/useOrderManagement";
-import { LOGIN_COLORS, LOGIN_GRADIENTS } from "../theme/loginTheme";
+import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { Order } from "../types/order.types";
 import { useNavigate } from "react-router-dom";
 import PinValidationDialog from "../components/auth/PinValidationDialog";
@@ -60,21 +59,13 @@ const AnularFactura = () => {
     >
       <PageHeader
         title="Anular Facturas"
-        actions={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => navigate("/home")}
-            startIcon={<ArrowBackIcon />}
-            sx={{
-              bgcolor: LOGIN_COLORS.primary,
-              "&:hover": { bgcolor: LOGIN_COLORS.primaryDark },
-              borderRadius: 2,
-              px: 2,
-            }}
+        startContent={
+          <IconButton 
+            onClick={() => navigate("/home")} 
+            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
           >
-            Regresar al Inicio
-          </Button>
+            <ArrowBackIcon color="primary" />
+          </IconButton>
         }
       />
 

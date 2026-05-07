@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  IconButton,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -102,21 +103,12 @@ export default function Cuentas() {
       <PageHeader
         title="Directorio de Cuentas"
         startContent={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => navigate("/admin")}
-            startIcon={<ArrowBackIcon />}
-            sx={{
-              bgcolor: LOGIN_COLORS.primary,
-              "&:hover": { bgcolor: LOGIN_COLORS.primaryDark },
-              borderRadius: 2,
-              px: 2,
-              mr: 2,
-            }}
+          <IconButton 
+            onClick={() => navigate("/admin")} 
+            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
           >
-            Regresar
-          </Button>
+            <ArrowBackIcon color="primary" />
+          </IconButton>
         }
         actions={<AccountMenu />}
       />

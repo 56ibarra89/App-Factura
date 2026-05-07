@@ -1,9 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
+import { Box, Typography, Stack, Button, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import TimerIcon from "@mui/icons-material/Timer";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -52,11 +49,19 @@ const Ordenes = () => {
     >
       <PageHeader 
         title="Gestión de Órdenes" 
+        startContent={
+          <IconButton 
+            onClick={() => navigate("/home")} 
+            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
+          >
+            <ArrowBackIcon color="primary" />
+          </IconButton>
+        }
         actions={
           <Stack direction="row" spacing={2} alignItems="center">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <TimerIcon color="action" />
-              <Typography variant="body2" color="text.secondary">
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ bgcolor: 'rgba(0,0,0,0.03)', px: 1.5, py: 0.5, borderRadius: 2 }}>
+              <TimerIcon color="action" fontSize="small" />
+              <Typography variant="body2" fontWeight="600" color="text.secondary">
                 {activeOrders.length} activas
               </Typography>
             </Stack>
@@ -71,26 +76,13 @@ const Ordenes = () => {
                   borderColor: LOGIN_COLORS.primary,
                   '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' },
                   borderRadius: 2,
-                  px: 2
+                  px: 2,
+                  height: 36
                 }}
               >
                 Limpiar Historial
               </Button>
             </RoleGuard>
-            <Button 
-              variant="contained" 
-              size="small"
-              onClick={() => navigate("/home")}
-              startIcon={<ArrowBackIcon />}
-              sx={{ 
-                bgcolor: LOGIN_COLORS.primary, 
-                '&:hover': { bgcolor: LOGIN_COLORS.primaryDark },
-                borderRadius: 2,
-                px: 2
-              }}
-            >
-              Regresar al Inicio
-            </Button>
           </Stack>
         }
       />

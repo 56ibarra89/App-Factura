@@ -46,13 +46,19 @@ export default function ConsultarTurnos() {
       <PageHeader
         title="Historial de Turnos"
         startContent={
-          <IconButton onClick={() => navigate("/home")} sx={{ bgcolor: "white", mr: 2 }}>
-            <ArrowBackIcon />
+          <IconButton 
+            onClick={() => navigate("/home")} 
+            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
+          >
+            <ArrowBackIcon color="primary" />
           </IconButton>
         }
         actions={
-          <IconButton onClick={reload} sx={{ bgcolor: "white" }}>
-            <RefreshIcon />
+          <IconButton 
+            onClick={reload} 
+            sx={{ bgcolor: "white", boxShadow: 1, "&:hover": { bgcolor: "grey.100" } }}
+          >
+            <RefreshIcon color="primary" />
           </IconButton>
         }
       />
