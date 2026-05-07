@@ -1,7 +1,8 @@
 import { initDB, STORES } from "./db.config";
 import { Correlativo } from "../types/correlativo.types";
+import type { ICorrelativoRepository } from "../types/repositories";
 
-export const correlativoRepository = {
+export const correlativoRepository: ICorrelativoRepository = {
   async save(correlativo: Correlativo): Promise<void> {
     const db = await initDB();
     return new Promise((resolve, reject) => {

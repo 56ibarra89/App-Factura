@@ -3,6 +3,7 @@ import { CartItemType } from "../types/cart";
 import { SelectedExtra } from "../types/extras";
 import { ProductSize } from "../types/product";
 import { useImpuestosConfig } from "./useImpuestosConfig";
+import { calculateCartTotals } from "../utils/cartTotals";
 
 /** Compara extras para determinar si dos items del carrito son iguales */
 const extrasKey = (extras: SelectedExtra[]) =>
@@ -92,23 +93,10 @@ export function useCartStore() {
 
   const clearCart = useCallback(() => setCart([]), []);
 
-  const subTotal = useMemo(
-    () =>
-      cart.reduce((sum, item) => {
-        const giftQty = item.giftQuantity || 0;
-        const paidQty = Math.max(0, item.quantity - giftQty);
-        return sum + item.price * paidQty;
-      }, 0),
-    [cart]
+  const { subTotal, taxAmount, total } = useMemo(
+    () => calculateCartTotals(cart, taxes, isExonerated),
+    [cart, taxes, isExonerated]
   );
-
-  const taxAmount = useMemo(() => {
-    if (isExonerated) return 0;
-    const activeTax = taxes[0]?.percentage || 0;
-    return subTotal * (activeTax / 100);
-  }, [subTotal, isExonerated, taxes]);
-
-  const total = subTotal + taxAmount;
 
   return {
     cart,

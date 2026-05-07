@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { logService } from "../services/logService";
+import { sessionStore } from "../services/storage/storage";
 
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_DURATION_MS = 30_000; // 30 segundos
@@ -20,22 +21,22 @@ export interface PinLockoutState {
  */
 export function usePinLockout(): PinLockoutState {
   const [attempts, setAttempts] = useState<number>(
-    () => Number(sessionStorage.getItem(STORAGE_ATTEMPTS) || 0)
+    () => Number(sessionStore.getItem(STORAGE_ATTEMPTS) || 0)
   );
   const [lockoutTime, setLockoutTime] = useState(0);
 
   // Sincroniza el countdown del lockout cada segundo
   useEffect(() => {
     const tick = () => {
-      const until = Number(sessionStorage.getItem(STORAGE_LOCKOUT_UNTIL) || 0);
+      const until = Number(sessionStore.getItem(STORAGE_LOCKOUT_UNTIL) || 0);
       const remaining = Math.ceil((until - Date.now()) / 1000);
       if (remaining > 0) {
         setLockoutTime(remaining);
       } else {
         setLockoutTime(0);
         if (until > 0) {
-          sessionStorage.removeItem(STORAGE_LOCKOUT_UNTIL);
-          sessionStorage.setItem(STORAGE_ATTEMPTS, "0");
+          sessionStore.removeItem(STORAGE_LOCKOUT_UNTIL);
+          sessionStore.setItem(STORAGE_ATTEMPTS, "0");
           setAttempts(0);
         }
       }
@@ -48,11 +49,11 @@ export function usePinLockout(): PinLockoutState {
   const registerFailedAttempt = (): boolean => {
     const newAttempts = attempts + 1;
     setAttempts(newAttempts);
-    sessionStorage.setItem(STORAGE_ATTEMPTS, newAttempts.toString());
+    sessionStore.setItem(STORAGE_ATTEMPTS, newAttempts.toString());
 
     if (newAttempts >= MAX_ATTEMPTS) {
       const until = Date.now() + LOCKOUT_DURATION_MS;
-      sessionStorage.setItem(STORAGE_LOCKOUT_UNTIL, until.toString());
+      sessionStore.setItem(STORAGE_LOCKOUT_UNTIL, until.toString());
       setLockoutTime(LOCKOUT_DURATION_MS / 1000);
       logService.log(
         "system",
@@ -68,11 +69,11 @@ export function usePinLockout(): PinLockoutState {
 
   const resetAttempts = () => {
     setAttempts(0);
-    sessionStorage.setItem(STORAGE_ATTEMPTS, "0");
+    sessionStore.setItem(STORAGE_ATTEMPTS, "0");
   };
 
   const isLocked =
-    Date.now() < Number(sessionStorage.getItem(STORAGE_LOCKOUT_UNTIL) || 0);
+    Date.now() < Number(sessionStore.getItem(STORAGE_LOCKOUT_UNTIL) || 0);
 
   return { attempts, lockoutTime, isLocked, registerFailedAttempt, resetAttempts };
 }

@@ -2,6 +2,7 @@
 // src/context/ProductContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Category, Product } from "../types/product";
+import { localStore, setJson, tryGetJson } from "../services/storage/storage";
 
 // Contexto y métodos disponibles
 interface ProductContextType {
@@ -32,21 +33,14 @@ import { initialCategories } from "../data/initialData";
 // Componente Provider
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const loadInitialCategories = () => {
-    try {
-      const stored = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (e) {
-      console.error("Error parsing categories from localStorage", e);
-    }
-    return initialCategories;
+    const stored = tryGetJson<Category[]>(localStore, CATEGORIES_STORAGE_KEY);
+    return stored ?? initialCategories;
   };
 
   const [categories, setCategories] = useState<Category[]>(loadInitialCategories());
 
   useEffect(() => {
-    localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categories));
+    setJson(localStore, CATEGORIES_STORAGE_KEY, categories);
   }, [categories]);
 
   const addProduct = (category: string, product: Product) => {

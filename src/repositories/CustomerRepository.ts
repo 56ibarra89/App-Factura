@@ -5,11 +5,12 @@
 
 import { initDB, STORES } from "./db.config";
 import { Customer } from "../types/customer.types";
+import type { ICustomerRepository } from "../types/repositories";
 
 const generateId = (): string =>
   Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-class CustomerRepository {
+class CustomerRepository implements ICustomerRepository {
   /**
    * Búsqueda por prefijo de nombre (case-insensitive).
    * Ej: "juan" devuelve "Juan Pérez", "Juan Dávila", etc.

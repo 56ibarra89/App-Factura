@@ -1,16 +1,8 @@
 import { logRepository } from "../repositories/LogRepository";
+import type { LogLevel, SystemLog } from "../types/log.types";
 
-export type LogLevel = "info" | "warn" | "error";
-
-export interface SystemLog {
-  id?: number;
-  timestamp: number;
-  user: string;
-  role: string | null;
-  action: string;
-  details?: string;
-  level: LogLevel;
-}
+// Re-export para mantener imports existentes si los hubiera.
+export type { LogLevel, SystemLog };
 
 /**
  * DIP: logService ahora delega en ILogRepository (LogRepository) en lugar
@@ -27,11 +19,18 @@ export const logService = {
     details?: string,
     level: LogLevel = "info"
   ): Promise<void> =>
-    logRepository.add(user, role, action, details, level),
+    logRepository
+      .add(user, role, action, details, level)
+      .catch((err) => console.error("[logService] Error guardando log:", err)),
 
   /**
    * Obtiene los logs más recientes
    */
   getLogs: (limit = 200): Promise<SystemLog[]> =>
-    logRepository.getRecent(limit),
+    logRepository
+      .getRecent(limit)
+      .catch((err) => {
+        console.error("[logService] Error obteniendo logs:", err);
+        return [];
+      }),
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { localStore, setJson, tryGetJson } from "../services/storage/storage";
 
 export interface ReservationInfo {
   nombre: string;
@@ -14,30 +15,23 @@ export function useTableReservations() {
 
   // Cargar datos iniciales
   useEffect(() => {
-    const savedStatus = localStorage.getItem(STORAGE_KEY_STATUS);
-    const savedDetails = localStorage.getItem(STORAGE_KEY_DETAILS);
+    const status = tryGetJson<Record<string, "disponible" | "reservado" | "ocupado">>(
+      localStore,
+      STORAGE_KEY_STATUS,
+    );
+    const details = tryGetJson<Record<string, ReservationInfo>>(
+      localStore,
+      STORAGE_KEY_DETAILS,
+    );
 
-    if (savedStatus) {
-      try {
-        setTableStatusMap(JSON.parse(savedStatus));
-      } catch (e) {
-        console.error("Error cargando estados de mesas:", e);
-      }
-    }
-
-    if (savedDetails) {
-      try {
-        setReservationDetails(JSON.parse(savedDetails));
-      } catch (e) {
-        console.error("Error cargando detalles de reservas:", e);
-      }
-    }
+    if (status) setTableStatusMap(status);
+    if (details) setReservationDetails(details);
   }, []);
 
   const setTableStatus = (tableId: string, status: "disponible" | "reservado" | "ocupado") => {
     setTableStatusMap(prev => {
       const next = { ...prev, [tableId]: status };
-      localStorage.setItem(STORAGE_KEY_STATUS, JSON.stringify(next));
+      setJson(localStore, STORAGE_KEY_STATUS, next);
       return next;
     });
   };
@@ -50,7 +44,7 @@ export function useTableReservations() {
       } else {
         delete next[tableId];
       }
-      localStorage.setItem(STORAGE_KEY_DETAILS, JSON.stringify(next));
+      setJson(localStore, STORAGE_KEY_DETAILS, next);
       return next;
     });
   };

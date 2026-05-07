@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { logService } from "../services/logService";
 import { UserRole } from "../types/user";
+import { sessionStore } from "../services/storage/storage";
 
 const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutos
 const CHECK_INTERVAL_MS = 30_000; // Revisar cada 30s
@@ -31,14 +32,14 @@ export function useInactivityTimer({
 }: UseInactivityTimerOptions): void {
   const resetTimer = useCallback(() => {
     if (!isLoggedIn) return;
-    sessionStorage.setItem("lastActivity", Date.now().toString());
+    sessionStore.setItem("lastActivity", Date.now().toString());
   }, [isLoggedIn]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
     const checkInactivity = () => {
-      const last = Number(sessionStorage.getItem("lastActivity") || Date.now());
+      const last = Number(sessionStore.getItem("lastActivity") || Date.now());
       if (Date.now() - last > INACTIVITY_LIMIT_MS) {
         logService.log(
           username,

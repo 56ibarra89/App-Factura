@@ -10,9 +10,10 @@ import {
 import { Shift, ShiftSales } from "../types/shift.types";
 import { IShiftRepository } from "../types/repositories";
 import { shiftRepository as defaultShiftRepository } from "../repositories/ShiftRepository";
-import { useOrderContext } from "./OrderContext";
+import { useOrderQueries } from "./OrderContext";
 import { useAuth } from "./AuthContext";
 import { calculateShiftSales } from "../utils/shiftUtils";
+import { localStore } from "../services/storage/storage";
 
 interface CajaContextType {
   currentShift: Shift | null;
@@ -40,10 +41,10 @@ export const CajaProvider = ({
   repository = defaultShiftRepository,
 }: CajaProviderProps) => {
   const { username } = useAuth();
-  const { orders } = useOrderContext();
+  const { orders } = useOrderQueries();
 
   const [currentShift, setCurrentShift] = useState<Shift | null>(() => {
-    const saved = localStorage.getItem("currentShift");
+    const saved = localStore.getItem("currentShift");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -52,7 +53,7 @@ export const CajaProvider = ({
         const startTime = new Date(parsed.startTime);
         if (isNaN(startTime.getTime())) {
           console.error("[CajaContext] Fecha de inicio inválida. Limpiando localStorage.");
-          localStorage.removeItem("currentShift");
+          localStore.removeItem("currentShift");
           return null;
         }
 
@@ -72,10 +73,10 @@ export const CajaProvider = ({
   useEffect(() => {
     if (currentShift) {
       console.log("[CajaContext] Guardando turno en localStorage:", currentShift.id);
-      localStorage.setItem("currentShift", JSON.stringify(currentShift));
+      localStore.setItem("currentShift", JSON.stringify(currentShift));
     } else {
       console.log("[CajaContext] Limpiando turno de localStorage");
-      localStorage.removeItem("currentShift");
+      localStore.removeItem("currentShift");
     }
   }, [currentShift]);
 

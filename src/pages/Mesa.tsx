@@ -18,6 +18,7 @@ import { CartItemType } from "../types/cart";
 import { PaymentMethod, OrderType } from "../types/order.types";
 import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 import { useImpuestosConfig } from "../hooks/useImpuestosConfig";
+import { calculateCartTotals } from "../utils/cartTotals";
 
 export default function MesasPage() {
   const { floorsConfig } = useMesasConfig();
@@ -163,20 +164,10 @@ export default function MesasPage() {
   const activeOrder = useMemo(() => selectedMesaId ? getOrderByTable(selectedMesaId) : null, [selectedMesaId, getOrderByTable]);
   const currentOrder: CartItemType[] = useMemo(() => activeOrder ? activeOrder.items : [], [activeOrder]);
 
-  const orderSubTotal = useMemo(() => {
-    return currentOrder.reduce((acc, item) => {
-        const giftQty = item.giftQuantity || 0;
-        const paidQty = Math.max(0, item.quantity - giftQty);
-        return acc + item.price * paidQty;
-    }, 0);
-  }, [currentOrder]);
-
-  const orderTaxAmount = useMemo(() => {
-    const activeTax = taxes[0]?.percentage || 0;
-    return isExonerated ? 0 : orderSubTotal * (activeTax / 100);
-  }, [orderSubTotal, taxes, isExonerated]);
-
-  const orderTotal = orderSubTotal + orderTaxAmount;
+  const { subTotal: orderSubTotal, taxAmount: orderTaxAmount, total: orderTotal } = useMemo(
+    () => calculateCartTotals(currentOrder, taxes, isExonerated),
+    [currentOrder, taxes, isExonerated]
+  );
 
   const handleFinalConfirm = useCallback((
     paymentMethod: PaymentMethod,
@@ -194,12 +185,13 @@ export default function MesasPage() {
       customerName,
       orderType,
       customerAddress,
+      orderTotal,
     );
 
     window.print();
     setIsPreviewOpen(false);
     restoreFocus();
-  }, [activeOrder, finalizeOrder, restoreFocus]);
+  }, [activeOrder, finalizeOrder, orderTotal, restoreFocus]);
 
   const handleSalir = () => navigate("/home");
 

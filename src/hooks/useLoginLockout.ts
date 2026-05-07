@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { logService } from "../services/logService";
+import { sessionStore } from "../services/storage/storage";
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 60_000; // 60 segundos
@@ -20,22 +21,22 @@ export interface LoginLockoutState {
  */
 export function useLoginLockout(): LoginLockoutState {
   const [loginAttempts, setLoginAttempts] = useState<number>(
-    () => Number(sessionStorage.getItem(STORAGE_ATTEMPTS) || 0)
+    () => Number(sessionStore.getItem(STORAGE_ATTEMPTS) || 0)
   );
   const [loginLockoutTime, setLoginLockoutTime] = useState(0);
 
   // Sincroniza el countdown del lockout cada segundo
   useEffect(() => {
     const tick = () => {
-      const until = Number(sessionStorage.getItem(STORAGE_LOCKOUT_UNTIL) || 0);
+      const until = Number(sessionStore.getItem(STORAGE_LOCKOUT_UNTIL) || 0);
       const remaining = Math.ceil((until - Date.now()) / 1000);
       if (remaining > 0) {
         setLoginLockoutTime(remaining);
       } else {
         setLoginLockoutTime(0);
         if (until > 0) {
-          sessionStorage.removeItem(STORAGE_LOCKOUT_UNTIL);
-          sessionStorage.setItem(STORAGE_ATTEMPTS, "0");
+          sessionStore.removeItem(STORAGE_LOCKOUT_UNTIL);
+          sessionStore.setItem(STORAGE_ATTEMPTS, "0");
           setLoginAttempts(0);
         }
       }
@@ -48,11 +49,11 @@ export function useLoginLockout(): LoginLockoutState {
   const registerFailedLogin = (username?: string): boolean => {
     const newAttempts = loginAttempts + 1;
     setLoginAttempts(newAttempts);
-    sessionStorage.setItem(STORAGE_ATTEMPTS, newAttempts.toString());
+    sessionStore.setItem(STORAGE_ATTEMPTS, newAttempts.toString());
 
     if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
       const until = Date.now() + LOCKOUT_DURATION_MS;
-      sessionStorage.setItem(STORAGE_LOCKOUT_UNTIL, until.toString());
+      sessionStore.setItem(STORAGE_LOCKOUT_UNTIL, until.toString());
       setLoginLockoutTime(LOCKOUT_DURATION_MS / 1000);
       logService.log(
         username || "unknown",
@@ -76,11 +77,11 @@ export function useLoginLockout(): LoginLockoutState {
 
   const resetLoginAttempts = () => {
     setLoginAttempts(0);
-    sessionStorage.setItem(STORAGE_ATTEMPTS, "0");
+    sessionStore.setItem(STORAGE_ATTEMPTS, "0");
   };
 
   const isLoginLocked =
-    Date.now() < Number(sessionStorage.getItem(STORAGE_LOCKOUT_UNTIL) || 0);
+    Date.now() < Number(sessionStore.getItem(STORAGE_LOCKOUT_UNTIL) || 0);
 
   return {
     loginAttempts,

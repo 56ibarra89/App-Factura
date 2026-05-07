@@ -1,9 +1,15 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Order,
   OrderStatus,
-  KitchenStatus,
   PaymentMethod,
   OrderType,
 } from "../types/order.types";
@@ -11,6 +17,13 @@ import { CartItemType } from "../types/cart";
 import { IOrderRepository } from "../types/repositories";
 import { orderRepository as defaultOrderRepository } from "../repositories/OrderRepository";
 import { useAuth } from "./AuthContext";
+import {
+  createOrder,
+  hydrateOrdersFromStorage,
+  orderMutations,
+  orderSelectors,
+} from "../services/order/orderDomain";
+import { localStore } from "../services/storage/storage";
 
 interface OrderContextProps {
   orders: Order[];
@@ -44,6 +57,7 @@ interface OrderContextProps {
     customerName?: string,
     orderType?: OrderType,
     customerAddress?: string,
+    finalTotal?: number,
   ) => void;
   markAsSentToKitchen: (orderId: string) => void;
   markAsSentToKitchenByTable: (tableId: string) => void;
@@ -51,7 +65,18 @@ interface OrderContextProps {
   unirMesas: (sourceTableId: string, destTableId: string) => void;
 }
 
-const OrderContext = createContext<OrderContextProps | undefined>(undefined);
+type OrderQueriesContextProps = Pick<OrderContextProps, "orders" | "getOrderByTable">;
+type OrderCommandsContextProps = Omit<
+  OrderContextProps,
+  "orders" | "getOrderByTable"
+>;
+
+const OrderQueriesContext = createContext<OrderQueriesContextProps | undefined>(
+  undefined,
+);
+const OrderCommandsContext = createContext<
+  OrderCommandsContextProps | undefined
+>(undefined);
 
 const LOCAL_STORAGE_KEY = "app_factura_orders";
 
@@ -66,19 +91,22 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   repository = defaultOrderRepository,
 }) => {
   const { username } = useAuth();
+
+  const persist = useCallback(
+    (order: Order) => {
+      void repository
+        .save(order)
+        .catch((err) =>
+          console.error("[OrderContext] Error guardando orden:", err),
+        );
+    },
+    [repository],
+  );
+
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!saved) return [];
+    const saved = localStore.getItem(LOCAL_STORAGE_KEY);
     try {
-      const parsed = JSON.parse(saved);
-      const now = new Date();
-      return parsed
-        .map((o: Order) => ({ ...o, timestamp: new Date(o.timestamp) }))
-        .filter((o: Order) => {
-          const isToday = o.timestamp.toDateString() === now.toDateString();
-          const isActive = o.status !== "paid" && o.status !== "cancelled";
-          return isToday || isActive;
-        });
+      return hydrateOrdersFromStorage(saved, new Date());
     } catch (e) {
       console.error("Error loading orders from localStorage", e);
       return [];
@@ -86,334 +114,230 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   });
 
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(orders));
+    localStore.setItem(LOCAL_STORAGE_KEY, JSON.stringify(orders));
   }, [orders]);
 
-  const addOrder = (
-    items: CartItemType[],
-    total: number,
-    customerName?: string,
-    orderType?: OrderType,
-    customerAddress?: string,
-    tableId?: string,
-    paymentMethod?: string,
-    splitAmounts?: { efectivo: number; tarjeta: number },
-  ) => {
-    const newOrder: Order = {
-      id: `ORD-${Date.now()}`,
-      items: [...items],
+  const addOrder = useCallback<OrderCommandsContextProps["addOrder"]>(
+    (
+      items,
       total,
-      status: "pending",
-      timestamp: new Date(),
       customerName,
       orderType,
       customerAddress,
       tableId,
-      paymentMethod: paymentMethod as PaymentMethod,
+      paymentMethod,
       splitAmounts,
-      cashierName: username || "Sistema",
-      isSentToKitchen: !tableId,
-    };
-
-    if (newOrder.isSentToKitchen) {
-      newOrder.items = newOrder.items.map((item) => ({
-        ...item,
-        isSentToKitchen: true,
-        sentAt: Date.now(),
-        kitchenStatus: "pending",
-      }));
-    }
-
-    setOrders((prev) => [newOrder, ...prev]);
-    repository.save(newOrder);
-  };
-
-  const updateOrderStatus = (
-    orderId: string,
-    status: OrderStatus,
-    sentAt?: number,
-  ) => {
-    setOrders((prev) => {
-      const updatedOrders = prev.map((order) => {
-        if (order.id === orderId) {
-          if (sentAt) {
-            // Actualizar solo los ítems de ese envío
-            const kitchenStatus = status as KitchenStatus;
-            const updatedItems = order.items.map((item) =>
-              item.sentAt === sentAt ? { ...item, kitchenStatus } : item,
-            );
-
-            // Recalcular estado global de la orden
-            const allDelivered = updatedItems.every(
-              (i) => i.kitchenStatus === "delivered" || !i.isSentToKitchen,
-            );
-            const anyPending = updatedItems.some(
-              (i) => i.kitchenStatus === "pending" && i.isSentToKitchen,
-            );
-            const anyPreparing = updatedItems.some(
-              (i) => i.kitchenStatus === "preparing" && i.isSentToKitchen,
-            );
-            const anyReady = updatedItems.some(
-              (i) => i.kitchenStatus === "ready" && i.isSentToKitchen,
-            );
-
-            let globalStatus = order.status;
-            // No cambiar el estado global si la orden ya fue pagada o cancelada
-            if (globalStatus !== "paid" && globalStatus !== "cancelled") {
-              if (allDelivered && updatedItems.length > 0)
-                globalStatus = "delivered";
-              else if (anyPending) globalStatus = "pending";
-              else if (anyPreparing) globalStatus = "preparing";
-              else if (anyReady) globalStatus = "ready";
-            }
-
-            return { ...order, status: globalStatus, items: updatedItems };
-          }
-          // Si no hay sentAt, actualizamos toda la orden y todos sus ítems
-          const kitchenStatus = status as KitchenStatus;
-          
-          let newGlobalStatus = status;
-          if (order.status === "paid" || order.status === "cancelled") {
-            newGlobalStatus = order.status;
-          }
-
-          return {
-            ...order,
-            status: newGlobalStatus,
-            items: order.items.map((item) => ({ ...item, kitchenStatus })),
-          };
-        }
-        return order;
+    ) => {
+      const nowMs = Date.now();
+      const newOrder = createOrder({
+        items,
+        total,
+        username,
+        customerName,
+        orderType,
+        customerAddress,
+        tableId,
+        paymentMethod,
+        splitAmounts,
+        nowMs,
       });
-      const modified = updatedOrders.find((o) => o.id === orderId);
-      if (modified) repository.save(modified);
-      return updatedOrders;
-    });
-  };
 
-  const removeOrder = (orderId: string) => {
-    setOrders((prev) => prev.filter((order) => order.id !== orderId));
-  };
+      setOrders((prev) => [newOrder, ...prev]);
+      persist(newOrder);
+    },
+    [persist, username],
+  );
 
-  const updateOrderItems = (
-    orderId: string,
-    items: CartItemType[],
-    total: number,
-  ) => {
-    setOrders((prev) => {
-      const updatedOrders = prev.map((order) => {
-        if (order.id === orderId) {
-          const hasNewItems = items.some((item) => !item.isSentToKitchen);
-
-          // Determinar el estado global en base a los kitchenStatus de los ítems enviados
-          const sentItems = items.filter((i) => i.isSentToKitchen);
-          const allDelivered =
-            sentItems.length > 0 &&
-            sentItems.every((i) => i.kitchenStatus === "delivered");
-          const anyPreparing = sentItems.some(
-            (i) => i.kitchenStatus === "preparing",
-          );
-          const anyReady = sentItems.some((i) => i.kitchenStatus === "ready");
-
-          let newStatus = order.status;
-          if (hasNewItems) {
-            // Hay nuevos ítems → siempre vuelve a pendiente
-            newStatus = "pending";
-          } else if (allDelivered) {
-            newStatus = "delivered";
-          } else if (anyReady) {
-            newStatus = "ready";
-          } else if (anyPreparing) {
-            newStatus = "preparing";
-          }
-
-          return { ...order, items: [...items], total, status: newStatus };
-        }
-        return order;
+  const updateOrderStatus = useCallback<OrderCommandsContextProps["updateOrderStatus"]>(
+    (orderId, status, sentAt) => {
+      setOrders((prev) => {
+        const { orders: nextOrders, modified } =
+          orderMutations.updateOrderStatus(prev, orderId, status, sentAt);
+        if (modified) persist(modified);
+        return nextOrders;
       });
-      const modified = updatedOrders.find((o) => o.id === orderId);
-      if (modified) repository.save(modified);
-      return updatedOrders;
-    });
-  };
+    },
+    [persist],
+  );
 
-  const getOrderByTable = (tableId: string) =>
-    orders.find(
-      (o) =>
-        (o.tableId === tableId ||
-          (o.linkedTables && o.linkedTables.includes(tableId))) &&
-        o.status !== "paid" &&
-        o.status !== "cancelled",
-    );
+  const removeOrder = useCallback<OrderCommandsContextProps["removeOrder"]>(
+    (orderId) => {
+      setOrders((prev) => prev.filter((order) => order.id !== orderId));
+    },
+    [],
+  );
 
-  const clearHistory = () => {
-    setOrders((prev) =>
-      prev.filter(
-        (order) => order.status !== "paid" && order.status !== "cancelled",
-      ),
-    );
-  };
-
-  const finalizeOrder = (
-    orderId: string,
-    paymentMethod: PaymentMethod,
-    splitAmounts?: { efectivo: number; tarjeta: number },
-    customerName?: string,
-    orderType?: OrderType,
-    customerAddress?: string,
-  ) => {
-    setOrders((prev) => {
-      const updatedOrders = prev.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              status: "paid" as OrderStatus,
-              paymentMethod,
-              splitAmounts,
-              customerName: customerName || order.customerName,
-              orderType: orderType || order.orderType,
-              customerAddress: customerAddress || order.customerAddress,
-            }
-          : order,
-      );
-      const modified = updatedOrders.find((o) => o.id === orderId);
-      if (modified) repository.save(modified);
-      return updatedOrders;
-    });
-  };
-
-  const markAsSentToKitchen = (orderId: string) => {
-    setOrders((prev) => {
-      const updatedOrders = prev.map((order) => {
-        if (order.id === orderId) {
-          const now = Date.now();
-          return {
-            ...order,
-            isSentToKitchen: true,
-            items: order.items.map((item) => ({
-              ...item,
-              isSentToKitchen: true,
-              sentAt: item.isSentToKitchen ? item.sentAt : now,
-              kitchenStatus: item.isSentToKitchen
-                ? item.kitchenStatus
-                : "pending",
-            })),
-          };
-        }
-        return order;
+  const updateOrderItems = useCallback<OrderCommandsContextProps["updateOrderItems"]>(
+    (orderId, items, total) => {
+      setOrders((prev) => {
+        const { orders: nextOrders, modified } =
+          orderMutations.updateOrderItems(prev, orderId, items, total);
+        if (modified) persist(modified);
+        return nextOrders;
       });
-      const modified = updatedOrders.find((o) => o.id === orderId);
-      if (modified) repository.save(modified);
-      return updatedOrders;
-    });
-  };
+    },
+    [persist],
+  );
 
-  const markAsSentToKitchenByTable = (tableId: string) => {
-    setOrders((prev) => {
-      const updatedOrders = prev.map((order) => {
-        if (
-          order.tableId === tableId &&
-          order.status !== "paid" &&
-          order.status !== "cancelled"
-        ) {
-          const now = Date.now();
-          return {
-            ...order,
-            isSentToKitchen: true,
-            items: order.items.map((item) => ({
-              ...item,
-              isSentToKitchen: true,
-              sentAt: item.isSentToKitchen ? item.sentAt : now,
-              kitchenStatus: item.isSentToKitchen
-                ? item.kitchenStatus
-                : "pending",
-            })),
-          };
-        }
-        return order;
+  const getOrderByTable = useCallback<OrderQueriesContextProps["getOrderByTable"]>(
+    (tableId) => orderSelectors.getActiveOrderByTable(orders, tableId),
+    [orders],
+  );
+
+  const clearHistory = useCallback<OrderCommandsContextProps["clearHistory"]>(
+    () => {
+      setOrders((prev) => orderMutations.clearHistory(prev).orders);
+    },
+    [],
+  );
+
+  const finalizeOrder = useCallback<OrderCommandsContextProps["finalizeOrder"]>(
+    (
+      orderId,
+      paymentMethod,
+      splitAmounts,
+      customerName,
+      orderType,
+      customerAddress,
+      finalTotal,
+    ) => {
+      setOrders((prev) => {
+        const { orders: nextOrders, modified } = orderMutations.finalizeOrder(
+          prev,
+          orderId,
+          {
+            paymentMethod,
+            splitAmounts,
+            customerName,
+            orderType,
+            customerAddress,
+            finalTotal,
+          },
+        );
+        if (modified) persist(modified);
+        return nextOrders;
       });
-      const modified = updatedOrders.find(
-        (o) =>
-          o.tableId === tableId &&
-          o.status !== "paid" &&
-          o.status !== "cancelled",
-      );
-      if (modified) repository.save(modified);
-      return updatedOrders;
-    });
-  };
+    },
+    [persist],
+  );
 
-  const moveOrder = (sourceTableId: string, destTableId: string) => {
-    setOrders((prev) => {
-      const updatedOrders = prev.map((order) =>
-        order.tableId === sourceTableId &&
-        order.status !== "paid" &&
-        order.status !== "cancelled"
-          ? { ...order, tableId: destTableId }
-          : order,
-      );
-      const modified = updatedOrders.find(
-        (o) =>
-          o.tableId === destTableId &&
-          o.status !== "paid" &&
-          o.status !== "cancelled",
-      );
-      if (modified) repository.save(modified);
-      return updatedOrders;
-    });
-  };
-
-  const unirMesas = (sourceTableId: string, destTableId: string) => {
-    setOrders((prev) => {
-      const updatedOrders = prev.map((order) => {
-        if (
-          order.tableId === sourceTableId &&
-          order.status !== "paid" &&
-          order.status !== "cancelled"
-        ) {
-          const linkedTables = order.linkedTables || [];
-          if (!linkedTables.includes(destTableId)) {
-            return { ...order, linkedTables: [...linkedTables, destTableId] };
-          }
-        }
-        return order;
+  const markAsSentToKitchen = useCallback<
+    OrderCommandsContextProps["markAsSentToKitchen"]
+  >(
+    (orderId) => {
+      setOrders((prev) => {
+        const { orders: nextOrders, modified } =
+          orderMutations.markAsSentToKitchen(prev, orderId, Date.now());
+        if (modified) persist(modified);
+        return nextOrders;
       });
-      const modified = updatedOrders.find(
-        (o) =>
-          o.tableId === sourceTableId &&
-          o.status !== "paid" &&
-          o.status !== "cancelled",
-      );
-      if (modified) repository.save(modified);
-      return updatedOrders;
-    });
-  };
+    },
+    [persist],
+  );
+
+  const markAsSentToKitchenByTable = useCallback<
+    OrderCommandsContextProps["markAsSentToKitchenByTable"]
+  >(
+    (tableId) => {
+      setOrders((prev) => {
+        const { orders: nextOrders, modified } =
+          orderMutations.markAsSentToKitchenByTable(prev, tableId, Date.now());
+        if (modified) persist(modified);
+        return nextOrders;
+      });
+    },
+    [persist],
+  );
+
+  const moveOrder = useCallback<OrderCommandsContextProps["moveOrder"]>(
+    (sourceTableId, destTableId) => {
+      setOrders((prev) => {
+        const { orders: nextOrders, modified } = orderMutations.moveOrder(
+          prev,
+          sourceTableId,
+          destTableId,
+        );
+        if (modified) persist(modified);
+        return nextOrders;
+      });
+    },
+    [persist],
+  );
+
+  const unirMesas = useCallback<OrderCommandsContextProps["unirMesas"]>(
+    (sourceTableId, destTableId) => {
+      setOrders((prev) => {
+        const { orders: nextOrders, modified } = orderMutations.unirMesas(
+          prev,
+          sourceTableId,
+          destTableId,
+        );
+        if (modified) persist(modified);
+        return nextOrders;
+      });
+    },
+    [persist],
+  );
+
+  const queriesValue = useMemo<OrderQueriesContextProps>(
+    () => ({ orders, getOrderByTable }),
+    [orders, getOrderByTable],
+  );
+
+  const commandsValue = useMemo<OrderCommandsContextProps>(
+    () => ({
+      addOrder,
+      updateOrderStatus,
+      removeOrder,
+      clearHistory,
+      updateOrderItems,
+      finalizeOrder,
+      markAsSentToKitchen,
+      markAsSentToKitchenByTable,
+      moveOrder,
+      unirMesas,
+    }),
+    [
+      addOrder,
+      updateOrderStatus,
+      removeOrder,
+      clearHistory,
+      updateOrderItems,
+      finalizeOrder,
+      markAsSentToKitchen,
+      markAsSentToKitchenByTable,
+      moveOrder,
+      unirMesas,
+    ],
+  );
 
   return (
-    <OrderContext.Provider
-      value={{
-        orders,
-        addOrder,
-        updateOrderStatus,
-        removeOrder,
-        clearHistory,
-        updateOrderItems,
-        getOrderByTable,
-        finalizeOrder,
-        markAsSentToKitchen,
-        markAsSentToKitchenByTable,
-        moveOrder,
-        unirMesas,
-      }}
-    >
-      {children}
-    </OrderContext.Provider>
+    <OrderQueriesContext.Provider value={queriesValue}>
+      <OrderCommandsContext.Provider value={commandsValue}>
+        {children}
+      </OrderCommandsContext.Provider>
+    </OrderQueriesContext.Provider>
   );
 };
 
-export const useOrderContext = () => {
-  const context = useContext(OrderContext);
+export const useOrderQueries = (): OrderQueriesContextProps => {
+  const context = useContext(OrderQueriesContext);
   if (!context)
-    throw new Error("useOrderContext debe usarse dentro de <OrderProvider>");
+    throw new Error("useOrderQueries debe usarse dentro de <OrderProvider>");
   return context;
+};
+
+export const useOrderCommands = (): OrderCommandsContextProps => {
+  const context = useContext(OrderCommandsContext);
+  if (!context)
+    throw new Error("useOrderCommands debe usarse dentro de <OrderProvider>");
+  return context;
+};
+
+export const useOrderContext = (): OrderContextProps => {
+  const queries = useContext(OrderQueriesContext);
+  const commands = useContext(OrderCommandsContext);
+  if (!queries || !commands)
+    throw new Error("useOrderContext debe usarse dentro de <OrderProvider>");
+  return { ...queries, ...commands };
 };

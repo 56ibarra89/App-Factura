@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { localStore, setJson, tryGetJson } from "../services/storage/storage";
 
 export interface AccountData {
   nombreCompleto: string;
@@ -28,18 +29,17 @@ export function useAccountSettings() {
 
   // Simular carga de datos iniciales
   useEffect(() => {
-    const savedData = localStorage.getItem(`account_data_${username}`);
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        setData((prev) => ({
-          ...prev,
-          nombreCompleto: parsed.nombreCompleto || "",
-          pin: parsed.pin || "",
-        }));
-      } catch (e) {
-        console.error("Error cargando datos de cuenta", e);
-      }
+    const storageKey = `account_data_${username}`;
+    const parsed = tryGetJson<{ nombreCompleto?: string; pin?: string }>(
+      localStore,
+      storageKey,
+    );
+    if (parsed) {
+      setData((prev) => ({
+        ...prev,
+        nombreCompleto: parsed.nombreCompleto || "",
+        pin: parsed.pin || "",
+      }));
     } else {
       // Valores por defecto
       setData((prev) => ({
@@ -115,7 +115,7 @@ export function useAccountSettings() {
       password: data.nuevaPassword || "123456", // Mantener la anterior en la vida real
     };
 
-    localStorage.setItem(`account_data_${username}`, JSON.stringify(toSave));
+    setJson(localStore, `account_data_${username}`, toSave);
 
     // Limpiar campos de contraseña
     setData((prev) => ({

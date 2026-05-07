@@ -10,7 +10,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { UserAccount } from "../../types/user";
-import { logService, SystemLog } from "../../services/logService";
+import { logService } from "../../services/logService";
+import type { SystemLog } from "../../types/log.types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 

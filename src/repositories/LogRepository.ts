@@ -1,5 +1,5 @@
 import { ILogRepository } from "../types/repositories";
-import { SystemLog, LogLevel } from "../services/logService";
+import type { SystemLog, LogLevel } from "../types/log.types";
 import { initDB, STORES } from "./db.config";
 
 /**
@@ -34,6 +34,7 @@ class LogRepository implements ILogRepository {
       });
     } catch (error) {
       console.error("Critical error saving to audit log:", error);
+      throw error;
     }
   }
 
@@ -63,7 +64,7 @@ class LogRepository implements ILogRepository {
       });
     } catch (error) {
       console.error("Error retrieving logs:", error);
-      return [];
+      throw error;
     }
   }
 }

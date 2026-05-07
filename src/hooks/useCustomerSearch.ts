@@ -5,8 +5,14 @@
 import { useState, useCallback, useRef } from "react";
 import { customerRepository } from "../repositories/CustomerRepository";
 import { Customer } from "../types/customer.types";
+import type { ICustomerRepository } from "../types/repositories";
 
-export function useCustomerSearch() {
+interface UseCustomerSearchOptions {
+  repository?: ICustomerRepository;
+}
+
+export function useCustomerSearch(options: UseCustomerSearchOptions = {}) {
+  const repository = options.repository ?? customerRepository;
   const [suggestions, setSuggestions] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -23,7 +29,7 @@ export function useCustomerSearch() {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const results = await customerRepository.searchByName(query.trim());
+        const results = await repository.searchByName(query.trim());
         setSuggestions(results);
       } catch (err) {
         console.error("[CustomerSearch] Error buscando clientes:", err);
@@ -32,7 +38,7 @@ export function useCustomerSearch() {
         setLoading(false);
       }
     }, 200);
-  }, []);
+  }, [repository]);
 
   /**
    * Guarda o actualiza un cliente con su dirección.
@@ -42,7 +48,7 @@ export function useCustomerSearch() {
     async (name: string, address?: string, phone?: string): Promise<boolean> => {
       if (!name.trim()) return false;
       try {
-        const { isNew } = await customerRepository.upsertCustomer(
+        const { isNew } = await repository.upsertCustomer(
           name.trim(),
           address?.trim(),
           phone?.trim()
@@ -53,7 +59,7 @@ export function useCustomerSearch() {
         return false;
       }
     },
-    []
+    [repository]
   );
 
   const clearSuggestions = useCallback(() => setSuggestions([]), []);

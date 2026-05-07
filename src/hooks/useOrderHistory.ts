@@ -20,9 +20,11 @@ export const useOrderHistory = () => {
   
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchOrders = async () => {
     setLoading(true);
+    setError(null);
     const startObj = new Date(startDate + "T00:00:00");
     const endObj = new Date(endDate + "T23:59:59");
     
@@ -31,10 +33,19 @@ export const useOrderHistory = () => {
       return;
     }
 
-    const fetched = await getOrdersByDateRange(startObj, endObj);
-    const completedOrders = fetched.filter(o => o.status === "paid" || o.status === "cancelled");
-    setOrders(completedOrders);
-    setLoading(false);
+    try {
+      const fetched = await getOrdersByDateRange(startObj, endObj);
+      const completedOrders = fetched.filter(
+        (o) => o.status === "paid" || o.status === "cancelled"
+      );
+      setOrders(completedOrders);
+    } catch (e) {
+      console.error("useOrderHistory: error al cargar", e);
+      setError("No se pudo cargar el historial de órdenes.");
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -64,6 +75,7 @@ export const useOrderHistory = () => {
     searchQuery,
     setSearchQuery,
     loading,
+    error,
     filteredOrders,
     handleSearchClick
   };

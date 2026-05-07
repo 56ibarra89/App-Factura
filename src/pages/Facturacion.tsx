@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useProductContext } from "../context/ProductContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useCart from "../hooks/useCart";
-import { useOrderContext } from "../context/OrderContext";
 import { useEffect } from "react";
 import { PaymentMethod, OrderType } from "../types/order.types";
 import { Snackbar, Alert } from "@mui/material";
 import { useAuth } from "../context/AuthContext";
 import { logService } from "../services/logService";
+import { useOrderCommands, useOrderQueries } from "../context/OrderContext";
 
 // Componentes de UI
 import CategoryTabs from "../components/CategoryTabs";
@@ -57,7 +57,7 @@ const Facturacion = () => {
   const [searchParams] = useSearchParams();
   const tableId = searchParams.get("tableId");
   const isCheckoutMode = searchParams.get("checkout") === "true";
-  const { getOrderByTable } = useOrderContext();
+  const { getOrderByTable } = useOrderQueries();
   const activeOrder = tableId ? getOrderByTable(tableId) : null;
 
   // Cargar carrito si es una mesa con orden activa
@@ -105,7 +105,7 @@ const Facturacion = () => {
     setPreviewOpen(false);
   };
 
-  const { markAsSentToKitchenByTable } = useOrderContext();
+  const { markAsSentToKitchenByTable } = useOrderCommands();
 
   const handleKitchenDispatch = () => {
     if (!tableId) return;

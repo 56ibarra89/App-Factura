@@ -1,6 +1,7 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { localStore } from "../services/storage/storage";
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export const useLogin = () => {
   const [remember, setRemember] = useState(false);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("rememberedUser");
+    const savedUser = localStore.getItem("rememberedUser");
     if (savedUser) {
       setCredentials((prev) => ({ ...prev, username: savedUser }));
       setRemember(true);

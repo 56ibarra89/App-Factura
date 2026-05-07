@@ -29,6 +29,7 @@ class OrderRepository implements IOrderRepository {
       });
     } catch (error) {
       console.error("Error guardando orden en DB:", error);
+      throw error;
     }
   }
 
@@ -64,7 +65,7 @@ class OrderRepository implements IOrderRepository {
       });
     } catch (error) {
       console.error("Error obteniendo órdenes de DB:", error);
-      return [];
+      throw error;
     }
   }
 
@@ -90,7 +91,7 @@ class OrderRepository implements IOrderRepository {
       });
     } catch (error) {
       console.error("Error obteniendo orden por ID:", error);
-      return null;
+      throw error;
     }
   }
 }

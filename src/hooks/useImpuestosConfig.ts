@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { logService } from '../services/logService';
+import { localStore, setJson, tryGetJson } from "../services/storage/storage";
 
 export interface Tax {
   id: string;
@@ -23,21 +24,14 @@ export const useImpuestosConfig = () => {
   const { username, role } = useAuth();
 
   const loadInitialConfig = (): TaxConfig => {
-    try {
-      const stored = localStorage.getItem(TAX_STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (e) {
-      console.error("Error parsing tax config from localStorage", e);
-    }
-    return { taxes: defaultTaxes, isExonerated: false };
+    const stored = tryGetJson<TaxConfig>(localStore, TAX_STORAGE_KEY);
+    return stored ?? { taxes: defaultTaxes, isExonerated: false };
   };
 
   const [config, setConfig] = useState<TaxConfig>(loadInitialConfig());
 
   useEffect(() => {
-    localStorage.setItem(TAX_STORAGE_KEY, JSON.stringify(config));
+    setJson(localStore, TAX_STORAGE_KEY, config);
   }, [config]);
 
   const taxes: Tax[] = config.taxes;

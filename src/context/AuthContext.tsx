@@ -7,6 +7,7 @@ import { logService } from "../services/logService";
 import { usePinLockout } from "../hooks/usePinLockout";
 import { useLoginLockout } from "../hooks/useLoginLockout";
 import { useInactivityTimer } from "../hooks/useInactivityTimer";
+import { localStore, sessionStore } from "../services/storage/storage";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -38,13 +39,13 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children, service = defaultAuthService }: AuthProviderProps) => {
   const [isLoggedIn, setIsLoggedIn] = useState(
-    () => sessionStorage.getItem("loggedIn") === "true"
+    () => sessionStore.getItem("loggedIn") === "true"
   );
   const [username, setUsername] = useState(
-    () => sessionStorage.getItem("username") || ""
+    () => sessionStore.getItem("username") || ""
   );
   const [role, setRole] = useState<UserRole | null>(
-    () => (sessionStorage.getItem("role") as UserRole | null)
+    () => (sessionStore.getItem("role") as UserRole | null)
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
     if (username) {
       logService.log(username, role, "LOGOUT", "Cierre de sesión de usuario");
     }
-    sessionStorage.clear();
+    sessionStore.clear();
     setIsLoggedIn(false);
     setUsername("");
     setRole(null);
@@ -82,22 +83,22 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         setLoading(false);
 
         if (result.success && result.role) {
-          sessionStorage.setItem("loggedIn", "true");
-          sessionStorage.setItem("username", user);
-          sessionStorage.setItem("role", result.role);
+          sessionStore.setItem("loggedIn", "true");
+          sessionStore.setItem("username", user);
+          sessionStore.setItem("role", result.role);
           loginLockout.resetLoginAttempts();
 
           setIsLoggedIn(true);
           setUsername(user);
           setRole(result.role);
-          sessionStorage.setItem("lastActivity", Date.now().toString());
+          sessionStore.setItem("lastActivity", Date.now().toString());
 
           logService.log(user, result.role, "LOGIN_PASSWORD", "Inicio de sesión con contraseña");
 
           if (remember) {
-            localStorage.setItem("rememberedUser", user);
+            localStore.setItem("rememberedUser", user);
           } else {
-            localStorage.removeItem("rememberedUser");
+            localStore.removeItem("rememberedUser");
           }
           return true;
         }
@@ -134,15 +135,15 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
       setLoading(false);
 
       if (result) {
-        sessionStorage.setItem("loggedIn", "true");
-        sessionStorage.setItem("username", result.username);
-        sessionStorage.setItem("role", result.role);
+        sessionStore.setItem("loggedIn", "true");
+        sessionStore.setItem("username", result.username);
+        sessionStore.setItem("role", result.role);
         pinLockout.resetAttempts();
 
         setIsLoggedIn(true);
         setUsername(result.username);
         setRole(result.role);
-        sessionStorage.setItem("lastActivity", Date.now().toString());
+        sessionStore.setItem("lastActivity", Date.now().toString());
 
         logService.log(result.username, result.role, "LOGIN_PIN", "Inicio de sesión con PIN");
         return true;

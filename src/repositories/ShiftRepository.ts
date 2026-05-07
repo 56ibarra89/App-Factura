@@ -32,6 +32,7 @@ class ShiftRepository implements IShiftRepository {
       });
     } catch (error) {
       console.error("Error guardando turno en DB:", error);
+      throw error;
     }
   }
 
@@ -60,7 +61,7 @@ class ShiftRepository implements IShiftRepository {
       });
     } catch (error) {
       console.error("Error obteniendo turnos de DB:", error);
-      return [];
+      throw error;
     }
   }
 }

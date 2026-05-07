@@ -1,22 +1,28 @@
 import { useState, useEffect, useCallback } from "react";
 import { correlativoRepository } from "../repositories/CorrelativoRepository";
 import { Correlativo, CorrelativoStatus, DocumentType } from "../types/correlativo.types";
+import type { ICorrelativoRepository } from "../types/repositories";
 
-export const useCorrelativos = () => {
+interface UseCorrelativosOptions {
+  repository?: ICorrelativoRepository;
+}
+
+export const useCorrelativos = (options: UseCorrelativosOptions = {}) => {
+  const repository = options.repository ?? correlativoRepository;
   const [correlativos, setCorrelativos] = useState<Correlativo[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadCorrelativos = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await correlativoRepository.getAll();
+      const data = await repository.getAll();
       setCorrelativos(data);
     } catch (error) {
       console.error("Error al cargar correlativos:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [repository]);
 
   useEffect(() => {
     loadCorrelativos();
@@ -45,11 +51,11 @@ export const useCorrelativos = () => {
         );
         if (activeExisting) {
           activeExisting.status = "Vencido";
-          await correlativoRepository.save(activeExisting);
+          await repository.save(activeExisting);
         }
       }
 
-      await correlativoRepository.save(newCorrelativo);
+        await repository.save(newCorrelativo);
       await loadCorrelativos();
     } catch (error) {
       console.error("Error guardando correlativo:", error);
@@ -58,14 +64,12 @@ export const useCorrelativos = () => {
   };
 
   const deleteCorrelativo = async (id: string) => {
-    if (window.confirm("¿Estás seguro de eliminar este registro?")) {
       try {
-        await correlativoRepository.delete(id);
+        await repository.delete(id);
         await loadCorrelativos();
       } catch (error) {
         console.error("Error eliminando correlativo:", error);
       }
-    }
   };
 
   const activeFactura = correlativos.find(

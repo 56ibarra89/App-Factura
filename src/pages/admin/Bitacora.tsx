@@ -9,7 +9,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 import PageHeader from "../../components/PageHeader";
-import { logService, SystemLog, LogLevel } from "../../services/logService";
+import { logService } from "../../services/logService";
+import type { SystemLog, LogLevel } from "../../types/log.types";
 import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
 import PinValidationDialog from "../../components/auth/PinValidationDialog";
 

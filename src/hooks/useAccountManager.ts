@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { UserAccount } from "../types/user";
 import { logService } from "../services/logService";
 import { useAuth } from "../context/AuthContext";
+import { localStore, setJson, tryGetJson } from "../services/storage/storage";
 
 // Simulación de datos iniciales
 const MOCK_INITIAL_USERS: UserAccount[] = [
@@ -58,25 +59,28 @@ export function useAccountManager() {
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const STORAGE_KEY = "app_factura_users";
+
   // Cargar usuarios al inicio
   useEffect(() => {
     setLoading(true);
-    const storedUsers = localStorage.getItem("app_factura_users");
-    if (storedUsers) {
-      try {
-        setUsers(JSON.parse(storedUsers));
-      } catch (e) {
+    const storedUsersRaw = localStore.getItem(STORAGE_KEY);
+    if (storedUsersRaw) {
+      const parsed = tryGetJson<UserAccount[]>(localStore, STORAGE_KEY);
+      if (parsed) {
+        setUsers(parsed);
+      } else {
         setUsers(MOCK_INITIAL_USERS);
       }
     } else {
       setUsers(MOCK_INITIAL_USERS);
-      localStorage.setItem("app_factura_users", JSON.stringify(MOCK_INITIAL_USERS));
+      setJson(localStore, STORAGE_KEY, MOCK_INITIAL_USERS);
     }
     setLoading(false);
   }, []);
 
   const saveToStorage = (updatedUsers: UserAccount[]) => {
-    localStorage.setItem("app_factura_users", JSON.stringify(updatedUsers));
+    setJson(localStore, STORAGE_KEY, updatedUsers);
     setUsers(updatedUsers);
   };
 

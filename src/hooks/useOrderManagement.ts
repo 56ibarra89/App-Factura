@@ -1,4 +1,4 @@
-import { useOrderContext } from "../context/OrderContext";
+import { useOrderCommands, useOrderQueries } from "../context/OrderContext";
 import { useMemo } from "react";
 import { Order } from "../types/order.types";
 import { CartItemType } from "../types/cart";
@@ -51,7 +51,8 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
 };
 
 export const useOrderManagement = () => {
-  const { orders, updateOrderStatus, removeOrder, clearHistory } = useOrderContext();
+  const { orders } = useOrderQueries();
+  const { updateOrderStatus, removeOrder, clearHistory } = useOrderCommands();
 
   // Dividir todas las órdenes en tickets virtuales
   const allTickets = useMemo(() => {

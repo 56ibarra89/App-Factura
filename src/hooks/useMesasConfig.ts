@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { localStore, setJson, tryGetJson } from "../services/storage/storage";
 
 export interface FloorConfig {
   id: number;
@@ -22,17 +23,15 @@ export function useMesasConfig() {
 
   // Cargar configuración local.
   useEffect(() => {
-    const saved = localStorage.getItem("app_factura_floors_config");
+    const key = "app_factura_floors_config";
+    const saved = tryGetJson<FloorConfig[]>(localStore, key);
     if (saved) {
-      try {
-        setFloors(JSON.parse(saved));
-      } catch (e) {
-        setFloors(DEFAULT_FLOORS);
-      }
-    } else {
-      setFloors(DEFAULT_FLOORS);
-      localStorage.setItem("app_factura_floors_config", JSON.stringify(DEFAULT_FLOORS));
+      setFloors(saved);
+      return;
     }
+
+    setFloors(DEFAULT_FLOORS);
+    setJson(localStore, key, DEFAULT_FLOORS);
   }, []);
 
   const updateFloorTables = (floorId: number, count: number) => {
@@ -40,7 +39,7 @@ export function useMesasConfig() {
       floor.id === floorId ? { ...floor, tableCount: count } : floor
     );
     setFloors(updated);
-    localStorage.setItem("app_factura_floors_config", JSON.stringify(updated));
+    setJson(localStore, "app_factura_floors_config", updated);
   };
 
   return {

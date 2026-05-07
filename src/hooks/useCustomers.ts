@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { customerRepository } from "../repositories/CustomerRepository";
 import { Customer, CustomerAddress } from "../types/customer.types";
+import type { ICustomerRepository } from "../types/repositories";
 
 const generateId = (): string =>
   Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -20,7 +21,12 @@ export interface CustomerFormData {
   addresses: CustomerAddress[];
 }
 
-export const useCustomers = () => {
+interface UseCustomersOptions {
+  repository?: ICustomerRepository;
+}
+
+export const useCustomers = (options: UseCustomersOptions = {}) => {
+  const repository = options.repository ?? customerRepository;
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +36,7 @@ export const useCustomers = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await customerRepository.getAll();
+      const data = await repository.getAll();
       setCustomers(data);
     } catch (err) {
       console.error("useCustomers: error al cargar", err);
@@ -38,7 +44,7 @@ export const useCustomers = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [repository]);
 
   useEffect(() => {
     loadCustomers();
@@ -60,10 +66,10 @@ export const useCustomers = () => {
         createdAt: now,
         updatedAt: now,
       };
-      await customerRepository.update(newCustomer);
+      await repository.update(newCustomer);
       await loadCustomers();
     },
-    [loadCustomers]
+    [repository, loadCustomers]
   );
 
   // ── Actualizar ───────────────────────────────────────────────────────────────
@@ -81,19 +87,19 @@ export const useCustomers = () => {
         addresses: data.addresses,
         updatedAt: new Date().toISOString(),
       };
-      await customerRepository.update(updated);
+      await repository.update(updated);
       await loadCustomers();
     },
-    [customers, loadCustomers]
+    [customers, repository, loadCustomers]
   );
 
   // ── Eliminar ─────────────────────────────────────────────────────────────────
   const deleteCustomer = useCallback(
     async (id: string): Promise<void> => {
-      await customerRepository.delete(id);
+      await repository.delete(id);
       await loadCustomers();
     },
-    [loadCustomers]
+    [repository, loadCustomers]
   );
 
   // ── Helpers de dirección ─────────────────────────────────────────────────────
