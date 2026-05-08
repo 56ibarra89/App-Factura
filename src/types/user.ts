@@ -3,6 +3,7 @@ export type UserRole = "admin" | "cajero" | "mesero" | "cocinero";
 export interface UserAccount {
   id: string; // Puede ser el nombre de usuario para simplificar (debe ser único)
   username: string; // El nombre con el que inicia sesión
+  email?: string; // Correo electrónico (opcional, para login de admin)
   firstName: string;
   lastName: string;
   pin: string;

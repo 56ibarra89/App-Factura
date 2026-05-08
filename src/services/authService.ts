@@ -1,10 +1,11 @@
 import { IAuthService, AuthLoginResult } from "../types/authService";
 import { UserRole } from "../types/user";
 
-const USER_TABLE: Record<string, { password: string; role: UserRole }> = {
+const USER_TABLE: Record<string, { password: string; role: UserRole; email?: string }> = {
   admin: {
     password: import.meta.env.VITE_USER_ADMIN_PASS,
     role: import.meta.env.VITE_USER_ADMIN_ROLE as UserRole,
+    email: import.meta.env.VITE_USER_ADMIN_EMAIL,
   },
   fran: {
     password: import.meta.env.VITE_USER_FRAN_PASS,
