@@ -23,6 +23,11 @@ const Producto = () => {
   const navigate = useNavigate();
   const addButtonRef = useRef<HTMLButtonElement>(null);
 
+  const blurActiveElement = () => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
+  };
+
   const [showForm, setShowForm] = useState(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [editing, setEditing] = useState<null | {
@@ -42,16 +47,19 @@ const Producto = () => {
   });
 
   const handleAdd = () => {
+    blurActiveElement();
     setEditing(null);
     setShowForm(true);
   };
 
   const handleEdit = (product: Product, category: string) => {
+    blurActiveElement();
     setEditing({ product, category });
     setShowForm(true);
   };
 
   const handleDeleteClick = (name: string, category: string) => {
+    blurActiveElement();
     setDeleteConfirm({
       open: true,
       name,
@@ -102,7 +110,10 @@ const Producto = () => {
               <Button 
                 variant="outlined" 
                 size="small"
-                onClick={() => setShowCategoryManager(true)}
+                onClick={() => {
+                  blurActiveElement();
+                  setShowCategoryManager(true);
+                }}
                 startIcon={<CategoryIcon />}
                 sx={{ 
                   borderRadius: 2, 
@@ -165,4 +176,4 @@ const Producto = () => {
   );
 };
 
-export default Producto;
+export default Producto;

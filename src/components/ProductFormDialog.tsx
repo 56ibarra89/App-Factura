@@ -13,6 +13,7 @@ import {
   FormControlLabel,
   Switch,
 } from "@mui/material";
+import { useEffect, useRef } from "react";
 import { Product } from "../types/product";
 import { useProductForm } from "../hooks/useProductForm";
 import { useProductContext } from "../context/ProductContext";
@@ -32,6 +33,16 @@ const ProductFormDialog = ({
   disableRestoreFocus?: boolean;
 }) => {
   const { categories } = useProductContext();
+
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => {
+      nameInputRef.current?.focus();
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [open]);
 
   const {
     form,
@@ -62,6 +73,8 @@ const ProductFormDialog = ({
       <DialogContent dividers>
         <form onSubmit={handleSubmit}>
           <TextField
+            inputRef={nameInputRef}
+            autoFocus
             fullWidth
             label="Nombre"
             name="name"

@@ -51,14 +51,20 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
         <RoleGuard allowedRoles={["admin"]}>
           <IconButton
             color="primary"
-            onClick={() => onEdit(params.row.rawProduct, params.row.category)}
+            onClick={(e) => {
+              (e.currentTarget as HTMLButtonElement).blur();
+              onEdit(params.row.rawProduct, params.row.category);
+            }}
           >
             <EditIcon />
           </IconButton>
 
           <IconButton
             color="error"
-            onClick={() => onDelete(params.row.name, params.row.category)}
+            onClick={(e) => {
+              (e.currentTarget as HTMLButtonElement).blur();
+              onDelete(params.row.name, params.row.category);
+            }}
           >
             <DeleteIcon />
           </IconButton>
