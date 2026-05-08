@@ -32,10 +32,16 @@ const PIN_TABLE: Record<string, { username: string; role: UserRole }> = {
 };
 
 export const authService: IAuthService = {
-  login: async (username, password): Promise<AuthLoginResult> => {
+  login: async (identifier, password): Promise<AuthLoginResult> => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const entry = USER_TABLE[username.toLowerCase()];
+        const idLower = identifier.toLowerCase();
+        
+        // Buscamos primero por nombre de usuario, si no existe, buscamos por email
+        const entry = USER_TABLE[idLower] || Object.values(USER_TABLE).find(
+          (u) => u.email && u.email.toLowerCase() === idLower
+        );
+
         if (entry && entry.password === password) {
           resolve({ success: true, role: entry.role });
         } else {

@@ -62,7 +62,7 @@ export const LoginForm = ({
       </Typography>
 
       <TextField
-        label="Usuario"
+        label="Usuario o Correo"
         variant="outlined"
         name="username"
         value={credentials.username}
