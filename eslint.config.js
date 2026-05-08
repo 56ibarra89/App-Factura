@@ -7,13 +7,13 @@ import tseslint from 'typescript-eslint'
 export default tseslint.config(
   { ignores: ['dist', 'dist-electron'] },
   {
+    // Configuración para el código del Frontend (React)
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
         ...globals.browser,
-        ...globals.node,
       },
     },
     plugins: {
@@ -28,4 +28,15 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Configuración para el proceso de Electron (Node.js)
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['electron/**/*.ts'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.node,
+      },
+    },
+  }
 )
