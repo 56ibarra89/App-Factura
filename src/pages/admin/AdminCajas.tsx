@@ -1,6 +1,5 @@
-import { Box, Container, IconButton, Typography, Grid } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate } from "react-router-dom";
+import { Box, Container, Typography, Grid } from "@mui/material";
+import { BackButton } from "../../components/BackButton";
 
 import PageHeader from "../../components/PageHeader";
 import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
@@ -9,7 +8,6 @@ import { CajaStatusCard } from "../../components/Admin/CajaStatusCard";
 import { WaiterPerformanceList } from "../../components/Admin/WaiterPerformanceList";
 
 const AdminCajas = () => {
-  const navigate = useNavigate();
   const { cajasActivas, waiterPerformance } = useAdminCajasData();
 
   return (
@@ -42,14 +40,7 @@ const AdminCajas = () => {
       <Box position="relative" zIndex={1}>
         <PageHeader
           title="Administración de Cajas"
-          startContent={
-            <IconButton 
-              onClick={() => navigate("/admin")} 
-              sx={{ bgcolor: "white", boxShadow: 1, mr: 2, "&:hover": { bgcolor: "grey.100" } }}
-            >
-              <ArrowBackIcon color="primary" />
-            </IconButton>
-          }
+          startContent={<BackButton to="/admin" />}
         />
 
         <Box sx={{ mt: 2, mb: 5, pl: 1 }}>

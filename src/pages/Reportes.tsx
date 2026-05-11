@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Box, Grid, CircularProgress, Typography, IconButton } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { BackButton } from "../components/BackButton";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import LocalPrintshopIcon from "@mui/icons-material/LocalPrintshop";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { useNavigate } from "react-router-dom";
 import { useDailyReport } from "../hooks/useDailyReport";
 import { StatCard } from "../components/Reportes/StatCard";
 import { TopProductsList } from "../components/Reportes/TopProductsList";
@@ -15,7 +14,6 @@ import PageHeader from "../components/PageHeader";
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 
 const Reportes = () => {
-  const navigate = useNavigate();
   const { data, isLoading, error } = useDailyReport();
   const [privacyMode, setPrivacyMode] = useState(false);
 
@@ -34,14 +32,7 @@ const Reportes = () => {
     >
       <PageHeader
         title="Reporte del Día"
-        startContent={
-          <IconButton 
-            onClick={() => navigate("/home")} 
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 2, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/home" />}
         actions={
           <Box display="flex" gap={1}>
             <IconButton 

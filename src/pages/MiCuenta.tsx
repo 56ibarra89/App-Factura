@@ -1,16 +1,13 @@
 import { Box, Grid } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import Button from "@mui/material/Button";
 import PageHeader from "../components/PageHeader";
 import AccountMenu from "../components/AccountMenu";
-import { LOGIN_COLORS, LOGIN_GRADIENTS } from "../theme/loginTheme";
+import { LOGIN_GRADIENTS } from "../theme/loginTheme";
+import { BackButton } from "../components/BackButton";
 import { useAccountSettings } from "../hooks/useAccountSettings";
 import { ProfileCard } from "../components/cuenta/ProfileCard";
 import { AccountSettingsForm } from "../components/cuenta/AccountSettingsForm";
 
 export default function MiCuenta() {
-  const navigate = useNavigate();
   const { data, loading, error, success, handleChange, handleSave } = useAccountSettings();
 
   return (
@@ -27,23 +24,7 @@ export default function MiCuenta() {
     >
       <PageHeader
         title="Mi Cuenta"
-        startContent={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={() => navigate("/home")}
-            startIcon={<ArrowBackIcon />}
-            sx={{
-              bgcolor: LOGIN_COLORS.primary,
-              "&:hover": { bgcolor: LOGIN_COLORS.primaryDark },
-              borderRadius: 2,
-              px: 2,
-              mr: 2,
-            }}
-          >
-            Regresar
-          </Button>
-        }
+        startContent={<BackButton to="/home" />}
         actions={<AccountMenu />}
       />
 

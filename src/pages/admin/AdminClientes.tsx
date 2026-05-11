@@ -9,19 +9,16 @@ import {
   Box,
   Typography,
   Button,
-  IconButton,
   InputAdornment,
   TextField,
   Chip,
   Alert,
   Snackbar,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { BackButton } from "../../components/BackButton";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import { useNavigate } from "react-router-dom";
-
 import { useCustomers } from "../../hooks/useCustomers";
 import CustomerTable from "../../components/Admin/Clientes/CustomerTable";
 import CustomerFormModal from "../../components/Admin/Clientes/CustomerFormModal";
@@ -30,7 +27,6 @@ import { Customer } from "../../types/customer.types";
 import { CustomerFormData } from "../../hooks/useCustomers";
 
 const AdminClientes: React.FC = () => {
-  const navigate = useNavigate();
   const {
     customers,
     loading,
@@ -130,17 +126,11 @@ const AdminClientes: React.FC = () => {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <IconButton
+          <BackButton 
             id="admin-clientes-back-btn"
-            onClick={() => navigate("/admin")}
-            sx={{
-              bgcolor: "white",
-              boxShadow: 1,
-              "&:hover": { bgcolor: "grey.100" },
-            }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
+            to="/admin"
+            sx={{ mr: 0 }}
+          />
           <Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
               <PeopleAltIcon color="primary" sx={{ fontSize: 32 }} />

@@ -2,18 +2,15 @@ import React from "react";
 import {
   Box,
   Typography,
-  IconButton,
   Snackbar,
   Alert,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate } from "react-router-dom";
+import { BackButton } from "../../components/BackButton";
 import { useRespaldos } from "../../hooks/useRespaldos";
 import ExportCard from "../../components/Admin/Respaldos/ExportCard";
 import ImportCard from "../../components/Admin/Respaldos/ImportCard";
 
 const AdminRespaldos: React.FC = () => {
-  const navigate = useNavigate();
   const {
     snackbarOpen,
     snackbarMessage,
@@ -30,17 +27,7 @@ const AdminRespaldos: React.FC = () => {
       {/* HEADER */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 5 }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <IconButton
-            onClick={() => navigate("/admin")}
-            sx={{
-              bgcolor: "white",
-              boxShadow: 1,
-              mr: 2,
-              "&:hover": { bgcolor: "grey.100" },
-            }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
+          <BackButton to="/admin" />
           <Box>
             <Typography variant="h4" fontWeight={800} gutterBottom sx={{ letterSpacing: "-0.5px" }}>
               Respaldos de Datos

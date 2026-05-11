@@ -2,14 +2,12 @@ import { useState, SyntheticEvent } from "react";
 import {
   Box,
   Container,
-  IconButton,
   Typography,
   Tabs,
   Tab,
   Paper,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate } from "react-router-dom";
+import { BackButton } from "../../components/BackButton";
 import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
 import DescuentosTab from "../../components/Admin/Promociones/DescuentosTab";
 import HappyHourTab from "../../components/Admin/Promociones/HappyHourTab";
@@ -52,7 +50,6 @@ function a11yProps(index: number) {
 }
 
 const AdminPromociones = () => {
-  const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
 
   const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
@@ -95,17 +92,7 @@ const AdminPromociones = () => {
 
       <Box position="relative" zIndex={1}>
         <Box display="flex" alignItems="center" sx={{ mb: 2 }}>
-          <IconButton
-            onClick={() => navigate("/admin")}
-            sx={{
-              bgcolor: "white",
-              boxShadow: 1,
-              mr: 2,
-              "&:hover": { bgcolor: "grey.100" },
-            }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
+          <BackButton to="/admin" />
           <Typography
             variant="h4"
             fontWeight={800}

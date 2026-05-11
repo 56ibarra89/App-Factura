@@ -3,12 +3,11 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { BackButton } from "../components/BackButton";
 import PageHeader from "../components/PageHeader";
 import { useOrderManagement } from "../hooks/useOrderManagement";
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { Order } from "../types/order.types";
-import { useNavigate } from "react-router-dom";
 import PinValidationDialog from "../components/auth/PinValidationDialog";
 import { statusLabels, statusColors } from "../config/orderStatusConfig";
 import Chip from "@mui/material/Chip";
@@ -22,7 +21,6 @@ import TableRow from "@mui/material/TableRow";
 
 const AnularFactura = () => {
   const { activeOrders, finishedOrders, updateOrderStatus } = useOrderManagement();
-  const navigate = useNavigate();
 
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
@@ -59,14 +57,7 @@ const AnularFactura = () => {
     >
       <PageHeader
         title="Anular Facturas"
-        startContent={
-          <IconButton 
-            onClick={() => navigate("/home")} 
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/home" />}
       />
 
       <Typography variant="body1" color="text.secondary" mb={4} mt={2}>

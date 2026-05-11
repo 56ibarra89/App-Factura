@@ -16,13 +16,11 @@ import {
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import PageHeader from "../components/PageHeader";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate } from "react-router-dom";
+import { BackButton } from "../components/BackButton";
 import InfoIcon from "@mui/icons-material/Info";
 import { useTurnosHistory } from "../hooks/useTurnosHistory";
 
 export default function ConsultarTurnos() {
-  const navigate = useNavigate();
   const { shifts, loading, error, reload } = useTurnosHistory();
 
   const formatDate = (date: Date) => {
@@ -45,14 +43,7 @@ export default function ConsultarTurnos() {
     >
       <PageHeader
         title="Historial de Turnos"
-        startContent={
-          <IconButton 
-            onClick={() => navigate("/home")} 
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/home" />}
         actions={
           <IconButton 
             onClick={reload} 

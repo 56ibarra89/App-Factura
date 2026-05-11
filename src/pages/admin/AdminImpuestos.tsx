@@ -1,7 +1,5 @@
-import { Box, Container, IconButton, Typography, Grid } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate } from "react-router-dom";
-
+import { Box, Container, Typography, Grid } from "@mui/material";
+import { BackButton } from "../../components/BackButton";
 import PageHeader from "../../components/PageHeader";
 import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
 import { useImpuestosConfig } from "../../hooks/useImpuestosConfig";
@@ -9,7 +7,6 @@ import { TaxConfigCard } from "../../components/Admin/TaxConfigCard";
 import { TaxExemptionToggle } from "../../components/Admin/TaxExemptionToggle";
 
 const AdminImpuestos = () => {
-  const navigate = useNavigate();
   const { taxes, isExonerated, toggleExoneration, updateTaxRate } = useImpuestosConfig();
 
   return (
@@ -42,14 +39,7 @@ const AdminImpuestos = () => {
       <Box position="relative" zIndex={1}>
         <PageHeader
           title="Administración de Impuestos"
-          startContent={
-            <IconButton 
-              onClick={() => navigate("/admin")} 
-              sx={{ bgcolor: "white", boxShadow: 1, mr: 2, "&:hover": { bgcolor: "grey.100" } }}
-            >
-              <ArrowBackIcon color="primary" />
-            </IconButton>
-          }
+          startContent={<BackButton to="/admin" />}
         />
 
         <Box sx={{ mt: 2, mb: 5, pl: 1 }}>

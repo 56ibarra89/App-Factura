@@ -1,7 +1,6 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Box, Typography, Stack, Button, IconButton } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Typography, Stack, Button } from "@mui/material";
+import { BackButton } from "../components/BackButton";
 import TimerIcon from "@mui/icons-material/Timer";
 import DeleteIcon from "@mui/icons-material/Delete";
 
@@ -27,7 +26,6 @@ const Ordenes = () => {
     clearHistory
   } = useOrderManagement();
   
-  const navigate = useNavigate();
   const { username, role: userRole } = useAuth();
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
 
@@ -49,14 +47,7 @@ const Ordenes = () => {
     >
       <PageHeader 
         title="Gestión de Órdenes" 
-        startContent={
-          <IconButton 
-            onClick={() => navigate("/home")} 
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/home" />}
         actions={
           <Stack direction="row" spacing={2} alignItems="center">
             <Stack direction="row" spacing={1} alignItems="center" sx={{ bgcolor: 'rgba(0,0,0,0.03)', px: 1.5, py: 0.5, borderRadius: 2 }}>

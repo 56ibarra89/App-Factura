@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Box, Typography, IconButton } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Typography } from "@mui/material";
+import { BackButton } from "../components/BackButton";
 import PageHeader from "../components/PageHeader";
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { Order } from "../types/order.types";
-import { useNavigate } from "react-router-dom";
 import OrderViewDialog from "../components/OrderViewDialog";
 import { useOrderHistory } from "../hooks/useOrderHistory";
 import ConsultarFacturasFilters from "../components/consultar-facturas/ConsultarFacturasFilters";
@@ -13,7 +12,6 @@ import PinValidationDialog from "../components/auth/PinValidationDialog";
 import { useAuth } from "../context/AuthContext";
 
 const ConsultarFacturas = () => {
-  const navigate = useNavigate();
 
   const {
     startDate,
@@ -71,14 +69,7 @@ const ConsultarFacturas = () => {
     >
       <PageHeader
         title="Consultar Facturas"
-        startContent={
-          <IconButton 
-            onClick={() => navigate("/home")} 
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/home" />}
       />
 
       <Typography variant="body1" color="text.secondary" mb={3} mt={2}>

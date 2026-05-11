@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Box, IconButton, Typography, Paper, Chip } from "@mui/material";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { BackButton } from "../../components/BackButton";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useNavigate } from "react-router-dom";
@@ -155,14 +155,7 @@ const Bitacora = () => {
     >
       <PageHeader
         title="Bitácora de Auditoría (ISO 27001)"
-        startContent={
-          <IconButton 
-            onClick={() => navigate("/admin")} 
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 2, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/admin" />}
         actions={
           <Box display="flex" gap={1}>
             <IconButton 

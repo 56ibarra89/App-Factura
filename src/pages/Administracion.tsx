@@ -1,15 +1,13 @@
 import {
   Box,
   Container,
-  IconButton,
   Typography,
   Divider,
   Grid,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
-
 import PageHeader from "../components/PageHeader";
+import { BackButton } from "../components/BackButton";
 import { AdminModuleCard } from "../components/Admin/AdminModuleCard";
 import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../theme/loginTheme";
 import { adminModules, AdminCategory } from "../data/adminModules";
@@ -82,19 +80,7 @@ const Administracion = () => {
       <Box position="relative" zIndex={1}>
         <PageHeader
           title="Centro de Control"
-          startContent={
-            <IconButton
-              onClick={() => navigate("/home")}
-              sx={{
-                bgcolor: "white",
-                boxShadow: 1,
-                mr: 2,
-                "&:hover": { bgcolor: "grey.100" },
-              }}
-            >
-              <ArrowBackIcon color="primary" />
-            </IconButton>
-          }
+          startContent={<BackButton to="/home" />}
         />
 
         {/* Hero Section */}

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { 
-  Box, Typography, Button, Grid, Paper, IconButton, 
+  Box, Typography, Button, Grid, Paper, 
   alpha, Switch, TextField, MenuItem, Divider, Tooltip,
   Chip, Avatar
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { BackButton } from "../../components/BackButton";
 import PrintIcon from "@mui/icons-material/Print";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -12,7 +12,6 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import AddIcon from "@mui/icons-material/Add";
-import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/PageHeader";
 import { LOGIN_COLORS, LOGIN_GRADIENTS } from "../../theme/loginTheme";
 
@@ -32,7 +31,6 @@ const MOCK_DEVICES: Device[] = [
 ];
 
 const Perifericos = () => {
-  const navigate = useNavigate();
   const [devices] = useState<Device[]>(MOCK_DEVICES);
 
   const renderDeviceCard = (device: Device) => {
@@ -129,14 +127,7 @@ const Perifericos = () => {
     >
       <PageHeader
         title="Gestión de Periféricos"
-        startContent={
-          <IconButton 
-            onClick={() => navigate("/admin")} 
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 2, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/admin" />}
         actions={
           <Box display="flex" gap={1.5}>
             <Button

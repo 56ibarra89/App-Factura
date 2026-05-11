@@ -1,11 +1,10 @@
-import { Box, Button, Paper, Stack, IconButton } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Button, Paper, Stack } from "@mui/material";
+import { BackButton } from "../components/BackButton";
 import CategoryIcon from "@mui/icons-material/Category";
 import AddIcon from "@mui/icons-material/Add";
 import { useState, useRef } from "react";
 import { useProductContext } from "../context/ProductContext";
 import { Product } from "../types/product";
-import { useNavigate } from "react-router-dom";
 import ProductsTable from "../components/ProductsTable";
 import ProductFormDialog from "../components/ProductFormDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -20,7 +19,6 @@ import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../theme/loginTheme";
 const Producto = () => {
   const { categories, addProduct, updateProduct, deleteProduct } = useProductContext();
   const { username, role } = useAuth();
-  const navigate = useNavigate();
   const addButtonRef = useRef<HTMLButtonElement>(null);
 
   const blurActiveElement = () => {
@@ -96,14 +94,7 @@ const Producto = () => {
     >
       <PageHeader
         title="Inventario de Productos"
-        startContent={
-          <IconButton 
-            onClick={() => navigate("/home")} 
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/home" />}
         actions={
           <RoleGuard allowedRoles={["admin"]}>
             <Stack direction="row" spacing={2}>

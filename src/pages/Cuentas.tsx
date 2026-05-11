@@ -15,13 +15,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  IconButton,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { BackButton } from "../components/BackButton";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import AccountMenu from "../components/AccountMenu";
 import {
@@ -35,7 +33,6 @@ import { UserForm } from "../components/cuentas/UserForm";
 import { UserActivity } from "../components/cuentas/UserActivity";
 
 export default function Cuentas() {
-  const navigate = useNavigate();
   const { users, saveUser, toggleUserStatus, deleteUser } = useAccountManager();
 
   // Scroll to top upon mounting to prevent inheriting scroll position from previous page
@@ -102,14 +99,7 @@ export default function Cuentas() {
     >
       <PageHeader
         title="Directorio de Cuentas"
-        startContent={
-          <IconButton 
-            onClick={() => navigate("/admin")} 
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 1, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/admin" />}
         actions={<AccountMenu />}
       />
 

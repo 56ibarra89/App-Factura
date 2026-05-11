@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { Box, Typography, Button, IconButton } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate } from "react-router-dom";
+import { BackButton } from "../../components/BackButton";
 import { useCorrelativos } from "../../hooks/useCorrelativos";
 import CorrelativoCard from "../../components/Admin/Correlativos/CorrelativoCard";
 import CorrelativoTable from "../../components/Admin/Correlativos/CorrelativoTable";
@@ -10,7 +9,6 @@ import CorrelativoFormModal from "../../components/Admin/Correlativos/Correlativ
 import { Correlativo } from "../../types/correlativo.types";
 
 const AdminCorrelativos: React.FC = () => {
-  const navigate = useNavigate();
   const {
     correlativos,
     loading,
@@ -38,17 +36,7 @@ const AdminCorrelativos: React.FC = () => {
       {/* HEADER */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <IconButton
-            onClick={() => navigate("/admin")}
-            sx={{
-              bgcolor: "white",
-              boxShadow: 1,
-              mr: 2,
-              "&:hover": { bgcolor: "grey.100" },
-            }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
+          <BackButton to="/admin" />
           <Box>
             <Typography variant="h4" fontWeight={700} gutterBottom>
               Correlativos y Facturación

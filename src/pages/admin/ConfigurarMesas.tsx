@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Box, Typography, Button, Paper, TextField, Divider, IconButton, Grid, alpha, Snackbar, Alert } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Typography, Button, Paper, TextField, Divider, Grid, alpha, Snackbar, Alert } from "@mui/material";
+import { BackButton } from "../../components/BackButton";
 import SaveIcon from "@mui/icons-material/Save";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useNavigate } from "react-router-dom";
@@ -45,14 +45,7 @@ export default function ConfigurarMesas() {
     >
       <PageHeader
         title="Plano de Mesas y Áreas"
-        startContent={
-          <IconButton
-            onClick={() => navigate("/admin")}
-            sx={{ bgcolor: "white", boxShadow: 1, mr: 2, "&:hover": { bgcolor: "grey.100" } }}
-          >
-            <ArrowBackIcon color="primary" />
-          </IconButton>
-        }
+        startContent={<BackButton to="/admin" />}
       />
 
       <Paper elevation={0} sx={{ mt: 4, borderRadius: 5, p: { xs: 3, md: 5 }, boxShadow: "0 12px 40px rgba(0,0,0,0.08)" }}>

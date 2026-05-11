@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { 
   Box, 
   Container, 
-  IconButton, 
   Typography, 
   Grid,
   Card,
@@ -15,7 +14,7 @@ import {
   Divider,
   InputAdornment
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { BackButton } from "../../components/BackButton";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import SaveIcon from "@mui/icons-material/Save";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
@@ -23,14 +22,11 @@ import BusinessIcon from "@mui/icons-material/Business";
 import PhoneIcon from "@mui/icons-material/Phone";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ReceiptIcon from "@mui/icons-material/Receipt";
-import { useNavigate } from "react-router-dom";
-
 import PageHeader from "../../components/PageHeader";
 import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
 import { useEmpresaConfig } from "../../hooks/useEmpresaConfig";
 
 const AdminEmpresa = () => {
-  const navigate = useNavigate();
   const { config, updateField, saveConfig } = useEmpresaConfig();
   const [loading, setLoading] = useState(false);
   const [toastOpen, setToastOpen] = useState(false);
@@ -89,14 +85,7 @@ const AdminEmpresa = () => {
       <Box position="relative" zIndex={1}>
         <PageHeader
           title="Identidad de la Empresa"
-          startContent={
-            <IconButton 
-              onClick={() => navigate("/admin")} 
-              sx={{ bgcolor: "white", boxShadow: 1, mr: 2, "&:hover": { bgcolor: "grey.100" } }}
-            >
-              <ArrowBackIcon color="primary" />
-            </IconButton>
-          }
+          startContent={<BackButton to="/admin" />}
         />
 
         <Box sx={{ mt: 2, mb: 4, pl: 1 }}>
