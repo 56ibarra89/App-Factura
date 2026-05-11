@@ -9,6 +9,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { ExtraFormItem } from "../types/product";
+import { blockInvalidChar } from "../utils/inputUtils";
 
 interface ExtrasFormSectionProps {
   extras: ExtraFormItem[];
@@ -67,6 +68,7 @@ const ExtrasFormSection = ({
               onChange={(e) => onPriceChange(extraIdx, sizeIdx, e.target.value)}
               sx={{ flex: 1 }}
               inputProps={{ min: 0, step: 0.5 }}
+              onKeyDown={blockInvalidChar}
             />
           ))}
         </Box>

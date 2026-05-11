@@ -18,6 +18,7 @@ import { Product } from "../types/product";
 import { useProductForm } from "../hooks/useProductForm";
 import { useProductContext } from "../context/ProductContext";
 import ExtrasFormSection from "./ExtrasFormSection";
+import { blockInvalidChar } from "../utils/inputUtils";
 
 const ProductFormDialog = ({
   open,
@@ -134,6 +135,7 @@ const ProductFormDialog = ({
                   label={`Precio ${p.size}`}
                   type="number"
                   inputProps={{ min: 0, step: "0.01" }}
+                  onKeyDown={blockInvalidChar}
                   error={p.price !== "" && parseFloat(p.price) <= 0}
                   helperText={p.price !== "" && parseFloat(p.price) <= 0 ? "El precio debe ser mayor a 0" : ""}
                   value={p.price}
@@ -153,6 +155,7 @@ const ProductFormDialog = ({
                 sx={{ mb: 2 }}
                 type="number"
                 inputProps={{ min: 0, step: "0.01" }}
+                onKeyDown={blockInvalidChar}
                 error={form.singlePrice !== "" && parseFloat(form.singlePrice) <= 0}
                 helperText={form.singlePrice !== "" && parseFloat(form.singlePrice) <= 0 ? "El precio debe ser mayor a 0" : ""}
                 value={form.singlePrice}
