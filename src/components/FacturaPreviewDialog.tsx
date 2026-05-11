@@ -26,6 +26,8 @@ import { PaymentMethod, OrderType } from "../types/order.types";
 import { Customer } from "../types/customer.types";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import CustomerAutocomplete from "./CustomerAutocomplete";
+import TicketPrint from "./TicketPrint";
+
 import { useCustomerSearch } from "../hooks/useCustomerSearch";
 import { formatItemName } from "../utils/formatUtils";
 import { useGeneralConfigData } from "../hooks/useGeneralConfigData";
@@ -421,6 +423,16 @@ export default function FacturaPreviewDialog({
           ✅ ¡Cliente guardado exitosamente!
         </Alert>
       </Snackbar>
+
+      <TicketPrint
+        cart={cart}
+        subTotal={subTotal}
+        taxAmount={taxAmount}
+        total={total}
+        customerName={customerName}
+        customerAddress={customerAddress}
+        orderType={orderType}
+      />
     </>
   );
 }

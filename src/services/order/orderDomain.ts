@@ -58,6 +58,8 @@ export function createOrder(params: {
   tableId?: string;
   paymentMethod?: string;
   splitAmounts?: { efectivo: number; tarjeta: number };
+  subTotal?: number;
+  taxAmount?: number;
   nowMs: number;
 }): Order {
   const {
@@ -70,12 +72,16 @@ export function createOrder(params: {
     tableId,
     paymentMethod,
     splitAmounts,
+    subTotal,
+    taxAmount,
     nowMs,
   } = params;
 
   const baseOrder: Order = {
     id: `ORD-${nowMs}`,
     items: [...items],
+    subTotal,
+    taxAmount,
     total,
     status: "pending",
     timestamp: new Date(nowMs),
@@ -219,6 +225,8 @@ export const orderMutations = {
       orderType?: OrderType;
       customerAddress?: string;
       finalTotal?: number;
+      subTotal?: number;
+      taxAmount?: number;
     },
   ): UpdateResult {
     const {
@@ -228,6 +236,8 @@ export const orderMutations = {
       orderType,
       customerAddress,
       finalTotal,
+      subTotal,
+      taxAmount,
     } = params;
 
     return updateOne(
@@ -242,6 +252,8 @@ export const orderMutations = {
         orderType: orderType || order.orderType,
         customerAddress: customerAddress || order.customerAddress,
         total: typeof finalTotal === "number" ? finalTotal : order.total,
+        subTotal: typeof subTotal === "number" ? subTotal : order.subTotal,
+        taxAmount: typeof taxAmount === "number" ? taxAmount : order.taxAmount,
       }),
     );
   },

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -40,6 +40,17 @@ function createWindow() {
   // Test active push message to Renderer-process.
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', (new Date).toLocaleString())
+  })
+
+  ipcMain.on('print-silent', (event) => {
+    const webContents = event.sender
+    webContents.print({ 
+      silent: true, 
+      printBackground: true,
+      margins: { marginType: 'none' } 
+    }, (success, failureReason) => {
+      if (!success) console.error('Error al imprimir:', failureReason)
+    })
   })
 
   if (VITE_DEV_SERVER_URL) {

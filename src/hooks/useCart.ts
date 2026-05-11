@@ -4,11 +4,7 @@ import { useCartStore } from "./useCartStore";
 import { useProductSelection } from "./useProductSelection";
 import { useCheckout } from "./useCheckout";
 
-interface UseCartOptions {
-  navigate?: (path: string) => void;
-}
-
-function useCart({ navigate }: UseCartOptions = {}) {
+function useCart() {
   const {
     cart,
     subTotal,
@@ -39,7 +35,7 @@ function useCart({ navigate }: UseCartOptions = {}) {
     cancelExtras,
   } = useProductSelection(handleConfirmProduct);
  
-  const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } = useCheckout(cart, clearCart, navigate);
+  const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } = useCheckout(cart);
  
   return {
     // State
@@ -60,6 +56,7 @@ function useCart({ navigate }: UseCartOptions = {}) {
     handleConfirmExtras: confirmExtras,
     handleCancelExtras: cancelExtras,
     handleRemoveItem: removeItem,
+    handleClearCart: clearCart,
     handleConfirmFactura: confirmFactura,
     handleSaveTableOrder: saveTableOrder,
     handleFinalizeTableOrder: finalizeTableOrder,

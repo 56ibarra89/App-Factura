@@ -7,9 +7,7 @@ import { useImpuestosConfig } from "./useImpuestosConfig";
 import { calculateCartTotals } from "../utils/cartTotals";
 
 export function useCheckout(
-  cart: CartItemType[],
-  clearCart: () => void,
-  navigate?: (path: string) => void
+  cart: CartItemType[]
 ) {
   const { taxes, isExonerated } = useImpuestosConfig();
   const { addOrder, updateOrderItems, finalizeOrder, markAsSentToKitchen } =
@@ -23,7 +21,7 @@ export function useCheckout(
       orderType?: OrderType,
       customerAddress?: string
     ) => {
-      const { total } = calculateCartTotals(cart, taxes, isExonerated);
+      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated);
 
       // Crear y persistir la orden
       addOrder(
@@ -34,33 +32,27 @@ export function useCheckout(
         customerAddress,
         undefined,
         paymentMethod,
-        splitAmounts
+        splitAmounts,
+        subTotal,
+        taxAmount
       );
-
-      clearCart();
-
-      // Navegar al inicio después de facturar
-      if (navigate) navigate("/home");
     },
-    [cart, taxes, isExonerated, navigate, clearCart, addOrder]
+    [cart, taxes, isExonerated, addOrder]
   );
 
   const saveTableOrder = useCallback(
     (orderId?: string, tableId?: string) => {
-      const { total } = calculateCartTotals(cart, taxes, isExonerated);
+      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated);
 
       if (orderId) {
         // Actualizar orden existente
-        updateOrderItems(orderId, cart, total);
+        updateOrderItems(orderId, cart, total, subTotal, taxAmount);
       } else {
         // Crear nueva orden para la mesa
-        addOrder(cart, total, undefined, "local", undefined, tableId);
+        addOrder(cart, total, undefined, "local", undefined, tableId, undefined, undefined, subTotal, taxAmount);
       }
-
-      clearCart();
-      if (navigate) navigate("/mesas");
     },
-    [cart, taxes, isExonerated, addOrder, updateOrderItems, clearCart, navigate]
+    [cart, taxes, isExonerated, addOrder, updateOrderItems]
   );
 
   const finalizeTableOrder = useCallback(
@@ -72,7 +64,7 @@ export function useCheckout(
       orderType?: OrderType,
       customerAddress?: string
     ) => {
-      const { total } = calculateCartTotals(cart, taxes, isExonerated);
+      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated);
       finalizeOrder(
         orderId,
         paymentMethod,
@@ -80,12 +72,12 @@ export function useCheckout(
         customerName,
         orderType,
         customerAddress,
-        total
+        total,
+        subTotal,
+        taxAmount
       );
-      clearCart();
-      if (navigate) navigate("/mesas");
     },
-    [cart, taxes, isExonerated, finalizeOrder, clearCart, navigate]
+    [cart, taxes, isExonerated, finalizeOrder]
   );
 
   return {

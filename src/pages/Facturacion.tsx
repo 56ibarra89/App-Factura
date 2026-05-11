@@ -52,7 +52,8 @@ const Facturacion = () => {
     handleSaveTableOrder,
     handleFinalizeTableOrder,
     handleSetCart,
-  } = useCart({ navigate });
+    handleClearCart,
+  } = useCart();
 
   const [searchParams] = useSearchParams();
   const tableId = searchParams.get("tableId");
@@ -85,10 +86,25 @@ const Facturacion = () => {
           orderType,
           customerAddress,
         );
-        window.print();
+        if (window.ipcRenderer) {
+          window.ipcRenderer.send('print-silent');
+          setTimeout(() => {
+            handleClearCart();
+            setPreviewOpen(false);
+            navigate('/mesas');
+          }, 500);
+        } else {
+          window.print();
+          handleClearCart();
+          setPreviewOpen(false);
+          navigate('/mesas');
+        }
       } else {
         // Solo guardar cambios en la mesa
         handleSaveTableOrder(activeOrder?.id, tableId);
+        handleClearCart();
+        setPreviewOpen(false);
+        navigate('/mesas');
       }
     } else {
       // Venta directa normal
@@ -99,10 +115,20 @@ const Facturacion = () => {
         orderType,
         customerAddress,
       );
-      window.print();
+      if (window.ipcRenderer) {
+        window.ipcRenderer.send('print-silent');
+        setTimeout(() => {
+          handleClearCart();
+          setPreviewOpen(false);
+          navigate('/home');
+        }, 500);
+      } else {
+        window.print();
+        handleClearCart();
+        setPreviewOpen(false);
+        navigate('/home');
+      }
     }
-
-    setPreviewOpen(false);
   };
 
   const { markAsSentToKitchenByTable } = useOrderCommands();

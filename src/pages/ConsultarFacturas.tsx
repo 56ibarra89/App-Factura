@@ -98,12 +98,25 @@ const ConsultarFacturas = () => {
           open={previewOpen}
           onClose={handleClosePreview}
           cart={selectedOrder.items}
+          subTotal={selectedOrder.subTotal || 0}
+          taxAmount={selectedOrder.taxAmount || 0}
           total={selectedOrder.total}
+          customerName={selectedOrder.customerName}
+          customerAddress={selectedOrder.customerAddress}
+          orderType={selectedOrder.orderType}
+          invoiceNumber={selectedOrder.id.split("-")[1]}
           title={`Factura #${selectedOrder.id.split("-")[1]} - ${selectedOrder.customerName || "Cliente"}`}
           confirmText="Imprimir"
           onConfirm={() => {
-            window.print();
-            handleClosePreview();
+            if (window.ipcRenderer) {
+              window.ipcRenderer.send('print-silent');
+              setTimeout(() => {
+                handleClosePreview();
+              }, 500);
+            } else {
+              window.print();
+              handleClosePreview();
+            }
           }}
         />
       )}

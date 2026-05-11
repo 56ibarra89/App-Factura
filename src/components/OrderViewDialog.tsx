@@ -13,11 +13,18 @@ import {
 } from "@mui/material";
 import { CartItemType } from "../types/cart";
 import { formatItemName } from "../utils/formatUtils";
+import TicketPrint from "./TicketPrint";
 
 interface OrderViewDialogProps {
   open: boolean;
   cart: CartItemType[];
+  subTotal?: number;
+  taxAmount?: number;
   total: number;
+  customerName?: string;
+  customerAddress?: string;
+  orderType?: string;
+  invoiceNumber?: string;
   onClose: () => void;
   onConfirm: () => void;
   title?: string;
@@ -32,6 +39,12 @@ export default function OrderViewDialog({
   onConfirm,
   title = "Detalle de Factura",
   confirmText = "Imprimir",
+  subTotal = 0,
+  taxAmount = 0,
+  customerName,
+  customerAddress,
+  orderType,
+  invoiceNumber,
 }: OrderViewDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -113,6 +126,18 @@ export default function OrderViewDialog({
           {confirmText}
         </Button>
       </DialogActions>
+
+      {/* Hidden printable ticket */}
+      <TicketPrint
+        cart={cart}
+        subTotal={subTotal}
+        taxAmount={taxAmount}
+        total={total}
+        customerName={customerName}
+        customerAddress={customerAddress}
+        orderType={orderType}
+        invoiceNumber={invoiceNumber}
+      />
     </Dialog>
   );
 }

@@ -14,6 +14,8 @@ export type OrderType = 'local' | 'llevar' | 'delivery';
 export interface Order {
   id: string;
   items: CartItemType[];
+  subTotal?: number;
+  taxAmount?: number;
   total: number;
   status: OrderStatus;
   timestamp: Date;

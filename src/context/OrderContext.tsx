@@ -36,6 +36,8 @@ interface OrderContextProps {
     tableId?: string,
     paymentMethod?: string,
     splitAmounts?: { efectivo: number; tarjeta: number },
+    subTotal?: number,
+    taxAmount?: number,
   ) => void;
   updateOrderStatus: (
     orderId: string,
@@ -48,6 +50,8 @@ interface OrderContextProps {
     orderId: string,
     items: CartItemType[],
     total: number,
+    subTotal?: number,
+    taxAmount?: number,
   ) => void;
   getOrderByTable: (tableId: string) => Order | undefined;
   finalizeOrder: (
@@ -58,6 +62,8 @@ interface OrderContextProps {
     orderType?: OrderType,
     customerAddress?: string,
     finalTotal?: number,
+    subTotal?: number,
+    taxAmount?: number,
   ) => void;
   markAsSentToKitchen: (orderId: string) => void;
   markAsSentToKitchenByTable: (tableId: string) => void;
@@ -127,6 +133,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       tableId,
       paymentMethod,
       splitAmounts,
+      subTotal,
+      taxAmount,
     ) => {
       const nowMs = Date.now();
       const newOrder = createOrder({
@@ -139,6 +147,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         tableId,
         paymentMethod,
         splitAmounts,
+        subTotal,
+        taxAmount,
         nowMs,
       });
 
@@ -168,11 +178,17 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   );
 
   const updateOrderItems = useCallback<OrderCommandsContextProps["updateOrderItems"]>(
-    (orderId, items, total) => {
+    (orderId, items, total, subTotal, taxAmount) => {
       setOrders((prev) => {
         const { orders: nextOrders, modified } =
           orderMutations.updateOrderItems(prev, orderId, items, total);
-        if (modified) persist(modified);
+        if (modified) {
+          // Note: updateOrderItems in orderDomain doesn't support subTotal/taxAmount yet, 
+          // let's just update the order object if it was modified
+          if (typeof subTotal === 'number') modified.subTotal = subTotal;
+          if (typeof taxAmount === 'number') modified.taxAmount = taxAmount;
+          persist(modified);
+        }
         return nextOrders;
       });
     },
@@ -200,6 +216,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       orderType,
       customerAddress,
       finalTotal,
+      subTotal,
+      taxAmount,
     ) => {
       setOrders((prev) => {
         const { orders: nextOrders, modified } = orderMutations.finalizeOrder(
@@ -212,6 +230,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
             orderType,
             customerAddress,
             finalTotal,
+            subTotal,
+            taxAmount,
           },
         );
         if (modified) persist(modified);
