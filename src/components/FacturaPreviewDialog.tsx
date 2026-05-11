@@ -28,6 +28,7 @@ import PaymentMethodSelector from "./PaymentMethodSelector";
 import CustomerAutocomplete from "./CustomerAutocomplete";
 import { useCustomerSearch } from "../hooks/useCustomerSearch";
 import { formatItemName } from "../utils/formatUtils";
+import { useGeneralConfigData } from "../hooks/useGeneralConfigData";
 
 interface FacturaPreviewDialogProps {
   open: boolean;
@@ -74,6 +75,9 @@ export default function FacturaPreviewDialog({
   const [toastOpen, setToastOpen] = useState(false);
 
   const { saveCustomer } = useCustomerSearch();
+  const { config } = useGeneralConfigData();
+  const exchangeRateVal = config.exchangeRate > 0 ? config.exchangeRate : 36.50;
+  const totalInUSD = total / exchangeRateVal;
 
   // Reiniciar campos cuando el diálogo se abre
   useEffect(() => {
@@ -229,9 +233,16 @@ export default function FacturaPreviewDialog({
           </Box>
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography fontWeight="bold">Total:</Typography>
-            <Typography fontWeight="bold" color="error.main">
-              C${total.toFixed(2)}
-            </Typography>
+            <Box textAlign="right">
+              <Typography fontWeight="bold" color="error.main">
+                {config.currencySymbol}{total.toFixed(2)}
+              </Typography>
+              {config.enableSecondaryCurrency && (
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Equivalente: {config.secondaryCurrencySymbol}{totalInUSD.toFixed(2)} (Tasa: {config.currencySymbol}{exchangeRateVal})
+                </Typography>
+              )}
+            </Box>
           </Box>
           {!isTableMode && (
             <>
@@ -368,6 +379,10 @@ export default function FacturaPreviewDialog({
                 setPaymentMethod={setPaymentMethod}
                 splitAmounts={splitAmounts}
                 setSplitAmounts={setSplitAmounts}
+                currencySymbol={config.currencySymbol}
+                secondaryCurrencySymbol={config.secondaryCurrencySymbol}
+                exchangeRate={exchangeRateVal}
+                enableSecondaryCurrency={config.enableSecondaryCurrency}
               />
             </>
           )}

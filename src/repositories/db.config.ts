@@ -6,7 +6,7 @@
  */
 
 const DB_NAME = "AppFacturaDB";
-const DB_VERSION = 7;
+const DB_VERSION = 9;
 
 export const STORES = {
   ORDERS: "orders",
@@ -14,6 +14,7 @@ export const STORES = {
   LOGS: "logs",
   CORRELATIVOS: "correlativos",
   CUSTOMERS: "customers",
+  CONFIG: "config",
 } as const;
 
 export const initDB = (): Promise<IDBDatabase> => {
@@ -38,7 +39,17 @@ export const initDB = (): Promise<IDBDatabase> => {
 
     request.onsuccess = () => {
       clearTimeout(timeout);
-      resolve(request.result);
+      const db = request.result;
+
+      // IMPORTANTE: esto debe registrarse SIEMPRE (no solo en onupgradeneeded)
+      // para que una DB abierta con versión vieja se cierre y permita la migración.
+      db.onversionchange = () => {
+        db.close();
+        console.warn("La base de datos cambió de versión. Recargando...");
+        window.location.reload();
+      };
+
+      resolve(db);
     };
 
     request.onblocked = () => {
@@ -48,14 +59,6 @@ export const initDB = (): Promise<IDBDatabase> => {
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       const transaction = (event.target as IDBOpenDBRequest).transaction;
-
-      db.onversionchange = () => {
-        db.close();
-        console.warn("La base de datos cambió de versión. Recargando...");
-        // NOTE: el reload es un side-effect de infraestructura aceptable aquí,
-        // ya que esta capa de config es la única responsable de gestionar la DB.
-        window.location.reload();
-      };
 
       if (!db.objectStoreNames.contains(STORES.ORDERS)) {
         const store = db.createObjectStore(STORES.ORDERS, { keyPath: "id" });
@@ -107,6 +110,10 @@ export const initDB = (): Promise<IDBDatabase> => {
         store.createIndex("nameLower", "nameLower", { unique: false });
         store.createIndex("name", "name", { unique: false });
         store.createIndex("updatedAt", "updatedAt", { unique: false });
+      }
+
+      if (!db.objectStoreNames.contains(STORES.CONFIG)) {
+        db.createObjectStore(STORES.CONFIG, { keyPath: "id" });
       }
     };
   });

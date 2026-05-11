@@ -11,7 +11,7 @@ import { CashRegisterBehaviorCard } from "../../components/Admin/CashRegisterBeh
 
 const AdminConfiguracion = () => {
   const navigate = useNavigate();
-  const { config, updatePreference } = useGeneralConfigData();
+  const { config, updatePreference, saveConfig } = useGeneralConfigData();
 
   return (
     <Box
@@ -75,6 +75,7 @@ const AdminConfiguracion = () => {
               <CurrencyCard 
                 config={config} 
                 onUpdate={updatePreference} 
+                onSave={saveConfig}
               />
             </Grid>
 

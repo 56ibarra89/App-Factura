@@ -24,6 +24,10 @@ interface PaymentMethodSelectorProps {
   setPaymentMethod: (method: PaymentMethod) => void;
   splitAmounts: SplitAmounts;
   setSplitAmounts: (amounts: SplitAmounts) => void;
+  currencySymbol?: string;
+  secondaryCurrencySymbol?: string;
+  exchangeRate?: number;
+  enableSecondaryCurrency?: boolean;
 }
 
 export default function PaymentMethodSelector({
@@ -32,6 +36,10 @@ export default function PaymentMethodSelector({
   setPaymentMethod,
   splitAmounts,
   setSplitAmounts,
+  currencySymbol = "C$",
+  secondaryCurrencySymbol = "$",
+  exchangeRate = 36.50,
+  enableSecondaryCurrency = false,
 }: PaymentMethodSelectorProps) {
   const handlePaymentMethodChange = (
     _event: React.MouseEvent<HTMLElement>,
@@ -40,12 +48,21 @@ export default function PaymentMethodSelector({
     if (newMethod !== null) {
       setPaymentMethod(newMethod);
       if (newMethod === "MIXTO") {
-        // Inicializar mixto asumiendo 0 efectivo, total en tarjeta, o mitad y mitad.
-        // Lo más seguro es inicializar con el total en Efectivo 0 y el resto Tarjeta.
         setSplitAmounts({ efectivo: 0, tarjeta: total });
       }
+      setReceivedLocal("");
+      setReceivedSecondary("");
     }
   };
+
+  const [receivedLocal, setReceivedLocal] = React.useState<number | "">("");
+  const [receivedSecondary, setReceivedSecondary] = React.useState<number | "">("");
+
+  const exchangeRateVal = exchangeRate > 0 ? exchangeRate : 36.50;
+  const totalReceivedInCordobas = Number(receivedLocal) + (Number(receivedSecondary) * exchangeRateVal);
+  const hasReceivedAny = receivedLocal !== "" || receivedSecondary !== "";
+  const change = hasReceivedAny && totalReceivedInCordobas >= total ? totalReceivedInCordobas - total : null;
+
 
   const handleCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Si el valor ingresado es vacío, asumimos 0
@@ -101,31 +118,86 @@ export default function PaymentMethodSelector({
         </ToggleButton>
       </ToggleButtonGroup>
 
+      {/* EFECTIVO - Calculadora de Vuelto */}
+      {paymentMethod === "EFECTIVO" && (
+        <Box mt={2} p={2} sx={{ bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="subtitle2" mb={2}>Monto Recibido</Typography>
+          <Box display="flex" gap={2}>
+            <TextField
+              label={`Efectivo en ${currencySymbol}`}
+              type="number"
+              value={receivedLocal}
+              onChange={(e) => setReceivedLocal(e.target.value === "" ? "" : parseFloat(e.target.value))}
+              fullWidth
+              size="small"
+              InputProps={{
+                startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
+                inputProps: { min: 0, step: "0.01" }
+              }}
+            />
+            {enableSecondaryCurrency && (
+              <TextField
+                label={`Efectivo en ${secondaryCurrencySymbol}`}
+                type="number"
+                value={receivedSecondary}
+                onChange={(e) => setReceivedSecondary(e.target.value === "" ? "" : parseFloat(e.target.value))}
+                fullWidth
+                size="small"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">{secondaryCurrencySymbol}</InputAdornment>,
+                  inputProps: { min: 0, step: "0.01" }
+                }}
+              />
+            )}
+          </Box>
+          
+          {change !== null && (
+            <Box mt={2} pt={2} borderTop={1} borderColor="divider" display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="body1" fontWeight="bold">Vuelto a entregar:</Typography>
+              <Typography variant="h6" fontWeight="bold" color="success.main">
+                {currencySymbol}{change.toFixed(2)}
+              </Typography>
+            </Box>
+          )}
+          {hasReceivedAny && totalReceivedInCordobas < total && (
+            <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+              El monto recibido (C${totalReceivedInCordobas.toFixed(2)}) es menor al total de la factura.
+            </Typography>
+          )}
+        </Box>
+      )}
+
+      {/* MIXTO */}
       {paymentMethod === "MIXTO" && (
-        <Box display="flex" gap={2} alignItems="center">
-          <TextField
-            label="Efectivo"
-            type="number"
-            value={splitAmounts.efectivo || ""}
-            onChange={handleCashChange}
-            fullWidth
-            InputProps={{
-              startAdornment: <InputAdornment position="start">C$</InputAdornment>,
-              inputProps: { min: 0, max: total, step: "0.01" }
-            }}
-          />
-          <Typography variant="h6" color="text.secondary">+</Typography>
-          <TextField
-            label="Tarjeta"
-            type="number"
-            value={splitAmounts.tarjeta || ""}
-            onChange={handleCardChange}
-            fullWidth
-            InputProps={{
-              startAdornment: <InputAdornment position="start">C$</InputAdornment>,
-              inputProps: { min: 0, max: total, step: "0.01" }
-            }}
-          />
+        <Box mt={2} p={2} sx={{ bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+           <Typography variant="subtitle2" mb={2}>Dividir Pago</Typography>
+           <Box display="flex" gap={2} alignItems="center">
+            <TextField
+              label="Efectivo"
+              type="number"
+              value={splitAmounts.efectivo || ""}
+              onChange={handleCashChange}
+              fullWidth
+              size="small"
+              InputProps={{
+                startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
+                inputProps: { min: 0, max: total, step: "0.01" }
+              }}
+            />
+            <Typography variant="h6" color="text.secondary">+</Typography>
+            <TextField
+              label="Tarjeta"
+              type="number"
+              value={splitAmounts.tarjeta || ""}
+              onChange={handleCardChange}
+              fullWidth
+              size="small"
+              InputProps={{
+                startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
+                inputProps: { min: 0, max: total, step: "0.01" }
+              }}
+            />
+          </Box>
         </Box>
       )}
     </>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Paper, TextField, alpha, Grid, Switch } from "@mui/material";
+import { Box, Typography, Paper, TextField, alpha, Grid, Switch, Button } from "@mui/material";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 
 import { GeneralConfigState } from "../../hooks/useGeneralConfigData";
@@ -7,9 +7,37 @@ import { GeneralConfigState } from "../../hooks/useGeneralConfigData";
 interface Props {
   config: GeneralConfigState;
   onUpdate: <K extends keyof GeneralConfigState>(key: K, value: GeneralConfigState[K]) => void;
+  onSave?: (override?: Partial<GeneralConfigState>) => Promise<void>;
 }
 
-export const CurrencyCard: React.FC<Props> = ({ config, onUpdate }) => {
+export const CurrencyCard: React.FC<Props> = ({ config, onUpdate, onSave }) => {
+  const [localRate, setLocalRate] = React.useState(config.exchangeRate.toString());
+
+  React.useEffect(() => {
+    // Solo sincronizar si el valor numérico es diferente (para evitar sobreescribir mientras se escribe)
+    const parsedLocal = parseFloat(localRate);
+    if (isNaN(parsedLocal) || parsedLocal !== config.exchangeRate) {
+      setLocalRate(config.exchangeRate.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.exchangeRate]);
+
+  const handleSave = async () => {
+    const override: Partial<GeneralConfigState> = {};
+
+    if (config.enableSecondaryCurrency) {
+      const parsed = parseFloat(localRate);
+      if (!isNaN(parsed) && parsed > 0) {
+        onUpdate('exchangeRate', parsed);
+        override.exchangeRate = parsed;
+      } else {
+        setLocalRate(config.exchangeRate.toString());
+      }
+    }
+
+    await onSave?.(Object.keys(override).length ? override : undefined);
+  };
+
   return (
     <Paper
       elevation={0}
@@ -120,12 +148,42 @@ export const CurrencyCard: React.FC<Props> = ({ config, onUpdate }) => {
               fullWidth
               size="small"
               type="number"
-              value={config.exchangeRate}
-              onChange={(e) => onUpdate('exchangeRate', parseFloat(e.target.value) || 0)}
+              value={localRate}
+              onChange={(e) => setLocalRate(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const parsed = parseFloat(localRate);
+                  if (!isNaN(parsed) && parsed > 0) {
+                    onUpdate('exchangeRate', parsed);
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }
+              }}
+              onBlur={() => {
+                const parsed = parseFloat(localRate);
+                if (!isNaN(parsed) && parsed > 0) {
+                  onUpdate('exchangeRate', parsed);
+                } else {
+                  setLocalRate(config.exchangeRate.toString());
+                }
+              }}
+              inputProps={{ step: "0.01", min: "0" }}
             />
           </Grid>
         </Grid>
       )}
+
+      <Box mt={3}>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          type="button"
+          onClick={handleSave}
+        >
+          Guardar
+        </Button>
+      </Box>
     </Paper>
   );
 };
