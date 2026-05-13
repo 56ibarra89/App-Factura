@@ -12,6 +12,7 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import { PaymentMethod } from "../types/order.types";
+import { blockInvalidChar } from "../utils/inputUtils";
 
 interface SplitAmounts {
   efectivo: number;
@@ -24,6 +25,10 @@ interface PaymentMethodSelectorProps {
   setPaymentMethod: (method: PaymentMethod) => void;
   splitAmounts: SplitAmounts;
   setSplitAmounts: (amounts: SplitAmounts) => void;
+  receivedLocal: number | "";
+  setReceivedLocal: (val: number | "") => void;
+  receivedSecondary: number | "";
+  setReceivedSecondary: (val: number | "") => void;
   currencySymbol?: string;
   secondaryCurrencySymbol?: string;
   exchangeRate?: number;
@@ -36,6 +41,10 @@ export default function PaymentMethodSelector({
   setPaymentMethod,
   splitAmounts,
   setSplitAmounts,
+  receivedLocal,
+  setReceivedLocal,
+  receivedSecondary,
+  setReceivedSecondary,
   currencySymbol = "C$",
   secondaryCurrencySymbol = "$",
   exchangeRate = 36.50,
@@ -54,9 +63,6 @@ export default function PaymentMethodSelector({
       setReceivedSecondary("");
     }
   };
-
-  const [receivedLocal, setReceivedLocal] = React.useState<number | "">("");
-  const [receivedSecondary, setReceivedSecondary] = React.useState<number | "">("");
 
   const exchangeRateVal = exchangeRate > 0 ? exchangeRate : 36.50;
   const totalReceivedInCordobas = Number(receivedLocal) + (Number(receivedSecondary) * exchangeRateVal);
@@ -134,6 +140,7 @@ export default function PaymentMethodSelector({
                 startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
                 inputProps: { min: 0, step: "0.01" }
               }}
+              onKeyDown={blockInvalidChar}
             />
             {enableSecondaryCurrency && (
               <TextField
@@ -147,6 +154,7 @@ export default function PaymentMethodSelector({
                   startAdornment: <InputAdornment position="start">{secondaryCurrencySymbol}</InputAdornment>,
                   inputProps: { min: 0, step: "0.01" }
                 }}
+                onKeyDown={blockInvalidChar}
               />
             )}
           </Box>
@@ -183,6 +191,7 @@ export default function PaymentMethodSelector({
                 startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
                 inputProps: { min: 0, max: total, step: "0.01" }
               }}
+              onKeyDown={blockInvalidChar}
             />
             <Typography variant="h6" color="text.secondary">+</Typography>
             <TextField
@@ -196,6 +205,7 @@ export default function PaymentMethodSelector({
                 startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
                 inputProps: { min: 0, max: total, step: "0.01" }
               }}
+              onKeyDown={blockInvalidChar}
             />
           </Box>
         </Box>

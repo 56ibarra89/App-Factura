@@ -69,6 +69,8 @@ export default function FacturaPreviewDialog({
 }: FacturaPreviewDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("EFECTIVO");
   const [splitAmounts, setSplitAmounts] = useState({ efectivo: 0, tarjeta: 0 });
+  const [receivedLocal, setReceivedLocal] = useState<number | "">("");
+  const [receivedSecondary, setReceivedSecondary] = useState<number | "">("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [orderType, setOrderType] = useState<OrderType>("local");
@@ -86,6 +88,8 @@ export default function FacturaPreviewDialog({
     if (open) {
       setPaymentMethod("EFECTIVO");
       setSplitAmounts({ efectivo: 0, tarjeta: total });
+      setReceivedLocal("");
+      setReceivedSecondary("");
       setCustomerName("");
       setCustomerPhone("");
       setOrderType("local");
@@ -137,6 +141,24 @@ export default function FacturaPreviewDialog({
         (a, b) => new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime()
       )
       .map((a) => a.address) ?? [];
+
+  /** Lógica de validación de pago basada en el método seleccionado */
+  const isPaymentValid = () => {
+    if (isTableMode) return true; // En modo mesa el pago se procesa diferente o después
+    if (paymentMethod === "EFECTIVO") {
+      const totalReceived =
+        Number(receivedLocal || 0) +
+        Number(receivedSecondary || 0) * exchangeRateVal;
+      // Permitir una pequeña diferencia por redondeo de decimales
+      return totalReceived >= (total - 0.01);
+    }
+    // Para otros métodos (TARJETA, APP, MIXTO) la validación es más sencilla o ya está manejada
+    if (paymentMethod === "MIXTO") {
+      const sum = splitAmounts.efectivo + splitAmounts.tarjeta;
+      return Math.abs(sum - total) < 0.01;
+    }
+    return true; // TARJETA y APP se asumen válidos al confirmar
+  };
 
   /** Confirmar pedido: guarda el cliente y luego llama al callback del padre */
   const handleConfirm = async () => {
@@ -381,6 +403,10 @@ export default function FacturaPreviewDialog({
                 setPaymentMethod={setPaymentMethod}
                 splitAmounts={splitAmounts}
                 setSplitAmounts={setSplitAmounts}
+                receivedLocal={receivedLocal}
+                setReceivedLocal={setReceivedLocal}
+                receivedSecondary={receivedSecondary}
+                setReceivedSecondary={setReceivedSecondary}
                 currencySymbol={config.currencySymbol}
                 secondaryCurrencySymbol={config.secondaryCurrencySymbol}
                 exchangeRate={exchangeRateVal}
@@ -400,6 +426,7 @@ export default function FacturaPreviewDialog({
             variant="contained"
             color="error"
             onClick={handleConfirm}
+            disabled={!isPaymentValid()}
             sx={{ "@media print": { display: "none" } }}
           >
             {confirmText}
