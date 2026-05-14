@@ -5,7 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import { BackButton } from "../components/BackButton";
 import PageHeader from "../components/PageHeader";
-import { useOrderManagement } from "../hooks/useOrderManagement";
+import { useOrderContext } from "../context/OrderContext";
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { Order } from "../types/order.types";
 import PinValidationDialog from "../components/auth/PinValidationDialog";
@@ -18,19 +18,20 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import TablePagination from "@mui/material/TablePagination";
 
 const AnularFactura = () => {
-  const { activeOrders, finishedOrders, updateOrderStatus } = useOrderManagement();
+  const { orders, updateOrderStatus } = useOrderContext();
 
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
 
   // Unimos todas las órdenes para mostrarlas juntas en orden histórico
   const allOrders = useMemo(() => {
-    return [...activeOrders, ...finishedOrders].sort(
+    return [...orders].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
-  }, [activeOrders, finishedOrders]);
+  }, [orders]);
 
   const handleOpenCancelDialog = (order: Order) => {
     setOrderToCancel(order);
@@ -44,6 +45,20 @@ const AnularFactura = () => {
     setPinDialogOpen(false);
     setOrderToCancel(null);
   };
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const paginatedOrders = allOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Box
@@ -64,8 +79,9 @@ const AnularFactura = () => {
         Aquí puedes ver las facturas de la jornada y anularlas si hubo algún error. Esta acción requiere PIN de administrador.
       </Typography>
 
-      <TableContainer component={Paper} sx={{ borderRadius: 4, boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
-        <Table sx={{ minWidth: 650 }}>
+      <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 4, boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
+        <TableContainer>
+          <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ bgcolor: "grey.100" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>ID Factura</TableCell>
@@ -84,7 +100,7 @@ const AnularFactura = () => {
                 </TableCell>
               </TableRow>
             )}
-            {allOrders.map((order) => {
+            {paginatedOrders.map((order) => {
               const isCancelled = order.status === "cancelled";
               return (
                 <TableRow key={order.id} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
@@ -118,6 +134,18 @@ const AnularFactura = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[10, 25, 50]}
+        component="div"
+        count={allOrders.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage="Filas por página:"
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
+      />
+    </Paper>
 
       {/* Security Dialog */}
       <PinValidationDialog

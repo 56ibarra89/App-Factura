@@ -83,7 +83,7 @@ export function createOrder(params: {
     subTotal,
     taxAmount,
     total,
-    status: "pending",
+    status: paymentMethod ? "paid" : "pending",
     timestamp: new Date(nowMs),
     customerName,
     orderType,

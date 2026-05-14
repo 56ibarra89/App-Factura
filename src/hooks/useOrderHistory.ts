@@ -36,7 +36,7 @@ export const useOrderHistory = () => {
     try {
       const fetched = await getOrdersByDateRange(startObj, endObj);
       const completedOrders = fetched.filter(
-        (o) => o.status === "paid" || o.status === "cancelled"
+        (o) => o.status === "paid" || o.status === "cancelled" || (o.status === "delivered" && !o.tableId)
       );
       setOrders(completedOrders);
     } catch (e) {
