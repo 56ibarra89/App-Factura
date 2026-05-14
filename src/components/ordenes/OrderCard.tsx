@@ -82,25 +82,20 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
 
         <Divider sx={{ mb: 2 }} />
 
-        <Stack spacing={0.5}>
+        <Stack spacing={1}>
           {order.items.map((item, idx) => (
-            <Box key={idx} display="flex" justifyContent="space-between" alignItems="center" sx={{ p: 0.5 }}>
-              <Typography variant="body2">
+            <Box key={idx} sx={{ p: 0.5, bgcolor: item.note ? 'rgba(255, 193, 7, 0.08)' : 'transparent', borderRadius: 1 }}>
+              <Typography variant="body2" fontWeight="medium">
                 {item.quantity}x {formatItemName(item.name, item.size)}
               </Typography>
-              <Typography variant="body2" fontWeight="bold">
-                C${(item.price * item.quantity).toFixed(2)}
-              </Typography>
+              {item.note && (
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, pl: 1, fontStyle: 'italic', borderLeft: '2px solid', borderColor: '#ffc107' }}>
+                  Nota: {item.note}
+                </Typography>
+              )}
             </Box>
           ))}
         </Stack>
-
-        <Box mt={2} pt={2} borderTop="1px dashed #eee" display="flex" justifyContent="space-between">
-          <Typography variant="subtitle1" fontWeight="bold">Total</Typography>
-          <Typography variant="subtitle1" fontWeight="bold" color={LOGIN_COLORS.primary}>
-            C${order.total.toFixed(2)}
-          </Typography>
-        </Box>
       </CardContent>
 
       <CardActions sx={{ p: 2, pt: 0, justifyContent: 'space-between' }}>
