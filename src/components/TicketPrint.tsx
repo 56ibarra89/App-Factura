@@ -13,7 +13,7 @@ interface TicketPrintProps {
   customerAddress?: string;
   orderType?: string;
   tableId?: string | null;
-  invoiceNumber?: string; // Optional if you have a correlative
+  invoiceNumber?: string;
 }
 
 const TicketPrint = ({
@@ -32,7 +32,11 @@ const TicketPrint = ({
 
   const formatDate = () => {
     const d = new Date();
-    return d.toLocaleDateString() + " " + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return (
+      d.toLocaleDateString() +
+      " " +
+      d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
   };
 
   return (
@@ -50,10 +54,10 @@ const TicketPrint = ({
               position: "absolute",
               left: 0,
               top: 0,
-              width: "76mm", // TM-U220 paper width
+              width: "76mm",
               margin: 0,
-              padding: "0 5mm", // slight padding so it doesn't print exactly on the edge
-              fontFamily: '"Courier New", Courier, monospace', // dot-matrix style
+              padding: "0 5mm",
+              fontFamily: '"Courier New", Courier, monospace',
               fontSize: "12px",
               lineHeight: "1.2",
               color: "#000",
@@ -75,6 +79,21 @@ const TicketPrint = ({
         }}
       >
         <Box textAlign="center" mb={2}>
+          {empresa.logoUrl && (
+            <Box mb={1} sx={{ display: "flex", justifyContent: "center" }}>
+              <img
+                src={empresa.logoUrl}
+                alt="Logo Empresa"
+                style={{
+                  maxWidth: "30mm",
+                  maxHeight: "30mm",
+                  objectFit: "contain",
+                  borderRadius: "50%",
+                  filter: "grayscale(100%) contrast(1.2)",
+                }}
+              />
+            </Box>
+          )}
           <Typography variant="body1" fontWeight="bold" fontFamily="inherit">
             {empresa.businessName}
           </Typography>
@@ -115,39 +134,95 @@ const TicketPrint = ({
           )}
         </Box>
 
-        <Box mb={1} sx={{ borderBottom: "1px dashed black", borderTop: "1px dashed black", py: 0.5 }}>
+        <Box
+          mb={1}
+          sx={{
+            borderBottom: "1px dashed black",
+            borderTop: "1px dashed black",
+            py: 0.5,
+          }}
+        >
           <Box display="flex" justifyContent="space-between">
-            <Typography variant="body2" fontFamily="inherit" sx={{ width: "15%" }}>CANT</Typography>
-            <Typography variant="body2" fontFamily="inherit" sx={{ width: "55%" }}>DESCRIP</Typography>
-            <Typography variant="body2" fontFamily="inherit" sx={{ width: "30%", textAlign: "right" }}>TOTAL</Typography>
+            <Typography
+              variant="body2"
+              fontFamily="inherit"
+              sx={{ width: "15%" }}
+            >
+              CANT
+            </Typography>
+            <Typography
+              variant="body2"
+              fontFamily="inherit"
+              sx={{ width: "55%" }}
+            >
+              DESCRIP
+            </Typography>
+            <Typography
+              variant="body2"
+              fontFamily="inherit"
+              sx={{ width: "30%", textAlign: "right" }}
+            >
+              TOTAL
+            </Typography>
           </Box>
         </Box>
 
         <Box mb={2}>
           {cart.map((item, idx) => {
-            const itemTotal = item.price * Math.max(0, item.quantity - (item.giftQuantity || 0));
+            const itemTotal =
+              item.price *
+              Math.max(0, item.quantity - (item.giftQuantity || 0));
             const nameFormatted = formatItemName(item.name, item.size);
 
             return (
               <Box key={idx} mb={1}>
                 <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" fontFamily="inherit" sx={{ width: "15%" }}>
+                  <Typography
+                    variant="body2"
+                    fontFamily="inherit"
+                    sx={{ width: "15%" }}
+                  >
                     {item.quantity}
                   </Typography>
-                  <Typography variant="body2" fontFamily="inherit" sx={{ width: "55%" }}>
+                  <Typography
+                    variant="body2"
+                    fontFamily="inherit"
+                    sx={{ width: "55%" }}
+                  >
                     {nameFormatted}
                   </Typography>
-                  <Typography variant="body2" fontFamily="inherit" sx={{ width: "30%", textAlign: "right" }}>
+                  <Typography
+                    variant="body2"
+                    fontFamily="inherit"
+                    sx={{ width: "30%", textAlign: "right" }}
+                  >
                     {itemTotal.toFixed(2)}
                   </Typography>
                 </Box>
                 {item.extras?.map((extra, eIdx) => (
-                  <Box display="flex" justifyContent="space-between" key={`extra-${eIdx}`} pl={2}>
-                    <Typography variant="body2" fontFamily="inherit" sx={{ width: "15%" }}></Typography>
-                    <Typography variant="body2" fontFamily="inherit" sx={{ width: "55%" }}>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    key={`extra-${eIdx}`}
+                    pl={2}
+                  >
+                    <Typography
+                      variant="body2"
+                      fontFamily="inherit"
+                      sx={{ width: "15%" }}
+                    ></Typography>
+                    <Typography
+                      variant="body2"
+                      fontFamily="inherit"
+                      sx={{ width: "55%" }}
+                    >
                       + {extra.name}
                     </Typography>
-                    <Typography variant="body2" fontFamily="inherit" sx={{ width: "30%", textAlign: "right" }}>
+                    <Typography
+                      variant="body2"
+                      fontFamily="inherit"
+                      sx={{ width: "30%", textAlign: "right" }}
+                    >
                       {extra.price.toFixed(2)}
                     </Typography>
                   </Box>
@@ -159,16 +234,31 @@ const TicketPrint = ({
 
         <Box mb={2} sx={{ borderTop: "1px dashed black", pt: 1 }}>
           <Box display="flex" justifyContent="space-between">
-            <Typography variant="body2" fontFamily="inherit">Subtotal:</Typography>
-            <Typography variant="body2" fontFamily="inherit">{general.currencySymbol}{subTotal.toFixed(2)}</Typography>
+            <Typography variant="body2" fontFamily="inherit">
+              Subtotal:
+            </Typography>
+            <Typography variant="body2" fontFamily="inherit">
+              {general.currencySymbol}
+              {subTotal.toFixed(2)}
+            </Typography>
           </Box>
           <Box display="flex" justifyContent="space-between">
-            <Typography variant="body2" fontFamily="inherit">IVA:</Typography>
-            <Typography variant="body2" fontFamily="inherit">{general.currencySymbol}{taxAmount.toFixed(2)}</Typography>
+            <Typography variant="body2" fontFamily="inherit">
+              IVA:
+            </Typography>
+            <Typography variant="body2" fontFamily="inherit">
+              {general.currencySymbol}
+              {taxAmount.toFixed(2)}
+            </Typography>
           </Box>
           <Box display="flex" justifyContent="space-between" mt={1}>
-            <Typography variant="body1" fontFamily="inherit" fontWeight="bold">TOTAL:</Typography>
-            <Typography variant="body1" fontFamily="inherit" fontWeight="bold">{general.currencySymbol}{total.toFixed(2)}</Typography>
+            <Typography variant="body1" fontFamily="inherit" fontWeight="bold">
+              TOTAL:
+            </Typography>
+            <Typography variant="body1" fontFamily="inherit" fontWeight="bold">
+              {general.currencySymbol}
+              {total.toFixed(2)}
+            </Typography>
           </Box>
         </Box>
 
