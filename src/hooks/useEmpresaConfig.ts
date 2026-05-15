@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { logService } from '../services/logService';
+import { configRepository } from '../repositories/ConfigRepository';
 
 export interface EmpresaConfigState {
   logoUrl: string;
@@ -19,6 +20,14 @@ export const useEmpresaConfig = () => {
     phone: '+1 234 567 8900',
     ticketFooter: '¡Gracias por su compra! Vuelva pronto.',
   });
+
+  useEffect(() => {
+    configRepository.getEmpresaConfig().then((data) => {
+      if (data) {
+        setConfig(data);
+      }
+    });
+  }, []);
 
   const updateField = useCallback(<K extends keyof EmpresaConfigState>(key: K, value: EmpresaConfigState[K]) => {
     setConfig(prev => ({ ...prev, [key]: value }));
@@ -41,17 +50,24 @@ export const useEmpresaConfig = () => {
       ticketFooter: sanitize(config.ticketFooter, 300)
     };
 
-    // Aquí se enviaría a la API o se guardaría en local
-    console.log('Configuración de empresa guardada:', sanitizedConfig);
-    
-    logService.log(
-      username, 
-      role, 
-      "CONFIG_CHANGE", 
-      `Actualización de datos de identidad de la empresa (${sanitizedConfig.businessName})`
-    );
-
-    return Promise.resolve(true); 
+    // Guardar en IndexedDB a través del repositorio
+    return configRepository.saveEmpresaConfig(sanitizedConfig)
+      .then(() => {
+        console.log('Configuración de empresa guardada:', sanitizedConfig);
+        setConfig(sanitizedConfig); // Actualizar el estado con los valores sanitizados
+        
+        logService.log(
+          username, 
+          role, 
+          "CONFIG_CHANGE", 
+          `Actualización de datos de identidad de la empresa (${sanitizedConfig.businessName})`
+        );
+        return true;
+      })
+      .catch((error) => {
+        console.error('Error al guardar la configuración:', error);
+        return false;
+      });
   }, [config, username, role]);
 
   return {

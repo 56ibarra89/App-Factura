@@ -1,5 +1,6 @@
 import { initDB, STORES } from "./db.config";
 import { GeneralConfigState } from "../hooks/useGeneralConfigData";
+import { EmpresaConfigState } from "../hooks/useEmpresaConfig";
 
 export const configRepository = {
   async getGeneralConfig(): Promise<GeneralConfigState | null> {
@@ -63,6 +64,49 @@ export const configRepository = {
       });
     } catch (error) {
       console.error("Error inicializando DB para guardar configuración:", error);
+      throw error;
+    }
+  },
+
+  async getEmpresaConfig(): Promise<EmpresaConfigState | null> {
+    try {
+      const db = await initDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORES.CONFIG, "readonly");
+        const store = transaction.objectStore(STORES.CONFIG);
+        const request = store.get("empresa_config");
+
+        transaction.onabort = () => reject(transaction.error ?? request.error);
+        transaction.onerror = () => reject(transaction.error ?? request.error);
+
+        request.onsuccess = () => resolve(request.result?.data || null);
+        request.onerror = () => reject(request.error);
+      });
+    } catch (error) {
+      console.error("Error obteniendo config de empresa:", error);
+      return null;
+    }
+  },
+
+  async saveEmpresaConfig(config: EmpresaConfigState): Promise<void> {
+    try {
+      const db = await initDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORES.CONFIG, "readwrite");
+        const store = transaction.objectStore(STORES.CONFIG);
+        
+        const request = store.put({
+          id: "empresa_config",
+          data: config,
+          updatedAt: new Date().toISOString()
+        });
+
+        transaction.oncomplete = () => resolve();
+        transaction.onabort = () => reject(transaction.error ?? request.error);
+        transaction.onerror = () => reject(transaction.error ?? request.error);
+      });
+    } catch (error) {
+      console.error("Error guardando config de empresa:", error);
       throw error;
     }
   }
