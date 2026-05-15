@@ -139,13 +139,14 @@ export default function MesasPage() {
     setIsTableSelectOpen(true);
   }, [selectedMesaId]);
 
-  const handleTableSelectConfirm = useCallback((targetTableId: string) => {
+  const handleTableSelectConfirm = useCallback((targetTableId: string | string[]) => {
     if (!selectedMesaId) return;
     if (tableSelectMode === "unir") {
       unirMesas(selectedMesaId, targetTableId);
     } else if (tableSelectMode === "mover") {
       moveOrder(selectedMesaId, targetTableId);
-      setSelectedMesaId(targetTableId);
+      const nextMesaId = Array.isArray(targetTableId) ? targetTableId[0] : targetTableId;
+      setSelectedMesaId(nextMesaId);
     }
     setIsTableSelectOpen(false);
     restoreFocus();
@@ -281,6 +282,12 @@ export default function MesasPage() {
         onClose={closeTableSelect}
         onConfirm={handleTableSelectConfirm}
         options={getAvailableTables()}
+        multiSelect={true}
+        maxSelection={
+          tableSelectMode === "mover" && activeOrder
+            ? (activeOrder.linkedTables?.length || 0) + 1
+            : undefined
+        }
         title={
           tableSelectMode === "unir"
             ? `Unir Mesa ${selectedMesaId?.split("-M")[1]} con...`

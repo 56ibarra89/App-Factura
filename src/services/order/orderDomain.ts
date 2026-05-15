@@ -299,28 +299,62 @@ export const orderMutations = {
     );
   },
 
-  moveOrder(prev: Order[], sourceTableId: string, destTableId: string): UpdateResult {
+  moveOrder(
+    prev: Order[],
+    sourceTableId: string,
+    destTableId: string | string[],
+  ): UpdateResult {
     return updateOne(
       prev,
       (order) =>
-        order.tableId === sourceTableId &&
+        (order.tableId === sourceTableId ||
+          (order.linkedTables && order.linkedTables.includes(sourceTableId))) &&
         order.status !== "paid" &&
         order.status !== "cancelled",
-      (order) => ({ ...order, tableId: destTableId }),
+      (order) => {
+        if (Array.isArray(destTableId)) {
+          return {
+            ...order,
+            tableId: destTableId[0],
+            linkedTables: destTableId.slice(1),
+          };
+        }
+        return {
+          ...order,
+          tableId: destTableId,
+          linkedTables: [], // Al mover a una sola mesa, liberamos todas las anteriores
+        };
+      },
     );
   },
 
-  unirMesas(prev: Order[], sourceTableId: string, destTableId: string): UpdateResult {
+  unirMesas(
+    prev: Order[],
+    sourceTableId: string,
+    destTableId: string | string[],
+  ): UpdateResult {
     return updateOne(
       prev,
       (order) =>
-        order.tableId === sourceTableId &&
+        (order.tableId === sourceTableId ||
+          (order.linkedTables && order.linkedTables.includes(sourceTableId))) &&
         order.status !== "paid" &&
         order.status !== "cancelled",
       (order) => {
         const linkedTables = order.linkedTables || [];
-        if (linkedTables.includes(destTableId)) return order;
-        return { ...order, linkedTables: [...linkedTables, destTableId] };
+        const newTables = Array.isArray(destTableId) ? destTableId : [destTableId];
+
+        const updatedLinkedTables = [...linkedTables];
+        newTables.forEach((tableId) => {
+          if (
+            !updatedLinkedTables.includes(tableId) &&
+            order.tableId !== tableId
+          ) {
+            updatedLinkedTables.push(tableId);
+          }
+        });
+
+        return { ...order, linkedTables: updatedLinkedTables };
       },
     );
   },

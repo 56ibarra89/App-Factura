@@ -67,8 +67,8 @@ interface OrderContextProps {
   ) => void;
   markAsSentToKitchen: (orderId: string) => void;
   markAsSentToKitchenByTable: (tableId: string) => void;
-  moveOrder: (sourceTableId: string, destTableId: string) => void;
-  unirMesas: (sourceTableId: string, destTableId: string) => void;
+  moveOrder: (sourceTableId: string, destTableId: string | string[]) => void;
+  unirMesas: (sourceTableId: string, destTableId: string | string[]) => void;
 }
 
 type OrderQueriesContextProps = Pick<OrderContextProps, "orders" | "getOrderByTable">;

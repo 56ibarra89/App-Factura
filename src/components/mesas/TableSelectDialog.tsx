@@ -23,9 +23,11 @@ interface TableOption {
 interface Props {
   open: boolean;
   onClose: () => void;
-  onConfirm: (tableId: string) => void;
+  onConfirm: (tableId: string | string[]) => void;
   options: TableOption[];
   title: string;
+  multiSelect?: boolean;
+  maxSelection?: number;
   disableRestoreFocus?: boolean;
   disableEnforceFocus?: boolean;
 }
@@ -36,20 +38,42 @@ export default function TableSelectDialog({
   onConfirm,
   options,
   title,
+  multiSelect = false,
+  maxSelection,
   disableRestoreFocus,
   disableEnforceFocus,
 }: Props) {
-  const [selectedTable, setSelectedTable] = useState<string>("");
+  const [selectedTables, setSelectedTables] = useState<string[]>([]);
+
+  const handleToggleTable = (id: string) => {
+    if (multiSelect) {
+      setSelectedTables((prev) => {
+        if (prev.includes(id)) {
+          return prev.filter((t) => t !== id);
+        }
+        if (maxSelection && prev.length >= maxSelection) {
+          return prev; // No permitir seleccionar más del máximo
+        }
+        return [...prev, id];
+      });
+    } else {
+      setSelectedTables([id]);
+    }
+  };
 
   const handleConfirm = () => {
-    if (selectedTable) {
-      onConfirm(selectedTable);
-      setSelectedTable("");
+    if (selectedTables.length > 0) {
+      if (multiSelect) {
+        onConfirm(selectedTables);
+      } else {
+        onConfirm(selectedTables[0]);
+      }
+      setSelectedTables([]);
     }
   };
 
   const handleClose = () => {
-    setSelectedTable("");
+    setSelectedTables([]);
     onClose();
   };
 
@@ -104,8 +128,15 @@ export default function TableSelectDialog({
           </Box>
         ) : (
           <Grid container spacing={2}>
+            {multiSelect && (
+              <Grid size={12}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1, ml: 0.5, fontWeight: "medium" }}>
+                  Selecciona {maxSelection ? `hasta ${maxSelection}` : "una o más"} mesas:
+                </Typography>
+              </Grid>
+            )}
             {options.map((opt) => {
-              const isSelected = selectedTable === opt.id;
+              const isSelected = selectedTables.includes(opt.id);
               
               // Simplificamos el texto si viene con mucho detalle
               const parts = opt.label.split('-');
@@ -117,7 +148,7 @@ export default function TableSelectDialog({
                   <Button
                     fullWidth
                     variant={isSelected ? "contained" : "outlined"}
-                    onClick={() => setSelectedTable(opt.id)}
+                    onClick={() => handleToggleTable(opt.id)}
                     sx={{
                       height: 100,
                       display: 'flex',
@@ -169,7 +200,7 @@ export default function TableSelectDialog({
         <Button
           onClick={handleConfirm}
           variant="contained"
-          disabled={!selectedTable}
+          disabled={selectedTables.length === 0}
           disableElevation
           sx={{ 
             fontWeight: "bold", 
