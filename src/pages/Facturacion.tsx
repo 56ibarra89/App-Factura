@@ -87,24 +87,24 @@ const Facturacion = () => {
           customerAddress,
         );
         if (window.ipcRenderer) {
-          window.ipcRenderer.send('print-silent');
+          window.ipcRenderer.send("print-silent");
           setTimeout(() => {
             handleClearCart();
             setPreviewOpen(false);
-            navigate('/mesas');
+            navigate("/mesas");
           }, 500);
         } else {
           window.print();
           handleClearCart();
           setPreviewOpen(false);
-          navigate('/mesas');
+          navigate("/mesas");
         }
       } else {
         // Solo guardar cambios en la mesa
         handleSaveTableOrder(activeOrder?.id, tableId);
         handleClearCart();
         setPreviewOpen(false);
-        navigate('/mesas');
+        navigate("/mesas");
       }
     } else {
       // Venta directa normal
@@ -116,17 +116,17 @@ const Facturacion = () => {
         customerAddress,
       );
       if (window.ipcRenderer) {
-        window.ipcRenderer.send('print-silent');
+        window.ipcRenderer.send("print-silent");
         setTimeout(() => {
           handleClearCart();
           setPreviewOpen(false);
-          navigate('/home');
+          navigate("/home");
         }, 500);
       } else {
         window.print();
         handleClearCart();
         setPreviewOpen(false);
-        navigate('/home');
+        navigate("/home");
       }
     }
   };
@@ -147,7 +147,21 @@ const Facturacion = () => {
     // Luego marcamos la mesa como enviada a cocina
     markAsSentToKitchenByTable(tableId);
 
-    logService.log(username, role, "KITCHEN_DISPATCH", `Pedido enviado a cocina para Mesa ${tableId.split("-M")[1]}`);
+    const nowMs = Date.now();
+    const updatedCart = cart.map((item) => ({
+      ...item,
+      isSentToKitchen: true,
+      sentAt: item.isSentToKitchen ? item.sentAt : nowMs,
+      kitchenStatus: item.isSentToKitchen ? item.kitchenStatus : "pending",
+    }));
+    handleSetCart(updatedCart);
+
+    logService.log(
+      username,
+      role,
+      "KITCHEN_DISPATCH",
+      `Pedido enviado a cocina para Mesa ${tableId.split("-M")[1]}`,
+    );
 
     setSnackbarOpen(true);
     setIsKitchenConfirmOpen(false);
