@@ -13,6 +13,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   username: string;
   role: UserRole | null;
+  email: string;
   loading: boolean;
   error: string;
   login: (username: string, password: string, remember?: boolean) => Promise<boolean>;
@@ -47,6 +48,9 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
   const [role, setRole] = useState<UserRole | null>(
     () => (sessionStore.getItem("role") as UserRole | null)
   );
+  const [email, setEmail] = useState(
+    () => sessionStore.getItem("email") || ""
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -64,6 +68,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
     setIsLoggedIn(false);
     setUsername("");
     setRole(null);
+    setEmail("");
   }, [username, role]);
 
   // SRP: timer de inactividad delegado a su propio hook
@@ -86,11 +91,13 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           sessionStore.setItem("loggedIn", "true");
           sessionStore.setItem("username", user);
           sessionStore.setItem("role", result.role);
+          if (result.email) sessionStore.setItem("email", result.email);
           loginLockout.resetLoginAttempts();
 
           setIsLoggedIn(true);
           setUsername(user);
           setRole(result.role);
+          if (result.email) setEmail(result.email);
           sessionStore.setItem("lastActivity", Date.now().toString());
 
           logService.log(user, result.role, "LOGIN_PASSWORD", "Inicio de sesión con contraseña");
@@ -202,6 +209,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         isLoggedIn,
         username,
         role,
+        email,
         loading,
         error,
         login,

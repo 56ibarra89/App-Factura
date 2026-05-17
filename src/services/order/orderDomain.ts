@@ -308,7 +308,7 @@ export const orderMutations = {
       prev,
       (order) =>
         (order.tableId === sourceTableId ||
-          (order.linkedTables && order.linkedTables.includes(sourceTableId))) &&
+          !!(order.linkedTables && order.linkedTables.includes(sourceTableId))) &&
         order.status !== "paid" &&
         order.status !== "cancelled",
       (order) => {
@@ -337,7 +337,7 @@ export const orderMutations = {
       prev,
       (order) =>
         (order.tableId === sourceTableId ||
-          (order.linkedTables && order.linkedTables.includes(sourceTableId))) &&
+          !!(order.linkedTables && order.linkedTables.includes(sourceTableId))) &&
         order.status !== "paid" &&
         order.status !== "cancelled",
       (order) => {

@@ -3,6 +3,7 @@ import { UserRole } from "./user";
 export interface AuthLoginResult {
   success: boolean;
   role?: UserRole;
+  email?: string;
 }
 
 export interface IAuthService {

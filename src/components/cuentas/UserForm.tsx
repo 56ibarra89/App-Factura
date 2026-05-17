@@ -8,6 +8,7 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import CasinoIcon from "@mui/icons-material/Casino";
 import { UserAccount, UserRole, ROLE_LABELS } from "../../types/user";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
+import { useAuth } from "../../context/AuthContext";
 
 interface UserFormProps {
   user: UserAccount | null;
@@ -21,6 +22,7 @@ const DEFAULT_USER: Partial<UserAccount> = {
 };
 
 export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormProps) {
+  const { role: currentRole } = useAuth();
   const [formData, setFormData] = useState<Partial<UserAccount>>(DEFAULT_USER);
   const isEditing = !!user;
 
@@ -99,9 +101,12 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
             <TextField id="user-lastname" fullWidth size="small" label="Apellido(s)" value={formData.lastName || ""} onChange={e => handleChange("lastName", e.target.value)} variant="filled" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField id="user-username" fullWidth size="small" label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing} required variant="filled" helperText={isEditing ? "El nombre de usuario es permanente." : "Usado para iniciar sesión."} />
+            <TextField id="user-username" fullWidth size="small" label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing && currentRole !== "admin"} required variant="filled" helperText={isEditing && currentRole !== "admin" ? "Solo administradores pueden editar el nombre de usuario." : "Usado para iniciar sesión."} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField id="user-email" fullWidth size="small" label="Correo Electrónico" value={formData.email || ""} onChange={e => handleChange("email", e.target.value)} variant="filled" type="email" />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 12 }}>
             <TextField id="user-role" fullWidth size="small" select label="Rol en la Empresa" value={formData.role || "cajero"} onChange={e => handleChange("role", e.target.value)} variant="filled" SelectProps={{ native: true }}>
               {(Object.keys(ROLE_LABELS) as UserRole[]).map(role => (
                 <option key={role} value={role}>{ROLE_LABELS[role]}</option>

@@ -43,7 +43,7 @@ export const authService: IAuthService = {
         );
 
         if (entry && entry.password === password) {
-          resolve({ success: true, role: entry.role });
+          resolve({ success: true, role: entry.role, email: entry.email });
         } else {
           resolve({ success: false });
         }

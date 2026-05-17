@@ -5,6 +5,7 @@ import { localStore, setJson, tryGetJson } from "../services/storage/storage";
 export interface AccountData {
   nombreCompleto: string;
   nombreUsuario: string;
+  email: string;
   pin: string;
   passwordActual: string;
   nuevaPassword: string;
@@ -12,11 +13,12 @@ export interface AccountData {
 }
 
 export function useAccountSettings() {
-  const { username } = useAuth();
+  const { username, email } = useAuth();
 
   const [data, setData] = useState<AccountData>({
     nombreCompleto: "",
     nombreUsuario: username || "",
+    email: email || "",
     pin: "",
     passwordActual: "",
     nuevaPassword: "",

@@ -59,6 +59,17 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
           />
         </Box>
 
+        <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
+          <TextField
+            fullWidth
+            label="Correo Electrónico"
+            variant="outlined"
+            type="email"
+            value={data.email || ""}
+            onChange={(e) => onChange("email", e.target.value)}
+          />
+        </Box>
+
         <Divider sx={{ my: 1 }} />
 
         <Typography variant="subtitle2" fontWeight="bold" color="primary.main" sx={{ textTransform: "uppercase", letterSpacing: 1 }}>
