@@ -6,6 +6,7 @@ import { useCerrarCaja } from "../hooks/useCerrarCaja";
 import LocalAtmIcon from "@mui/icons-material/LocalAtm";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import SmartphoneIcon from "@mui/icons-material/Smartphone";
+import ShiftTicketPrint from "../components/ShiftTicketPrint";
 
 export default function CerrarCajaPage() {
   const {
@@ -17,6 +18,8 @@ export default function CerrarCajaPage() {
     expectedCash,
     canSubmit,
     currentShift,
+    printShift,
+    blindCashCount,
     handleSubmit,
     handleCancel,
   } = useCerrarCaja();
@@ -58,41 +61,45 @@ export default function CerrarCajaPage() {
           </Alert>
         )}
 
-        <Grid container spacing={2} mb={4}>
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 3 }}>
-              <LocalAtmIcon color="success" />
-              <Typography variant="caption" display="block">Ventas Efectivo</Typography>
-              <Typography variant="h6" fontWeight="bold">C${sales.cash.toFixed(2)}</Typography>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 3 }}>
-              <CreditCardIcon color="primary" />
-              <Typography variant="caption" display="block">Ventas Tarjeta</Typography>
-              <Typography variant="h6" fontWeight="bold">C${sales.card.toFixed(2)}</Typography>
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 3 }}>
-              <SmartphoneIcon color="info" />
-              <Typography variant="caption" display="block">Ventas App</Typography>
-              <Typography variant="h6" fontWeight="bold">C${sales.app.toFixed(2)}</Typography>
-            </Paper>
-          </Grid>
-        </Grid>
+        {!blindCashCount && (
+          <>
+            <Grid container spacing={2} mb={4}>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 3 }}>
+                  <LocalAtmIcon color="success" />
+                  <Typography variant="caption" display="block">Ventas Efectivo</Typography>
+                  <Typography variant="h6" fontWeight="bold">C${sales.cash.toFixed(2)}</Typography>
+                </Paper>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 3 }}>
+                  <CreditCardIcon color="primary" />
+                  <Typography variant="caption" display="block">Ventas Tarjeta</Typography>
+                  <Typography variant="h6" fontWeight="bold">C${sales.card.toFixed(2)}</Typography>
+                </Paper>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 4 }}>
+                <Paper variant="outlined" sx={{ p: 2, textAlign: 'center', borderRadius: 3 }}>
+                  <SmartphoneIcon color="info" />
+                  <Typography variant="caption" display="block">Ventas App</Typography>
+                  <Typography variant="h6" fontWeight="bold">C${sales.app.toFixed(2)}</Typography>
+                </Paper>
+              </Grid>
+            </Grid>
 
-        <Box sx={{ bgcolor: 'rgba(211, 47, 47, 0.05)', p: 2, borderRadius: 3, mb: 4, border: '1px dashed #d32f2f' }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="body1" fontWeight="bold">Total Teórico en Efectivo:</Typography>
-            <Typography variant="h5" fontWeight="900" color="primary.main">
-              C${expectedCash.toFixed(2)}
-            </Typography>
-          </Box>
-          <Typography variant="caption" color="text.secondary">
-            (Apertura: C${currentShift.openingAmount.toFixed(2)} + Ventas: C${sales.cash.toFixed(2)})
-          </Typography>
-        </Box>
+            <Box sx={{ bgcolor: 'rgba(211, 47, 47, 0.05)', p: 2, borderRadius: 3, mb: 4, border: '1px dashed #d32f2f' }}>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="body1" fontWeight="bold">Total Teórico en Efectivo:</Typography>
+                <Typography variant="h5" fontWeight="900" color="primary.main">
+                  C${expectedCash.toFixed(2)}
+                </Typography>
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                (Apertura: C${currentShift.openingAmount.toFixed(2)} + Ventas: C${sales.cash.toFixed(2)})
+              </Typography>
+            </Box>
+          </>
+        )}
 
         <Divider sx={{ mb: 4 }} />
 
@@ -105,6 +112,8 @@ export default function CerrarCajaPage() {
           openingAmount={currentShift.openingAmount}
           loading={loading}
         />
+
+        {printShift && <ShiftTicketPrint shift={printShift} />}
       </Box>
     </AuthLayout>
   );

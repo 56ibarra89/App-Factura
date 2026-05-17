@@ -10,7 +10,7 @@ import Alert from "@mui/material/Alert";
 
 export default function AbrirCajaPage() {
   const { currentShift } = useCaja();
-  const { amount, setAmount, canSubmit, handleSubmit, handleCancel } = useAbrirCaja();
+  const { amount, setAmount, canSubmit, expectedAmount, requireExactOpening, handleSubmit, handleCancel } = useAbrirCaja();
 
   useEffect(() => {
     console.log("[AbrirCajaPage] Montado. Estado actual de la caja:", currentShift ? "ABIERTA" : "CERRADA");
@@ -60,6 +60,8 @@ export default function AbrirCajaPage() {
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           canSubmit={canSubmit}
+          expectedAmount={expectedAmount}
+          requireExactOpening={requireExactOpening}
         />
       </Box>
     </AuthLayout>

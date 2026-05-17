@@ -13,6 +13,8 @@ interface Props {
   onSubmit: () => void;
   onCancel: () => void;
   canSubmit: boolean;
+  expectedAmount: number | null;
+  requireExactOpening: boolean;
 }
 
 export function AbrirCajaForm({
@@ -21,7 +23,12 @@ export function AbrirCajaForm({
   onSubmit,
   onCancel,
   canSubmit,
+  expectedAmount,
+  requireExactOpening,
 }: Props) {
+  const isExactRequired = requireExactOpening && expectedAmount !== null;
+  const numAmount = Number(amount);
+  const showExactError = isExactRequired && amount !== "" && numAmount !== expectedAmount;
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <TextField
@@ -39,7 +46,12 @@ export function AbrirCajaForm({
             </InputAdornment>
           ),
         }}
-        helperText="Ingresa el monto en efectivo disponible en gaveta."
+        error={showExactError}
+        helperText={
+          isExactRequired 
+            ? `Se requiere un monto exacto de C$ ${expectedAmount?.toFixed(2)} basado en el cierre anterior.` 
+            : "Ingresa el monto en efectivo disponible en gaveta."
+        }
         sx={{
           '& .MuiOutlinedInput-root': {
             borderRadius: 2,
