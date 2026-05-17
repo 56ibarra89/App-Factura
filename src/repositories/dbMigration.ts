@@ -15,8 +15,8 @@ export const migrateUsernameInDB = async (oldUsername: string, newUsername: stri
       const store = transaction.objectStore(STORES.ORDERS);
       
       const request = store.openCursor();
-      request.onsuccess = (event: any) => {
-        const cursor = event.target.result;
+      request.onsuccess = (event: Event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
         if (cursor) {
           const order = cursor.value;
           if (order.cashierName === oldUsername) {
@@ -37,8 +37,8 @@ export const migrateUsernameInDB = async (oldUsername: string, newUsername: stri
       const store = transaction.objectStore(STORES.SHIFTS);
       
       const request = store.openCursor();
-      request.onsuccess = (event: any) => {
-        const cursor = event.target.result;
+      request.onsuccess = (event: Event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
         if (cursor) {
           const shift = cursor.value;
           if (shift.cashierName === oldUsername) {
@@ -59,8 +59,8 @@ export const migrateUsernameInDB = async (oldUsername: string, newUsername: stri
       const store = transaction.objectStore(STORES.LOGS);
       
       const request = store.openCursor();
-      request.onsuccess = (event: any) => {
-        const cursor = event.target.result;
+      request.onsuccess = (event: Event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
         if (cursor) {
           const log = cursor.value;
           if (log.user === oldUsername) {
