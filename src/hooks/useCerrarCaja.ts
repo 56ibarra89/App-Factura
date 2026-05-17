@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCaja } from "../context/CajaContext";
 import { useGeneralConfigData } from "./useGeneralConfigData";
+import { Shift } from "../types/shift.types";
 
 export function useCerrarCaja() {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export function useCerrarCaja() {
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [printShift, setPrintShift] = useState<any>(null);
+  const [printShift, setPrintShift] = useState<Shift | null>(null);
 
   const sales = useMemo(() => calculateCurrentShiftSales(), [calculateCurrentShiftSales]);
 

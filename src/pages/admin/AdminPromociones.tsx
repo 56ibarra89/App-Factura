@@ -18,7 +18,9 @@ import {
   MOCK_DESCUENTOS,
   MOCK_CUPONES,
   MOCK_CERTIFICADOS,
+  DescuentoRule,
 } from "../../data/promocionesMockData";
+import DescuentoDialog from "../../components/Admin/Promociones/DescuentoDialog";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -51,12 +53,36 @@ function a11yProps(index: number) {
 
 const AdminPromociones = () => {
   const [tabValue, setTabValue] = useState(0);
+  const [descuentos, setDescuentos] = useState<DescuentoRule[]>(MOCK_DESCUENTOS);
+  const [isDescuentoDialogOpen, setIsDescuentoDialogOpen] = useState(false);
+  const [editingDescuento, setEditingDescuento] = useState<DescuentoRule | null>(null);
 
   const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  // OCP: cuando se conecte una API real, solo cambia aquí — los tabs no se tocan
+  const handleAddDescuento = () => {
+    setEditingDescuento(null);
+    setIsDescuentoDialogOpen(true);
+  };
+
+  const handleEditDescuento = (item: DescuentoRule) => {
+    setEditingDescuento(item);
+    setIsDescuentoDialogOpen(true);
+  };
+
+  const handleDeleteDescuento = (id: number) => {
+    setDescuentos(descuentos.filter(d => d.id !== id));
+  };
+
+  const handleSaveDescuento = (rule: DescuentoRule) => {
+    if (editingDescuento) {
+      setDescuentos(descuentos.map(d => d.id === rule.id ? rule : d));
+    } else {
+      setDescuentos([...descuentos, rule]);
+    }
+  };
+
   const handleAdd = () => console.log("TODO: abrir formulario de creación");
   const handleEdit = (item: unknown) => console.log("TODO: editar", item);
   const handleDelete = (id: number) => console.log("TODO: eliminar", id);
@@ -150,10 +176,10 @@ const AdminPromociones = () => {
             <Box sx={{ p: { xs: 2, md: 4 } }}>
               <CustomTabPanel value={tabValue} index={0}>
                 <DescuentosTab
-                  rules={MOCK_DESCUENTOS}
-                  onAdd={handleAdd}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  rules={descuentos}
+                  onAdd={handleAddDescuento}
+                  onEdit={handleEditDescuento}
+                  onDelete={handleDeleteDescuento}
                 />
               </CustomTabPanel>
               <CustomTabPanel value={tabValue} index={1}>
@@ -183,6 +209,13 @@ const AdminPromociones = () => {
           </Paper>
         </Container>
       </Box>
+
+      <DescuentoDialog
+        open={isDescuentoDialogOpen}
+        onClose={() => setIsDescuentoDialogOpen(false)}
+        onSave={handleSaveDescuento}
+        editingRule={editingDescuento}
+      />
     </Box>
   );
 };
