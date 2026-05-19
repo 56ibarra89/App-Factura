@@ -21,12 +21,16 @@ import {
   DescuentoRule,
   HappyHourRule,
   CuponRule,
+  CertificadoRule,
 } from "../../data/promocionesMockData";
 import DescuentoDialog from "../../components/Admin/Promociones/DescuentoDialog";
 import HappyHourDialog from "../../components/Admin/Promociones/HappyHourDialog";
 import CuponDialog from "../../components/Admin/Promociones/CuponDialog";
 import type { CuponFormOutput } from "../../components/Admin/Promociones/CuponDialog";
+import CertificadoDialog from "../../components/Admin/Promociones/CertificadoDialog";
+import CertificadoDetailDialog from "../../components/Admin/Promociones/CertificadoDetailDialog";
 import { useCupones } from "../../hooks/useCupones";
+import { useCertificados } from "../../hooks/useCertificados";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -156,9 +160,32 @@ const AdminPromociones = () => {
   const handleCopyCupon = (code: string) =>
     navigator.clipboard?.writeText(code);
 
-  // ── Certificados (pendiente de implementación real) ─────────────────────────
-  const handleAdd = () => console.log("TODO: abrir formulario de creación");
-  const handleView = (item: unknown) => console.log("TODO: ver detalle", item);
+  // ── Certificaciones (Vales) ──────────────────────────────────────────────────
+  // DIP: useCertificados recibe los datos iniciales — sustituible por una API.
+  const { certificados, addCertificado, markDelivered, cancelCertificado } =
+    useCertificados(MOCK_CERTIFICADOS);
+  const [isCertDialogOpen, setIsCertDialogOpen] = useState(false);
+  const [isCertDetailOpen, setIsCertDetailOpen] = useState(false);
+  const [viewingCert, setViewingCert] = useState<CertificadoRule | null>(null);
+
+  const handleEmitCert = () => setIsCertDialogOpen(true);
+
+  const handleViewCert = (cert: CertificadoRule) => {
+    setViewingCert(cert);
+    setIsCertDetailOpen(true);
+  };
+
+  const handleMarkDelivered = (id: number) => {
+    markDelivered(id);
+    setIsCertDetailOpen(false);
+    setViewingCert(null);
+  };
+
+  const handleCancelCert = (id: number) => {
+    cancelCertificado(id);
+    setIsCertDetailOpen(false);
+    setViewingCert(null);
+  };
 
   return (
     <Box
@@ -273,9 +300,9 @@ const AdminPromociones = () => {
               </CustomTabPanel>
               <CustomTabPanel value={tabValue} index={3}>
                 <CertificacionesTab
-                  certificados={MOCK_CERTIFICADOS}
-                  onAdd={handleAdd}
-                  onView={handleView}
+                  certificados={certificados}
+                  onEmit={handleEmitCert}
+                  onView={handleViewCert}
                 />
               </CustomTabPanel>
             </Box>
@@ -302,6 +329,23 @@ const AdminPromociones = () => {
         onClose={() => setIsCuponDialogOpen(false)}
         onSave={handleSaveCupon}
         editingCupon={editingCupon}
+      />
+
+      <CertificadoDialog
+        open={isCertDialogOpen}
+        onClose={() => setIsCertDialogOpen(false)}
+        onEmit={addCertificado}
+      />
+
+      <CertificadoDetailDialog
+        open={isCertDetailOpen}
+        onClose={() => {
+          setIsCertDetailOpen(false);
+          setViewingCert(null);
+        }}
+        certificado={viewingCert}
+        onMarkDelivered={handleMarkDelivered}
+        onCancel={handleCancelCert}
       />
     </Box>
   );
