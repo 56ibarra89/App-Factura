@@ -76,7 +76,10 @@ export interface CertificadoRule {
   origin: string;
   product: string;
   issueDate: string;
-  status: "Disponible" | "Entregado";
+  /** Notas adicionales al momento de la emisión */
+  notes?: string;
+  /** Estado del vale: se pasa de Disponible → Entregado al canjear, o Anulado */
+  status: "Disponible" | "Entregado" | "Anulado";
 }
 
 // ── Datos mock ──────────────────────────────────────────────────────────────
