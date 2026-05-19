@@ -19,8 +19,10 @@ import {
   MOCK_CUPONES,
   MOCK_CERTIFICADOS,
   DescuentoRule,
+  HappyHourRule,
 } from "../../data/promocionesMockData";
 import DescuentoDialog from "../../components/Admin/Promociones/DescuentoDialog";
+import HappyHourDialog from "../../components/Admin/Promociones/HappyHourDialog";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -53,6 +55,8 @@ function a11yProps(index: number) {
 
 const AdminPromociones = () => {
   const [tabValue, setTabValue] = useState(0);
+
+  // ── Descuentos ─────────────────────────────────────────────────────────────
   const [descuentos, setDescuentos] = useState<DescuentoRule[]>(MOCK_DESCUENTOS);
   const [isDescuentoDialogOpen, setIsDescuentoDialogOpen] = useState(false);
   const [editingDescuento, setEditingDescuento] = useState<DescuentoRule | null>(null);
@@ -83,8 +87,43 @@ const AdminPromociones = () => {
     }
   };
 
+  // ── Happy Hour ──────────────────────────────────────────────────────────────
+  const [happyHours, setHappyHours] = useState<HappyHourRule[]>(MOCK_HAPPY_HOURS);
+  const [isHHDialogOpen, setIsHHDialogOpen] = useState(false);
+  const [editingHH, setEditingHH] = useState<HappyHourRule | null>(null);
+
+  const handleAddHH = () => {
+    setEditingHH(null);
+    setIsHHDialogOpen(true);
+  };
+
+  const handleEditHH = (rule: HappyHourRule) => {
+    setEditingHH(rule);
+    setIsHHDialogOpen(true);
+  };
+
+  const handleDeleteHH = (id: number) => {
+    setHappyHours(happyHours.filter(h => h.id !== id));
+  };
+
+  const handleSaveHH = (rule: HappyHourRule) => {
+    if (editingHH) {
+      setHappyHours(happyHours.map(h => h.id === rule.id ? rule : h));
+    } else {
+      setHappyHours([...happyHours, rule]);
+    }
+  };
+
+  const handleToggleHHStatus = (id: number) => {
+    setHappyHours(happyHours.map(h =>
+      h.id === id
+        ? { ...h, status: h.status === "Activo" ? "Inactivo" : "Activo" }
+        : h
+    ));
+  };
+
+  // ── Cupones / Certificados (pendiente de implementación real) ───────────────
   const handleAdd = () => console.log("TODO: abrir formulario de creación");
-  const handleEdit = (item: unknown) => console.log("TODO: editar", item);
   const handleDelete = (id: number) => console.log("TODO: eliminar", id);
   const handleCopy = (code: string) => navigator.clipboard?.writeText(code);
   const handleView = (item: unknown) => console.log("TODO: ver detalle", item);
@@ -184,10 +223,11 @@ const AdminPromociones = () => {
               </CustomTabPanel>
               <CustomTabPanel value={tabValue} index={1}>
                 <HappyHourTab
-                  rules={MOCK_HAPPY_HOURS}
-                  onAdd={handleAdd}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  rules={happyHours}
+                  onAdd={handleAddHH}
+                  onEdit={handleEditHH}
+                  onDelete={handleDeleteHH}
+                  onToggleStatus={handleToggleHHStatus}
                 />
               </CustomTabPanel>
               <CustomTabPanel value={tabValue} index={2}>
@@ -215,6 +255,13 @@ const AdminPromociones = () => {
         onClose={() => setIsDescuentoDialogOpen(false)}
         onSave={handleSaveDescuento}
         editingRule={editingDescuento}
+      />
+
+      <HappyHourDialog
+        open={isHHDialogOpen}
+        onClose={() => setIsHHDialogOpen(false)}
+        onSave={handleSaveHH}
+        editingRule={editingHH}
       />
     </Box>
   );

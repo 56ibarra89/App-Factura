@@ -11,10 +11,21 @@ export type PromoStatus = "Activo" | "Inactivo" | "Agotado";
 export interface HappyHourRule {
   id: number;
   name: string;
+  /** Días seleccionados, ej. ["Jue", "Vie", "Sab"] */
+  daysOfWeek: string[];
+  /** Hora de inicio en formato HH:mm */
+  startTime: string;
+  /** Hora de fin en formato HH:mm */
+  endTime: string;
+  /** Tipo de promoción */
+  promotionType: "2x1" | "porcentaje" | "monto_fijo";
+  /** Valor numérico (solo para porcentaje y monto_fijo) */
+  promotionValue: string;
+  status: "Activo" | "Inactivo";
+  // Campos derivados calculados al guardar — usados solo para la tarjeta visual
   days: string;
   time: string;
   promotion: string;
-  status: "Activo" | "Inactivo";
 }
 
 export interface DescuentoRule {
@@ -50,18 +61,28 @@ export const MOCK_HAPPY_HOURS: HappyHourRule[] = [
   {
     id: 1,
     name: "Happy Hour Cervezas",
+    daysOfWeek: ["Jue", "Vie", "Sab"],
+    startTime: "18:00",
+    endTime: "21:00",
+    promotionType: "2x1",
+    promotionValue: "",
+    status: "Activo",
     days: "Jue, Vie, Sab",
     time: "18:00 - 21:00",
     promotion: "2x1",
-    status: "Activo",
   },
   {
     id: 2,
     name: "Almuerzo Ejecutivo",
+    daysOfWeek: ["Lun", "Mar", "Mié", "Jue", "Vie"],
+    startTime: "12:00",
+    endTime: "15:00",
+    promotionType: "porcentaje",
+    promotionValue: "20",
+    status: "Inactivo",
     days: "Lun - Vie",
     time: "12:00 - 15:00",
     promotion: "-20% en Platos Fuertes",
-    status: "Inactivo",
   },
 ];
 
