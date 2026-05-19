@@ -9,6 +9,7 @@ import ReceiptIcon from "@mui/icons-material/Receipt";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import HistoryIcon from "@mui/icons-material/History";
 import { InventorySharp } from "@mui/icons-material";
+import DeliveryDiningIcon from "@mui/icons-material/DeliveryDining";
 
 export interface MenuItem {
   label: string;
@@ -28,6 +29,10 @@ export const getMenuItems = (): MenuItem[] => [
     label: "Facturar",
     icon: <PointOfSaleIcon fontSize="large" color="primary" />,
     route: "/facturacion",
+  },
+  {
+    label: "Delivery",
+    icon: <DeliveryDiningIcon fontSize="large" color="error" />,
   },
   {
     label: "Órdenes",

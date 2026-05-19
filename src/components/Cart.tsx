@@ -45,6 +45,7 @@ const Cart = ({
       <Typography variant="h6" fontWeight="bold" mb={1}>
         Tu pedido
       </Typography>
+      
       <Divider />
 
       <Box flex={1} overflow="auto" pr={1} my={1}>

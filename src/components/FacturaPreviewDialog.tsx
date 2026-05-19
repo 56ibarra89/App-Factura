@@ -51,6 +51,9 @@ interface FacturaPreviewDialogProps {
   isTableMode?: boolean;
   disableRestoreFocus?: boolean;
   disableEnforceFocus?: boolean;
+  initialCustomer?: Customer | null;
+  initialPhone?: string;
+  initialOrderType?: OrderType;
 }
 
 export default function FacturaPreviewDialog({
@@ -66,6 +69,9 @@ export default function FacturaPreviewDialog({
   isTableMode = false,
   disableRestoreFocus = false,
   disableEnforceFocus = false,
+  initialCustomer = null,
+  initialPhone = "",
+  initialOrderType = "local",
 }: FacturaPreviewDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("EFECTIVO");
   const [splitAmounts, setSplitAmounts] = useState({ efectivo: 0, tarjeta: 0 });
@@ -83,20 +89,28 @@ export default function FacturaPreviewDialog({
   const exchangeRateVal = config.exchangeRate > 0 ? config.exchangeRate : 36.50;
   const totalInUSD = total / exchangeRateVal;
 
-  // Reiniciar campos cuando el diálogo se abre
+  // Reiniciar campos cuando el diálogo se abre, usando valores iniciales si se proveen
   useEffect(() => {
     if (open) {
       setPaymentMethod("EFECTIVO");
       setSplitAmounts({ efectivo: 0, tarjeta: total });
       setReceivedLocal("");
       setReceivedSecondary("");
-      setCustomerName("");
-      setCustomerPhone("");
-      setOrderType("local");
-      setCustomerAddress("");
-      setSelectedCustomer(null);
+      setCustomerName(initialCustomer ? initialCustomer.name : "");
+      setCustomerPhone(initialPhone || (initialCustomer?.phone || ""));
+      setOrderType(initialOrderType || "local");
+      setSelectedCustomer(initialCustomer);
+      
+      if (initialCustomer && initialCustomer.addresses.length > 0 && initialOrderType === "delivery") {
+        const sorted = [...initialCustomer.addresses].sort(
+          (a, b) => new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime()
+        );
+        setCustomerAddress(sorted[0].address);
+      } else {
+        setCustomerAddress("");
+      }
     }
-  }, [open, total]);
+  }, [open, total, initialCustomer, initialPhone, initialOrderType]);
 
   // Cuando el tipo cambia a "delivery" y ya hay un cliente con direcciones,
   // prellenar con la dirección usada más recientemente

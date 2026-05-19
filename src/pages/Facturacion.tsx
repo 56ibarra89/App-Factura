@@ -2,7 +2,7 @@
 import Box from "@mui/material/Box";
 import { useState } from "react";
 import { useProductContext } from "../context/ProductContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import useCart from "../hooks/useCart";
 import { useEffect } from "react";
 import { PaymentMethod, OrderType } from "../types/order.types";
@@ -21,6 +21,7 @@ import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 import SelectSizeDialog from "../components/SelectSizeDialog";
 import ExtrasDialog from "../components/ExtrasDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { Customer } from "../types/customer.types";
 
 const Facturacion = () => {
   const { categories } = useProductContext();
@@ -31,6 +32,12 @@ const Facturacion = () => {
   const [isKitchenConfirmOpen, setIsKitchenConfirmOpen] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { deliveryCustomer?: Customer | null; deliveryPhone?: string } | null;
+
+  // Estado para la asignación anticipada de cliente (Delivery)
+  const [deliveryCustomer, setDeliveryCustomer] = useState<Customer | null>(state?.deliveryCustomer || null);
+  const [deliveryPhone, setDeliveryPhone] = useState<string>(state?.deliveryPhone || "");
 
   const {
     cart,
@@ -125,6 +132,8 @@ const Facturacion = () => {
       } else {
         window.print();
         handleClearCart();
+        setDeliveryCustomer(null);
+        setDeliveryPhone("");
         setPreviewOpen(false);
         navigate("/home");
       }
@@ -244,6 +253,9 @@ const Facturacion = () => {
         isTableMode={!!tableId && !isCheckoutMode}
         disableRestoreFocus
         disableEnforceFocus
+        initialCustomer={deliveryCustomer}
+        initialPhone={deliveryPhone}
+        initialOrderType={deliveryCustomer || deliveryPhone ? "delivery" : undefined}
       />
 
       <Snackbar
