@@ -8,6 +8,14 @@
 
 export type PromoStatus = "Activo" | "Inactivo" | "Agotado";
 
+/**
+ * Estado calculado automáticamente para un cupón.
+ * - "Agotado":  currentUses >= maxUses (cuando maxUses > 0)
+ * - "Vencido":  la fecha actual superó expiresDate (cuando expiresDate no es vacío)
+ * - El que se cumpla primero prevalece.
+ */
+export type CuponStatus = "Activo" | "Inactivo" | "Agotado" | "Vencido";
+
 export interface HappyHourRule {
   id: number;
   name: string;
@@ -39,11 +47,27 @@ export interface DescuentoRule {
 
 export interface CuponRule {
   id: number;
+  /** Código alfanumérico único que redime el cajero/cliente */
   code: string;
+  /** "porcentaje" | "monto_fijo" */
+  discountType: "porcentaje" | "monto_fijo";
+  /** Valor numérico del descuento (ej. "15" para 15% o "50" para C$50) */
+  discountValue: string;
+  /** Usos máximos permitidos. 0 = ilimitado */
+  maxUses: number;
+  /** Usos actuales — incrementa cada vez que se redime */
+  currentUses: number;
+  /** Fecha de vencimiento ISO (YYYY-MM-DD) o "" = sin límite */
+  expiresDate: string;
+  // ── Campos derivados (calculados por computeCuponStatus) ────────────────
+  /** Texto para la columna Descuento, ej. "15%" o "C$50.00" */
   discount: string;
+  /** Texto para la columna Uso, ej. "14 / 50" o "120 / ∞" */
   usage: string;
+  /** Texto para la columna Vencimiento */
   expires: string;
-  status: "Activo" | "Agotado" | "Inactivo";
+  /** Estado calculado automáticamente */
+  status: CuponStatus;
 }
 
 export interface CertificadoRule {
@@ -109,6 +133,11 @@ export const MOCK_CUPONES: CuponRule[] = [
   {
     id: 1,
     code: "VERANO2026",
+    discountType: "porcentaje",
+    discountValue: "15",
+    maxUses: 50,
+    currentUses: 14,
+    expiresDate: "2026-08-31",
     discount: "15%",
     usage: "14 / 50",
     expires: "2026-08-31",
@@ -117,7 +146,12 @@ export const MOCK_CUPONES: CuponRule[] = [
   {
     id: 2,
     code: "BIENVENIDA",
-    discount: "$50.00",
+    discountType: "monto_fijo",
+    discountValue: "50",
+    maxUses: 0,
+    currentUses: 120,
+    expiresDate: "",
+    discount: "C$50.00",
     usage: "120 / ∞",
     expires: "Sin límite",
     status: "Activo",
@@ -125,6 +159,11 @@ export const MOCK_CUPONES: CuponRule[] = [
   {
     id: 3,
     code: "FLASH50",
+    discountType: "porcentaje",
+    discountValue: "50",
+    maxUses: 10,
+    currentUses: 10,
+    expiresDate: "2026-04-01",
     discount: "50%",
     usage: "10 / 10",
     expires: "2026-04-01",

@@ -20,9 +20,13 @@ import {
   MOCK_CERTIFICADOS,
   DescuentoRule,
   HappyHourRule,
+  CuponRule,
 } from "../../data/promocionesMockData";
 import DescuentoDialog from "../../components/Admin/Promociones/DescuentoDialog";
 import HappyHourDialog from "../../components/Admin/Promociones/HappyHourDialog";
+import CuponDialog from "../../components/Admin/Promociones/CuponDialog";
+import type { CuponFormOutput } from "../../components/Admin/Promociones/CuponDialog";
+import { useCupones } from "../../hooks/useCupones";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -122,10 +126,38 @@ const AdminPromociones = () => {
     ));
   };
 
-  // ── Cupones / Certificados (pendiente de implementación real) ───────────────
+  // ── Cupones Manuales ────────────────────────────────────────────────────────
+  // DIP: useCupones recibe los datos iniciales como parámetro.
+  // Si en el futuro se conecta a una API, solo cambia MOCK_CUPONES por la respuesta.
+  const { cupones, addCupon, editCupon, deleteCupon } = useCupones(MOCK_CUPONES);
+  const [isCuponDialogOpen, setIsCuponDialogOpen] = useState(false);
+  const [editingCupon, setEditingCupon] = useState<CuponRule | null>(null);
+
+  const handleAddCupon = () => {
+    setEditingCupon(null);
+    setIsCuponDialogOpen(true);
+  };
+
+  const handleEditCupon = (cupon: CuponRule) => {
+    setEditingCupon(cupon);
+    setIsCuponDialogOpen(true);
+  };
+
+  const handleSaveCupon = (data: CuponFormOutput) => {
+    if (editingCupon) {
+      editCupon(data);
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: _id, ...rest } = data;
+      addCupon(rest);
+    }
+  };
+
+  const handleCopyCupon = (code: string) =>
+    navigator.clipboard?.writeText(code);
+
+  // ── Certificados (pendiente de implementación real) ─────────────────────────
   const handleAdd = () => console.log("TODO: abrir formulario de creación");
-  const handleDelete = (id: number) => console.log("TODO: eliminar", id);
-  const handleCopy = (code: string) => navigator.clipboard?.writeText(code);
   const handleView = (item: unknown) => console.log("TODO: ver detalle", item);
 
   return (
@@ -232,10 +264,11 @@ const AdminPromociones = () => {
               </CustomTabPanel>
               <CustomTabPanel value={tabValue} index={2}>
                 <CuponesTab
-                  cupones={MOCK_CUPONES}
-                  onAdd={handleAdd}
-                  onCopy={handleCopy}
-                  onDelete={handleDelete}
+                  cupones={cupones}
+                  onAdd={handleAddCupon}
+                  onEdit={handleEditCupon}
+                  onCopy={handleCopyCupon}
+                  onDelete={deleteCupon}
                 />
               </CustomTabPanel>
               <CustomTabPanel value={tabValue} index={3}>
@@ -262,6 +295,13 @@ const AdminPromociones = () => {
         onClose={() => setIsHHDialogOpen(false)}
         onSave={handleSaveHH}
         editingRule={editingHH}
+      />
+
+      <CuponDialog
+        open={isCuponDialogOpen}
+        onClose={() => setIsCuponDialogOpen(false)}
+        onSave={handleSaveCupon}
+        editingCupon={editingCupon}
       />
     </Box>
   );
