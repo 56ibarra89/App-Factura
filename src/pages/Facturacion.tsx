@@ -21,7 +21,9 @@ import FacturaPreviewDialog from "../components/FacturaPreviewDialog";
 import SelectSizeDialog from "../components/SelectSizeDialog";
 import ExtrasDialog from "../components/ExtrasDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
+import CertificadoDialog from "../components/CertificadoDialog";
 import { Customer } from "../types/customer.types";
+import { CertificadoRule } from "../data/promocionesMockData";
 
 const Facturacion = () => {
   const { categories } = useProductContext();
@@ -30,6 +32,7 @@ const Facturacion = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [isKitchenConfirmOpen, setIsKitchenConfirmOpen] = useState(false);
+  const [certificadoOpen, setCertificadoOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,7 +44,9 @@ const Facturacion = () => {
 
   const {
     cart,
+    promotion,
     subTotal,
+    discountAmount,
     taxAmount,
     total,
     selectedProduct,
@@ -60,6 +65,8 @@ const Facturacion = () => {
     handleFinalizeTableOrder,
     handleSetCart,
     handleClearCart,
+    handleApplyPromotion,
+    handleRemovePromotion,
   } = useCart();
 
   const [searchParams] = useSearchParams();
@@ -82,6 +89,61 @@ const Facturacion = () => {
     orderType?: OrderType,
     customerAddress?: string,
   ) => {
+    // 1. Marcar vales como entregados
+    try {
+      const saved = localStorage.getItem("app_certificados");
+      let certificados = saved ? JSON.parse(saved) : null;
+      if (!certificados) {
+        // Fallback al mock si aún no se inicializó el localStorage
+        const { MOCK_CERTIFICADOS } = require("../data/promocionesMockData");
+        certificados = MOCK_CERTIFICADOS;
+      }
+      
+      let changed = false;
+      cart.forEach((item) => {
+        if (item.note && item.note.startsWith("Vale: ")) {
+          const serial = item.note.replace("Vale: ", "").trim();
+          certificados = certificados.map((c: CertificadoRule) => {
+            if (c.serial === serial) {
+              changed = true;
+              return { ...c, status: "Entregado" };
+            }
+            return c;
+          });
+        }
+      });
+
+      if (changed) {
+        localStorage.setItem("app_certificados", JSON.stringify(certificados));
+      }
+
+      // 2. Incrementar uso de Cupones si aplica
+      if (promotion) {
+        const savedCupones = localStorage.getItem("app_cupones");
+        let cupones = savedCupones ? JSON.parse(savedCupones) : null;
+        if (!cupones) {
+          const { MOCK_CUPONES } = require("../data/promocionesMockData");
+          cupones = MOCK_CUPONES;
+        }
+
+        let changedCupon = false;
+        cupones = cupones.map((c: any) => {
+          // Buscamos si el código de promoción aplicado pertenece a un cupón
+          if (c.code === promotion.code) {
+            changedCupon = true;
+            return { ...c, currentUses: c.currentUses + 1 };
+          }
+          return c;
+        });
+
+        if (changedCupon) {
+          localStorage.setItem("app_cupones", JSON.stringify(cupones));
+        }
+      }
+
+    } catch (e) {
+      console.error("Error updating promotions status", e);
+    }
     if (tableId) {
       if (isCheckoutMode && activeOrder) {
         // Finalizar y cobrar mesa
@@ -176,6 +238,18 @@ const Facturacion = () => {
     setIsKitchenConfirmOpen(false);
   };
 
+  const handleApplyCertificado = (cert: CertificadoRule) => {
+    // Agregamos el producto de regalo al carrito
+    handleAddToCartItem({
+      name: cert.product,
+      price: 0,
+      size: "único",
+      extras: [],
+      note: `Vale: ${cert.serial}`,
+      giftQuantity: 1,
+    });
+  };
+
   const currentProducts = categories[selectedTab]?.items || [];
 
   return (
@@ -201,6 +275,7 @@ const Facturacion = () => {
         onChangeQuantity={handleChangeQuantity}
         onChangeGiftQuantity={handleChangeGiftQuantity}
         onPreviewClick={() => setPreviewOpen(true)}
+        onOpenCertificado={() => setCertificadoOpen(true)}
         onSendToKitchen={handleKitchenDispatch}
         isTableOrder={!!tableId}
       />
@@ -229,9 +304,13 @@ const Facturacion = () => {
       <FacturaPreviewDialog
         open={previewOpen}
         cart={cart}
+        promotion={promotion}
         subTotal={subTotal}
+        discountAmount={discountAmount}
         taxAmount={taxAmount}
         total={total}
+        onApplyPromotion={handleApplyPromotion}
+        onRemovePromotion={handleRemovePromotion}
         onClose={() => setPreviewOpen(false)}
         onConfirm={handleFinalConfirm}
         title={
@@ -282,6 +361,12 @@ const Facturacion = () => {
         onConfirm={handleConfirmKitchenDispatch}
         disableRestoreFocus
         disableEnforceFocus
+      />
+
+      <CertificadoDialog
+        open={certificadoOpen}
+        onClose={() => setCertificadoOpen(false)}
+        onApply={handleApplyCertificado}
       />
     </Box>
   );

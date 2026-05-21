@@ -7,6 +7,7 @@
  *  O — Open/Closed: se renombró onAdd → onEmit (semántico) y se añadió chip
  *      para "Anulado" sin tocar el resto del contrato de props.
  */
+import { useState } from "react";
 import {
   Box,
   Typography,
@@ -21,9 +22,15 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import DeleteIcon from "@mui/icons-material/Delete";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import { CertificadoRule } from "../../../data/promocionesMockData";
 
@@ -45,6 +52,8 @@ interface CertificacionesTabProps {
   onEmit?: () => void;
   /** Abre el dialog de detalle del certificado seleccionado */
   onView?: (certificado: CertificadoRule) => void;
+  /** Elimina el certificado seleccionado */
+  onDelete?: (id: number) => void;
 }
 
 // ── Componente ───────────────────────────────────────────────────────────────
@@ -53,7 +62,17 @@ const CertificacionesTab = ({
   certificados,
   onEmit,
   onView,
+  onDelete,
 }: CertificacionesTabProps) => {
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (deleteId !== null) {
+      onDelete?.(deleteId);
+      setDeleteId(null);
+    }
+  };
+
   return (
     <Box>
       {/* Cabecera */}
@@ -191,21 +210,32 @@ const CertificacionesTab = ({
 
                   {/* Acciones */}
                   <TableCell align="right">
-                    <Tooltip
-                      title={
-                        cert.status === "Disponible"
-                          ? "Ver detalle / Canjear"
-                          : "Ver detalle"
-                      }
-                    >
-                      <IconButton
-                        color="primary"
-                        size="small"
-                        onClick={() => onView?.(cert)}
+                    <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
+                      <Tooltip
+                        title={
+                          cert.status === "Disponible"
+                            ? "Ver detalle / Canjear"
+                            : "Ver detalle"
+                        }
                       >
-                        <VisibilityIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                        <IconButton
+                          color="primary"
+                          size="small"
+                          onClick={() => onView?.(cert)}
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Eliminar certificado">
+                        <IconButton
+                          color="error"
+                          size="small"
+                          onClick={() => setDeleteId(cert.id)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
@@ -213,6 +243,35 @@ const CertificacionesTab = ({
           </Table>
         </TableContainer>
       )}
+
+      {/* Diálogo de Confirmación */}
+      <Dialog
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Está seguro de que desea eliminar este certificado de forma permanente? 
+            Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteId(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disableElevation
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

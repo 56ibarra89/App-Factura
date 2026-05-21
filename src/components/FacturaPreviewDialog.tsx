@@ -27,6 +27,8 @@ import { Customer } from "../types/customer.types";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import CustomerAutocomplete from "./CustomerAutocomplete";
 import TicketPrint from "./TicketPrint";
+import PromocionesSelector from "./PromocionesSelector";
+import { AppliedPromotion } from "../utils/cartTotals";
 
 import { useCustomerSearch } from "../hooks/useCustomerSearch";
 import { formatItemName } from "../utils/formatUtils";
@@ -35,9 +37,13 @@ import { useGeneralConfigData } from "../hooks/useGeneralConfigData";
 interface FacturaPreviewDialogProps {
   open: boolean;
   cart: CartItemType[];
+  promotion?: AppliedPromotion | null;
   subTotal: number;
+  discountAmount?: number;
   taxAmount: number;
   total: number;
+  onApplyPromotion?: (promo: AppliedPromotion) => void;
+  onRemovePromotion?: () => void;
   onClose: () => void;
   onConfirm: (
     paymentMethod: PaymentMethod,
@@ -59,9 +65,13 @@ interface FacturaPreviewDialogProps {
 export default function FacturaPreviewDialog({
   open,
   cart,
+  promotion,
   subTotal,
+  discountAmount = 0,
   taxAmount,
   total,
+  onApplyPromotion,
+  onRemovePromotion,
   onClose,
   onConfirm,
   title = "Resumen de Factura",
@@ -265,6 +275,12 @@ export default function FacturaPreviewDialog({
             <Typography>Subtotal:</Typography>
             <Typography>C${subTotal.toFixed(2)}</Typography>
           </Box>
+          {discountAmount > 0 && (
+            <Box display="flex" justifyContent="space-between" mb={1}>
+              <Typography color="success.main">Descuento:</Typography>
+              <Typography color="success.main">-C${discountAmount.toFixed(2)}</Typography>
+            </Box>
+          )}
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography>Impuestos:</Typography>
             <Typography>C${taxAmount.toFixed(2)}</Typography>
@@ -282,6 +298,15 @@ export default function FacturaPreviewDialog({
               )}
             </Box>
           </Box>
+
+          {!isTableMode && onApplyPromotion && onRemovePromotion && (
+            <PromocionesSelector
+              currentPromotion={promotion || null}
+              onApply={onApplyPromotion}
+              onRemove={onRemovePromotion}
+            />
+          )}
+
           {!isTableMode && (
             <>
               <Divider sx={{ my: 2 }} />
@@ -468,6 +493,7 @@ export default function FacturaPreviewDialog({
       <TicketPrint
         cart={cart}
         subTotal={subTotal}
+        discountAmount={discountAmount}
         taxAmount={taxAmount}
         total={total}
         customerName={customerName}

@@ -15,6 +15,7 @@ export interface Order {
   id: string;
   items: CartItemType[];
   subTotal?: number;
+  discountAmount?: number;
   taxAmount?: number;
   total: number;
   status: OrderStatus;
@@ -22,6 +23,7 @@ export interface Order {
   customerName?: string;
   orderType?: OrderType;
   customerAddress?: string;
+  promotionCode?: string;
   tableId?: string;
   paymentMethod?: PaymentMethod;
   splitAmounts?: { efectivo: number; tarjeta: number };

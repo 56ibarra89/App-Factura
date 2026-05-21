@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Box,
   Typography,
@@ -7,6 +8,11 @@ import {
   CardContent,
   Chip,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -23,6 +29,15 @@ interface DescuentosTabProps {
 }
 
 const DescuentosTab = ({ rules, onAdd, onEdit, onDelete }: DescuentosTabProps) => {
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (deleteId !== null) {
+      onDelete?.(deleteId);
+      setDeleteId(null);
+    }
+  };
+
   return (
     <Box>
       <Box
@@ -110,7 +125,7 @@ const DescuentosTab = ({ rules, onAdd, onEdit, onDelete }: DescuentosTabProps) =
                   <IconButton size="small" color="primary" onClick={() => onEdit?.(desc)}>
                     <EditIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" color="error" onClick={() => onDelete?.(desc.id)}>
+                  <IconButton size="small" color="error" onClick={() => setDeleteId(desc.id)}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Box>
@@ -119,6 +134,35 @@ const DescuentosTab = ({ rules, onAdd, onEdit, onDelete }: DescuentosTabProps) =
           </Grid>
         ))}
       </Grid>
+
+      {/* Diálogo de Confirmación */}
+      <Dialog
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Está seguro de que desea eliminar esta regla de descuento de forma permanente? 
+            Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteId(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disableElevation
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

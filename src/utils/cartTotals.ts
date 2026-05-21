@@ -4,6 +4,12 @@ export interface TaxLike {
   percentage: number;
 }
 
+export interface AppliedPromotion {
+  code: string;
+  discountType: "porcentaje" | "monto_fijo";
+  discountValue: number;
+}
+
 export function calculateSubtotal(items: CartItemType[]): number {
   return items.reduce((sum, item) => {
     const giftQty = item.giftQuantity || 0;
@@ -25,9 +31,25 @@ export function calculateTaxAmount(
 export function calculateCartTotals(
   items: CartItemType[],
   taxes: TaxLike[] | undefined,
-  isExonerated: boolean
-): { subTotal: number; taxAmount: number; total: number } {
+  isExonerated: boolean,
+  promotion?: AppliedPromotion | null
+): { subTotal: number; discountAmount: number; taxAmount: number; total: number } {
   const subTotal = calculateSubtotal(items);
-  const taxAmount = calculateTaxAmount(subTotal, taxes, isExonerated);
-  return { subTotal, taxAmount, total: subTotal + taxAmount };
+  
+  let discountAmount = 0;
+  if (promotion) {
+    if (promotion.discountType === "porcentaje") {
+      discountAmount = subTotal * (promotion.discountValue / 100);
+    } else {
+      discountAmount = promotion.discountValue;
+    }
+  }
+  
+  // Ensure discount doesn't exceed subtotal
+  discountAmount = Math.min(discountAmount, subTotal);
+  
+  const subTotalAfterDiscount = subTotal - discountAmount;
+  const taxAmount = calculateTaxAmount(subTotalAfterDiscount, taxes, isExonerated);
+  
+  return { subTotal, discountAmount, taxAmount, total: subTotalAfterDiscount + taxAmount };
 }

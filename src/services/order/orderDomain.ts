@@ -60,6 +60,8 @@ export function createOrder(params: {
   splitAmounts?: { efectivo: number; tarjeta: number };
   subTotal?: number;
   taxAmount?: number;
+  discountAmount?: number;
+  promotionCode?: string;
   nowMs: number;
 }): Order {
   const {
@@ -74,6 +76,8 @@ export function createOrder(params: {
     splitAmounts,
     subTotal,
     taxAmount,
+    discountAmount,
+    promotionCode,
     nowMs,
   } = params;
 
@@ -81,6 +85,7 @@ export function createOrder(params: {
     id: `ORD-${nowMs}`,
     items: [...items],
     subTotal,
+    discountAmount,
     taxAmount,
     total,
     status: paymentMethod ? "paid" : "pending",
@@ -88,6 +93,7 @@ export function createOrder(params: {
     customerName,
     orderType,
     customerAddress,
+    promotionCode,
     tableId,
     paymentMethod: paymentMethod as PaymentMethod,
     splitAmounts,
@@ -121,6 +127,8 @@ export const orderMutations = {
       tableId?: string;
       paymentMethod?: string;
       splitAmounts?: { efectivo: number; tarjeta: number };
+      discountAmount?: number;
+      promotionCode?: string;
       nowMs: number;
     },
   ): UpdateResult {
@@ -227,6 +235,8 @@ export const orderMutations = {
       finalTotal?: number;
       subTotal?: number;
       taxAmount?: number;
+      discountAmount?: number;
+      promotionCode?: string;
     },
   ): UpdateResult {
     const {
@@ -238,6 +248,8 @@ export const orderMutations = {
       finalTotal,
       subTotal,
       taxAmount,
+      discountAmount,
+      promotionCode,
     } = params;
 
     return updateOne(
@@ -251,8 +263,10 @@ export const orderMutations = {
         customerName: customerName || order.customerName,
         orderType: orderType || order.orderType,
         customerAddress: customerAddress || order.customerAddress,
+        promotionCode: promotionCode || order.promotionCode,
         total: typeof finalTotal === "number" ? finalTotal : order.total,
         subTotal: typeof subTotal === "number" ? subTotal : order.subTotal,
+        discountAmount: typeof discountAmount === "number" ? discountAmount : order.discountAmount,
         taxAmount: typeof taxAmount === "number" ? taxAmount : order.taxAmount,
       }),
     );

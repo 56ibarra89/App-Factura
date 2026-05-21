@@ -14,6 +14,7 @@ interface CartProps {
   onChangeQuantity: (index: number, quantity: number) => void;
   onChangeGiftQuantity: (index: number, quantity: number) => void;
   onPreviewClick: () => void;
+  onOpenCertificado?: () => void;
   onSendToKitchen?: () => void;
   isTableOrder?: boolean;
 }
@@ -28,6 +29,7 @@ const Cart = ({
   onChangeQuantity,
   onChangeGiftQuantity,
   onPreviewClick,
+  onOpenCertificado,
   onSendToKitchen,
   isTableOrder,
 }: CartProps) => {
@@ -97,6 +99,18 @@ const Cart = ({
         >
           Vista previa
         </Button>
+
+        {onOpenCertificado && (
+          <Button
+            variant="outlined"
+            color="secondary"
+            fullWidth
+            onClick={onOpenCertificado}
+            sx={{ mb: 1 }}
+          >
+            Canjear Vale
+          </Button>
+        )}
 
         {isTableOrder && onSendToKitchen && (
           <Button

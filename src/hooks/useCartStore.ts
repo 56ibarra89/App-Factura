@@ -3,7 +3,8 @@ import { CartItemType } from "../types/cart";
 import { SelectedExtra } from "../types/extras";
 import { ProductSize } from "../types/product";
 import { useImpuestosConfig } from "./useImpuestosConfig";
-import { calculateCartTotals } from "../utils/cartTotals";
+import { calculateCartTotals, AppliedPromotion } from "../utils/cartTotals";
+import { useAutomaticPromotions } from "./useAutomaticPromotions";
 
 /** Compara extras para determinar si dos items del carrito son iguales */
 const extrasKey = (extras: SelectedExtra[]) =>
@@ -11,10 +12,14 @@ const extrasKey = (extras: SelectedExtra[]) =>
 
 export function useCartStore() {
   const [cart, setCart] = useState<CartItemType[]>([]);
+  const [manualPromotion, setPromotion] = useState<AppliedPromotion | null>(null);
   const { taxes, isExonerated } = useImpuestosConfig();
+  const { activeHappyHour } = useAutomaticPromotions();
+
+  const promotion = manualPromotion || activeHappyHour;
 
   const addItem = useCallback(
-    (newItem: { name: string; price: number; size: ProductSize; extras: SelectedExtra[]; note?: string }) => {
+    (newItem: { name: string; price: number; size: ProductSize; extras: SelectedExtra[]; note?: string; giftQuantity?: number }) => {
       // Sanitización y Validación (ISO 27001)
       const sanitizedPrice = Math.max(0, newItem.price);
       const sanitizedNote = newItem.note ? newItem.note.substring(0, 200).replace(/[<>]/g, "") : "";
@@ -29,7 +34,7 @@ export function useCartStore() {
             !item.isSentToKitchen // No fusionar si ya se envió a cocina
         );
 
-        if (existingIndex !== -1) {
+        if (existingIndex !== -1 && !newItem.giftQuantity) {
           const updated = [...prev];
           updated[existingIndex] = {
             ...updated[existingIndex],
@@ -45,7 +50,8 @@ export function useCartStore() {
             ...newItem,
             price: sanitizedPrice + extrasTotal,
             note: sanitizedNote,
-            quantity: 1,
+            quantity: Math.max(1, newItem.giftQuantity || 1),
+            giftQuantity: newItem.giftQuantity || 0,
           },
         ];
       });
@@ -93,14 +99,24 @@ export function useCartStore() {
 
   const clearCart = useCallback(() => setCart([]), []);
 
-  const { subTotal, taxAmount, total } = useMemo(
-    () => calculateCartTotals(cart, taxes, isExonerated),
-    [cart, taxes, isExonerated]
+  const { subTotal, discountAmount, taxAmount, total } = useMemo(
+    () => calculateCartTotals(cart, taxes, isExonerated, promotion),
+    [cart, taxes, isExonerated, promotion]
   );
+
+  const applyPromotion = useCallback((promo: AppliedPromotion) => {
+    setPromotion(promo);
+  }, []);
+
+  const removePromotion = useCallback(() => {
+    setPromotion(null);
+  }, []);
 
   return {
     cart,
+    promotion,
     subTotal,
+    discountAmount,
     taxAmount,
     total,
     addItem,
@@ -109,5 +125,7 @@ export function useCartStore() {
     changeGiftQuantity,
     clearCart,
     setCart,
+    applyPromotion,
+    removePromotion,
   };
 }

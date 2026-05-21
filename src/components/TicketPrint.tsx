@@ -7,6 +7,7 @@ import { formatItemName } from "../utils/formatUtils";
 interface TicketPrintProps {
   cart: CartItemType[];
   subTotal: number;
+  discountAmount?: number;
   taxAmount: number;
   total: number;
   customerName?: string;
@@ -19,6 +20,7 @@ interface TicketPrintProps {
 const TicketPrint = ({
   cart,
   subTotal,
+  discountAmount = 0,
   taxAmount,
   total,
   customerName,
@@ -242,6 +244,17 @@ const TicketPrint = ({
               {subTotal.toFixed(2)}
             </Typography>
           </Box>
+          {discountAmount > 0 && (
+            <Box display="flex" justifyContent="space-between">
+              <Typography variant="body2" fontFamily="inherit">
+                Descuento:
+              </Typography>
+              <Typography variant="body2" fontFamily="inherit">
+                -{general.currencySymbol}
+                {discountAmount.toFixed(2)}
+              </Typography>
+            </Box>
+          )}
           <Box display="flex" justifyContent="space-between">
             <Typography variant="body2" fontFamily="inherit">
               IVA:

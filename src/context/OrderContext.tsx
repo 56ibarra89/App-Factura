@@ -38,6 +38,8 @@ interface OrderContextProps {
     splitAmounts?: { efectivo: number; tarjeta: number },
     subTotal?: number,
     taxAmount?: number,
+    discountAmount?: number,
+    promotionCode?: string,
   ) => void;
   updateOrderStatus: (
     orderId: string,
@@ -64,6 +66,8 @@ interface OrderContextProps {
     finalTotal?: number,
     subTotal?: number,
     taxAmount?: number,
+    discountAmount?: number,
+    promotionCode?: string,
   ) => void;
   markAsSentToKitchen: (orderId: string) => void;
   markAsSentToKitchenByTable: (tableId: string) => void;
@@ -135,6 +139,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       splitAmounts,
       subTotal,
       taxAmount,
+      discountAmount,
+      promotionCode,
     ) => {
       const nowMs = Date.now();
       const newOrder = createOrder({
@@ -149,6 +155,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         splitAmounts,
         subTotal,
         taxAmount,
+        discountAmount,
+        promotionCode,
         nowMs,
       });
 
@@ -218,6 +226,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       finalTotal,
       subTotal,
       taxAmount,
+      discountAmount,
+      promotionCode,
     ) => {
       setOrders((prev) => {
         const { orders: nextOrders, modified } = orderMutations.finalizeOrder(
@@ -232,6 +242,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
             finalTotal,
             subTotal,
             taxAmount,
+            discountAmount,
+            promotionCode,
           },
         );
         if (modified) persist(modified);

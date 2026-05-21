@@ -1,4 +1,4 @@
-import { useState, SyntheticEvent } from "react";
+import { useState, useEffect, SyntheticEvent } from "react";
 import {
   Box,
   Container,
@@ -65,7 +65,19 @@ const AdminPromociones = () => {
   const [tabValue, setTabValue] = useState(0);
 
   // ── Descuentos ─────────────────────────────────────────────────────────────
-  const [descuentos, setDescuentos] = useState<DescuentoRule[]>(MOCK_DESCUENTOS);
+  const [descuentos, setDescuentos] = useState<DescuentoRule[]>(() => {
+    try {
+      const saved = localStorage.getItem("app_descuentos");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error("Failed to parse app_descuentos", e);
+    }
+    return MOCK_DESCUENTOS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("app_descuentos", JSON.stringify(descuentos));
+  }, [descuentos]);
   const [isDescuentoDialogOpen, setIsDescuentoDialogOpen] = useState(false);
   const [editingDescuento, setEditingDescuento] = useState<DescuentoRule | null>(null);
 
@@ -96,7 +108,19 @@ const AdminPromociones = () => {
   };
 
   // ── Happy Hour ──────────────────────────────────────────────────────────────
-  const [happyHours, setHappyHours] = useState<HappyHourRule[]>(MOCK_HAPPY_HOURS);
+  const [happyHours, setHappyHours] = useState<HappyHourRule[]>(() => {
+    try {
+      const saved = localStorage.getItem("app_happy_hours");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error("Failed to parse app_happy_hours", e);
+    }
+    return MOCK_HAPPY_HOURS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("app_happy_hours", JSON.stringify(happyHours));
+  }, [happyHours]);
   const [isHHDialogOpen, setIsHHDialogOpen] = useState(false);
   const [editingHH, setEditingHH] = useState<HappyHourRule | null>(null);
 
@@ -162,8 +186,13 @@ const AdminPromociones = () => {
 
   // ── Certificaciones (Vales) ──────────────────────────────────────────────────
   // DIP: useCertificados recibe los datos iniciales — sustituible por una API.
-  const { certificados, addCertificado, markDelivered, cancelCertificado } =
-    useCertificados(MOCK_CERTIFICADOS);
+  const {
+    certificados,
+    addCertificado,
+    markDelivered,
+    cancelCertificado,
+    deleteCertificado,
+  } = useCertificados(MOCK_CERTIFICADOS);
   const [isCertDialogOpen, setIsCertDialogOpen] = useState(false);
   const [isCertDetailOpen, setIsCertDetailOpen] = useState(false);
   const [viewingCert, setViewingCert] = useState<CertificadoRule | null>(null);
@@ -303,6 +332,7 @@ const AdminPromociones = () => {
                   certificados={certificados}
                   onEmit={handleEmitCert}
                   onView={handleViewCert}
+                  onDelete={deleteCertificado}
                 />
               </CustomTabPanel>
             </Box>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Box,
   Typography,
@@ -9,6 +10,11 @@ import {
   IconButton,
   Switch,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -32,6 +38,15 @@ const HappyHourTab = ({
   onDelete,
   onToggleStatus,
 }: HappyHourTabProps) => {
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (deleteId !== null) {
+      onDelete?.(deleteId);
+      setDeleteId(null);
+    }
+  };
+
   return (
     <Box>
       <Box
@@ -228,7 +243,7 @@ const HappyHourTab = ({
                     <IconButton
                       size="small"
                       color="error"
-                      onClick={() => onDelete?.(hh.id)}
+                      onClick={() => setDeleteId(hh.id)}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
@@ -239,6 +254,35 @@ const HappyHourTab = ({
           </Grid>
         ))}
       </Grid>
+
+      {/* Diálogo de Confirmación */}
+      <Dialog
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Está seguro de que desea eliminar esta regla de Happy Hour de forma permanente? 
+            Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteId(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disableElevation
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

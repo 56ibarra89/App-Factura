@@ -4,10 +4,12 @@ import { CartItemType } from "../types/cart";
 import { useOrderCommands } from "../context/OrderContext";
 import { OrderType, PaymentMethod } from "../types/order.types";
 import { useImpuestosConfig } from "./useImpuestosConfig";
-import { calculateCartTotals } from "../utils/cartTotals";
+import { calculateCartTotals, AppliedPromotion } from "../utils/cartTotals";
 
 export function useCheckout(
-  cart: CartItemType[]
+  cart: CartItemType[],
+  promotion: AppliedPromotion | null,
+  discountAmount: number
 ) {
   const { taxes, isExonerated } = useImpuestosConfig();
   const { addOrder, updateOrderItems, finalizeOrder, markAsSentToKitchen } =
@@ -21,7 +23,7 @@ export function useCheckout(
       orderType?: OrderType,
       customerAddress?: string
     ) => {
-      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated);
+      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated, promotion);
 
       // Crear y persistir la orden
       addOrder(
@@ -34,25 +36,27 @@ export function useCheckout(
         paymentMethod,
         splitAmounts,
         subTotal,
-        taxAmount
+        taxAmount,
+        discountAmount,
+        promotion?.code
       );
     },
-    [cart, taxes, isExonerated, addOrder]
+    [cart, taxes, isExonerated, promotion, discountAmount, addOrder]
   );
 
   const saveTableOrder = useCallback(
     (orderId?: string, tableId?: string) => {
-      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated);
+      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated, promotion);
 
       if (orderId) {
         // Actualizar orden existente
         updateOrderItems(orderId, cart, total, subTotal, taxAmount);
       } else {
         // Crear nueva orden para la mesa
-        addOrder(cart, total, undefined, "local", undefined, tableId, undefined, undefined, subTotal, taxAmount);
+        addOrder(cart, total, undefined, "local", undefined, tableId, undefined, undefined, subTotal, taxAmount, discountAmount, promotion?.code);
       }
     },
-    [cart, taxes, isExonerated, addOrder, updateOrderItems]
+    [cart, taxes, isExonerated, promotion, discountAmount, addOrder, updateOrderItems]
   );
 
   const finalizeTableOrder = useCallback(
@@ -64,7 +68,7 @@ export function useCheckout(
       orderType?: OrderType,
       customerAddress?: string
     ) => {
-      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated);
+      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated, promotion);
       finalizeOrder(
         orderId,
         paymentMethod,
@@ -74,10 +78,12 @@ export function useCheckout(
         customerAddress,
         total,
         subTotal,
-        taxAmount
+        taxAmount,
+        discountAmount,
+        promotion?.code
       );
     },
-    [cart, taxes, isExonerated, finalizeOrder]
+    [cart, taxes, isExonerated, promotion, discountAmount, finalizeOrder]
   );
 
   return {

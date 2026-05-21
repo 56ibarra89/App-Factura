@@ -6,7 +6,7 @@
  *  D — Dependency Inversion: recibe los datos iniciales por parámetro,
  *      pudiendo conectarse a una API sin modificar el hook.
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CuponRule, CuponStatus } from "../data/promocionesMockData";
 
 // ── Función pura de dominio ──────────────────────────────────────────────────
@@ -92,7 +92,19 @@ interface UseCuponesReturn {
  * @param initialData - Datos iniciales (mock o procedentes de una API).
  */
 export function useCupones(initialData: CuponRule[]): UseCuponesReturn {
-  const [cupones, setCupones] = useState<CuponRule[]>(initialData);
+  const [cupones, setCupones] = useState<CuponRule[]>(() => {
+    try {
+      const saved = localStorage.getItem("app_cupones");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return initialData;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("app_cupones", JSON.stringify(cupones));
+  }, [cupones]);
 
   const addCupon = useCallback(
     (data: Omit<CuponRule, "id" | "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => {

@@ -7,7 +7,9 @@ import { useCheckout } from "./useCheckout";
 function useCart() {
   const {
     cart,
+    promotion,
     subTotal,
+    discountAmount,
     taxAmount,
     total,
     addItem,
@@ -16,6 +18,8 @@ function useCart() {
     changeGiftQuantity,
     clearCart,
     setCart,
+    applyPromotion,
+    removePromotion,
   } = useCartStore();
 
   const handleConfirmProduct = useCallback(
@@ -35,12 +39,14 @@ function useCart() {
     cancelExtras,
   } = useProductSelection(handleConfirmProduct);
  
-  const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } = useCheckout(cart);
+  const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } = useCheckout(cart, promotion, discountAmount);
  
   return {
     // State
     cart,
+    promotion,
     subTotal,
+    discountAmount,
     taxAmount,
     total,
     selectedProduct,
@@ -62,6 +68,8 @@ function useCart() {
     handleFinalizeTableOrder: finalizeTableOrder,
     handleSetCart: setCart,
     handleSendToKitchen: sendToKitchen,
+    handleApplyPromotion: applyPromotion,
+    handleRemovePromotion: removePromotion,
   };
 }
 

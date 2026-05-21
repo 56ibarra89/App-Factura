@@ -7,7 +7,7 @@
  *  D — Dependency Inversion: recibe los datos iniciales como parámetro →
  *      fácilmente sustituible por una fuente API sin modificar el hook.
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { CertificadoRule } from "../data/promocionesMockData";
 
 // ── Helpers de dominio ───────────────────────────────────────────────────────
@@ -46,6 +46,7 @@ interface UseCertificadosReturn {
   addCertificado: (data: CertificadoInput) => void;
   markDelivered: (id: number) => void;
   cancelCertificado: (id: number) => void;
+  deleteCertificado: (id: number) => void;
 }
 
 /**
@@ -55,7 +56,19 @@ interface UseCertificadosReturn {
 export function useCertificados(
   initialData: CertificadoRule[]
 ): UseCertificadosReturn {
-  const [certificados, setCertificados] = useState<CertificadoRule[]>(initialData);
+  const [certificados, setCertificados] = useState<CertificadoRule[]>(() => {
+    try {
+      const saved = localStorage.getItem("app_certificados");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error("Failed to parse app_certificados", e);
+    }
+    return initialData;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("app_certificados", JSON.stringify(certificados));
+  }, [certificados]);
 
   /** Emite un nuevo certificado generando serial y fecha de emisión automáticamente. */
   const addCertificado = useCallback((data: CertificadoInput) => {
@@ -95,5 +108,16 @@ export function useCertificados(
     );
   }, []);
 
-  return { certificados, addCertificado, markDelivered, cancelCertificado };
+  /** Elimina físicamente el certificado de la lista. */
+  const deleteCertificado = useCallback((id: number) => {
+    setCertificados((prev) => prev.filter((c) => c.id !== id));
+  }, []);
+
+  return {
+    certificados,
+    addCertificado,
+    markDelivered,
+    cancelCertificado,
+    deleteCertificado,
+  };
 }

@@ -8,6 +8,7 @@
  *  O — Open/Closed: se agregó onEdit sin modificar el contrato de las props
  *      existentes (onAdd, onCopy, onDelete siguen igual).
  */
+import { useState } from "react";
 import {
   Box,
   Typography,
@@ -22,6 +23,11 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -61,6 +67,15 @@ const CuponesTab = ({
   onCopy,
   onDelete,
 }: CuponesTabProps) => {
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const handleConfirmDelete = () => {
+    if (deleteId !== null) {
+      onDelete?.(deleteId);
+      setDeleteId(null);
+    }
+  };
+
   return (
     <Box>
       {/* Cabecera */}
@@ -194,7 +209,7 @@ const CuponesTab = ({
                         <IconButton
                           color="error"
                           size="small"
-                          onClick={() => onDelete?.(cupon.id)}
+                          onClick={() => setDeleteId(cupon.id)}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
@@ -207,6 +222,35 @@ const CuponesTab = ({
           </Table>
         </TableContainer>
       )}
+
+      {/* Diálogo de Confirmación */}
+      <Dialog
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Está seguro de que desea eliminar este cupón de forma permanente? 
+            Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteId(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disableElevation
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
