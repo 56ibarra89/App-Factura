@@ -89,6 +89,11 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
           <Typography variant="body2" fontFamily="inherit">
             Cajero: {shift.cashierName}
           </Typography>
+          {shift.cashRegisterName && (
+            <Typography variant="body2" fontFamily="inherit">
+              Caja: {shift.cashRegisterName}
+            </Typography>
+          )}
           <Typography variant="body2" fontFamily="inherit">
             Inicio: {formatDate(shift.startTime)}
           </Typography>

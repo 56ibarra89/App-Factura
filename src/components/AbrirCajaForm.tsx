@@ -3,11 +3,19 @@ import {
   Button,
   InputAdornment,
   TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { LOGIN_COLORS } from "../theme/loginTheme";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { CashRegisterConfig } from "../types/shift.types";
 
 interface Props {
+  cajas: CashRegisterConfig[];
+  selectedRegisterId: string;
+  onSelectRegister: (id: string) => void;
   amount: string;
   onChangeAmount: (value: string) => void;
   onSubmit: () => void;
@@ -18,6 +26,9 @@ interface Props {
 }
 
 export function AbrirCajaForm({
+  cajas,
+  selectedRegisterId,
+  onSelectRegister,
   amount,
   onChangeAmount,
   onSubmit,
@@ -29,22 +40,47 @@ export function AbrirCajaForm({
   const isExactRequired = requireExactOpening && expectedAmount !== null;
   const numAmount = Number(amount);
   const showExactError = isExactRequired && amount !== "" && numAmount !== expectedAmount;
+  
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {cajas.length > 0 && (
+        <FormControl fullWidth>
+          <InputLabel id="select-caja-label">Estación de Caja</InputLabel>
+          <Select
+            labelId="select-caja-label"
+            value={selectedRegisterId}
+            label="Estación de Caja"
+            onChange={(e) => onSelectRegister(e.target.value)}
+            sx={{
+              borderRadius: 2,
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: LOGIN_COLORS.primary },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: LOGIN_COLORS.primary },
+            }}
+          >
+            {cajas.map((c) => (
+              <MenuItem key={c.id} value={c.id}>
+                {c.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+
       <TextField
         label="Monto inicial de apertura"
         type="number"
         value={amount}
         onChange={(e) => onChangeAmount(e.target.value)}
         fullWidth
-        autoFocus
+        autoFocus={cajas.length === 0}
         inputProps={{ min: 0, step: "0.01" }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              $
+              C$
             </InputAdornment>
           ),
+          sx: { borderRadius: 2 }
         }}
         error={showExactError}
         helperText={
@@ -54,7 +90,6 @@ export function AbrirCajaForm({
         }
         sx={{
           '& .MuiOutlinedInput-root': {
-            borderRadius: 2,
             '&:hover fieldset': { borderColor: LOGIN_COLORS.primary },
             '&.Mui-focused fieldset': { borderColor: LOGIN_COLORS.primary },
           },

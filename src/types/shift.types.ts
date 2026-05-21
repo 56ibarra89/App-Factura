@@ -15,4 +15,19 @@ export interface Shift {
   totalSales: ShiftSales;
   status: 'open' | 'closed';
   notes?: string;
+  cashRegisterName?: string;
+}
+
+export interface CashRegisterConfig {
+  id: string;
+  name: string;
+  defaultOpeningAmount: number;
+}
+
+export interface ShiftProfileConfig {
+  id: string;
+  name: string;
+  startTime: string; // "HH:MM"
+  endTime: string;   // "HH:MM"
+  description?: string;
 }

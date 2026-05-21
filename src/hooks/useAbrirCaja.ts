@@ -3,11 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useCaja } from "../context/CajaContext";
 import { useGeneralConfigData } from "./useGeneralConfigData";
 import { shiftRepository } from "../repositories/ShiftRepository";
+import { useCajasConfig } from "./useCajasConfig";
 
 export function useAbrirCaja() {
   const navigate = useNavigate();
   const { abrirCaja } = useCaja();
   const { config } = useGeneralConfigData();
+  const { cajas } = useCajasConfig();
+  
+  const [selectedRegisterId, setSelectedRegisterId] = useState("");
   const [amount, setAmount] = useState("");
   const [expectedAmount, setExpectedAmount] = useState<number | null>(null);
 
@@ -26,9 +30,25 @@ export function useAbrirCaja() {
     return () => { isMounted = false; };
   }, []);
 
+  // Precompletar monto según la caja seleccionada
+  useEffect(() => {
+    if (selectedRegisterId) {
+      const reg = cajas.find((c) => c.id === selectedRegisterId);
+      if (reg) {
+        if (config.requireExactOpeningAmount && expectedAmount !== null) {
+          setAmount(String(expectedAmount));
+        } else {
+          setAmount(String(reg.defaultOpeningAmount));
+        }
+      }
+    }
+  }, [selectedRegisterId, cajas, config.requireExactOpeningAmount, expectedAmount]);
+
   const numAmount = Number(amount);
   
   const canSubmit = (() => {
+    // Es obligatorio seleccionar una estación de caja si existen estaciones configuradas
+    if (cajas.length > 0 && !selectedRegisterId) return false;
     if (amount === "" || numAmount < 0) return false;
     
     // Si la configuración exige monto exacto y tenemos un turno anterior válido
@@ -36,14 +56,15 @@ export function useAbrirCaja() {
       return numAmount === expectedAmount;
     }
     
-    // Si no exige monto exacto o no hay turno anterior, cualquier monto >= 0 es válido
-    // (el usuario prefirió permitir montos mayores o iguales a 0)
     return numAmount >= 0;
   })();
 
   const handleSubmit = () => {
-    console.log("[useAbrirCaja] Ejecutando handleSubmit con monto:", amount);
-    abrirCaja(Number(amount));
+    const selectedRegister = cajas.find((c) => c.id === selectedRegisterId);
+    const registerName = selectedRegister ? selectedRegister.name : undefined;
+
+    console.log("[useAbrirCaja] Ejecutando handleSubmit con monto y caja:", amount, registerName);
+    abrirCaja(Number(amount), registerName);
     console.log("[useAbrirCaja] Navegando a /home...");
     navigate("/home");
   };
@@ -53,6 +74,9 @@ export function useAbrirCaja() {
   };
 
   return {
+    cajas,
+    selectedRegisterId,
+    setSelectedRegisterId,
     amount,
     setAmount,
     canSubmit,

@@ -65,6 +65,7 @@ export default function ConsultarTurnos() {
           <TableHead sx={{ bgcolor: 'rgba(211, 47, 47, 0.05)' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 'bold' }}>Cajero</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Caja</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Apertura</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Cierre</TableCell>
               <TableCell align="right" sx={{ fontWeight: 'bold' }}>Ventas Total</TableCell>
@@ -76,7 +77,7 @@ export default function ConsultarTurnos() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
                   <CircularProgress size={24} sx={{ color: 'primary.main', mb: 1 }} />
                   <Typography variant="body2" color="text.secondary">Cargando turnos...</Typography>
                 </TableCell>
@@ -84,6 +85,7 @@ export default function ConsultarTurnos() {
             ) : shifts.map((shift) => (
               <TableRow key={shift.id} hover>
                 <TableCell sx={{ fontWeight: "600" }}>{shift.cashierName}</TableCell>
+                <TableCell sx={{ color: "text.secondary" }}>{shift.cashRegisterName || "General"}</TableCell>
                 <TableCell>{formatDate(shift.startTime)}</TableCell>
                 <TableCell>{shift.endTime ? formatDate(shift.endTime) : "---"}</TableCell>
                 <TableCell align="right">
@@ -114,7 +116,7 @@ export default function ConsultarTurnos() {
             ))}
             {shifts.length === 0 && !loading && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
                   <Typography color="text.secondary">No se encontraron turnos registrados.</Typography>
                 </TableCell>
               </TableRow>

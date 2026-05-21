@@ -53,6 +53,9 @@ export default function CerrarCajaPage() {
         </Typography>
         <Typography variant="body1" color="text.secondary" mb={3}>
           Resumen del turno de <strong>{currentShift.cashierName}</strong>
+          {currentShift.cashRegisterName && (
+            <> en <strong>{currentShift.cashRegisterName}</strong></>
+          )}
         </Typography>
 
         {error && (

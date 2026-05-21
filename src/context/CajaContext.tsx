@@ -17,7 +17,7 @@ import { localStore } from "../services/storage/storage";
 
 interface CajaContextType {
   currentShift: Shift | null;
-  abrirCaja: (amount: number) => void;
+  abrirCaja: (amount: number, registerName?: string) => void;
   cerrarCaja: (finalAmount: number, notes?: string) => Promise<void>;
   calculateCurrentShiftSales: () => ShiftSales;
 }
@@ -98,8 +98,8 @@ export const CajaProvider = ({
   }, [currentShift, orders]);
 
   const abrirCaja = useCallback(
-    (amount: number) => {
-      console.log("[CajaContext] Intentando abrir caja con monto:", amount);
+    (amount: number, registerName?: string) => {
+      console.log("[CajaContext] Intentando abrir caja con monto:", amount, registerName);
       const newShift: Shift = {
         id: `SHIFT-${Date.now()}`,
         cashierName: username || "Sistema",
@@ -107,6 +107,7 @@ export const CajaProvider = ({
         openingAmount: amount,
         totalSales: { cash: 0, card: 0, app: 0, total: 0 },
         status: "open",
+        cashRegisterName: registerName,
       };
       console.log("[CajaContext] Nuevo turno creado:", newShift);
       setCurrentShift(newShift);
