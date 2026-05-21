@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { CartItemType } from "../types/cart";
 import { SelectedExtra } from "../types/extras";
 import { ProductSize } from "../types/product";
@@ -14,7 +14,33 @@ export function useCartStore() {
   const [cart, setCart] = useState<CartItemType[]>([]);
   const [manualPromotion, setPromotion] = useState<AppliedPromotion | null>(null);
   const { taxes, isExonerated } = useImpuestosConfig();
-  const { activeHappyHour } = useAutomaticPromotions();
+  const { activeHappyHour, active2x1 } = useAutomaticPromotions();
+
+  // ── Cálculo Automático de 2x1 ──────────────────────────────────────────────
+  useEffect(() => {
+    setCart((prev) => {
+      let changed = false;
+      const newCart = prev.map(item => {
+        // Ignoramos los vales (certificados) que son agregados como regalo fijo
+        if (item.note?.startsWith("Vale: ")) return item;
+
+        if (active2x1 && (item.name === active2x1.appliesTo || active2x1.appliesTo === "Todos")) {
+          const expectedGift = Math.floor(item.quantity / 2);
+          if (item.giftQuantity !== expectedGift) {
+            changed = true;
+            return { ...item, giftQuantity: expectedGift, note: item.note || "2x1 Happy Hour" };
+          }
+        } else if (item.note === "2x1 Happy Hour") {
+          // Si el Happy Hour terminó, le quitamos el regalo automático
+          changed = true;
+          return { ...item, giftQuantity: 0, note: "" };
+        }
+
+        return item;
+      });
+      return changed ? newCart : prev;
+    });
+  }, [active2x1, cart]);
 
   const promotion = manualPromotion || activeHappyHour;
 

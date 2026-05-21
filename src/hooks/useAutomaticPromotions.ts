@@ -6,6 +6,7 @@ const DAYS_MAP = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sab"];
 
 export function useAutomaticPromotions() {
   const [activeHappyHour, setActiveHappyHour] = useState<AppliedPromotion | null>(null);
+  const [active2x1, setActive2x1] = useState<HappyHourRule | null>(null);
 
   useEffect(() => {
     // Revisa cada minuto si hay un happy hour activo
@@ -34,14 +35,21 @@ export function useAutomaticPromotions() {
         return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
       });
 
-      if (activeRule && activeRule.promotionType !== "2x1") {
-        setActiveHappyHour({
-          code: `AUTO-${activeRule.name.toUpperCase().replace(/\s+/g, "")}`,
-          discountType: activeRule.promotionType,
-          discountValue: parseFloat(activeRule.promotionValue || "0"),
-        });
+      if (activeRule) {
+        if (activeRule.promotionType === "2x1") {
+          setActive2x1(activeRule);
+          setActiveHappyHour(null);
+        } else {
+          setActive2x1(null);
+          setActiveHappyHour({
+            code: `AUTO-${activeRule.name.toUpperCase().replace(/\s+/g, "")}`,
+            discountType: activeRule.promotionType,
+            discountValue: parseFloat(activeRule.promotionValue || "0"),
+          });
+        }
       } else {
         setActiveHappyHour(null);
+        setActive2x1(null);
       }
     };
 
@@ -50,5 +58,5 @@ export function useAutomaticPromotions() {
     return () => clearInterval(interval);
   }, []);
 
-  return { activeHappyHour };
+  return { activeHappyHour, active2x1 };
 }

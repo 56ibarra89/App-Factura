@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { HappyHourRule } from "../../../data/promocionesMockData";
+import { useProductContext } from "../../../context/ProductContext";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -30,12 +31,13 @@ function buildDerivedFields(
   startTime: string,
   endTime: string,
   promotionType: HappyHourRule["promotionType"],
-  promotionValue: string
+  promotionValue: string,
+  appliesTo?: string,
 ): Pick<HappyHourRule, "days" | "time" | "promotion"> {
   const days = daysOfWeek.join(", ");
   const time = `${startTime} - ${endTime}`;
   let promotion = "";
-  if (promotionType === "2x1") promotion = "2x1";
+  if (promotionType === "2x1") promotion = appliesTo ? `2x1 en ${appliesTo}` : "2x1";
   else if (promotionType === "porcentaje") promotion = `-${promotionValue}%`;
   else if (promotionType === "monto_fijo") promotion = `-C$${promotionValue}`;
   return { days, time, promotion };
@@ -51,6 +53,7 @@ type FormState = {
   promotionType: HappyHourRule["promotionType"];
   promotionValue: string;
   status: "Activo" | "Inactivo";
+  appliesTo?: string;
 };
 
 const DEFAULT_FORM: FormState = {
@@ -61,6 +64,7 @@ const DEFAULT_FORM: FormState = {
   promotionType: "2x1",
   promotionValue: "",
   status: "Activo",
+  appliesTo: "",
 };
 
 // ── Componente ───────────────────────────────────────────────────────────────
@@ -78,6 +82,9 @@ const HappyHourDialog = ({
   onSave,
   editingRule,
 }: HappyHourDialogProps) => {
+  const { categories } = useProductContext();
+  const allProducts = categories.flatMap(c => c.items.map(item => item.name));
+
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -93,6 +100,7 @@ const HappyHourDialog = ({
           promotionType: editingRule.promotionType,
           promotionValue: editingRule.promotionValue,
           status: editingRule.status,
+          appliesTo: editingRule.appliesTo || "",
         });
       } else {
         setForm(DEFAULT_FORM);
@@ -136,12 +144,18 @@ const HappyHourDialog = ({
       return;
     }
 
+    if (form.promotionType === "2x1" && !form.appliesTo) {
+      setErrorMsg("Debes seleccionar a qué producto aplica el 2x1.");
+      return;
+    }
+
     const derived = buildDerivedFields(
       form.daysOfWeek,
       form.startTime,
       form.endTime,
       form.promotionType,
-      form.promotionValue
+      form.promotionValue,
+      form.appliesTo
     );
 
     onSave({
@@ -153,6 +167,7 @@ const HappyHourDialog = ({
       promotionType: form.promotionType,
       promotionValue: form.promotionValue,
       status: form.status,
+      appliesTo: form.promotionType === "2x1" ? form.appliesTo : undefined,
       ...derived,
     });
     onClose();
@@ -273,6 +288,27 @@ const HappyHourDialog = ({
                 <MenuItem value="monto_fijo">Monto fijo de descuento</MenuItem>
               </Select>
             </FormControl>
+
+            {/* Producto Aplicable (solo para 2x1) */}
+            {form.promotionType === "2x1" && (
+              <FormControl fullWidth required>
+                <InputLabel>Producto Aplicable</InputLabel>
+                <Select
+                  value={form.appliesTo || ""}
+                  label="Producto Aplicable"
+                  onChange={(e) => {
+                    setForm({ ...form, appliesTo: e.target.value as string });
+                    setErrorMsg("");
+                  }}
+                >
+                  {allProducts.map((prodName) => (
+                    <MenuItem key={prodName} value={prodName}>
+                      {prodName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
 
             {/* Valor de la promoción (oculto si es 2x1) */}
             {needsValue && (

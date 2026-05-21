@@ -30,6 +30,8 @@ export interface HappyHourRule {
   /** Valor numérico (solo para porcentaje y monto_fijo) */
   promotionValue: string;
   status: "Activo" | "Inactivo";
+  /** Producto específico al que aplica (principalmente para 2x1) */
+  appliesTo?: string;
   // Campos derivados calculados al guardar — usados solo para la tarjeta visual
   days: string;
   time: string;
