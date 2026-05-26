@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import LocalPizzaIcon from "@mui/icons-material/LocalPizza";
 import { LOGIN_SHADOWS, LOGIN_GRADIENTS } from "../../theme/loginTheme";
-import { TopProduct } from "../../hooks/useDailyReport";
+import { TopProduct } from "../../hooks/useSalesReport";
 
 interface TopProductsListProps {
   products: TopProduct[];
