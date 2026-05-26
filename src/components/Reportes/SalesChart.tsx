@@ -11,13 +11,14 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { LOGIN_SHADOWS, LOGIN_COLORS } from "../../theme/loginTheme";
-import { SalesByHour } from "../../hooks/useDailyReport";
+import { SalesByTime } from "../../hooks/useSalesReport";
 
 interface SalesChartProps {
-  data: SalesByHour[];
+  data: SalesByTime[];
+  groupByDay?: boolean;
 }
 
-export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
+export const SalesChart: React.FC<SalesChartProps> = ({ data, groupByDay }) => {
   return (
     <Box
       sx={{
@@ -32,7 +33,7 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
       }}
     >
       <Typography variant="h6" fontWeight={700} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <AssessmentIcon color="primary" /> Evolución de Ventas por Hora
+        <AssessmentIcon color="primary" /> Evolución de Ventas {groupByDay ? 'por Día' : 'por Hora'}
       </Typography>
       
       <Box flex={1} width="100%">
@@ -45,6 +46,7 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data }) => {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
               <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: "#666" }} />
               <YAxis 
+                width={80}
                 axisLine={false} 
                 tickLine={false} 
                 tick={{ fill: "#666" }} 
