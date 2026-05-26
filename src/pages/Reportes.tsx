@@ -1,21 +1,65 @@
-import { useState } from "react";
-import { Box, Grid, CircularProgress, Typography, IconButton } from "@mui/material";
+import { useState, useMemo } from "react";
+import { Box, Grid, CircularProgress, Typography, IconButton, Select, MenuItem, TextField } from "@mui/material";
 import { BackButton } from "../components/BackButton";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import LocalPrintshopIcon from "@mui/icons-material/LocalPrintshop";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { useDailyReport } from "../hooks/useDailyReport";
+import { useSalesReport } from "../hooks/useSalesReport";
 import { StatCard } from "../components/Reportes/StatCard";
 import { TopProductsList } from "../components/Reportes/TopProductsList";
 import { SalesChart } from "../components/Reportes/SalesChart";
 import PageHeader from "../components/PageHeader";
 import { LOGIN_GRADIENTS } from "../theme/loginTheme";
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, format } from "date-fns";
+
+type FilterType = "today" | "week" | "month" | "custom";
 
 const Reportes = () => {
-  const { data, isLoading, error } = useDailyReport();
   const [privacyMode, setPrivacyMode] = useState(false);
+  const [filterType, setFilterType] = useState<FilterType>("today");
+  
+  // Custom date range state
+  const [customStart, setCustomStart] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+  const [customEnd, setCustomEnd] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+
+  // Calculate start and end dates based on filter
+  const { startDate, endDate } = useMemo(() => {
+    const now = new Date();
+    switch (filterType) {
+      case "today":
+        return { startDate: startOfDay(now), endDate: endOfDay(now) };
+      case "week":
+        // startOfWeek usa domingo por defecto, podemos poner { weekStartsOn: 1 } si queremos lunes
+        return { startDate: startOfWeek(now, { weekStartsOn: 1 }), endDate: endOfWeek(now, { weekStartsOn: 1 }) };
+      case "month":
+        return { startDate: startOfMonth(now), endDate: endOfMonth(now) };
+      case "custom":
+        return { 
+          startDate: startOfDay(new Date(customStart)), 
+          endDate: endOfDay(new Date(customEnd)) 
+        };
+      default:
+        return { startDate: startOfDay(now), endDate: endOfDay(now) };
+    }
+  }, [filterType, customStart, customEnd]);
+
+  const { data, isLoading, error } = useSalesReport(startDate, endDate);
+
+  // Determinar si agrupamos por día para pasar al chart
+  const daysDiff = differenceInDays(endDate, startDate);
+  const groupByDay = daysDiff >= 1;
+
+  const getReportTitle = () => {
+    switch (filterType) {
+      case "today": return "Reporte del Día";
+      case "week": return "Reporte Semanal";
+      case "month": return "Reporte Mensual";
+      case "custom": return "Reporte Personalizado";
+      default: return "Reporte de Ventas";
+    }
+  };
 
   return (
     <Box
@@ -31,20 +75,57 @@ const Reportes = () => {
       }}
     >
       <PageHeader
-        title="Reporte del Día"
+        title={getReportTitle()}
         startContent={<BackButton to="/home" />}
         actions={
-          <Box display="flex" gap={1}>
-            <IconButton 
-              onClick={() => setPrivacyMode(!privacyMode)}
-              sx={{ bgcolor: "white", boxShadow: 1 }}
-              title={privacyMode ? "Mostrar montos" : "Ocultar montos (Privacidad)"}
+          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+            <Select
+              size="small"
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as FilterType)}
+              sx={{ bgcolor: "white", borderRadius: 2, minWidth: 150 }}
             >
-              {privacyMode ? <VisibilityIcon color="primary" /> : <VisibilityOffIcon color="primary" />}
-            </IconButton>
-            <IconButton sx={{ bgcolor: "white", boxShadow: 1 }}>
-              <LocalPrintshopIcon color="primary" />
-            </IconButton>
+              <MenuItem value="today">Hoy</MenuItem>
+              <MenuItem value="week">Esta Semana</MenuItem>
+              <MenuItem value="month">Este Mes</MenuItem>
+              <MenuItem value="custom">Personalizado</MenuItem>
+            </Select>
+
+            {filterType === "custom" && (
+              <>
+                <TextField
+                  type="date"
+                  size="small"
+                  label="Desde"
+                  value={customStart}
+                  onChange={(e) => setCustomStart(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ bgcolor: "white", borderRadius: 2 }}
+                />
+                <TextField
+                  type="date"
+                  size="small"
+                  label="Hasta"
+                  value={customEnd}
+                  onChange={(e) => setCustomEnd(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ bgcolor: "white", borderRadius: 2 }}
+                />
+              </>
+            )}
+
+            <Box display="flex" gap={1}>
+              <IconButton 
+                onClick={() => setPrivacyMode(!privacyMode)}
+                sx={{ bgcolor: "white", boxShadow: 1 }}
+                title={privacyMode ? "Mostrar montos" : "Ocultar montos (Privacidad)"}
+              >
+                {privacyMode ? <VisibilityIcon color="primary" /> : <VisibilityOffIcon color="primary" />}
+              </IconButton>
+              <IconButton sx={{ bgcolor: "white", boxShadow: 1 }}>
+                <LocalPrintshopIcon color="primary" />
+              </IconButton>
+            </Box>
           </Box>
         }
       />
@@ -64,8 +145,8 @@ const Reportes = () => {
             <StatCard
               title="Ventas Totales (Entregadas)"
               value={`C$${data.totalSales.toFixed(2)}`}
-              icon={<AttachMoneyIcon fontSize="large" />}
-              subtitle="Ingresos del día"
+              icon={<AccountBalanceWalletIcon fontSize="large" />}
+              subtitle="Ingresos del periodo"
               masked={privacyMode}
             />
           </Grid>
@@ -79,9 +160,9 @@ const Reportes = () => {
             />
           </Grid>
 
-          {/* Gráfico de Ventas por Hora */}
+          {/* Gráfico de Ventas */}
           <Grid size={{ xs: 12, lg: 8 }}>
-            <SalesChart data={data.salesByHour} />
+            <SalesChart data={data.salesByTime} groupByDay={groupByDay} />
           </Grid>
 
           {/* Lista de Productos Top */}
