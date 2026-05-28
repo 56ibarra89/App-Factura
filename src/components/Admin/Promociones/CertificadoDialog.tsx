@@ -33,13 +33,13 @@ import type { CertificadoInput } from "../../../hooks/useCertificados";
 
 type FormState = {
   origin: string;
-  product: string;
+  productId: string;
   notes: string;
 };
 
 const DEFAULT_FORM: FormState = {
   origin: "",
-  product: "",
+  productId: "",
   notes: "",
 };
 
@@ -65,11 +65,16 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
     }
   }, [open]);
 
+  // Aplanar todos los productos
+  const allProducts = categories.flatMap((cat) =>
+    cat.items.map((item) => ({ id: item.id, name: item.name }))
+  );
+
   // ── Validación ─────────────────────────────────────────────────────────────
   const validate = (): boolean => {
     const next: Partial<Record<keyof FormState, string>> = {};
     if (!form.origin.trim()) next.origin = "El origen / empresa es obligatorio.";
-    if (!form.product) next.product = "Selecciona el producto a canjear.";
+    if (!form.productId) next.productId = "Selecciona el producto a canjear.";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -78,18 +83,18 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    
+    const product = allProducts.find(p => p.id === form.productId);
+    const productName = product ? product.name : "";
+
     onEmit({
       origin: form.origin.trim(),
-      product: form.product,
+      product: form.productId,
+      productName: productName,
       notes: form.notes.trim() || undefined,
     });
     onClose();
   };
-
-  // Aplanar todos los productos de todas las categorías para el Select agrupado
-  const allProducts = categories.flatMap((cat) =>
-    cat.items.map((item) => ({ category: cat.label, name: item.name }))
-  );
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -115,14 +120,14 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
             />
 
             {/* Producto a Canjear — Select agrupado por categoría */}
-            <FormControl fullWidth error={!!errors.product} required>
+            <FormControl fullWidth error={!!errors.productId} required>
               <InputLabel>Producto a Canjear</InputLabel>
               <Select
-                value={form.product}
+                value={form.productId}
                 label="Producto a Canjear"
                 onChange={(e) => {
-                  setForm({ ...form, product: e.target.value });
-                  setErrors((p) => ({ ...p, product: undefined }));
+                  setForm({ ...form, productId: e.target.value });
+                  setErrors((p) => ({ ...p, productId: undefined }));
                 }}
                 MenuProps={{ PaperProps: { style: { maxHeight: 320 } } }}
               >
@@ -139,16 +144,16 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
                           {cat.icon ? `${cat.icon} ` : ""}{cat.label}
                         </ListSubheader>,
                         ...cat.items.map((item) => (
-                          <MenuItem key={`${cat.label}-${item.name}`} value={item.name}>
+                          <MenuItem key={`item-${item.id}`} value={item.id}>
                             {item.name}
                           </MenuItem>
                         )),
                       ]
                 )}
               </Select>
-              {errors.product && (
+              {errors.productId && (
                 <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.75 }}>
-                  {errors.product}
+                  {errors.productId}
                 </Typography>
               )}
             </FormControl>
