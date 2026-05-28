@@ -10,7 +10,8 @@ import {
   Box,
 } from "@mui/material";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
-import { MOCK_CERTIFICADOS, CertificadoRule } from "../data/promocionesMockData";
+import { CertificadoRule } from "../types/promociones";
+import { apiClient } from "../config/apiClient";
 
 interface CertificadoDialogProps {
   open: boolean;
@@ -25,39 +26,41 @@ export default function CertificadoDialog({
 }: CertificadoDialogProps) {
   const [serial, setSerial] = useState("");
   const [error, setError] = useState("");
-  const [currentCertificados, setCurrentCertificados] = useState(MOCK_CERTIFICADOS);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
       setSerial("");
       setError("");
-      try {
-        const saved = localStorage.getItem("app_certificados");
-        if (saved) setCurrentCertificados(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
     }
   }, [open]);
 
-  const handleApply = () => {
+  const handleApply = async () => {
+    if (!serial.trim()) return;
     setError("");
-    const cert = currentCertificados.find(
-      (c) => c.serial.trim().toUpperCase() === serial.trim().toUpperCase()
-    );
+    setLoading(true);
 
-    if (!cert) {
-      setError("No se encontró ningún certificado con este número.");
-      return;
+    try {
+      const data = await apiClient(`/promotions/certificates/${serial.trim().toUpperCase()}`);
+      
+      if (data.status !== "Disponible") {
+        setError(`Este certificado no puede usarse (Estado: ${data.status}).`);
+        return;
+      }
+
+      onApply(data as CertificadoRule);
+      onClose();
+    } catch (e: any) {
+      if (e.status === 404) {
+        setError("No se encontró ningún certificado con este número.");
+      } else if (e.message) {
+        setError(e.message);
+      } else {
+        setError("Error al validar el certificado.");
+      }
+    } finally {
+      setLoading(false);
     }
-
-    if (cert.status !== "Disponible") {
-      setError(`Este certificado no puede usarse (Estado: ${cert.status}).`);
-      return;
-    }
-
-    onApply(cert);
-    onClose();
   };
 
   const isInputEmpty = serial.trim().length === 0;
@@ -100,16 +103,16 @@ export default function CertificadoDialog({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2, justifyContent: "space-between" }}>
-        <Button onClick={onClose} color="inherit">
+        <Button onClick={onClose} color="inherit" disabled={loading}>
           Cancelar
         </Button>
         <Button
           variant="contained"
           color="primary"
           onClick={handleApply}
-          disabled={isInputEmpty}
+          disabled={isInputEmpty || loading}
         >
-          Canjear
+          {loading ? "Verificando..." : "Canjear"}
         </Button>
       </DialogActions>
     </Dialog>
