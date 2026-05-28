@@ -1,41 +1,15 @@
 /**
- * useCertificados — Hook CRUD para la gestión de certificados/vales de producto.
- *
- * SOLID:
- *  S — Single Responsibility: solo gestiona el estado y lógica de certificados.
- *      La generación del serial y la fecha de emisión son responsabilidades internas.
- *  D — Dependency Inversion: recibe los datos iniciales como parámetro →
- *      fácilmente sustituible por una fuente API sin modificar el hook.
+ * useCertificados — Hook CRUD para la gestión de certificados/vales de producto conectado al backend.
  */
 import { useState, useCallback, useEffect } from "react";
-import { CertificadoRule } from "../data/promocionesMockData";
-
-// ── Helpers de dominio ───────────────────────────────────────────────────────
-
-/**
- * Genera un serial único con formato VC-XXXXXX (6 dígitos aleatorios).
- * Verifica que no exista ya en la lista actual para garantizar unicidad.
- */
-export function generateSerial(existing: CertificadoRule[]): string {
-  const existingSerials = new Set(existing.map((c) => c.serial));
-  let serial: string;
-  do {
-    const num = Math.floor(100000 + Math.random() * 900000);
-    serial = `VC-${num}`;
-  } while (existingSerials.has(serial));
-  return serial;
-}
-
-/** Devuelve la fecha de hoy en formato ISO YYYY-MM-DD. */
-export function todayISO(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
-// ── Tipo de entrada para emitir un certificado ───────────────────────────────
+import { apiClient } from "../config/apiClient";
+import { CertificadoRule } from "../types/promociones";
+import { useProductContext } from "../context/ProductContext";
 
 export type CertificadoInput = {
   origin: string;
   product: string;
+  productName?: string;
   notes?: string;
 };
 
@@ -43,81 +17,91 @@ export type CertificadoInput = {
 
 interface UseCertificadosReturn {
   certificados: CertificadoRule[];
-  addCertificado: (data: CertificadoInput) => void;
-  markDelivered: (id: number) => void;
-  cancelCertificado: (id: number) => void;
-  deleteCertificado: (id: number) => void;
+  loading: boolean;
+  addCertificado: (data: CertificadoInput) => Promise<void>;
+  markDelivered: (id: number) => Promise<void>;
+  cancelCertificado: (id: number) => Promise<void>;
+  deleteCertificado: (id: number) => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
-/**
- * Hook que provee el CRUD de certificados/vales.
- * @param initialData - Datos iniciales (mock o procedentes de una API).
- */
-export function useCertificados(
-  initialData: CertificadoRule[]
-): UseCertificadosReturn {
-  const [certificados, setCertificados] = useState<CertificadoRule[]>(() => {
+export function useCertificados(): UseCertificadosReturn {
+  const [certificados, setCertificados] = useState<CertificadoRule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { categories } = useProductContext();
+
+  const fetchCertificados = useCallback(async () => {
     try {
-      const saved = localStorage.getItem("app_certificados");
-      if (saved) return JSON.parse(saved);
+      setLoading(true);
+      const data = await apiClient("/promotions/certificates");
+      setCertificados(data.map((c: any) => {
+        let productName = "Producto Desconocido";
+        if (c.items && c.items.length > 0) {
+           const pId = c.items[0].productId;
+           for (const cat of categories) {
+             const found = cat.items.find(item => item.id === pId);
+             if (found) {
+                productName = found.name;
+                break;
+             }
+           }
+        }
+        
+        return {
+          id: c.id,
+          serial: c.serial,
+          origin: c.origin,
+          product: productName,
+          issueDate: c.issueDate ? c.issueDate.split("T")[0] : "",
+          notes: c.description || "",
+          status: c.status || "Disponible",
+        };
+      }));
     } catch (e) {
-      console.error("Failed to parse app_certificados", e);
+      console.error("Error fetching certificates:", e);
+    } finally {
+      setLoading(false);
     }
-    return initialData;
-  });
+  }, [categories]);
 
   useEffect(() => {
-    localStorage.setItem("app_certificados", JSON.stringify(certificados));
-  }, [certificados]);
+    fetchCertificados();
+  }, [fetchCertificados]);
 
-  /** Emite un nuevo certificado generando serial y fecha de emisión automáticamente. */
-  const addCertificado = useCallback((data: CertificadoInput) => {
-    setCertificados((prev) => {
-      const newCert: CertificadoRule = {
-        id: Date.now(),
-        serial: generateSerial(prev),
+  const addCertificado = useCallback(async (data: CertificadoInput) => {
+    await apiClient("/promotions/certificates", {
+      method: "POST",
+      body: JSON.stringify({
         origin: data.origin,
-        product: data.product,
-        notes: data.notes,
-        issueDate: todayISO(),
-        status: "Disponible",
-      };
-      return [...prev, newCert];
+        items: [{ productId: data.product, quantity: 1 }],
+        description: data.notes,
+      }),
     });
-  }, []);
+    await fetchCertificados();
+  }, [fetchCertificados]);
 
-  /** Marca el certificado como entregado (canje). Disponible → Entregado. */
-  const markDelivered = useCallback((id: number) => {
-    setCertificados((prev) =>
-      prev.map((c) =>
-        c.id === id && c.status === "Disponible"
-          ? { ...c, status: "Entregado" }
-          : c
-      )
-    );
-  }, []);
+  const markDelivered = useCallback(async (id: number) => {
+    await apiClient(`/promotions/certificates/${id}/deliver`, { method: "POST" });
+    await fetchCertificados();
+  }, [fetchCertificados]);
 
-  /** Anula el certificado sin eliminarlo del registro. */
-  const cancelCertificado = useCallback((id: number) => {
-    setCertificados((prev) =>
-      prev.map((c) =>
-        c.id === id && c.status === "Disponible"
-          ? { ...c, status: "Anulado" }
-          : c
-      )
-    );
-  }, []);
+  const cancelCertificado = useCallback(async (id: number) => {
+    await apiClient(`/promotions/certificates/${id}/cancel`, { method: "POST" });
+    await fetchCertificados();
+  }, [fetchCertificados]);
 
-  /** Elimina físicamente el certificado de la lista. */
-  const deleteCertificado = useCallback((id: number) => {
-    setCertificados((prev) => prev.filter((c) => c.id !== id));
-  }, []);
+  const deleteCertificado = useCallback(async (id: number) => {
+    await apiClient(`/promotions/certificates/${id}`, { method: "DELETE" });
+    await fetchCertificados();
+  }, [fetchCertificados]);
 
   return {
     certificados,
+    loading,
     addCertificado,
     markDelivered,
     cancelCertificado,
     deleteCertificado,
+    refresh: fetchCertificados
   };
 }
