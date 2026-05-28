@@ -1,79 +1,62 @@
 /**
- * useCupones — Hook CRUD para la gestión de cupones manuales.
- *
- * SOLID:
- *  S — Single Responsibility: solo gestiona el estado y lógica de cupones.
- *  D — Dependency Inversion: recibe los datos iniciales por parámetro,
- *      pudiendo conectarse a una API sin modificar el hook.
+ * useCupones — Hook CRUD para la gestión de cupones manuales conectado al backend.
  */
 import { useState, useCallback, useEffect } from "react";
+import { apiClient } from "../config/apiClient";
 import { CuponRule, CuponStatus } from "../data/promocionesMockData";
 
 // ── Función pura de dominio ──────────────────────────────────────────────────
 
-/**
- * Calcula el estado de un cupón en función de sus usos y fecha de vencimiento.
- * El criterio que se cumpla primero (agotado o vencido) prevalece.
- *
- * @returns CuponStatus calculado automáticamente, o "Inactivo" si el cupón está desactivado.
- */
 export function computeCuponStatus(
   maxUses: number,
   currentUses: number,
-  expiresDate: string,
-  manualStatus: CuponStatus
+  expiresDate: string | null | undefined,
+  manualStatus: string
 ): CuponStatus {
-  // Un cupón inactivo manualmente no cambia a otro estado automáticamente
-  if (manualStatus === "Inactivo") return "Inactivo";
+  if (manualStatus === "INACTIVO") return "Inactivo";
 
   const isExhausted = maxUses > 0 && currentUses >= maxUses;
   const isExpired =
-    expiresDate !== "" && new Date(expiresDate) < new Date(new Date().toDateString());
+    expiresDate && new Date(expiresDate) < new Date(new Date().toDateString());
 
   if (isExhausted) return "Agotado";
   if (isExpired) return "Vencido";
   return "Activo";
 }
 
-// ── Funciones auxiliares (cálculo de campos derivados) ───────────────────────
-
-/** Genera el texto de descuento para la columna visual. */
-function buildDiscount(type: CuponRule["discountType"], value: string): string {
-  if (type === "porcentaje") return `${value}%`;
-  return `C$${parseFloat(value).toFixed(2)}`;
+function buildDiscount(type: string, value: string | number): string {
+  if (type === "PORCENTAJE" || type === "porcentaje") return `${value}%`;
+  return `C$${parseFloat(value.toString()).toFixed(2)}`;
 }
 
-/** Genera el texto de uso para la columna visual. */
 function buildUsage(current: number, max: number): string {
   return max === 0 ? `${current} / ∞` : `${current} / ${max}`;
 }
 
-/** Genera el texto de vencimiento para la columna visual. */
-function buildExpires(dateISO: string): string {
-  return dateISO === "" ? "Sin límite" : dateISO;
+function buildExpires(dateISO: string | null | undefined): string {
+  return !dateISO ? "Sin límite" : dateISO.split("T")[0];
 }
 
-/**
- * Reconstruye todos los campos derivados de un CuponRule a partir de sus
- * campos granulares. Llama a computeCuponStatus internamente.
- */
-export function hydrateCupon(
-  partial: Omit<CuponRule, "discount" | "usage" | "expires" | "status"> & {
-    manualStatus?: CuponStatus;
-  }
-): CuponRule {
-  const manualStatus: CuponStatus = partial.manualStatus ?? "Activo";
+export function hydrateCuponBackend(raw: any): CuponRule {
+  const manualStatusStr = raw.manualStatus || "ACTIVO";
   const status = computeCuponStatus(
-    partial.maxUses,
-    partial.currentUses,
-    partial.expiresDate,
-    manualStatus
+    raw.maxUses,
+    raw.currentUses,
+    raw.expiresDate,
+    manualStatusStr
   );
+
   return {
-    ...partial,
-    discount: buildDiscount(partial.discountType, partial.discountValue),
-    usage: buildUsage(partial.currentUses, partial.maxUses),
-    expires: buildExpires(partial.expiresDate),
+    id: raw.id,
+    code: raw.code,
+    discountType: raw.discountType === "porcentaje" || raw.discountType === "PORCENTAJE" ? "porcentaje" : "monto_fijo",
+    discountValue: raw.discountValue.toString(),
+    maxUses: raw.maxUses,
+    currentUses: raw.currentUses,
+    expiresDate: raw.expiresDate ? raw.expiresDate.split("T")[0] : "",
+    discount: buildDiscount(raw.discountType, raw.discountValue),
+    usage: buildUsage(raw.currentUses, raw.maxUses),
+    expires: buildExpires(raw.expiresDate),
     status,
   };
 }
@@ -82,51 +65,76 @@ export function hydrateCupon(
 
 interface UseCuponesReturn {
   cupones: CuponRule[];
-  addCupon: (data: Omit<CuponRule, "id" | "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => void;
-  editCupon: (data: Omit<CuponRule, "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => void;
-  deleteCupon: (id: number) => void;
+  loading: boolean;
+  addCupon: (data: Omit<CuponRule, "id" | "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => Promise<void>;
+  editCupon: (data: Omit<CuponRule, "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => Promise<void>;
+  deleteCupon: (id: number) => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
-/**
- * Hook que provee el CRUD de cupones con recálculo automático de estado.
- * @param initialData - Datos iniciales (mock o procedentes de una API).
- */
-export function useCupones(initialData: CuponRule[]): UseCuponesReturn {
-  const [cupones, setCupones] = useState<CuponRule[]>(() => {
+export function useCupones(): UseCuponesReturn {
+  const [cupones, setCupones] = useState<CuponRule[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCupones = useCallback(async () => {
     try {
-      const saved = localStorage.getItem("app_cupones");
-      if (saved) return JSON.parse(saved);
+      setLoading(true);
+      const data = await apiClient("/promotions/coupons");
+      setCupones(data.map((c: any) => hydrateCuponBackend(c)));
     } catch (e) {
-      console.error(e);
+      console.error("Error fetching coupons:", e);
+    } finally {
+      setLoading(false);
     }
-    return initialData;
-  });
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("app_cupones", JSON.stringify(cupones));
-  }, [cupones]);
+    fetchCupones();
+  }, [fetchCupones]);
 
   const addCupon = useCallback(
-    (data: Omit<CuponRule, "id" | "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => {
-      const newCupon = hydrateCupon({ ...data, id: Date.now() });
-      setCupones((prev) => [...prev, newCupon]);
+    async (data: Omit<CuponRule, "id" | "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => {
+      await apiClient("/promotions/coupons", {
+        method: "POST",
+        body: JSON.stringify({
+          code: data.code,
+          discountType: data.discountType === "porcentaje" ? "porcentaje" : "monto_fijo",
+          discountValue: parseFloat(data.discountValue),
+          maxUses: data.maxUses,
+          expiresDate: data.expiresDate || undefined,
+          manualStatus: data.manualStatus === "Inactivo" ? "Inactivo" : "Activo",
+        }),
+      });
+      await fetchCupones();
     },
-    []
+    [fetchCupones]
   );
 
   const editCupon = useCallback(
-    (data: Omit<CuponRule, "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => {
-      const updated = hydrateCupon(data);
-      setCupones((prev) =>
-        prev.map((c) => (c.id === updated.id ? updated : c))
-      );
+    async (data: Omit<CuponRule, "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => {
+      await apiClient(`/promotions/coupons/${data.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          code: data.code,
+          discountType: data.discountType === "porcentaje" ? "porcentaje" : "monto_fijo",
+          discountValue: parseFloat(data.discountValue),
+          maxUses: data.maxUses,
+          expiresDate: data.expiresDate || undefined,
+          manualStatus: data.manualStatus === "Inactivo" ? "Inactivo" : "Activo",
+        }),
+      });
+      await fetchCupones();
     },
-    []
+    [fetchCupones]
   );
 
-  const deleteCupon = useCallback((id: number) => {
-    setCupones((prev) => prev.filter((c) => c.id !== id));
-  }, []);
+  const deleteCupon = useCallback(
+    async (id: number) => {
+      await apiClient(`/promotions/coupons/${id}`, { method: "DELETE" });
+      await fetchCupones();
+    },
+    [fetchCupones]
+  );
 
-  return { cupones, addCupon, editCupon, deleteCupon };
+  return { cupones, loading, addCupon, editCupon, deleteCupon, refresh: fetchCupones };
 }
