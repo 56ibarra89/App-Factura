@@ -1,108 +1,145 @@
-/* eslint-disable react-refresh/only-export-components */
-// src/context/ProductContext.tsx
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { Category, Product } from "../types/product";
-import { localStore, setJson, tryGetJson } from "../services/storage/storage";
+import { apiClient } from "../config/apiClient";
 
-// Contexto y métodos disponibles
 interface ProductContextType {
   categories: Category[];
-  addProduct: (category: string, product: Product) => void;
-  updateProduct: (category: string, oldName: string, updatedProduct: Product) => void;
-  deleteProduct: (category: string, productName: string) => void;
-  addCategory: (categoryName: string, icon?: string) => void;
-  updateCategory: (oldName: string, newName: string, icon?: string) => void;
-  deleteCategory: (categoryName: string) => void;
+  addProduct: (category: string, product: Product) => Promise<void>;
+  updateProduct: (category: string, oldName: string, updatedProduct: Product) => Promise<void>;
+  deleteProduct: (category: string, productName: string) => Promise<void>;
+  addCategory: (categoryName: string, icon?: string) => Promise<void>;
+  updateCategory: (oldName: string, newName: string, icon?: string) => Promise<void>;
+  deleteCategory: (categoryName: string) => Promise<void>;
 }
-
-const CATEGORIES_STORAGE_KEY = 'app_factura_categories';
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-// Hook personalizado para consumir el contexto
 export const useProductContext = () => {
   const context = useContext(ProductContext);
   if (!context) throw new Error("useProductContext debe usarse dentro de ProductProvider");
   return context;
 };
 
-import { initialCategories } from "../data/initialData";
-
-// ...
-
-// Componente Provider
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
-  const loadInitialCategories = () => {
-    const stored = tryGetJson<Category[]>(localStore, CATEGORIES_STORAGE_KEY);
-    return stored ?? initialCategories;
-  };
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const [categories, setCategories] = useState<Category[]>(loadInitialCategories());
+  const loadCategories = useCallback(async () => {
+    try {
+      const data = await apiClient("/products/categories");
+      setCategories(data);
+    } catch (error) {
+      console.error("Error al cargar categorías desde el backend:", error);
+    }
+  }, []);
 
   useEffect(() => {
-    setJson(localStore, CATEGORIES_STORAGE_KEY, categories);
-  }, [categories]);
+    loadCategories();
+  }, [loadCategories]);
 
-  const addProduct = (category: string, product: Product) => {
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.label === category
-          ? {
-              ...cat,
-              items: [...cat.items, product],
-            }
-          : cat
-      )
-    );
+  const addProduct = async (categoryName: string, product: Product) => {
+    try {
+      const cat = categories.find(c => c.label === categoryName);
+      if (!cat?.id) throw new Error("Categoría no encontrada");
+      
+      await apiClient('/products', {
+        method: 'POST',
+        body: JSON.stringify({
+          categoryId: cat.id,
+          name: product.name,
+          description: product.description,
+          isActive: true,
+          hasMultipleSizes: product.hasMultipleSizes ?? false,
+          prices: product.prices,
+          extras: product.extras || []
+        })
+      });
+      await loadCategories();
+    } catch (error) {
+      console.error("Error al crear producto:", error);
+      throw error;
+    }
   };
 
-  const updateProduct = (category: string, oldName: string, updatedProduct: Product) => {
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.label === category
-          ? {
-              ...cat,
-              items: cat.items.map((p) =>
-                p.name === oldName ? updatedProduct : p
-              ),
-            }
-          : cat
-      )
-    );
+  const updateProduct = async (categoryName: string, oldName: string, updatedProduct: Product) => {
+    try {
+      const cat = categories.find(c => c.label === categoryName);
+      const prod = cat?.items.find(p => p.name === oldName);
+      if (!cat?.id || !prod?.id) throw new Error("Categoría o Producto no encontrado");
+
+      await apiClient(`/products/${prod.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          categoryId: cat.id,
+          name: updatedProduct.name,
+          description: updatedProduct.description,
+          isActive: true,
+          hasMultipleSizes: updatedProduct.hasMultipleSizes ?? false,
+          prices: updatedProduct.prices,
+          extras: updatedProduct.extras || []
+        })
+      });
+      await loadCategories();
+    } catch (error) {
+      console.error("Error al actualizar producto:", error);
+      throw error;
+    }
   };
 
-  const deleteProduct = (category: string, productName: string) => {
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.label === category
-          ? {
-              ...cat,
-              items: cat.items.filter((p) => p.name !== productName),
-            }
-          : cat
-      )
-    );
+  const deleteProduct = async (categoryName: string, productName: string) => {
+    try {
+      const cat = categories.find(c => c.label === categoryName);
+      const prod = cat?.items.find(p => p.name === productName);
+      if (prod?.id) {
+        await apiClient(`/products/${prod.id}`, { method: 'DELETE' });
+        await loadCategories();
+      }
+    } catch (error) {
+      console.error("Error al eliminar producto:", error);
+      throw error;
+    }
   };
 
-  const addCategory = (categoryName: string, icon?: string) => {
-    setCategories((prev) => {
-      if (prev.some(cat => cat.label === categoryName)) return prev;
-      return [...prev, { label: categoryName, icon, items: [] }];
-    });
+  const addCategory = async (categoryName: string, icon?: string) => {
+    try {
+      if (categories.some(cat => cat.label === categoryName)) return;
+      await apiClient('/products/categories', {
+        method: 'POST',
+        body: JSON.stringify({ label: categoryName, icon })
+      });
+      await loadCategories();
+    } catch (error) {
+      console.error("Error al crear categoría:", error);
+      throw error;
+    }
   };
 
-  const updateCategory = (oldName: string, newName: string, icon?: string) => {
-    setCategories((prev) =>
-      prev.map((cat) =>
-        cat.label === oldName
-          ? { ...cat, label: newName, icon: icon !== undefined ? icon : cat.icon }
-          : cat
-      )
-    );
+  const updateCategory = async (oldName: string, newName: string, icon?: string) => {
+    try {
+      const cat = categories.find(c => c.label === oldName);
+      if (cat?.id) {
+        await apiClient(`/products/categories/${cat.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ label: newName, icon })
+        });
+        await loadCategories();
+      }
+    } catch (error) {
+      console.error("Error al actualizar categoría:", error);
+      throw error;
+    }
   };
 
-  const deleteCategory = (categoryName: string) => {
-    setCategories((prev) => prev.filter(cat => cat.label !== categoryName));
+  const deleteCategory = async (categoryName: string) => {
+    try {
+      const cat = categories.find(c => c.label === categoryName);
+      if (cat?.id) {
+        await apiClient(`/products/categories/${cat.id}`, { method: 'DELETE' });
+        await loadCategories();
+      }
+    } catch (error) {
+      console.error("Error al eliminar categoría:", error);
+      throw error;
+    }
   };
 
   return (
