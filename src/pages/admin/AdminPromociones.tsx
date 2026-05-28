@@ -1,4 +1,4 @@
-import { useState, useEffect, SyntheticEvent } from "react";
+import { useState, SyntheticEvent } from "react";
 import {
   Box,
   Container,
@@ -14,15 +14,11 @@ import HappyHourTab from "../../components/Admin/Promociones/HappyHourTab";
 import CuponesTab from "../../components/Admin/Promociones/CuponesTab";
 import CertificacionesTab from "../../components/Admin/Promociones/CertificacionesTab";
 import {
-  MOCK_HAPPY_HOURS,
-  MOCK_DESCUENTOS,
-  MOCK_CUPONES,
-  MOCK_CERTIFICADOS,
   DescuentoRule,
   HappyHourRule,
   CuponRule,
   CertificadoRule,
-} from "../../data/promocionesMockData";
+} from "../../types/promociones";
 import DescuentoDialog from "../../components/Admin/Promociones/DescuentoDialog";
 import HappyHourDialog from "../../components/Admin/Promociones/HappyHourDialog";
 import CuponDialog from "../../components/Admin/Promociones/CuponDialog";
@@ -31,6 +27,8 @@ import CertificadoDialog from "../../components/Admin/Promociones/CertificadoDia
 import CertificadoDetailDialog from "../../components/Admin/Promociones/CertificadoDetailDialog";
 import { useCupones } from "../../hooks/useCupones";
 import { useCertificados } from "../../hooks/useCertificados";
+import { useHappyHours } from "../../hooks/useHappyHours";
+import { useDescuentos } from "../../hooks/useDescuentos";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -65,19 +63,7 @@ const AdminPromociones = () => {
   const [tabValue, setTabValue] = useState(0);
 
   // ── Descuentos ─────────────────────────────────────────────────────────────
-  const [descuentos, setDescuentos] = useState<DescuentoRule[]>(() => {
-    try {
-      const saved = localStorage.getItem("app_descuentos");
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error("Failed to parse app_descuentos", e);
-    }
-    return MOCK_DESCUENTOS;
-  });
-
-  useEffect(() => {
-    localStorage.setItem("app_descuentos", JSON.stringify(descuentos));
-  }, [descuentos]);
+  const { descuentos, addDescuento, editDescuento, deleteDescuento } = useDescuentos();
   const [isDescuentoDialogOpen, setIsDescuentoDialogOpen] = useState(false);
   const [editingDescuento, setEditingDescuento] = useState<DescuentoRule | null>(null);
 
@@ -96,31 +82,19 @@ const AdminPromociones = () => {
   };
 
   const handleDeleteDescuento = (id: number) => {
-    setDescuentos(descuentos.filter(d => d.id !== id));
+    deleteDescuento(id);
   };
 
   const handleSaveDescuento = (rule: DescuentoRule) => {
     if (editingDescuento) {
-      setDescuentos(descuentos.map(d => d.id === rule.id ? rule : d));
+      editDescuento(rule);
     } else {
-      setDescuentos([...descuentos, rule]);
+      addDescuento(rule);
     }
   };
 
   // ── Happy Hour ──────────────────────────────────────────────────────────────
-  const [happyHours, setHappyHours] = useState<HappyHourRule[]>(() => {
-    try {
-      const saved = localStorage.getItem("app_happy_hours");
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error("Failed to parse app_happy_hours", e);
-    }
-    return MOCK_HAPPY_HOURS;
-  });
-
-  useEffect(() => {
-    localStorage.setItem("app_happy_hours", JSON.stringify(happyHours));
-  }, [happyHours]);
+  const { happyHours, addHappyHour, editHappyHour, deleteHappyHour, toggleHappyHourStatus } = useHappyHours();
   const [isHHDialogOpen, setIsHHDialogOpen] = useState(false);
   const [editingHH, setEditingHH] = useState<HappyHourRule | null>(null);
 
@@ -135,29 +109,23 @@ const AdminPromociones = () => {
   };
 
   const handleDeleteHH = (id: number) => {
-    setHappyHours(happyHours.filter(h => h.id !== id));
+    deleteHappyHour(id);
   };
 
   const handleSaveHH = (rule: HappyHourRule) => {
     if (editingHH) {
-      setHappyHours(happyHours.map(h => h.id === rule.id ? rule : h));
+      editHappyHour(rule);
     } else {
-      setHappyHours([...happyHours, rule]);
+      addHappyHour(rule);
     }
   };
 
   const handleToggleHHStatus = (id: number) => {
-    setHappyHours(happyHours.map(h =>
-      h.id === id
-        ? { ...h, status: h.status === "Activo" ? "Inactivo" : "Activo" }
-        : h
-    ));
+    toggleHappyHourStatus(id);
   };
 
   // ── Cupones Manuales ────────────────────────────────────────────────────────
-  // DIP: useCupones recibe los datos iniciales como parámetro.
-  // Si en el futuro se conecta a una API, solo cambia MOCK_CUPONES por la respuesta.
-  const { cupones, addCupon, editCupon, deleteCupon } = useCupones(MOCK_CUPONES);
+  const { cupones, addCupon, editCupon, deleteCupon } = useCupones();
   const [isCuponDialogOpen, setIsCuponDialogOpen] = useState(false);
   const [editingCupon, setEditingCupon] = useState<CuponRule | null>(null);
 
@@ -185,14 +153,13 @@ const AdminPromociones = () => {
     navigator.clipboard?.writeText(code);
 
   // ── Certificaciones (Vales) ──────────────────────────────────────────────────
-  // DIP: useCertificados recibe los datos iniciales — sustituible por una API.
   const {
     certificados,
     addCertificado,
     markDelivered,
     cancelCertificado,
     deleteCertificado,
-  } = useCertificados(MOCK_CERTIFICADOS);
+  } = useCertificados();
   const [isCertDialogOpen, setIsCertDialogOpen] = useState(false);
   const [isCertDetailOpen, setIsCertDetailOpen] = useState(false);
   const [viewingCert, setViewingCert] = useState<CertificadoRule | null>(null);
