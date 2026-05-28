@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Box, Typography, Button, Paper, TextField, Divider, Grid, alpha, Snackbar, Alert } from "@mui/material";
+import { Box, Typography, Button, Paper, TextField, Divider, Grid, alpha, Snackbar, Alert, IconButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, CircularProgress } from "@mui/material";
 import { BackButton } from "../../components/BackButton";
 import SaveIcon from "@mui/icons-material/Save";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/PageHeader";
 import { useMesasConfig } from "../../hooks/useMesasConfig";
@@ -13,22 +16,44 @@ import { logService } from "../../services/logService";
 export default function ConfigurarMesas() {
   const navigate = useNavigate();
   const { username, role } = useAuth();
-  const { floorsConfig, updateFloorTables } = useMesasConfig();
+  const { floorsConfig, updateFloorTables, addFloor, removeFloor, updateFloorName, error, clearError, saveAllChanges, hasUnsavedChanges, isSaving } = useMesasConfig();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [deleteData, setDeleteData] = useState<{ id: number; name: string } | null>(null);
 
   const handleUpdate = (floorId: number, val: string) => {
     const count = parseInt(val) || 0;
-    const floor = floorsConfig.find(f => f.id === floorId);
-    
     updateFloorTables(floorId, Math.max(0, count));
-    setShowSuccess(true);
+  };
 
-    if (floor) {
+  const handleAddFloor = () => {
+    const name = `Nueva Planta ${floorsConfig.length + 1}`;
+    addFloor(name);
+  };
+
+  const handleDeleteFloor = (floorId: number, name: string) => {
+    setDeleteData({ id: floorId, name });
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteData) {
+      removeFloor(deleteData.id);
+      setDeleteData(null);
+    }
+  };
+
+  const handleUpdateName = (floorId: number, name: string) => {
+    updateFloorName(floorId, name);
+  };
+
+  const handleSave = async () => {
+    const success = await saveAllChanges();
+    if (success) {
+      setShowSuccess(true);
       logService.log(
         username, 
         role, 
         "CONFIG_CHANGE", 
-        `Cambio en plano de mesas: Area "${floor.name}" actualizada a ${count} mesas`
+        `Cambio en plano de mesas: Configuración actualizada manualmente`
       );
     }
   };
@@ -55,7 +80,12 @@ export default function ConfigurarMesas() {
           </Typography>
           <Typography variant="body1" color="text.secondary" mt={1}>
             Ingresa la cantidad de mesas disponibles en cada área. La numeración se reinicia por planta.
-            Si una planta tiene "0", se ocultará de la vista principal. Los cambios se guardan <strong>automáticamente</strong>.
+            Si una planta tiene "0", se ocultará de la vista principal. 
+            {hasUnsavedChanges && (
+              <Typography component="span" color="warning.main" fontWeight="bold">
+                {" "}¡Tienes cambios sin guardar!
+              </Typography>
+            )}
           </Typography>
         </Box>
 
@@ -71,18 +101,54 @@ export default function ConfigurarMesas() {
                   borderColor: floor.tableCount > 0 ? alpha(LOGIN_COLORS.primary, 0.3) : "divider",
                   bgcolor: floor.tableCount > 0 ? alpha(LOGIN_COLORS.primary, 0.03) : "white",
                   transition: "all 0.2s",
+                  position: "relative",
                   "&:hover": {
                     borderColor: LOGIN_COLORS.primary,
                     boxShadow: "0 8px 24px rgba(0,0,0,0.05)"
                   }
                 }}
               >
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="subtitle1" fontWeight="800" color="text.primary">
-                    {floor.name}
-                  </Typography>
+                <Box sx={{ position: "absolute", top: 8, right: 8, display: "flex" }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      document.getElementById(`floor-name-${floor.id}`)?.focus();
+                    }}
+                    sx={{ color: "text.secondary" }}
+                    title="Editar nombre"
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => handleDeleteFloor(floor.id, floor.name)}
+                    title="Eliminar planta"
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+
+                <Box display="flex" flexDirection="column" gap={1} mb={2} pr={7}>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <TextField
+                      id={`floor-name-${floor.id}`}
+                      variant="standard"
+                      value={floor.name}
+                      onChange={(e) => handleUpdateName(floor.id, e.target.value)}
+                      InputProps={{ disableUnderline: true }}
+                      sx={{
+                        "& input": {
+                          fontWeight: "800",
+                          fontSize: "1.1rem",
+                          color: "text.primary",
+                          p: 0,
+                        }
+                      }}
+                    />
+                  </Box>
                   {floor.tableCount > 0 && (
-                    <Typography variant="caption" fontWeight="bold" color="primary" sx={{ bgcolor: alpha(LOGIN_COLORS.primary, 0.08), px: 1, py: 0.3, borderRadius: 1 }}>
+                    <Typography variant="caption" fontWeight="bold" color="primary" sx={{ bgcolor: alpha(LOGIN_COLORS.primary, 0.08), px: 1, py: 0.3, borderRadius: 1, alignSelf: "flex-start" }}>
                       {floor.tableCount} mesas
                     </Typography>
                   )}
@@ -100,21 +166,53 @@ export default function ConfigurarMesas() {
               </Paper>
             </Grid>
           ))}
+          
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleAddFloor}
+              sx={{
+                height: "100%",
+                minHeight: 140,
+                borderRadius: 4,
+                borderStyle: "dashed",
+                borderWidth: 2,
+                color: "text.secondary",
+                borderColor: "divider",
+                "&:hover": {
+                  borderStyle: "dashed",
+                  borderWidth: 2,
+                }
+              }}
+            >
+              <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+                <AddIcon fontSize="large" />
+                <Typography fontWeight="bold">Añadir Planta</Typography>
+              </Box>
+            </Button>
+          </Grid>
         </Grid>
 
         <Divider sx={{ my: 4 }} />
 
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="body2" color="text.secondary" display="flex" alignItems="center" gap={1}>
-            <SaveIcon sx={{ fontSize: 16 }} />
-            Los cambios se guardan automáticamente al escribir.
-          </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
           <Button
             variant="outlined"
             onClick={() => navigate("/mesas")}
-            sx={{ borderRadius: 4, fontWeight: "bold", textTransform: "none" }}
+            sx={{ borderRadius: 4, fontWeight: "bold", textTransform: "none", color: "text.secondary", borderColor: "divider" }}
           >
-            Vista previa de Mesas →
+            ← Volver a Vista de Mesas
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSave}
+            disabled={!hasUnsavedChanges || isSaving}
+            startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+            sx={{ borderRadius: 4, fontWeight: "bold", textTransform: "none", px: 4, py: 1.5, boxShadow: hasUnsavedChanges ? "0 4px 14px rgba(0,0,0,0.2)" : "none" }}
+          >
+            {isSaving ? "Guardando..." : "Guardar Cambios"}
           </Button>
         </Box>
       </Paper>
@@ -135,6 +233,51 @@ export default function ConfigurarMesas() {
           ✓ Configuración guardada correctamente
         </Alert>
       </Snackbar>
+
+      {/* Snackbar de error */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={4000}
+        onClose={clearError}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={clearError}
+          severity="error"
+          variant="filled"
+          sx={{ borderRadius: 3, fontWeight: "bold" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
+      {/* Diálogo de Confirmación para Eliminar */}
+      <Dialog
+        open={deleteData !== null}
+        onClose={() => setDeleteData(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Estás seguro que deseas eliminar la planta <strong>"{deleteData?.name}"</strong>?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteData(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disableElevation
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

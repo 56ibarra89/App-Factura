@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { localStore, setJson, tryGetJson } from "../services/storage/storage";
+import { useState, useEffect, useRef } from "react";
+import { apiClient } from "../config/apiClient";
 
 export interface FloorConfig {
   id: number;
@@ -20,30 +20,78 @@ const DEFAULT_FLOORS: FloorConfig[] = [
 
 export function useMesasConfig() {
   const [floors, setFloors] = useState<FloorConfig[]>([]);
+  const [initialFloors, setInitialFloors] = useState<FloorConfig[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Cargar configuración local.
-  useEffect(() => {
-    const key = "app_factura_floors_config";
-    const saved = tryGetJson<FloorConfig[]>(localStore, key);
-    if (saved) {
-      setFloors(saved);
-      return;
+  const fetchFloors = async () => {
+    try {
+      const data = await apiClient('/mesas/config');
+      setFloors(data);
+      setInitialFloors(data);
+    } catch (e) {
+      console.error('Error fetching floors config:', e);
     }
+  };
 
-    setFloors(DEFAULT_FLOORS);
-    setJson(localStore, key, DEFAULT_FLOORS);
+  useEffect(() => {
+    fetchFloors();
   }, []);
 
   const updateFloorTables = (floorId: number, count: number) => {
-    const updated = floors.map(floor => 
+    setFloors(prev => prev.map(floor => 
       floor.id === floorId ? { ...floor, tableCount: count } : floor
-    );
-    setFloors(updated);
-    setJson(localStore, "app_factura_floors_config", updated);
+    ));
   };
+
+  const addFloor = (name: string) => {
+    const newId = floors.length > 0 ? Math.max(...floors.map(f => f.id)) + 1 : 1;
+    setFloors(prev => [...prev, { id: newId, name, tableCount: 0 }]);
+  };
+
+  const removeFloor = (floorId: number) => {
+    setFloors(prev => prev.filter(f => f.id !== floorId));
+  };
+
+  const updateFloorName = (floorId: number, name: string) => {
+    setFloors(prev => prev.map(floor => 
+      floor.id === floorId ? { ...floor, name } : floor
+    ));
+  };
+
+  const saveAllChanges = async () => {
+    setIsSaving(true);
+    try {
+      await apiClient('/mesas/config', {
+        method: 'POST',
+        body: JSON.stringify(floors),
+      });
+      setInitialFloors(floors); // Reset unsaved changes tracking
+      return true;
+    } catch (e) {
+      console.error('Error updating floors config:', e);
+      const errorMessage = e instanceof Error ? e.message : 'Error guardando la configuración de mesas.';
+      setError(errorMessage);
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const clearError = () => setError(null);
+
+  const hasUnsavedChanges = JSON.stringify(floors) !== JSON.stringify(initialFloors);
 
   return {
     floorsConfig: floors,
-    updateFloorTables
+    updateFloorTables,
+    addFloor,
+    removeFloor,
+    updateFloorName,
+    saveAllChanges,
+    hasUnsavedChanges,
+    isSaving,
+    error,
+    clearError
   };
 }

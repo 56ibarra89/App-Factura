@@ -14,16 +14,20 @@ import {
   OrderType,
 } from "../types/order.types";
 import { CartItemType } from "../types/cart";
-import { IOrderRepository } from "../types/repositories";
-import { orderRepository as defaultOrderRepository } from "../repositories/OrderRepository";
 import { useAuth } from "./AuthContext";
 import {
   createOrder,
-  hydrateOrdersFromStorage,
   orderMutations,
   orderSelectors,
 } from "../services/order/orderDomain";
-import { localStore } from "../services/storage/storage";
+import {
+  fetchOrdersFromBackend,
+  syncAddOrderToBackend,
+  syncUpdateOrderStatus,
+  syncUpdateOrderItems,
+  syncFinalizeOrder,
+  syncUpdateTables
+} from "../services/order/backendSync";
 
 interface OrderContextProps {
   orders: Order[];
@@ -88,44 +92,30 @@ const OrderCommandsContext = createContext<
   OrderCommandsContextProps | undefined
 >(undefined);
 
-const LOCAL_STORAGE_KEY = "app_factura_orders";
-
 interface OrderProviderProps {
   children: React.ReactNode;
-  /** DIP: permite inyectar un repositorio alternativo (e.g. mock para tests) */
-  repository?: IOrderRepository;
 }
 
 export const OrderProvider: React.FC<OrderProviderProps> = ({
   children,
-  repository = defaultOrderRepository,
 }) => {
   const { username } = useAuth();
-
-  const persist = useCallback(
-    (order: Order) => {
-      void repository
-        .save(order)
-        .catch((err) =>
-          console.error("[OrderContext] Error guardando orden:", err),
-        );
-    },
-    [repository],
-  );
-
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStore.getItem(LOCAL_STORAGE_KEY);
-    try {
-      return hydrateOrdersFromStorage(saved, new Date());
-    } catch (e) {
-      console.error("Error loading orders from localStorage", e);
-      return [];
-    }
-  });
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    localStore.setItem(LOCAL_STORAGE_KEY, JSON.stringify(orders));
-  }, [orders]);
+    const loadOrders = async () => {
+      try {
+        const backendOrders = await fetchOrdersFromBackend();
+        setOrders(backendOrders);
+      } catch (error) {
+        console.error("Failed to load orders from backend", error);
+      }
+    };
+    loadOrders();
+    // Refresh periodicamente cada 10 segundos para mantener sincronización
+    const interval = setInterval(loadOrders, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const addOrder = useCallback<OrderCommandsContextProps["addOrder"]>(
     (
@@ -161,21 +151,21 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       });
 
       setOrders((prev) => [newOrder, ...prev]);
-      persist(newOrder);
+      syncAddOrderToBackend(newOrder).catch(console.error);
     },
-    [persist, username],
+    [username],
   );
 
   const updateOrderStatus = useCallback<OrderCommandsContextProps["updateOrderStatus"]>(
     (orderId, status, sentAt) => {
       setOrders((prev) => {
-        const { orders: nextOrders, modified } =
+        const { orders: nextOrders } =
           orderMutations.updateOrderStatus(prev, orderId, status, sentAt);
-        if (modified) persist(modified);
         return nextOrders;
       });
+      syncUpdateOrderStatus(orderId, status, sentAt).catch(console.error);
     },
-    [persist],
+    [],
   );
 
   const removeOrder = useCallback<OrderCommandsContextProps["removeOrder"]>(
@@ -187,20 +177,23 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
 
   const updateOrderItems = useCallback<OrderCommandsContextProps["updateOrderItems"]>(
     (orderId, items, total, subTotal, taxAmount) => {
+      let modifiedOrder: Order | undefined;
       setOrders((prev) => {
         const { orders: nextOrders, modified } =
           orderMutations.updateOrderItems(prev, orderId, items, total);
         if (modified) {
-          // Note: updateOrderItems in orderDomain doesn't support subTotal/taxAmount yet, 
-          // let's just update the order object if it was modified
           if (typeof subTotal === 'number') modified.subTotal = subTotal;
           if (typeof taxAmount === 'number') modified.taxAmount = taxAmount;
-          persist(modified);
+          modifiedOrder = modified;
         }
         return nextOrders;
       });
+      
+      if (modifiedOrder) {
+        syncUpdateOrderItems(modifiedOrder).catch(console.error);
+      }
     },
-    [persist],
+    [],
   );
 
   const getOrderByTable = useCallback<OrderQueriesContextProps["getOrderByTable"]>(
@@ -229,6 +222,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       discountAmount,
       promotionCode,
     ) => {
+      let modifiedOrder: Order | undefined;
       setOrders((prev) => {
         const { orders: nextOrders, modified } = orderMutations.finalizeOrder(
           prev,
@@ -246,69 +240,89 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
             promotionCode,
           },
         );
-        if (modified) persist(modified);
+        modifiedOrder = modified;
         return nextOrders;
       });
+      
+      if (modifiedOrder) {
+        syncFinalizeOrder(modifiedOrder).catch(console.error);
+      }
     },
-    [persist],
+    [],
   );
 
   const markAsSentToKitchen = useCallback<
     OrderCommandsContextProps["markAsSentToKitchen"]
   >(
     (orderId) => {
+      let modifiedOrder: Order | undefined;
       setOrders((prev) => {
         const { orders: nextOrders, modified } =
           orderMutations.markAsSentToKitchen(prev, orderId, Date.now());
-        if (modified) persist(modified);
+        modifiedOrder = modified;
         return nextOrders;
       });
+      if (modifiedOrder) {
+        syncUpdateOrderItems(modifiedOrder).catch(console.error);
+      }
     },
-    [persist],
+    [],
   );
 
   const markAsSentToKitchenByTable = useCallback<
     OrderCommandsContextProps["markAsSentToKitchenByTable"]
   >(
     (tableId) => {
+      let modifiedOrder: Order | undefined;
       setOrders((prev) => {
         const { orders: nextOrders, modified } =
           orderMutations.markAsSentToKitchenByTable(prev, tableId, Date.now());
-        if (modified) persist(modified);
+        modifiedOrder = modified;
         return nextOrders;
       });
+      if (modifiedOrder) {
+        syncUpdateOrderItems(modifiedOrder).catch(console.error);
+      }
     },
-    [persist],
+    [],
   );
 
   const moveOrder = useCallback<OrderCommandsContextProps["moveOrder"]>(
     (sourceTableId, destTableId) => {
+      let modifiedOrder: Order | undefined;
       setOrders((prev) => {
         const { orders: nextOrders, modified } = orderMutations.moveOrder(
           prev,
           sourceTableId,
           destTableId,
         );
-        if (modified) persist(modified);
+        modifiedOrder = modified;
         return nextOrders;
       });
+      if (modifiedOrder) {
+        syncUpdateTables(modifiedOrder.id, modifiedOrder.linkedTables || (modifiedOrder.tableId ? [modifiedOrder.tableId] : [])).catch(console.error);
+      }
     },
-    [persist],
+    [],
   );
 
   const unirMesas = useCallback<OrderCommandsContextProps["unirMesas"]>(
     (sourceTableId, destTableId) => {
+      let modifiedOrder: Order | undefined;
       setOrders((prev) => {
         const { orders: nextOrders, modified } = orderMutations.unirMesas(
           prev,
           sourceTableId,
           destTableId,
         );
-        if (modified) persist(modified);
+        modifiedOrder = modified;
         return nextOrders;
       });
+      if (modifiedOrder) {
+        syncUpdateTables(modifiedOrder.id, modifiedOrder.linkedTables || (modifiedOrder.tableId ? [modifiedOrder.tableId] : [])).catch(console.error);
+      }
     },
-    [persist],
+    [],
   );
 
   const queriesValue = useMemo<OrderQueriesContextProps>(
