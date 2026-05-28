@@ -23,7 +23,8 @@ import ExtrasDialog from "../components/ExtrasDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
 import CertificadoDialog from "../components/CertificadoDialog";
 import { Customer } from "../types/customer.types";
-import { CertificadoRule } from "../data/promocionesMockData";
+import { CertificadoRule } from "../types/promociones";
+import { apiClient } from "../config/apiClient";
 
 const Facturacion = () => {
   const { categories } = useProductContext();
@@ -82,7 +83,7 @@ const Facturacion = () => {
     }
   }, [activeOrder, cart.length, handleSetCart]);
 
-  const handleFinalConfirm = (
+  const handleFinalConfirm = async (
     paymentMethod: PaymentMethod,
     splitAmounts?: { efectivo: number; tarjeta: number },
     customerName?: string,
@@ -91,56 +92,31 @@ const Facturacion = () => {
   ) => {
     // 1. Marcar vales como entregados
     try {
-      const saved = localStorage.getItem("app_certificados");
-      let certificados = saved ? JSON.parse(saved) : null;
-      if (!certificados) {
-        // Fallback al mock si aún no se inicializó el localStorage
-        const { MOCK_CERTIFICADOS } = require("../data/promocionesMockData");
-        certificados = MOCK_CERTIFICADOS;
-      }
-      
-      let changed = false;
-      cart.forEach((item) => {
+      for (const item of cart) {
         if (item.note && item.note.startsWith("Vale: ")) {
           const serial = item.note.replace("Vale: ", "").trim();
-          certificados = certificados.map((c: CertificadoRule) => {
-            if (c.serial === serial) {
-              changed = true;
-              return { ...c, status: "Entregado" };
-            }
-            return c;
-          });
+          try {
+            await apiClient("/promotions/certificates/redeem", {
+              method: "POST",
+              body: JSON.stringify({ serial }),
+            });
+          } catch (e) {
+            console.error("Error al redimir certificado:", e);
+          }
         }
-      });
-
-      if (changed) {
-        localStorage.setItem("app_certificados", JSON.stringify(certificados));
       }
 
       // 2. Incrementar uso de Cupones si aplica
       if (promotion) {
-        const savedCupones = localStorage.getItem("app_cupones");
-        let cupones = savedCupones ? JSON.parse(savedCupones) : null;
-        if (!cupones) {
-          const { MOCK_CUPONES } = require("../data/promocionesMockData");
-          cupones = MOCK_CUPONES;
-        }
-
-        let changedCupon = false;
-        cupones = cupones.map((c: any) => {
-          // Buscamos si el código de promoción aplicado pertenece a un cupón
-          if (c.code === promotion.code) {
-            changedCupon = true;
-            return { ...c, currentUses: c.currentUses + 1 };
-          }
-          return c;
-        });
-
-        if (changedCupon) {
-          localStorage.setItem("app_cupones", JSON.stringify(cupones));
+        try {
+          await apiClient("/promotions/coupons/redeem", {
+            method: "POST",
+            body: JSON.stringify({ code: promotion.code }),
+          });
+        } catch (e) {
+          console.error("Error al redimir cupón:", e);
         }
       }
-
     } catch (e) {
       console.error("Error updating promotions status", e);
     }
