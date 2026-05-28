@@ -53,20 +53,20 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
   // ── Crear ────────────────────────────────────────────────────────────────────
   const createCustomer = useCallback(
     async (data: CustomerFormData): Promise<void> => {
-      const now = new Date().toISOString();
-      const nameLower = data.name.toLowerCase().trim();
-      const newCustomer: Customer = {
-        id: crypto.randomUUID(),
-        nameLower,
-        name: data.name.trim(),
-        phone: data.phone.trim() || undefined,
-        addresses: data.addresses.length
-          ? data.addresses
-          : [],
-        createdAt: now,
-        updatedAt: now,
-      };
-      await repository.update(newCustomer);
+      const name = data.name.trim();
+      const phone = data.phone.trim() || undefined;
+      
+      if (data.addresses.length === 0) {
+        // Crear cliente sin direcciones
+        await repository.upsertCustomer(name, undefined, phone);
+      } else {
+        // Crear cliente y agregar cada dirección. upsertCustomer en el backend
+        // agrega la dirección si el cliente ya existe (por nombre).
+        for (const addr of data.addresses) {
+          await repository.upsertCustomer(name, addr.address, phone);
+        }
+      }
+      
       await loadCustomers();
     },
     [repository, loadCustomers]
@@ -87,7 +87,18 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
         addresses: data.addresses,
         updatedAt: new Date().toISOString(),
       };
+      
+      // Actualizamos nombre y teléfono
       await repository.update(updated);
+      
+      // Sincronizamos las direcciones agregadas (el backend no soporta eliminar direcciones por ahora,
+      // pero esto asegura que las nuevas se agreguen).
+      const name = data.name.trim();
+      const phone = data.phone.trim() || undefined;
+      for (const addr of data.addresses) {
+        await repository.upsertCustomer(name, addr.address, phone);
+      }
+      
       await loadCustomers();
     },
     [customers, repository, loadCustomers]
