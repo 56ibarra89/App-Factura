@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -19,8 +19,9 @@ import {
 } from "@mui/material";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { AppliedPromotion } from "../utils/cartTotals";
-import { MOCK_CUPONES, MOCK_DESCUENTOS } from "../data/promocionesMockData";
-import { computeCuponStatus } from "../hooks/useCupones";
+import { useCupones, computeCuponStatus } from "../hooks/useCupones";
+import { useDescuentos } from "../hooks/useDescuentos";
+import { CuponRule, DescuentoRule } from "../types/promociones";
 
 interface PromocionesSelectorProps {
   currentPromotion: AppliedPromotion | null;
@@ -37,27 +38,9 @@ export default function PromocionesSelector({
   const [tabIndex, setTabIndex] = useState(0);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
-  const [currentCupones, setCurrentCupones] = useState(MOCK_CUPONES);
-  const [currentDescuentos, setCurrentDescuentos] = useState(MOCK_DESCUENTOS);
-
-
-
-  useEffect(() => {
-    if (open) {
-      try {
-        const savedC = localStorage.getItem("app_cupones");
-        if (savedC) setCurrentCupones(JSON.parse(savedC));
-      } catch (e) {
-        console.error(e);
-      }
-      try {
-        const savedD = localStorage.getItem("app_descuentos");
-        if (savedD) setCurrentDescuentos(JSON.parse(savedD));
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, [open]);
+  
+  const { cupones: currentCupones } = useCupones();
+  const { descuentos: currentDescuentos } = useDescuentos();
 
   const handleApplyCode = () => {
     setError("");
@@ -88,7 +71,7 @@ export default function PromocionesSelector({
     setOpen(false);
   };
 
-  const handleSelectCupon = (cupon: typeof MOCK_CUPONES[0]) => {
+  const handleSelectCupon = (cupon: CuponRule) => {
     onApply({
       code: cupon.code,
       discountType: cupon.discountType,
@@ -97,7 +80,7 @@ export default function PromocionesSelector({
     setOpen(false);
   };
 
-  const handleSelectDescuento = (desc: typeof MOCK_DESCUENTOS[0]) => {
+  const handleSelectDescuento = (desc: DescuentoRule) => {
     // Convert "Porcentaje" to "porcentaje", "Monto Fijo" to "monto_fijo"
     const isPercent = desc.type.toLowerCase() === "porcentaje";
     const cleanValue = desc.value.replace(/[^0-9.]/g, "");
