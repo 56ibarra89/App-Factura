@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Typography, Button, Card, CardContent, Divider, Chip } from "@mui/material";
+import { Box, Typography, Button, Card, CardContent } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { BackButton } from "../../components/BackButton";
 import { useCorrelativos } from "../../hooks/useCorrelativos";
@@ -123,9 +123,7 @@ const AdminCorrelativos: React.FC = () => {
           if (deleteId) deleteCorrelativo(deleteId);
           setDeleteId(null);
         }}
-        onCancel={() => setDeleteId(null)}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
+        onClose={() => setDeleteId(null)}
       />
     </Box>
   );

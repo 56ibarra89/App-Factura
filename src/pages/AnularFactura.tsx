@@ -24,9 +24,12 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import TablePagination from "@mui/material/TablePagination";
+import { useMesasConfig } from "../hooks/useMesasConfig";
+import { formatTableName } from "../utils/formatUtils";
 
 const AnularFactura = () => {
   const { updateOrderStatus } = useOrderContext();
+  const { floorsConfig } = useMesasConfig();
 
   const today = new Date();
   const getLocalDate = (d: Date) => new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
@@ -231,9 +234,9 @@ const AnularFactura = () => {
                         {new Date(order.timestamp).toLocaleTimeString()}
                       </Typography>
                     </TableCell>
-                    <TableCell>#{order.invoiceNumber || order.id.split("-")[1]}</TableCell>
+                    <TableCell>{order.invoiceNumber ? `#${order.invoiceNumber}` : "Sin Factura"}</TableCell>
                     <TableCell>
-                      {order.customerName || (order.tableId ? `Mesa ${order.tableId}` : "--")}
+                      {order.customerName || (order.tableId ? formatTableName(order.tableId, floorsConfig) : "--")}
                     </TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>C${order.total.toFixed(2)}</TableCell>
                     <TableCell align="center">

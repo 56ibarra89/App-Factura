@@ -54,6 +54,10 @@ export default function MesasPage() {
   const [tableSelectMode, setTableSelectMode] = useState<
     "unir" | "mover" | null
   >(null);
+  
+  // Checkout snapshot state
+  const [checkoutOrder, setCheckoutOrder] = useState<any>(null);
+  const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<string | undefined>(undefined);
 
   // Obtener órdenes activas desde el contexto
   const { getOrderByTable, moveOrder, unirMesas, finalizeOrder } =
@@ -122,10 +126,14 @@ export default function MesasPage() {
     navigate(`/facturacion?tableId=${selectedMesaId}`);
   }, [selectedMesaId, isReserved, releaseTable, navigate]);
 
+  const activeOrder = useMemo(() => selectedMesaId ? getOrderByTable(selectedMesaId) : null, [selectedMesaId, getOrderByTable]);
+
   const handleCheckoutTable = useCallback(() => {
-    if (!selectedMesaId) return;
+    if (!selectedMesaId || !activeOrder) return;
+    setCheckoutOrder(activeOrder);
+    setCreatedInvoiceNumber(undefined);
     setIsPreviewOpen(true);
-  }, [selectedMesaId]);
+  }, [selectedMesaId, activeOrder]);
 
   const handleUnirMesas = useCallback(() => {
     if (!selectedMesaId) return;
@@ -162,37 +170,56 @@ export default function MesasPage() {
   }, [mesas, selectedMesaId]);
 
   // Obtener la orden de la mesa seleccionada
-  const activeOrder = useMemo(() => selectedMesaId ? getOrderByTable(selectedMesaId) : null, [selectedMesaId, getOrderByTable]);
   const currentOrder: CartItemType[] = useMemo(() => activeOrder ? activeOrder.items : [], [activeOrder]);
 
   const { subTotal: orderSubTotal, taxAmount: orderTaxAmount, total: orderTotal } = useMemo(
     () => calculateCartTotals(currentOrder, taxes, isExonerated),
     [currentOrder, taxes, isExonerated]
   );
+  
+  const checkoutCart: CartItemType[] = useMemo(() => checkoutOrder ? checkoutOrder.items : [], [checkoutOrder]);
+  const { subTotal: checkoutSubTotal, taxAmount: checkoutTaxAmount, total: checkoutTotal } = useMemo(
+    () => calculateCartTotals(checkoutCart, taxes, isExonerated),
+    [checkoutCart, taxes, isExonerated]
+  );
 
-  const handleFinalConfirm = useCallback((
+  const handleFinalConfirm = useCallback(async (
     paymentMethod: PaymentMethod,
     splitAmounts?: { efectivo: number; tarjeta: number },
     customerName?: string,
     orderType?: OrderType,
     customerAddress?: string,
   ) => {
-    if (!activeOrder) return;
+    if (!checkoutOrder) return;
 
-    finalizeOrder(
-      activeOrder.id,
+    const invoiceNumber = await finalizeOrder(
+      checkoutOrder.id,
       paymentMethod,
       splitAmounts,
       customerName,
       orderType,
       customerAddress,
-      orderTotal,
+      checkoutTotal,
     );
 
-    window.print();
-    setIsPreviewOpen(false);
-    restoreFocus();
-  }, [activeOrder, finalizeOrder, orderTotal, restoreFocus]);
+    setCreatedInvoiceNumber(invoiceNumber || "000001");
+    
+    setTimeout(() => {
+      if (window.ipcRenderer) {
+        window.ipcRenderer.send("print-silent");
+        setTimeout(() => {
+          setIsPreviewOpen(false);
+          setCheckoutOrder(null);
+          restoreFocus();
+        }, 500);
+      } else {
+        window.print();
+        setIsPreviewOpen(false);
+        setCheckoutOrder(null);
+        restoreFocus();
+      }
+    }, 500);
+  }, [checkoutOrder, finalizeOrder, checkoutTotal, restoreFocus]);
 
   const handleSalir = () => navigate("/home");
 
@@ -208,6 +235,7 @@ export default function MesasPage() {
 
   const closePreview = useCallback(() => {
     setIsPreviewOpen(false);
+    setCheckoutOrder(null);
     restoreFocus();
   }, [restoreFocus]);
 
@@ -297,13 +325,13 @@ export default function MesasPage() {
         disableEnforceFocus
       />
 
-      {activeOrder && (
+      {checkoutOrder && (
         <FacturaPreviewDialog
           open={isPreviewOpen}
-          cart={currentOrder}
-          subTotal={orderSubTotal}
-          taxAmount={orderTaxAmount}
-          total={orderTotal}
+          cart={checkoutCart}
+          subTotal={checkoutSubTotal}
+          taxAmount={checkoutTaxAmount}
+          total={checkoutTotal}
           onClose={closePreview}
           onConfirm={handleFinalConfirm}
           title={`Cerrar Cuenta Mesa ${selectedMesaId}`}
@@ -311,6 +339,7 @@ export default function MesasPage() {
           isTableMode={false}
           disableRestoreFocus
           disableEnforceFocus
+          invoiceNumber={createdInvoiceNumber}
         />
       )}
     </Box>

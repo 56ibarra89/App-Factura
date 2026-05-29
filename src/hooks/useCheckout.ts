@@ -46,15 +46,19 @@ export function useCheckout(
   );
 
   const saveTableOrder = useCallback(
-    (orderId?: string, tableId?: string) => {
+    async (orderId?: string, tableId?: string) => {
       const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated, promotion);
 
       if (orderId) {
         // Actualizar orden existente
-        updateOrderItems(orderId, cart, total, subTotal, taxAmount);
+        await updateOrderItems(orderId, cart, total, subTotal, taxAmount);
+        return orderId;
       } else {
         // Crear nueva orden para la mesa
-        addOrder(cart, total, undefined, "local", undefined, tableId, undefined, undefined, subTotal, taxAmount, discountAmount, promotion?.code);
+        const invoiceNumber = await addOrder(cart, total, undefined, "local", undefined, tableId, undefined, undefined, subTotal, taxAmount, discountAmount, promotion?.code);
+        // Note: the order ID is created synchronously locally, we can get it from the last added order or just not rely on it immediately. But wait, addOrder creates it internally.
+        // Let's just await it to ensure backend sync is done before proceeding.
+        return invoiceNumber;
       }
     },
     [cart, taxes, isExonerated, promotion, discountAmount, addOrder, updateOrderItems]

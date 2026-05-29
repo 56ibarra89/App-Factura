@@ -118,7 +118,6 @@ export async function syncUpdateOrderItems(order: Order) {
       taxAmount: order.taxAmount,
       discountAmount: order.discountAmount,
       isSentToKitchen: order.isSentToKitchen,
-      status: order.status.toLowerCase(),
     }),
   });
 }
@@ -127,15 +126,17 @@ export async function syncFinalizeOrder(order: Order): Promise<Order> {
   const response = await apiClient(`/orders/${order.id}/finalize`, {
     method: 'PATCH',
     body: JSON.stringify({
-      paymentMethod: order.paymentMethod?.toUpperCase(),
+      payments: [{
+        method: order.paymentMethod?.toUpperCase() || 'EFECTIVO',
+        amount: order.total
+      }],
       customerSnapshotName: order.customerName,
       orderType: order.orderType?.toLowerCase(),
       customerAddress: order.customerAddress,
       subTotal: order.subTotal,
       taxAmount: order.taxAmount,
       discountAmount: order.discountAmount,
-      total: order.total,
-      status: 'paid'
+      finalTotal: order.total
     }),
   });
   return mapBackendOrderToFrontend(response);

@@ -19,7 +19,7 @@ export function useMesasConfig() {
       const data = await apiClient('/mesas/config');
       setFloors(data);
       setInitialFloors(data);
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Error fetching floors config:', e);
     }
   };
@@ -58,7 +58,7 @@ export function useMesasConfig() {
       });
       setInitialFloors(floors); // Reset unsaved changes tracking
       return true;
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Error updating floors config:', e);
       const errorMessage = e instanceof Error ? e.message : 'Error guardando la configuración de mesas.';
       setError(errorMessage);

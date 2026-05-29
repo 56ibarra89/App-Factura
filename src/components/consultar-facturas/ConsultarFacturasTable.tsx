@@ -3,6 +3,8 @@ import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody
 import PrintIcon from "@mui/icons-material/Print";
 import { Order } from "../../types/order.types";
 import { statusLabels, statusColors } from "../../config/orderStatusConfig";
+import { useMesasConfig } from "../../hooks/useMesasConfig";
+import { formatTableName } from "../../utils/formatUtils";
 
 interface ConsultarFacturasTableProps {
   orders: Order[];
@@ -11,6 +13,7 @@ interface ConsultarFacturasTableProps {
 }
 
 const ConsultarFacturasTable = ({ orders, loading, onPrintClick }: ConsultarFacturasTableProps) => {
+  const { floorsConfig } = useMesasConfig();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -87,11 +90,11 @@ const ConsultarFacturasTable = ({ orders, loading, onPrintClick }: ConsultarFact
                         {order.timestamp.toLocaleTimeString()}
                       </Typography>
                     </TableCell>
-                    <TableCell>#{order.invoiceNumber || order.id.split("-")[1]}</TableCell>
+                    <TableCell>{order.invoiceNumber ? `#${order.invoiceNumber}` : "Sin Factura"}</TableCell>
                     <TableCell>
                       {order.customerName && order.customerName !== "Mesa"
                         ? order.customerName
-                        : (order.tableId ? `Mesa ${order.tableId}` : "--")}
+                        : (order.tableId ? formatTableName(order.tableId, floorsConfig) : "--")}
                     </TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>
                       C${order.total.toFixed(2)}

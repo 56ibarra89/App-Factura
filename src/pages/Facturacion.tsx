@@ -194,11 +194,11 @@ const Facturacion = () => {
     setIsKitchenConfirmOpen(true);
   };
 
-  const handleConfirmKitchenDispatch = () => {
+  const handleConfirmKitchenDispatch = async () => {
     if (!tableId) return;
 
     // Primero guardamos el estado actual para no perder nada
-    handleSaveTableOrder(activeOrder?.id, tableId);
+    await handleSaveTableOrder(activeOrder?.id, tableId);
 
     // Luego marcamos la mesa como enviada a cocina
     markAsSentToKitchenByTable(tableId);

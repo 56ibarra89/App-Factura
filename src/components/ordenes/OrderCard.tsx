@@ -14,7 +14,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { Order, OrderStatus } from "../../types/order.types";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { statusColors, statusLabels } from "../../config/orderStatusConfig";
-import { formatItemName } from "../../utils/formatUtils";
+import { formatItemName, formatTableName } from "../../utils/formatUtils";
+import { useMesasConfig } from "../../hooks/useMesasConfig";
 
 interface OrderCardProps {
   order: Order;
@@ -23,6 +24,7 @@ interface OrderCardProps {
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }) => {
+  const { floorsConfig } = useMesasConfig();
   const timeElapsed = Math.floor((new Date().getTime() - new Date(order.timestamp).getTime()) / 60000);
 
   // Obtener el sentAt del primer ítem (todos los ítems del ticket comparten el mismo sentAt)
@@ -45,7 +47,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
           <Box>
             <Typography variant="h6" fontWeight="bold" color="text.primary">
-              #{order.invoiceNumber || order.id.split('-')[1]}
+              {order.invoiceNumber ? `#${order.invoiceNumber}` : "Orden en Curso"}
             </Typography>
             <Typography variant="caption" color="text.secondary" display="block">
               {new Date(order.timestamp).toLocaleTimeString()} ({timeElapsed} min)
@@ -62,7 +64,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
                 )}
                 {order.tableId && (
                   <Chip 
-                    label={`Mesa ${order.tableId}`} 
+                    label={formatTableName(order.tableId, floorsConfig)} 
                     size="small" 
                     color="secondary"
                     variant="outlined"

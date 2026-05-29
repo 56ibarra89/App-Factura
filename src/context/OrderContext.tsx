@@ -58,7 +58,7 @@ interface OrderContextProps {
     total: number,
     subTotal?: number,
     taxAmount?: number,
-  ) => void;
+  ) => Promise<void>;
   getOrderByTable: (tableId: string) => Order | undefined;
   finalizeOrder: (
     orderId: string,
@@ -102,6 +102,11 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   const { username } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
 
+  const ordersRef = React.useRef<Order[]>(orders);
+  useEffect(() => {
+    ordersRef.current = orders;
+  }, [orders]);
+
   useEffect(() => {
     const loadOrders = async () => {
       try {
@@ -113,81 +118,60 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       }
     };
     loadOrders();
-    // Refresh periodicamente cada 10 segundos para mantener sincronización
     const interval = setInterval(loadOrders, 10000);
     return () => clearInterval(interval);
   }, []);
 
+  const updateOrdersState = useCallback((updater: (prev: Order[]) => Order[]) => {
+    const next = updater(ordersRef.current);
+    ordersRef.current = next;
+    setOrders(next);
+  }, []);
+
   const addOrder = useCallback<OrderCommandsContextProps["addOrder"]>(
     async (
-      items,
-      total,
-      customerName,
-      orderType,
-      customerAddress,
-      tableId,
-      paymentMethod,
-      splitAmounts,
-      subTotal,
-      taxAmount,
-      discountAmount,
-      promotionCode,
+      items, total, customerName, orderType, customerAddress, tableId, paymentMethod, splitAmounts, subTotal, taxAmount, discountAmount, promotionCode
     ) => {
       const nowMs = Date.now();
       const newOrder = createOrder({
-        items,
-        total,
-        username,
-        customerName,
-        orderType,
-        customerAddress,
-        tableId,
-        paymentMethod,
-        splitAmounts,
-        subTotal,
-        taxAmount,
-        discountAmount,
-        promotionCode,
-        nowMs,
+        items, total, username, customerName, orderType, customerAddress, tableId, paymentMethod, splitAmounts, subTotal, taxAmount, discountAmount, promotionCode, nowMs
       });
 
-      setOrders((prev) => [newOrder, ...prev]);
+      updateOrdersState((prev) => [newOrder, ...prev]);
       try {
         const createdOrder = await syncAddOrderToBackend(newOrder);
-        setOrders(prev => prev.map(o => o.id === newOrder.id ? { ...o, invoiceNumber: createdOrder.invoiceNumber } : o));
+        updateOrdersState(prev => prev.map(o => o.id === newOrder.id ? { ...o, invoiceNumber: createdOrder.invoiceNumber } : o));
         return createdOrder.invoiceNumber;
       } catch (error) {
         console.error(error);
       }
     },
-    [username],
+    [username, updateOrdersState],
   );
 
   const updateOrderStatus = useCallback<OrderCommandsContextProps["updateOrderStatus"]>(
     (orderId, status, sentAt) => {
-      setOrders((prev) => {
-        const { orders: nextOrders } =
-          orderMutations.updateOrderStatus(prev, orderId, status, sentAt);
+      updateOrdersState((prev) => {
+        const { orders: nextOrders } = orderMutations.updateOrderStatus(prev, orderId, status, sentAt);
         return nextOrders;
       });
       syncUpdateOrderStatus(orderId, status, sentAt).catch(console.error);
     },
-    [],
+    [updateOrdersState],
   );
 
   const removeOrder = useCallback<OrderCommandsContextProps["removeOrder"]>(
     (orderId) => {
-      setOrders((prev) => prev.filter((order) => order.id !== orderId));
+      updateOrdersState((prev) => prev.filter((order) => order.id !== orderId));
     },
-    [],
+    [updateOrdersState],
   );
 
   const updateOrderItems = useCallback<OrderCommandsContextProps["updateOrderItems"]>(
-    (orderId, items, total, subTotal, taxAmount) => {
+    async (orderId, items, total, subTotal, taxAmount) => {
       let modifiedOrder: Order | undefined;
-      setOrders((prev) => {
-        const { orders: nextOrders, modified } =
-          orderMutations.updateOrderItems(prev, orderId, items, total);
+      updateOrdersState((prev) => {
+        const { orders: nextOrders, modified } = orderMutations.updateOrderItems(prev, orderId, items, total);
         if (modified) {
           if (typeof subTotal === 'number') modified.subTotal = subTotal;
           if (typeof taxAmount === 'number') modified.taxAmount = taxAmount;
@@ -195,12 +179,11 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         }
         return nextOrders;
       });
-      
       if (modifiedOrder) {
-        syncUpdateOrderItems(modifiedOrder).catch(console.error);
+        await syncUpdateOrderItems(modifiedOrder).catch(console.error);
       }
     },
-    [],
+    [updateOrdersState],
   );
 
   const getOrderByTable = useCallback<OrderQueriesContextProps["getOrderByTable"]>(
@@ -210,7 +193,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
 
   const clearHistory = useCallback<OrderCommandsContextProps["clearHistory"]>(
     () => {
-      setOrders((prev) => {
+      updateOrdersState((prev) => {
         const toHide = prev.filter(o => o.status === 'paid' || o.status === 'cancelled').map(o => o.id);
         if (toHide.length > 0) {
           const hiddenIds = JSON.parse(localStorage.getItem('hiddenOrderIds') || '[]');
@@ -219,40 +202,17 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         return orderMutations.clearHistory(prev).orders;
       });
     },
-    [],
+    [updateOrdersState],
   );
 
   const finalizeOrder = useCallback<OrderCommandsContextProps["finalizeOrder"]>(
     async (
-      orderId,
-      paymentMethod,
-      splitAmounts,
-      customerName,
-      orderType,
-      customerAddress,
-      finalTotal,
-      subTotal,
-      taxAmount,
-      discountAmount,
-      promotionCode,
+      orderId, paymentMethod, splitAmounts, customerName, orderType, customerAddress, finalTotal, subTotal, taxAmount, discountAmount, promotionCode
     ) => {
       let modifiedOrder: Order | undefined;
-      setOrders((prev) => {
+      updateOrdersState((prev) => {
         const { orders: nextOrders, modified } = orderMutations.finalizeOrder(
-          prev,
-          orderId,
-          {
-            paymentMethod,
-            splitAmounts,
-            customerName,
-            orderType,
-            customerAddress,
-            finalTotal,
-            subTotal,
-            taxAmount,
-            discountAmount,
-            promotionCode,
-          },
+          prev, orderId, { paymentMethod, splitAmounts, customerName, orderType, customerAddress, finalTotal, subTotal, taxAmount, discountAmount, promotionCode }
         );
         modifiedOrder = modified;
         return nextOrders;
@@ -261,24 +221,21 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       if (modifiedOrder) {
         try {
           const finalizedOrder = await syncFinalizeOrder(modifiedOrder);
-          setOrders(prev => prev.map(o => o.id === modifiedOrder!.id ? { ...o, invoiceNumber: finalizedOrder.invoiceNumber } : o));
+          updateOrdersState(current => current.map(o => o.id === modifiedOrder!.id ? { ...o, status: 'paid', invoiceNumber: finalizedOrder.invoiceNumber } : o));
           return finalizedOrder.invoiceNumber;
         } catch (error) {
           console.error(error);
         }
       }
     },
-    [],
+    [updateOrdersState],
   );
 
-  const markAsSentToKitchen = useCallback<
-    OrderCommandsContextProps["markAsSentToKitchen"]
-  >(
+  const markAsSentToKitchen = useCallback<OrderCommandsContextProps["markAsSentToKitchen"]>(
     (orderId) => {
       let modifiedOrder: Order | undefined;
-      setOrders((prev) => {
-        const { orders: nextOrders, modified } =
-          orderMutations.markAsSentToKitchen(prev, orderId, Date.now());
+      updateOrdersState((prev) => {
+        const { orders: nextOrders, modified } = orderMutations.markAsSentToKitchen(prev, orderId, Date.now());
         modifiedOrder = modified;
         return nextOrders;
       });
@@ -286,17 +243,14 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         syncUpdateOrderItems(modifiedOrder).catch(console.error);
       }
     },
-    [],
+    [updateOrdersState],
   );
 
-  const markAsSentToKitchenByTable = useCallback<
-    OrderCommandsContextProps["markAsSentToKitchenByTable"]
-  >(
+  const markAsSentToKitchenByTable = useCallback<OrderCommandsContextProps["markAsSentToKitchenByTable"]>(
     (tableId) => {
       let modifiedOrder: Order | undefined;
-      setOrders((prev) => {
-        const { orders: nextOrders, modified } =
-          orderMutations.markAsSentToKitchenByTable(prev, tableId, Date.now());
+      updateOrdersState((prev) => {
+        const { orders: nextOrders, modified } = orderMutations.markAsSentToKitchenByTable(prev, tableId, Date.now());
         modifiedOrder = modified;
         return nextOrders;
       });
@@ -304,18 +258,14 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         syncUpdateOrderItems(modifiedOrder).catch(console.error);
       }
     },
-    [],
+    [updateOrdersState],
   );
 
   const moveOrder = useCallback<OrderCommandsContextProps["moveOrder"]>(
     (sourceTableId, destTableId) => {
       let modifiedOrder: Order | undefined;
-      setOrders((prev) => {
-        const { orders: nextOrders, modified } = orderMutations.moveOrder(
-          prev,
-          sourceTableId,
-          destTableId,
-        );
+      updateOrdersState((prev) => {
+        const { orders: nextOrders, modified } = orderMutations.moveOrder(prev, sourceTableId, destTableId);
         modifiedOrder = modified;
         return nextOrders;
       });
@@ -323,18 +273,14 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         syncUpdateTables(modifiedOrder.id, modifiedOrder.linkedTables || (modifiedOrder.tableId ? [modifiedOrder.tableId] : [])).catch(console.error);
       }
     },
-    [],
+    [updateOrdersState],
   );
 
   const unirMesas = useCallback<OrderCommandsContextProps["unirMesas"]>(
     (sourceTableId, destTableId) => {
       let modifiedOrder: Order | undefined;
-      setOrders((prev) => {
-        const { orders: nextOrders, modified } = orderMutations.unirMesas(
-          prev,
-          sourceTableId,
-          destTableId,
-        );
+      updateOrdersState((prev) => {
+        const { orders: nextOrders, modified } = orderMutations.unirMesas(prev, sourceTableId, destTableId);
         modifiedOrder = modified;
         return nextOrders;
       });
@@ -342,7 +288,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         syncUpdateTables(modifiedOrder.id, modifiedOrder.linkedTables || (modifiedOrder.tableId ? [modifiedOrder.tableId] : [])).catch(console.error);
       }
     },
-    [],
+    [updateOrdersState],
   );
 
   const queriesValue = useMemo<OrderQueriesContextProps>(
