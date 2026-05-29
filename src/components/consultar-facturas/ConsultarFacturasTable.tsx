@@ -87,7 +87,7 @@ const ConsultarFacturasTable = ({ orders, loading, onPrintClick }: ConsultarFact
                         {order.timestamp.toLocaleTimeString()}
                       </Typography>
                     </TableCell>
-                    <TableCell>#{order.id.split("-")[1]}</TableCell>
+                    <TableCell>#{order.invoiceNumber || order.id.split("-")[1]}</TableCell>
                     <TableCell>
                       {order.customerName && order.customerName !== "Mesa"
                         ? order.customerName

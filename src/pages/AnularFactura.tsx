@@ -231,7 +231,7 @@ const AnularFactura = () => {
                         {new Date(order.timestamp).toLocaleTimeString()}
                       </Typography>
                     </TableCell>
-                    <TableCell>#{order.id.split("-")[1]}</TableCell>
+                    <TableCell>#{order.invoiceNumber || order.id.split("-")[1]}</TableCell>
                     <TableCell>
                       {order.customerName || (order.tableId ? `Mesa ${order.tableId}` : "--")}
                     </TableCell>

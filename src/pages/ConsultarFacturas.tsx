@@ -104,8 +104,8 @@ const ConsultarFacturas = () => {
           customerName={selectedOrder.customerName}
           customerAddress={selectedOrder.customerAddress}
           orderType={selectedOrder.orderType}
-          invoiceNumber={selectedOrder.id.split("-")[1]}
-          title={`Factura #${selectedOrder.id.split("-")[1]} - ${selectedOrder.customerName || "Cliente"}`}
+          invoiceNumber={selectedOrder.invoiceNumber || selectedOrder.id.split("-")[1]}
+          title={`Factura #${selectedOrder.invoiceNumber || selectedOrder.id.split("-")[1]} - ${selectedOrder.customerName || "Cliente"}`}
           confirmText="Imprimir"
           onConfirm={() => {
             if (window.ipcRenderer) {

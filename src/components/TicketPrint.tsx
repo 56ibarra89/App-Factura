@@ -2,6 +2,7 @@ import { Box, Typography, GlobalStyles } from "@mui/material";
 import { CartItemType } from "../types/cart";
 import { useEmpresaConfig } from "../hooks/useEmpresaConfig";
 import { useGeneralConfigData } from "../hooks/useGeneralConfigData";
+import { useDgiConfig } from "../hooks/useDgiConfig";
 import { formatItemName } from "../utils/formatUtils";
 
 interface TicketPrintProps {
@@ -31,6 +32,7 @@ const TicketPrint = ({
 }: TicketPrintProps) => {
   const { config: empresa } = useEmpresaConfig();
   const { config: general } = useGeneralConfigData();
+  const { dgiConfig } = useDgiConfig();
 
   const formatDate = () => {
     const d = new Date();
@@ -105,6 +107,16 @@ const TicketPrint = ({
           <Typography variant="body2" fontFamily="inherit">
             Tel: {empresa.phone}
           </Typography>
+          {dgiConfig && dgiConfig.resolutionNumber && (
+            <Box mt={1}>
+              <Typography variant="body2" fontFamily="inherit" fontSize="10px">
+                Resolución DGI: {dgiConfig.resolutionNumber}
+              </Typography>
+              <Typography variant="body2" fontFamily="inherit" fontSize="10px">
+                Serie autorizada: {dgiConfig.startNumber} al {dgiConfig.endNumber}
+              </Typography>
+            </Box>
+          )}
         </Box>
 
         <Box mb={2}>

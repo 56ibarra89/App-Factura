@@ -42,6 +42,7 @@ interface FacturaPreviewDialogProps {
   discountAmount?: number;
   taxAmount: number;
   total: number;
+  invoiceNumber?: string;
   onApplyPromotion?: (promo: AppliedPromotion) => void;
   onRemovePromotion?: () => void;
   onClose: () => void;
@@ -82,6 +83,7 @@ export default function FacturaPreviewDialog({
   initialCustomer = null,
   initialPhone = "",
   initialOrderType = "local",
+  invoiceNumber,
 }: FacturaPreviewDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("EFECTIVO");
   const [splitAmounts, setSplitAmounts] = useState({ efectivo: 0, tarjeta: 0 });
@@ -499,6 +501,7 @@ export default function FacturaPreviewDialog({
         customerName={customerName}
         customerAddress={customerAddress}
         orderType={orderType}
+        invoiceNumber={invoiceNumber}
       />
     </>
   );

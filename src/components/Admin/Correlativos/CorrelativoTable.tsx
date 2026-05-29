@@ -82,11 +82,7 @@ const CorrelativoTable: React.FC<CorrelativoTableProps> = ({
                 <TableCell align="right">
                   <IconButton
                     size="small"
-                    onClick={() => {
-                      if (window.confirm("¿Estás seguro de eliminar este registro?")) {
-                        onDelete(row.id);
-                      }
-                    }}
+                    onClick={() => onDelete(row.id)}
                     color="error"
                   >
                     <DeleteIcon fontSize="small" />

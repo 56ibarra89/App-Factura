@@ -31,6 +31,7 @@ export function mapBackendOrderToFrontend(backendOrder: any): Order {
     paymentMethod: backendOrder.payments && backendOrder.payments.length > 0 ? (backendOrder.payments[0].method.toLowerCase() as PaymentMethod) : undefined,
     cashierName: backendOrder.cashierSnapshotName || undefined,
     isSentToKitchen: backendOrder.isSentToKitchen,
+    invoiceNumber: backendOrder.invoice?.invoiceNumber || backendOrder.invoiceNumber || undefined,
   };
 }
 
@@ -46,7 +47,7 @@ export async function fetchOrdersByDateRange(startDate: Date, endDate: Date): Pr
   return data.map(mapBackendOrderToFrontend);
 }
 
-export async function syncAddOrderToBackend(order: Order): Promise<void> {
+export async function syncAddOrderToBackend(order: Order): Promise<Order> {
   const payload = {
     id: order.id,
     items: order.items.map(i => ({
@@ -79,10 +80,11 @@ export async function syncAddOrderToBackend(order: Order): Promise<void> {
     }] : undefined,
   };
 
-  await apiClient('/orders', {
+  const response = await apiClient('/orders', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+  return mapBackendOrderToFrontend(response);
 }
 
 export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, sentAt?: number) {
@@ -121,8 +123,8 @@ export async function syncUpdateOrderItems(order: Order) {
   });
 }
 
-export async function syncFinalizeOrder(order: Order) {
-  await apiClient(`/orders/${order.id}/finalize`, {
+export async function syncFinalizeOrder(order: Order): Promise<Order> {
+  const response = await apiClient(`/orders/${order.id}/finalize`, {
     method: 'PATCH',
     body: JSON.stringify({
       paymentMethod: order.paymentMethod?.toUpperCase(),
@@ -136,6 +138,7 @@ export async function syncFinalizeOrder(order: Order) {
       status: 'paid'
     }),
   });
+  return mapBackendOrderToFrontend(response);
 }
 
 export async function syncUpdateTables(orderId: string, linkedTables: string[]) {

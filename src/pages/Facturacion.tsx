@@ -34,6 +34,7 @@ const Facturacion = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [isKitchenConfirmOpen, setIsKitchenConfirmOpen] = useState(false);
   const [certificadoOpen, setCertificadoOpen] = useState(false);
+  const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<string | undefined>(undefined);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -123,7 +124,7 @@ const Facturacion = () => {
     if (tableId) {
       if (isCheckoutMode && activeOrder) {
         // Finalizar y cobrar mesa
-        handleFinalizeTableOrder(
+        const invoiceNumber = await handleFinalizeTableOrder(
           activeOrder.id,
           paymentMethod,
           splitAmounts,
@@ -131,19 +132,23 @@ const Facturacion = () => {
           orderType,
           customerAddress,
         );
-        if (window.ipcRenderer) {
-          window.ipcRenderer.send("print-silent");
-          setTimeout(() => {
+        setCreatedInvoiceNumber(invoiceNumber || "000001");
+        
+        setTimeout(() => {
+          if (window.ipcRenderer) {
+            window.ipcRenderer.send("print-silent");
+            setTimeout(() => {
+              handleClearCart();
+              setPreviewOpen(false);
+              navigate("/mesas");
+            }, 500);
+          } else {
+            window.print();
             handleClearCart();
             setPreviewOpen(false);
             navigate("/mesas");
-          }, 500);
-        } else {
-          window.print();
-          handleClearCart();
-          setPreviewOpen(false);
-          navigate("/mesas");
-        }
+          }
+        }, 500);
       } else {
         // Solo guardar cambios en la mesa
         handleSaveTableOrder(activeOrder?.id, tableId);
@@ -153,28 +158,32 @@ const Facturacion = () => {
       }
     } else {
       // Venta directa normal
-      handleConfirmFactura(
+      const invoiceNumber = await handleConfirmFactura(
         paymentMethod,
         splitAmounts,
         customerName,
         orderType,
         customerAddress,
       );
-      if (window.ipcRenderer) {
-        window.ipcRenderer.send("print-silent");
-        setTimeout(() => {
+      setCreatedInvoiceNumber(invoiceNumber || "000001");
+      
+      setTimeout(() => {
+        if (window.ipcRenderer) {
+          window.ipcRenderer.send("print-silent");
+          setTimeout(() => {
+            handleClearCart();
+            setPreviewOpen(false);
+            navigate("/home");
+          }, 500);
+        } else {
+          window.print();
           handleClearCart();
+          setDeliveryCustomer(null);
+          setDeliveryPhone("");
           setPreviewOpen(false);
           navigate("/home");
-        }, 500);
-      } else {
-        window.print();
-        handleClearCart();
-        setDeliveryCustomer(null);
-        setDeliveryPhone("");
-        setPreviewOpen(false);
-        navigate("/home");
-      }
+        }
+      }, 500);
     }
   };
 
@@ -311,6 +320,7 @@ const Facturacion = () => {
         initialCustomer={deliveryCustomer}
         initialPhone={deliveryPhone}
         initialOrderType={deliveryCustomer || deliveryPhone ? "delivery" : undefined}
+        invoiceNumber={createdInvoiceNumber}
       />
 
       <Snackbar

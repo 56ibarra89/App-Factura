@@ -45,7 +45,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
           <Box>
             <Typography variant="h6" fontWeight="bold" color="text.primary">
-              #{order.id.split('-')[1]}
+              #{order.invoiceNumber || order.id.split('-')[1]}
             </Typography>
             <Typography variant="caption" color="text.secondary" display="block">
               {new Date(order.timestamp).toLocaleTimeString()} ({timeElapsed} min)

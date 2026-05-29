@@ -44,7 +44,7 @@ interface OrderContextProps {
     taxAmount?: number,
     discountAmount?: number,
     promotionCode?: string,
-  ) => void;
+  ) => Promise<string | void>;
   updateOrderStatus: (
     orderId: string,
     status: OrderStatus,
@@ -72,7 +72,7 @@ interface OrderContextProps {
     taxAmount?: number,
     discountAmount?: number,
     promotionCode?: string,
-  ) => void;
+  ) => Promise<string | void>;
   markAsSentToKitchen: (orderId: string) => void;
   markAsSentToKitchenByTable: (tableId: string) => void;
   moveOrder: (sourceTableId: string, destTableId: string | string[]) => void;
@@ -119,7 +119,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   }, []);
 
   const addOrder = useCallback<OrderCommandsContextProps["addOrder"]>(
-    (
+    async (
       items,
       total,
       customerName,
@@ -152,7 +152,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       });
 
       setOrders((prev) => [newOrder, ...prev]);
-      syncAddOrderToBackend(newOrder).catch(console.error);
+      try {
+        const createdOrder = await syncAddOrderToBackend(newOrder);
+        setOrders(prev => prev.map(o => o.id === newOrder.id ? { ...o, invoiceNumber: createdOrder.invoiceNumber } : o));
+        return createdOrder.invoiceNumber;
+      } catch (error) {
+        console.error(error);
+      }
     },
     [username],
   );
@@ -217,7 +223,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   );
 
   const finalizeOrder = useCallback<OrderCommandsContextProps["finalizeOrder"]>(
-    (
+    async (
       orderId,
       paymentMethod,
       splitAmounts,
@@ -253,7 +259,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       });
       
       if (modifiedOrder) {
-        syncFinalizeOrder(modifiedOrder).catch(console.error);
+        try {
+          const finalizedOrder = await syncFinalizeOrder(modifiedOrder);
+          setOrders(prev => prev.map(o => o.id === modifiedOrder!.id ? { ...o, invoiceNumber: finalizedOrder.invoiceNumber } : o));
+          return finalizedOrder.invoiceNumber;
+        } catch (error) {
+          console.error(error);
+        }
       }
     },
     [],

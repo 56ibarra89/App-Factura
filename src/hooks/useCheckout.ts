@@ -16,7 +16,7 @@ export function useCheckout(
     useOrderCommands();
 
   const confirmFactura = useCallback(
-    (
+    async (
       paymentMethod?: string,
       splitAmounts?: { efectivo: number; tarjeta: number },
       customerName?: string,
@@ -26,7 +26,7 @@ export function useCheckout(
       const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated, promotion);
 
       // Crear y persistir la orden
-      addOrder(
+      const invoiceNumber = await addOrder(
         cart,
         total,
         customerName,
@@ -40,6 +40,7 @@ export function useCheckout(
         discountAmount,
         promotion?.code
       );
+      return invoiceNumber;
     },
     [cart, taxes, isExonerated, promotion, discountAmount, addOrder]
   );
@@ -60,7 +61,7 @@ export function useCheckout(
   );
 
   const finalizeTableOrder = useCallback(
-    (
+    async (
       orderId: string,
       paymentMethod: PaymentMethod,
       splitAmounts?: { efectivo: number; tarjeta: number },
@@ -69,7 +70,7 @@ export function useCheckout(
       customerAddress?: string
     ) => {
       const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated, promotion);
-      finalizeOrder(
+      const invoiceNumber = await finalizeOrder(
         orderId,
         paymentMethod,
         splitAmounts,
@@ -82,6 +83,7 @@ export function useCheckout(
         discountAmount,
         promotion?.code
       );
+      return invoiceNumber;
     },
     [cart, taxes, isExonerated, promotion, discountAmount, finalizeOrder]
   );

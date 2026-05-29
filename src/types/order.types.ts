@@ -30,4 +30,5 @@ export interface Order {
   cashierName?: string;
   isSentToKitchen?: boolean;
   linkedTables?: string[];
+  invoiceNumber?: string;
 }

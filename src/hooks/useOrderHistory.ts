@@ -65,6 +65,7 @@ export const useOrderHistory = () => {
     return orders.filter(
       (o) =>
         o.id.toLowerCase().includes(lowerQuery) ||
+        (o.invoiceNumber && o.invoiceNumber.toLowerCase().includes(lowerQuery)) ||
         (o.customerName && o.customerName.toLowerCase().includes(lowerQuery))
     );
   }, [orders, searchQuery]);
