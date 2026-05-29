@@ -29,8 +29,9 @@ const AnularFactura = () => {
   const { updateOrderStatus } = useOrderContext();
 
   const today = new Date();
-  const [startDate, setStartDate] = useState<string>(today.toISOString().split("T")[0]);
-  const [endDate, setEndDate] = useState<string>(today.toISOString().split("T")[0]);
+  const getLocalDate = (d: Date) => new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+  const [startDate, setStartDate] = useState<string>(getLocalDate(today));
+  const [endDate, setEndDate] = useState<string>(getLocalDate(today));
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
 

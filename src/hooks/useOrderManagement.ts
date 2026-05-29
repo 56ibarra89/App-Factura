@@ -32,7 +32,8 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
     const anyReady = items.some(i => i.kitchenStatus === 'ready');
     
     let ticketStatus = order.status;
-    if (allDelivered) ticketStatus = 'delivered';
+    if (order.status === 'cancelled') ticketStatus = 'cancelled';
+    else if (allDelivered) ticketStatus = 'delivered';
     else if (anyPending) ticketStatus = 'pending';
     else if (anyPreparing) ticketStatus = 'preparing';
     else if (anyReady) ticketStatus = 'ready';

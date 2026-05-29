@@ -4,6 +4,8 @@ import { getOrdersByDateRange } from "../services/db";
 
 export const useOrderHistory = () => {
   const today = new Date();
+  const getLocalDate = (d: Date) => new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split("T")[0];
+
   const lastMonth = new Date(
     today.getFullYear(),
     today.getMonth() - 1,
@@ -11,10 +13,10 @@ export const useOrderHistory = () => {
   );
 
   const [startDate, setStartDate] = useState<string>(
-    lastMonth.toISOString().split("T")[0]
+    getLocalDate(lastMonth)
   );
   const [endDate, setEndDate] = useState<string>(
-    today.toISOString().split("T")[0]
+    getLocalDate(today)
   );
   const [searchQuery, setSearchQuery] = useState("");
   

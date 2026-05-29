@@ -106,7 +106,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     const loadOrders = async () => {
       try {
         const backendOrders = await fetchOrdersFromBackend();
-        setOrders(backendOrders);
+        const hiddenIds = JSON.parse(localStorage.getItem('hiddenOrderIds') || '[]');
+        setOrders(backendOrders.filter(o => !hiddenIds.includes(o.id)));
       } catch (error) {
         console.error("Failed to load orders from backend", error);
       }
@@ -163,7 +164,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
           orderMutations.updateOrderStatus(prev, orderId, status, sentAt);
         return nextOrders;
       });
-      syncUpdateOrderStatus(orderId, status).catch(console.error);
+      syncUpdateOrderStatus(orderId, status, sentAt).catch(console.error);
     },
     [],
   );
@@ -203,7 +204,14 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
 
   const clearHistory = useCallback<OrderCommandsContextProps["clearHistory"]>(
     () => {
-      setOrders((prev) => orderMutations.clearHistory(prev).orders);
+      setOrders((prev) => {
+        const toHide = prev.filter(o => o.status === 'paid' || o.status === 'cancelled').map(o => o.id);
+        if (toHide.length > 0) {
+          const hiddenIds = JSON.parse(localStorage.getItem('hiddenOrderIds') || '[]');
+          localStorage.setItem('hiddenOrderIds', JSON.stringify([...new Set([...hiddenIds, ...toHide])]));
+        }
+        return orderMutations.clearHistory(prev).orders;
+      });
     },
     [],
   );

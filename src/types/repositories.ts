@@ -1,18 +1,7 @@
-import { Order } from "./order.types";
 import { Shift } from "./shift.types";
 import type { SystemLog, LogLevel } from "./log.types";
 import type { Customer } from "./customer.types";
 import type { Correlativo } from "./correlativo.types";
-
-/**
- * DIP: Abstracción para la persistencia de órdenes.
- * Los contextos dependen de esta interfaz, no de IndexedDB directamente.
- */
-export interface IOrderRepository {
-  save(order: Order): Promise<void>;
-  getByDateRange(startDate: Date, endDate: Date): Promise<Order[]>;
-  getById(id: string): Promise<Order | null>;
-}
 
 /**
  * DIP: Abstracción para la persistencia de turnos (cajas).

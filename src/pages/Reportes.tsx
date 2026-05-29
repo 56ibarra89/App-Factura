@@ -37,8 +37,8 @@ const Reportes = () => {
         return { startDate: startOfMonth(now), endDate: endOfMonth(now) };
       case "custom":
         return { 
-          startDate: startOfDay(new Date(customStart)), 
-          endDate: endOfDay(new Date(customEnd)) 
+          startDate: startOfDay(new Date(customStart + "T00:00:00")), 
+          endDate: endOfDay(new Date(customEnd + "T00:00:00")) 
         };
       default:
         return { startDate: startOfDay(now), endDate: endOfDay(now) };

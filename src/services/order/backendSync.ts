@@ -39,27 +39,36 @@ export async function fetchOrdersFromBackend(): Promise<Order[]> {
   return data.map(mapBackendOrderToFrontend);
 }
 
+export async function fetchOrdersByDateRange(startDate: Date, endDate: Date): Promise<Order[]> {
+  const start = startDate.toISOString();
+  const end = endDate.toISOString();
+  const data = await apiClient(`/orders?startDate=${start}&endDate=${end}`);
+  return data.map(mapBackendOrderToFrontend);
+}
+
 export async function syncAddOrderToBackend(order: Order): Promise<void> {
   const payload = {
     id: order.id,
     items: order.items.map(i => ({
       name: i.name,
       price: i.price,
-      size: i.size.toUpperCase(),
+      size: i.size.toLowerCase() === 'unico' ? 'único' : i.size.toLowerCase(),
       quantity: i.quantity,
       extras: i.extras ? i.extras.map(e => ({ name: e.name, price: e.price })) : [],
       note: i.note,
       giftQuantity: i.giftQuantity || 0,
       isSentToKitchen: !!i.isSentToKitchen,
+      sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
+      kitchenStatus: i.kitchenStatus,
     })),
     total: order.total,
     subTotal: order.subTotal,
     taxAmount: order.taxAmount,
     discountAmount: order.discountAmount,
-    status: order.status.toUpperCase(),
+    status: order.status.toLowerCase(),
     timestamp: order.timestamp.toISOString(),
     customerSnapshotName: order.customerName,
-    orderType: order.orderType ? order.orderType.toUpperCase() : undefined,
+    orderType: order.orderType ? order.orderType.toLowerCase() : undefined,
     customerAddress: order.customerAddress,
     cashierSnapshotName: order.cashierName,
     isSentToKitchen: order.isSentToKitchen,
@@ -76,12 +85,12 @@ export async function syncAddOrderToBackend(order: Order): Promise<void> {
   });
 }
 
-export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus) {
+export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, sentAt?: number) {
   await apiClient(`/orders/${orderId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({
-      status: status.toUpperCase(),
-      isSentToKitchen: status === "preparing" || status === "ready" || status === "delivered" ? true : undefined
+      status: status.toLowerCase(),
+      ...(sentAt ? { sentAt } : {})
     }),
   });
 }
@@ -93,19 +102,21 @@ export async function syncUpdateOrderItems(order: Order) {
       items: order.items.map(i => ({
         name: i.name,
         price: i.price,
-        size: i.size.toUpperCase(),
+        size: i.size.toLowerCase() === 'unico' ? 'único' : i.size.toLowerCase(),
         quantity: i.quantity,
         extras: i.extras ? i.extras.map(e => ({ name: e.name, price: e.price })) : [],
         note: i.note,
         giftQuantity: i.giftQuantity || 0,
-        isSentToKitchen: !!i.isSentToKitchen,
+      isSentToKitchen: !!i.isSentToKitchen,
+      sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
+      kitchenStatus: i.kitchenStatus,
       })),
       total: order.total,
       subTotal: order.subTotal,
       taxAmount: order.taxAmount,
       discountAmount: order.discountAmount,
       isSentToKitchen: order.isSentToKitchen,
-      status: order.status.toUpperCase(),
+      status: order.status.toLowerCase(),
     }),
   });
 }
@@ -116,13 +127,13 @@ export async function syncFinalizeOrder(order: Order) {
     body: JSON.stringify({
       paymentMethod: order.paymentMethod?.toUpperCase(),
       customerSnapshotName: order.customerName,
-      orderType: order.orderType?.toUpperCase(),
+      orderType: order.orderType?.toLowerCase(),
       customerAddress: order.customerAddress,
       subTotal: order.subTotal,
       taxAmount: order.taxAmount,
       discountAmount: order.discountAmount,
       total: order.total,
-      status: 'PAID'
+      status: 'paid'
     }),
   });
 }

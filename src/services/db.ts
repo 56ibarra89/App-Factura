@@ -4,10 +4,10 @@
  * La lógica real vive en src/repositories/.
  */
 
-// Re-exportar operaciones de órdenes
-import { orderRepository } from "../repositories/OrderRepository";
+// Re-exportar operaciones de órdenes (ahora desde backendSync)
+import { fetchOrdersByDateRange } from "./order/backendSync";
 export const getOrdersByDateRange = (startDate: Date, endDate: Date) =>
-  orderRepository.getByDateRange(startDate, endDate);
+  fetchOrdersByDateRange(startDate, endDate);
 
 // Re-exportar operaciones de turnos
 import { shiftRepository } from "../repositories/ShiftRepository";

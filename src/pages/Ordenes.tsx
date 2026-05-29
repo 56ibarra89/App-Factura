@@ -21,8 +21,7 @@ const Ordenes = () => {
   const { 
     activeOrders, 
     finishedOrders, 
-    updateOrderStatus, 
-    removeOrder,
+    updateOrderStatus,
     clearHistory
   } = useOrderManagement();
   
@@ -33,6 +32,10 @@ const Ordenes = () => {
     clearHistory();
     logService.log(username, userRole, "CLEAR_HISTORY", "Vaciado manual de todo el historial de órdenes");
     setIsClearConfirmOpen(false);
+  };
+
+  const handleDeleteOrder = (id: string) => {
+    updateOrderStatus(id, "cancelled");
   };
 
   return (
@@ -88,7 +91,7 @@ const Ordenes = () => {
         <OrderGrid 
           orders={activeOrders} 
           onUpdateStatus={updateOrderStatus} 
-          onDelete={removeOrder} 
+          onDelete={handleDeleteOrder} 
         />
       )}
 
@@ -100,7 +103,7 @@ const Ordenes = () => {
           <OrderGrid 
             orders={finishedOrders.slice(0, 50)} 
             onUpdateStatus={updateOrderStatus} 
-            onDelete={removeOrder} 
+            onDelete={handleDeleteOrder} 
           />
         </>
       )}
