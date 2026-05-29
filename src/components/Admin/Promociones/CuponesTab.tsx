@@ -34,7 +34,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import { CuponRule, CuponStatus } from "../../../data/promocionesMockData";
+import { CuponRule, CuponStatus } from "../../../types/promociones";
 
 // ── Helpers de presentación ──────────────────────────────────────────────────
 

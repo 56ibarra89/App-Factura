@@ -19,6 +19,7 @@ export default function ConfigurarMesas() {
   const { floorsConfig, updateFloorTables, addFloor, removeFloor, updateFloorName, error, clearError, saveAllChanges, hasUnsavedChanges, isSaving } = useMesasConfig();
   const [showSuccess, setShowSuccess] = useState(false);
   const [deleteData, setDeleteData] = useState<{ id: number; name: string } | null>(null);
+  const [editData, setEditData] = useState<{ id: number; name: string } | null>(null);
 
   const handleUpdate = (floorId: number, val: string) => {
     const count = parseInt(val) || 0;
@@ -43,6 +44,13 @@ export default function ConfigurarMesas() {
 
   const handleUpdateName = (floorId: number, name: string) => {
     updateFloorName(floorId, name);
+  };
+
+  const handleConfirmEdit = () => {
+    if (editData) {
+      handleUpdateName(editData.id, editData.name);
+      setEditData(null);
+    }
   };
 
   const handleSave = async () => {
@@ -112,7 +120,7 @@ export default function ConfigurarMesas() {
                   <IconButton
                     size="small"
                     onClick={() => {
-                      document.getElementById(`floor-name-${floor.id}`)?.focus();
+                      setEditData({ id: floor.id, name: floor.name });
                     }}
                     sx={{ color: "text.secondary" }}
                     title="Editar nombre"
@@ -131,21 +139,13 @@ export default function ConfigurarMesas() {
 
                 <Box display="flex" flexDirection="column" gap={1} mb={2} pr={7}>
                   <Box display="flex" alignItems="center" gap={1}>
-                    <TextField
-                      id={`floor-name-${floor.id}`}
-                      variant="standard"
-                      value={floor.name}
-                      onChange={(e) => handleUpdateName(floor.id, e.target.value)}
-                      InputProps={{ disableUnderline: true }}
-                      sx={{
-                        "& input": {
-                          fontWeight: "800",
-                          fontSize: "1.1rem",
-                          color: "text.primary",
-                          p: 0,
-                        }
-                      }}
-                    />
+                    <Typography
+                      variant="h6"
+                      fontWeight="800"
+                      color="text.primary"
+                    >
+                      {floor.name}
+                    </Typography>
                   </Box>
                   {floor.tableCount > 0 && (
                     <Typography variant="caption" fontWeight="bold" color="primary" sx={{ bgcolor: alpha(LOGIN_COLORS.primary, 0.08), px: 1, py: 0.3, borderRadius: 1, alignSelf: "flex-start" }}>
@@ -275,6 +275,43 @@ export default function ConfigurarMesas() {
             disableElevation
           >
             Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Diálogo de Edición */}
+      <Dialog
+        open={editData !== null}
+        onClose={() => setEditData(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Editar Nombre de Planta</DialogTitle>
+        <DialogContent>
+          <DialogContentText mb={2}>
+            Ingresa el nuevo nombre para esta planta:
+          </DialogContentText>
+          <TextField
+            autoFocus
+            fullWidth
+            variant="outlined"
+            value={editData?.name || ""}
+            onChange={(e) => editData && setEditData({ ...editData, name: e.target.value })}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') handleConfirmEdit();
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setEditData(null)} color="inherit">
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmEdit}
+            color="primary"
+            variant="contained"
+            disableElevation
+          >
+            Guardar
           </Button>
         </DialogActions>
       </Dialog>

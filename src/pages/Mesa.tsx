@@ -40,8 +40,8 @@ export default function MesasPage() {
   const activeFloors = useMemo(() => floorsConfig.filter((f) => f.tableCount > 0), [floorsConfig]);
   const floors = useMemo(() => 
     activeFloors.length > 0
-      ? activeFloors.map((f) => f.name)
-      : ["Primera Planta"], 
+      ? activeFloors.map((f) => ({ id: f.id, name: f.name }))
+      : [], 
   [activeFloors]);
 
   const [selectedFloor, setSelectedFloor] = useState(1);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { apiClient } from "../config/apiClient";
 
 export interface FloorConfig {
@@ -7,16 +7,6 @@ export interface FloorConfig {
   tableCount: number;
 }
 
-const DEFAULT_FLOORS: FloorConfig[] = [
-  { id: 1, name: "Primera Planta", tableCount: 15 },
-  { id: 2, name: "Segunda Planta", tableCount: 10 },
-  { id: 3, name: "Tercera Planta", tableCount: 0 },
-  { id: 4, name: "Cuarta Planta", tableCount: 0 },
-  { id: 5, name: "Quinta Planta", tableCount: 0 },
-  { id: 6, name: "Sexta Planta", tableCount: 0 },
-  { id: 7, name: "Séptima Planta", tableCount: 0 },
-  { id: 8, name: "Octava Planta", tableCount: 0 },
-];
 
 export function useMesasConfig() {
   const [floors, setFloors] = useState<FloorConfig[]>([]);

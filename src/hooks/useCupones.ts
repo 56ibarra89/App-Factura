@@ -3,7 +3,7 @@
  */
 import { useState, useCallback, useEffect } from "react";
 import { apiClient } from "../config/apiClient";
-import { CuponRule, CuponStatus } from "../data/promocionesMockData";
+import { CuponRule, CuponStatus } from "../types/promociones";
 
 // ── Función pura de dominio ──────────────────────────────────────────────────
 

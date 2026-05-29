@@ -18,7 +18,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { HappyHourRule } from "../../../data/promocionesMockData";
+import { HappyHourRule } from "../../../types/promociones";
 import { useProductContext } from "../../../context/ProductContext";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

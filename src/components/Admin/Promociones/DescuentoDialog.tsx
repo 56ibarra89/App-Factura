@@ -12,7 +12,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { DescuentoRule } from "../../../data/promocionesMockData";
+import { DescuentoRule } from "../../../types/promociones";
 import { useProductContext } from "../../../context/ProductContext";
 
 interface DescuentoDialogProps {

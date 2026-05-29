@@ -28,7 +28,7 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
-import { CuponRule, CuponStatus } from "../../../data/promocionesMockData";
+import { CuponRule, CuponStatus } from "../../../types/promociones";
 
 // ── Tipo de salida del formulario ────────────────────────────────────────────
 

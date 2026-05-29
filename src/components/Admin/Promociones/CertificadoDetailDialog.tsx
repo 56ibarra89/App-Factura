@@ -24,7 +24,7 @@ import {
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
-import { CertificadoRule } from "../../../data/promocionesMockData";
+import { CertificadoRule } from "../../../types/promociones";
 
 // ── Helpers de presentación ──────────────────────────────────────────────────
 

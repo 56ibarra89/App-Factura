@@ -163,7 +163,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
           orderMutations.updateOrderStatus(prev, orderId, status, sentAt);
         return nextOrders;
       });
-      syncUpdateOrderStatus(orderId, status, sentAt).catch(console.error);
+      syncUpdateOrderStatus(orderId, status).catch(console.error);
     },
     [],
   );

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { apiClient } from "../config/apiClient";
-import { DescuentoRule } from "../data/promocionesMockData";
+import { DescuentoRule } from "../types/promociones";
 
 export function useDescuentos() {
   const [descuentos, setDescuentos] = useState<DescuentoRule[]>([]);

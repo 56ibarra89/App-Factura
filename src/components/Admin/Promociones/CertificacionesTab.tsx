@@ -32,7 +32,7 @@ import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
-import { CertificadoRule } from "../../../data/promocionesMockData";
+import { CertificadoRule } from "../../../types/promociones";
 
 // ── Helper de presentación ───────────────────────────────────────────────────
 

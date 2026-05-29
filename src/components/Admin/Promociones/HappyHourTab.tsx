@@ -20,7 +20,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import { HappyHourRule } from "../../../data/promocionesMockData";
+import { HappyHourRule } from "../../../types/promociones";
 
 interface HappyHourTabProps {
   /** OCP: el componente renderiza datos recibidos por props, sin conocer su origen */

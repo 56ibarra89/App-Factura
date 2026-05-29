@@ -4,9 +4,9 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import { LOGIN_COLORS, LOGIN_GRADIENTS } from "../../theme/loginTheme";
 
 interface Props {
-  floors: string[];
+  floors: { id: number; name: string }[];
   selectedFloor: number;
-  onChangeFloor: (floor: number) => void;
+  onChangeFloor: (floorId: number) => void;
 }
 
 export default function SectionSidebar({
@@ -43,13 +43,13 @@ export default function SectionSidebar({
       </Box>
 
       <List sx={{ p: 2, flexGrow: 1, overflowY: "auto" }}>
-        {floors.map((floor, index) => {
-          const isSelected = selectedFloor === index + 1;
+        {floors.map((floor) => {
+          const isSelected = selectedFloor === floor.id;
           return (
-            <ListItem disablePadding key={floor} sx={{ mb: 1.5 }}>
+            <ListItem disablePadding key={floor.id} sx={{ mb: 1.5 }}>
               <ListItemButton
                 selected={isSelected}
-                onClick={() => onChangeFloor(index + 1)}
+                onClick={() => onChangeFloor(floor.id)}
                 sx={{
                   borderRadius: 3,
                   py: 1.8,
@@ -79,7 +79,7 @@ export default function SectionSidebar({
                   transition: "all 0.3s"
                 }} />
                 <ListItemText 
-                  primary={floor} 
+                  primary={floor.name} 
                   primaryTypographyProps={{ 
                     fontWeight: isSelected ? 800 : 500,
                     fontSize: "1rem",

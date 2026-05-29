@@ -18,7 +18,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PercentIcon from "@mui/icons-material/Percent";
-import { DescuentoRule } from "../../../data/promocionesMockData";
+import { DescuentoRule } from "../../../types/promociones";
 
 interface DescuentosTabProps {
   /** OCP: el componente renderiza datos recibidos por props, sin conocer su origen */

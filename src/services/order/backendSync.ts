@@ -76,7 +76,7 @@ export async function syncAddOrderToBackend(order: Order): Promise<void> {
   });
 }
 
-export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, sentAt?: number) {
+export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus) {
   await apiClient(`/orders/${orderId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { apiClient } from "../config/apiClient";
-import { HappyHourRule } from "../data/promocionesMockData";
+import { HappyHourRule } from "../types/promociones";
 
 export function useHappyHours() {
   const [happyHours, setHappyHours] = useState<HappyHourRule[]>([]);
