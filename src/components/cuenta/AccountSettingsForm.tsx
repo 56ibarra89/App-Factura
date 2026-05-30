@@ -54,8 +54,8 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
             label="Nombre de Usuario"
             variant="outlined"
             value={data.nombreUsuario}
-            disabled
-            helperText="El nombre de usuario no se puede cambiar"
+            onChange={(e) => onChange("nombreUsuario", e.target.value)}
+            helperText="Debe ser único en el sistema. Te cerrará sesión si lo cambias."
           />
         </Box>
 

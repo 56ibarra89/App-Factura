@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { localStore, setJson, tryGetJson } from "../services/storage/storage";
+import { apiClient } from "../config/apiClient";
+import { authService } from "../services/authService";
 
 export interface AccountData {
+  id?: string;
   nombreCompleto: string;
   nombreUsuario: string;
   email: string;
@@ -13,7 +15,7 @@ export interface AccountData {
 }
 
 export function useAccountSettings() {
-  const { username, email } = useAuth();
+  const { username, email, updateUsername } = useAuth();
 
   const [data, setData] = useState<AccountData>({
     nombreCompleto: "",
@@ -29,28 +31,27 @@ export function useAccountSettings() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  // Simular carga de datos iniciales
   useEffect(() => {
-    const storageKey = `account_data_${username}`;
-    const parsed = tryGetJson<{ nombreCompleto?: string; pin?: string }>(
-      localStore,
-      storageKey,
-    );
-    if (parsed) {
-      setData((prev) => ({
-        ...prev,
-        nombreCompleto: parsed.nombreCompleto || "",
-        pin: parsed.pin || "",
-      }));
-    } else {
-      // Valores por defecto
-      setData((prev) => ({
-        ...prev,
-        nombreCompleto:
-          username === "admin" ? "Administrador Principal" : "Usuario Creado",
-        pin: username === "admin" ? "1234" : "0000",
-      }));
-    }
+    if (!username) return;
+
+    const fetchProfile = async () => {
+      try {
+        const user = await apiClient(`/users/username/${username}`);
+        setData((prev) => ({
+          ...prev,
+          id: user.id,
+          nombreUsuario: user.username || "",
+          nombreCompleto: `${user.firstName} ${user.lastName}`.trim(),
+          email: user.email || "",
+          pin: user.pin || "",
+        }));
+      } catch (err) {
+        console.error("Error cargando el perfil", err);
+        setError("No se pudo cargar la información del perfil.");
+      }
+    };
+
+    fetchProfile();
   }, [username]);
 
   const handleChange = (field: keyof AccountData, value: string) => {
@@ -62,8 +63,20 @@ export function useAccountSettings() {
   const handleSave = async () => {
     setLoading(true);
     setSuccess("");
+    setError("");
 
-    // Validaciones de Complejidad de Contraseña
+    if (!data.id) {
+      setError("Falta el ID del usuario. Recarga la página.");
+      setLoading(false);
+      return;
+    }
+
+    if (!data.nombreUsuario || data.nombreUsuario.trim().length < 3) {
+      setError("El nombre de usuario debe tener al menos 3 caracteres.");
+      setLoading(false);
+      return;
+    }
+
     const validatePassword = (pass: string) => {
       const requirements = [
         { regex: /.{8,}/, msg: "mínimo 8 caracteres" },
@@ -79,7 +92,6 @@ export function useAccountSettings() {
       return null;
     };
 
-    // Validaciones
     if (data.nuevaPassword) {
       const passwordError = validatePassword(data.nuevaPassword);
       if (passwordError) {
@@ -87,48 +99,85 @@ export function useAccountSettings() {
         setLoading(false);
         return;
       }
+
+      if (data.nuevaPassword !== data.confirmarPassword) {
+        setError("Las nuevas contraseñas no coinciden");
+        setLoading(false);
+        return;
+      }
+
+      if (!data.passwordActual) {
+        setError("Necesita la contraseña actual para definir una nueva");
+        setLoading(false);
+        return;
+      }
+
+      // Validar contraseña actual directamente en el backend
+      try {
+        const loginResult = await authService.login(username, data.passwordActual);
+        if (!loginResult.success) {
+          setError("La contraseña actual es incorrecta");
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        setError("Error validando la contraseña actual");
+        setLoading(false);
+        return;
+      }
     }
 
-    if (data.nuevaPassword && data.nuevaPassword !== data.confirmarPassword) {
-      setError("Las nuevas contraseñas no coinciden");
+    if (!data.pin || data.pin.length !== 4 || !/^\d+$/.test(data.pin)) {
+      setError("El PIN debe ser un código numérico de exactamente 4 dígitos");
       setLoading(false);
       return;
     }
 
-    if (data.nuevaPassword && !data.passwordActual) {
-      setError("Necesita la contraseña actual para definir una nueva");
+    try {
+      const parts = data.nombreCompleto.split(" ");
+      const firstName = parts[0] || "";
+      const lastName = parts.slice(1).join(" ") || "";
+
+      const updatePayload: any = {
+        username: data.nombreUsuario.trim(),
+        firstName,
+        lastName,
+        email: data.email,
+        pin: data.pin,
+      };
+
+      if (data.nuevaPassword) {
+        updatePayload.password = data.nuevaPassword;
+      }
+
+      await apiClient(`/users/${data.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (username !== data.nombreUsuario.trim()) {
+        updateUsername(data.nombreUsuario.trim());
+      }
+
+      setData((prev) => ({
+        ...prev,
+        passwordActual: "",
+        nuevaPassword: "",
+        confirmarPassword: "",
+      }));
+
+      setSuccess("Datos actualizados correctamente");
+    } catch (err: any) {
+      console.error("Error actualizando perfil", err);
+      // Prisma P2002 conflict error will be returned as 409 from the backend with the message
+      if (err.message && err.message.toLowerCase().includes("existe")) {
+         setError("Ese nombre de usuario, PIN o correo ya está en uso por otra cuenta.");
+      } else {
+         setError(err.message || "Error al actualizar los datos");
+      }
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (data.pin && data.pin.length < 4) {
-      setError("El PIN debe tener al menos 4 dígitos");
-      setLoading(false);
-      return;
-    }
-
-    // Simular llamada a API
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    // Guardar en localStorage (MOCK)
-    const toSave = {
-      nombreCompleto: data.nombreCompleto,
-      pin: data.pin,
-      password: data.nuevaPassword || "123456", // Mantener la anterior en la vida real
-    };
-
-    setJson(localStore, `account_data_${username}`, toSave);
-
-    // Limpiar campos de contraseña
-    setData((prev) => ({
-      ...prev,
-      passwordActual: "",
-      nuevaPassword: "",
-      confirmarPassword: "",
-    }));
-
-    setSuccess("Datos actualizados correctamente");
-    setLoading(false);
   };
 
   return {

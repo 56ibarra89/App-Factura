@@ -23,6 +23,7 @@ interface AuthContextType {
   validatePinForAction: (pin: string) => Promise<{ success: boolean; error?: string }>;
   lockoutTime: number;
   loginLockoutTime: number;
+  updateUsername: (newUsername: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,6 +60,11 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
   const loginLockout = useLoginLockout();
 
   const clearError = useCallback(() => setError(""), []);
+
+  const updateUsername = useCallback((newUsername: string) => {
+    setUsername(newUsername);
+    sessionStore.setItem("username", newUsername);
+  }, []);
 
   const logout = useCallback(() => {
     if (username) {
@@ -217,6 +223,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         logout,
         clearError,
         validatePinForAction,
+        updateUsername,
         lockoutTime: pinLockout.lockoutTime,
         loginLockoutTime: loginLockout.loginLockoutTime,
       }}
