@@ -8,14 +8,15 @@ import {
   Divider,
   Button,
   Box,
+  MenuItem,
 } from "@mui/material";
-import { DgiConfig } from "../../../hooks/useDgiConfig";
+import { Correlativo, DocumentType, CorrelativoStatus } from "../../../types/correlativo.types";
 
 interface CorrelativoFormModalProps {
   open: boolean;
-  initialData?: DgiConfig | null;
+  initialData?: Partial<Correlativo> | null;
   onClose: () => void;
-  onSave: (formData: DgiConfig) => Promise<void>;
+  onSave: (formData: Partial<Correlativo>) => Promise<void>;
 }
 
 const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
@@ -24,25 +25,33 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const [formData, setFormData] = useState<DgiConfig>({
+  const [formData, setFormData] = useState<Partial<Correlativo>>({
+    documentType: "Factura",
     resolutionNumber: "",
+    prefix: "",
     startNumber: 1,
     endNumber: 100000,
-    authorizationDate: new Date().toISOString(),
+    currentNumber: 1,
+    issueDate: new Date(),
+    expirationDate: new Date(),
+    status: "Activo",
   });
 
   useEffect(() => {
     if (open) {
       if (initialData) {
-        setFormData({
-          ...initialData,
-        });
+        setFormData({ ...initialData });
       } else {
         setFormData({
+          documentType: "Factura",
           resolutionNumber: "",
+          prefix: "",
           startNumber: 1,
           endNumber: 100000,
-          authorizationDate: new Date().toISOString(),
+          currentNumber: 1,
+          issueDate: new Date(),
+          expirationDate: new Date(),
+          status: "Activo",
         });
       }
     }
@@ -63,7 +72,9 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Configurar Resolución DGI</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
+        {initialData?.id ? "Actualizar Correlativo" : "Nuevo Correlativo"}
+      </DialogTitle>
       <Divider />
       <DialogContent sx={{ pt: 3 }}>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3 }}>
@@ -72,29 +83,7 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
               fullWidth
               label="Número de Resolución DGI"
               name="resolutionNumber"
-              value={formData.resolutionNumber}
-              onChange={handleInputChange}
-              variant="outlined"
-            />
-          </Box>
-          <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 6' } }}>
-            <TextField
-              fullWidth
-              type="number"
-              label="Rango Autorizado Inicial"
-              name="startNumber"
-              value={formData.startNumber}
-              onChange={handleInputChange}
-              variant="outlined"
-            />
-          </Box>
-          <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 6' } }}>
-            <TextField
-              fullWidth
-              type="number"
-              label="Rango Autorizado Final"
-              name="endNumber"
-              value={formData.endNumber}
+              value={formData.resolutionNumber || ""}
               onChange={handleInputChange}
               variant="outlined"
             />
@@ -102,18 +91,76 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
           <Box sx={{ gridColumn: 'span 12' }}>
             <TextField
               fullWidth
-              type="date"
-              label="Fecha de Autorización de la Resolución"
-              name="authorizationDate"
-              InputLabelProps={{ shrink: true }}
-              value={
-                formData.authorizationDate
-                  ? new Date(formData.authorizationDate).toISOString().split("T")[0]
-                  : ""
-              }
-              onChange={(e) => setFormData({ ...formData, authorizationDate: new Date(e.target.value).toISOString() })}
+              label="Prefijo (Opcional)"
+              name="prefix"
+              value={formData.prefix || ""}
+              onChange={handleInputChange}
               variant="outlined"
             />
+          </Box>
+          <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 4' } }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Rango Inicial"
+              name="startNumber"
+              value={formData.startNumber || ""}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+          </Box>
+          <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 4' } }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Rango Final"
+              name="endNumber"
+              value={formData.endNumber || ""}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+          </Box>
+          <Box sx={{ gridColumn: { xs: 'span 12', sm: 'span 4' } }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Número Actual"
+              name="currentNumber"
+              value={formData.currentNumber || ""}
+              onChange={handleInputChange}
+              variant="outlined"
+            />
+          </Box>
+          <Box sx={{ gridColumn: 'span 6' }}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Fecha de Aprobación"
+              name="issueDate"
+              InputLabelProps={{ shrink: true }}
+              value={
+                formData.issueDate
+                  ? new Date(formData.issueDate).toISOString().split("T")[0]
+                  : ""
+              }
+              onChange={(e) => setFormData({ ...formData, issueDate: new Date(e.target.value) })}
+              variant="outlined"
+            />
+          </Box>
+          <Box sx={{ gridColumn: 'span 6' }}>
+            <TextField
+              select
+              fullWidth
+              label="Estado"
+              name="status"
+              value={formData.status || "Activo"}
+              onChange={handleInputChange}
+              variant="outlined"
+            >
+              <MenuItem value="Activo">Activo</MenuItem>
+              <MenuItem value="Agotado">Agotado</MenuItem>
+              <MenuItem value="Vencido">Vencido</MenuItem>
+            </TextField>
           </Box>
         </Box>
       </DialogContent>
@@ -123,7 +170,7 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
           Cancelar
         </Button>
         <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ textTransform: "none", borderRadius: 2 }}>
-          Guardar Configuración
+          {initialData?.id ? "Actualizar" : "Guardar"}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,70 +1,58 @@
 import { Shift } from "../types/shift.types";
 import { IShiftRepository } from "../types/repositories";
-import { initDB, STORES } from "./db.config";
+import { apiClient } from "../config/apiClient";
 
-/**
- * DIP: Implementación concreta de IShiftRepository usando IndexedDB.
- */
 class ShiftRepository implements IShiftRepository {
-  async save(shift: Shift): Promise<void> {
+  private mapToFrontendShift(backendShift: any): Shift {
+    return {
+      id: backendShift.id,
+      cashierName: backendShift.cashierSnapshotName,
+      startTime: new Date(backendShift.startTime),
+      endTime: backendShift.endTime ? new Date(backendShift.endTime) : undefined,
+      openingAmount: Number(backendShift.openingAmount),
+      closingAmount: backendShift.closingAmount ? Number(backendShift.closingAmount) : undefined,
+      status: backendShift.status === "CLOSED" ? "closed" : "open",
+      notes: backendShift.notes,
+      cashRegisterName: backendShift.cashRegisterSnapshotName,
+      totalSales: { cash: 0, card: 0, app: 0, total: 0 },
+    };
+  }
+
+  async openShift(data: any): Promise<Shift> {
     try {
-      const db = await initDB();
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORES.SHIFTS, "readwrite");
-        const store = transaction.objectStore(STORES.SHIFTS);
-
-        const shiftToSave = {
-          ...shift,
-          startTime:
-            shift.startTime instanceof Date
-              ? shift.startTime.getTime()
-              : new Date(shift.startTime).getTime(),
-          endTime: shift.endTime
-            ? shift.endTime instanceof Date
-              ? shift.endTime.getTime()
-              : new Date(shift.endTime).getTime()
-            : null,
-        };
-
-        const request = store.put(shiftToSave);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+      const result = await apiClient("/shifts/open", {
+        method: "POST",
+        body: JSON.stringify(data)
       });
+      return this.mapToFrontendShift(result);
     } catch (error) {
-      console.error("Error guardando turno en DB:", error);
+      console.error("Error opening shift on backend:", error);
+      throw error;
+    }
+  }
+
+  async closeShift(id: string, data: any): Promise<Shift> {
+    try {
+      const result = await apiClient(`/shifts/${id}/close`, {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
+      return this.mapToFrontendShift(result);
+    } catch (error) {
+      console.error("Error closing shift on backend:", error);
       throw error;
     }
   }
 
   async getAll(): Promise<Shift[]> {
     try {
-      const db = await initDB();
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORES.SHIFTS, "readonly");
-        const store = transaction.objectStore(STORES.SHIFTS);
-        const request = store.getAll();
-
-        request.onsuccess = () => {
-          const results = request.result.map((item: Shift) => ({
-            ...item,
-            startTime: new Date(item.startTime),
-            endTime: item.endTime ? new Date(item.endTime) : undefined,
-          }));
-          resolve(
-            results.sort(
-              (a: Shift, b: Shift) =>
-                b.startTime.getTime() - a.startTime.getTime()
-            )
-          );
-        };
-        request.onerror = () => reject(request.error);
-      });
+      const response = await apiClient("/shifts?limit=200");
+      return response.map(this.mapToFrontendShift);
     } catch (error) {
       console.error("Error obteniendo turnos de DB:", error);
-      throw error;
+      return [];
     }
   }
 }
 
-/** Instancia singleton por defecto (inyectable en contextos) */
 export const shiftRepository = new ShiftRepository();

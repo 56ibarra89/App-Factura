@@ -59,14 +59,19 @@ export function useAbrirCaja() {
     return numAmount >= 0;
   })();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const selectedRegister = cajas.find((c) => c.id === selectedRegisterId);
     const registerName = selectedRegister ? selectedRegister.name : undefined;
 
     console.log("[useAbrirCaja] Ejecutando handleSubmit con monto y caja:", amount, registerName);
-    abrirCaja(Number(amount), registerName);
-    console.log("[useAbrirCaja] Navegando a /home...");
-    navigate("/home");
+    try {
+      await abrirCaja(Number(amount), registerName);
+      console.log("[useAbrirCaja] Navegando a /home...");
+      navigate("/home");
+    } catch (error) {
+      console.error("Failed to open shift:", error);
+      // Podría mostrar un toast acá si lo hubiera
+    }
   };
 
   const handleCancel = () => {

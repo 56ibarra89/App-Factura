@@ -36,7 +36,7 @@ export default function CustomerAutocomplete({
       options={suggestions}
       getOptionLabel={(opt) => (typeof opt === "string" ? opt : opt.name)}
       inputValue={value}
-      filterOptions={(x) => x} // La búsqueda real la hace IndexedDB
+      filterOptions={(x) => x} // La búsqueda real se hace por backend o persistencia externa
       onInputChange={(_e, newValue) => {
         onChange(newValue);
         search(newValue);

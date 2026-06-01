@@ -81,7 +81,7 @@ export const useGeneralConfigData = () => {
     setConfig(prev => {
       const newConfig = { ...prev, [key]: value };
       
-      // Guardar asíncronamente en IndexedDB
+      // Guardar asíncronamente
       configRepository.saveGeneralConfig(newConfig).catch(err => {
         console.error("Error guardando configuración:", err);
       });

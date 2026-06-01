@@ -17,7 +17,7 @@ import { localStore } from "../services/storage/storage";
 
 interface CajaContextType {
   currentShift: Shift | null;
-  abrirCaja: (amount: number, registerName?: string) => void;
+  abrirCaja: (amount: number, registerName?: string) => Promise<void>;
   cerrarCaja: (finalAmount: number, notes?: string) => Promise<void>;
   calculateCurrentShiftSales: () => ShiftSales;
 }
@@ -98,21 +98,22 @@ export const CajaProvider = ({
   }, [currentShift, orders]);
 
   const abrirCaja = useCallback(
-    (amount: number, registerName?: string) => {
+    async (amount: number, registerName?: string) => {
       console.log("[CajaContext] Intentando abrir caja con monto:", amount, registerName);
-      const newShift: Shift = {
-        id: `SHIFT-${Date.now()}`,
-        cashierName: username || "Sistema",
-        startTime: new Date(),
-        openingAmount: amount,
-        totalSales: { cash: 0, card: 0, app: 0, total: 0 },
-        status: "open",
-        cashRegisterName: registerName,
-      };
-      console.log("[CajaContext] Nuevo turno creado:", newShift);
-      setCurrentShift(newShift);
+      try {
+        const newShift = await repository.openShift({
+          cashierName: username || "Sistema",
+          openingAmount: amount,
+          cashRegisterName: registerName
+        });
+        console.log("[CajaContext] Nuevo turno creado en backend:", newShift);
+        setCurrentShift(newShift);
+      } catch (error) {
+        console.error("Error al abrir caja en backend:", error);
+        throw error;
+      }
     },
-    [username]
+    [username, repository]
   );
 
   const cerrarCaja = useCallback(
@@ -121,16 +122,12 @@ export const CajaProvider = ({
 
       try {
         const sales = calculateCurrentShiftSales();
-        const closedShift: Shift = {
-          ...currentShift,
-          endTime: new Date(),
+        
+        await repository.closeShift(currentShift.id, {
           closingAmount: finalAmount,
-          totalSales: sales,
-          status: "closed",
-          notes,
-        };
+          notes
+        });
 
-        await repository.save(closedShift);
         setCurrentShift(null);
       } catch (error) {
         console.error("Error closing shift:", error);

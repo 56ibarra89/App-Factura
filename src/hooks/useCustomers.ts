@@ -1,7 +1,6 @@
 /**
  * useCustomers — SRP: encapsula todo el estado y las operaciones CRUD de clientes.
- * DIP: depende del customerRepository (abstracción), nunca de IndexedDB directamente.
- * Patrón idéntico a useCorrelativos.ts para consistencia arquitectónica.
+ * DIP: depende del customerRepository (abstracción).
  */
 
 import { useState, useEffect, useCallback } from "react";

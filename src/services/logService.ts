@@ -5,8 +5,8 @@ import type { LogLevel, SystemLog } from "../types/log.types";
 export type { LogLevel, SystemLog };
 
 /**
- * DIP: logService ahora delega en ILogRepository (LogRepository) en lugar
- * de llamar a initDB() directamente. La fuente de persistencia es intercambiable.
+ * DIP: logService ahora delega en ILogRepository (LogRepository).
+ * La fuente de persistencia es intercambiable (ahora conectada al backend).
  */
 export const logService = {
   /**

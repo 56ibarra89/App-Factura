@@ -3,7 +3,6 @@ import { UserAccount } from "../types/user";
 import { logService } from "../services/logService";
 import { useAuth } from "../context/AuthContext";
 import { localStore, setJson, tryGetJson } from "../services/storage/storage";
-import { migrateUsernameInDB } from "../repositories/dbMigration";
 
 // Simulación de datos iniciales
 const MOCK_INITIAL_USERS: UserAccount[] = [
@@ -93,13 +92,6 @@ export function useAccountManager() {
       if (exists) {
         updatedUsers = users.map(u => u.id === user.id ? user : u);
         logService.log(adminUser, adminRole, "USER_UPDATE", `Usuario actualizado: @${user.username} (${user.firstName} ${user.lastName})`);
-        
-        if (exists.username !== user.username) {
-          console.log(`[useAccountManager] El nombre de usuario cambió de ${exists.username} a ${user.username}. Ejecutando migración en BD...`);
-          migrateUsernameInDB(exists.username, user.username).catch(err => {
-            console.error("Error al migrar los datos del usuario en la base de datos:", err);
-          });
-        }
       } else {
         updatedUsers = [...users, { ...user, createdAt: new Date().toISOString() }];
         logService.log(adminUser, adminRole, "USER_CREATE", `Nuevo usuario creado: @${user.username} (${user.firstName} ${user.lastName})`);

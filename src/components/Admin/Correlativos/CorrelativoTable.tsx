@@ -13,18 +13,21 @@ import {
   IconButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { Correlativo, CorrelativoStatus } from "../../../types/correlativo.types";
 
 interface CorrelativoTableProps {
   correlativos: Correlativo[];
   loading: boolean;
   onDelete: (id: string) => void;
+  onUpdate?: (correlativo: Correlativo) => void;
 }
 
 const CorrelativoTable: React.FC<CorrelativoTableProps> = ({
   correlativos,
   loading,
   onDelete,
+  onUpdate,
 }) => {
   const getStatusColor = (status: CorrelativoStatus) => {
     switch (status) {
@@ -50,7 +53,7 @@ const CorrelativoTable: React.FC<CorrelativoTableProps> = ({
               <TableCell><Typography fontWeight={600}>Prefijo</Typography></TableCell>
               <TableCell><Typography fontWeight={600}>Rango</Typography></TableCell>
               <TableCell><Typography fontWeight={600}>Actual</Typography></TableCell>
-              <TableCell><Typography fontWeight={600}>Vencimiento</Typography></TableCell>
+              <TableCell><Typography fontWeight={600}>Fecha de Aprobación</Typography></TableCell>
               <TableCell><Typography fontWeight={600}>Estado</Typography></TableCell>
               <TableCell align="right"><Typography fontWeight={600}>Acciones</Typography></TableCell>
             </TableRow>
@@ -70,7 +73,7 @@ const CorrelativoTable: React.FC<CorrelativoTableProps> = ({
                 <TableCell>{row.prefix}</TableCell>
                 <TableCell>{row.startNumber} - {row.endNumber}</TableCell>
                 <TableCell>{row.currentNumber}</TableCell>
-                <TableCell>{new Date(row.expirationDate).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(row.issueDate).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <Chip
                     label={row.status}
@@ -80,6 +83,15 @@ const CorrelativoTable: React.FC<CorrelativoTableProps> = ({
                   />
                 </TableCell>
                 <TableCell align="right">
+                  {onUpdate && (
+                    <IconButton
+                      size="small"
+                      onClick={() => onUpdate(row)}
+                      color="primary"
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  )}
                   <IconButton
                     size="small"
                     onClick={() => onDelete(row.id)}

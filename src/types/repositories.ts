@@ -7,7 +7,8 @@ import type { Correlativo } from "./correlativo.types";
  * DIP: Abstracción para la persistencia de turnos (cajas).
  */
 export interface IShiftRepository {
-  save(shift: Shift): Promise<void>;
+  openShift(data: any): Promise<Shift>;
+  closeShift(id: string, data: any): Promise<Shift>;
   getAll(): Promise<Shift[]>;
 }
 
@@ -42,6 +43,7 @@ export interface ICustomerRepository {
 /** DIP: Abstracción para persistencia/consulta de correlativos. */
 export interface ICorrelativoRepository {
   save(correlativo: Correlativo): Promise<void>;
+  update(id: string, correlativo: Partial<Correlativo>): Promise<void>;
   getAll(): Promise<Correlativo[]>;
   getActiveByDocumentType(documentType: string): Promise<Correlativo | null>;
   delete(id: string): Promise<void>;

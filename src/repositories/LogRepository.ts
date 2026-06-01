@@ -1,73 +1,40 @@
 import { ILogRepository } from "../types/repositories";
 import type { SystemLog, LogLevel } from "../types/log.types";
-import { initDB, STORES } from "./db.config";
+import { apiClient } from "../config/apiClient";
 
-/**
- * DIP: Implementación concreta de ILogRepository usando IndexedDB.
- */
 class LogRepository implements ILogRepository {
   async add(
     user: string,
     role: string | null,
     action: string,
     details?: string,
-    level: LogLevel = "info"
+    level: LogLevel = "INFO"
   ): Promise<void> {
     try {
-      const db = await initDB();
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORES.LOGS, "readwrite");
-        const store = transaction.objectStore(STORES.LOGS);
-
-        const logEntry: SystemLog = {
-          timestamp: Date.now(),
+      await apiClient("/system-logs", {
+        method: "POST",
+        body: JSON.stringify({
           user,
           role,
           action,
           details,
           level,
-        };
-
-        const request = store.add(logEntry);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        }),
       });
     } catch (error) {
       console.error("Critical error saving to audit log:", error);
-      throw error;
     }
   }
 
   async getRecent(limit = 200): Promise<SystemLog[]> {
     try {
-      const db = await initDB();
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction(STORES.LOGS, "readonly");
-        const store = transaction.objectStore(STORES.LOGS);
-        const index = store.index("timestamp");
-
-        // Cursor descendente (más recientes primero)
-        const request = index.openCursor(null, "prev");
-        const results: SystemLog[] = [];
-
-        request.onsuccess = (event) => {
-          const cursor = (event.target as IDBRequest<IDBCursorWithValue>)
-            .result;
-          if (cursor && results.length < limit) {
-            results.push(cursor.value);
-            cursor.continue();
-          } else {
-            resolve(results);
-          }
-        };
-        request.onerror = () => reject(request.error);
-      });
+      const logs = await apiClient("/system-logs");
+      return logs.slice(0, limit);
     } catch (error) {
       console.error("Error retrieving logs:", error);
-      throw error;
+      return [];
     }
   }
 }
 
-/** Instancia singleton por defecto */
 export const logRepository = new LogRepository();

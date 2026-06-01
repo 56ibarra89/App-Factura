@@ -50,7 +50,7 @@ export const useEmpresaConfig = () => {
       ticketFooter: sanitize(config.ticketFooter, 300)
     };
 
-    // Guardar en IndexedDB a través del repositorio
+    // Guardar en backend a través del repositorio
     return configRepository.saveEmpresaConfig(sanitizedConfig)
       .then(() => {
         console.log('Configuración de empresa guardada:', sanitizedConfig);

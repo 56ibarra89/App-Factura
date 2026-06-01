@@ -44,21 +44,20 @@ export const useCorrelativos = (options: UseCorrelativosOptions = {}) => {
         createdAt: new Date(),
       };
 
-      // Inactivar los correlativos anteriores activos del mismo tipo
-      if (newCorrelativo.status === "Activo") {
-        const activeExisting = correlativos.find(
-          (c) => c.documentType === newCorrelativo.documentType && c.status === "Activo"
-        );
-        if (activeExisting) {
-          activeExisting.status = "Vencido";
-          await repository.save(activeExisting);
-        }
-      }
-
-        await repository.save(newCorrelativo);
+      await repository.save(newCorrelativo);
       await loadCorrelativos();
     } catch (error) {
       console.error("Error guardando correlativo:", error);
+      throw error;
+    }
+  };
+
+  const updateCorrelativo = async (id: string, formData: Partial<Correlativo>) => {
+    try {
+      await repository.update(id, formData);
+      await loadCorrelativos();
+    } catch (error) {
+      console.error("Error actualizando correlativo:", error);
       throw error;
     }
   };
@@ -81,6 +80,7 @@ export const useCorrelativos = (options: UseCorrelativosOptions = {}) => {
     loading,
     activeFactura,
     saveCorrelativo,
+    updateCorrelativo,
     deleteCorrelativo,
   };
 };
