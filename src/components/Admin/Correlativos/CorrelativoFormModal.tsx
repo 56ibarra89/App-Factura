@@ -33,7 +33,7 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
     endNumber: 100000,
     currentNumber: 1,
     issueDate: new Date(),
-    expirationDate: new Date(),
+    expirationDate: new Date("2099-12-31"),
     status: "Activo",
   });
 
@@ -50,7 +50,7 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
           endNumber: 100000,
           currentNumber: 1,
           issueDate: new Date(),
-          expirationDate: new Date(),
+          expirationDate: new Date("2099-12-31"),
           status: "Activo",
         });
       }
@@ -147,7 +147,7 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
               variant="outlined"
             />
           </Box>
-          <Box sx={{ gridColumn: 'span 6' }}>
+          <Box sx={{ gridColumn: 'span 12' }}>
             <TextField
               select
               fullWidth
