@@ -9,6 +9,7 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
   };
 
   const response = await fetch(url, {
+    cache: "no-store", // Evitar caché agresivo del navegador
     ...options,
     headers,
   });
