@@ -13,18 +13,20 @@ export interface EmpresaConfigState {
 
 export const useEmpresaConfig = () => {
   const { username, role } = useAuth();
-  const [config, setConfig] = useState<EmpresaConfigState>({
+  const defaultConfig: EmpresaConfigState = {
     logoUrl: '',
     businessName: 'Mi Negocio',
     address: 'Av. Principal 123, Ciudad',
     phone: '+1 234 567 8900',
     ticketFooter: '¡Gracias por su compra! Vuelva pronto.',
-  });
+  };
+
+  const [config, setConfig] = useState<EmpresaConfigState>(defaultConfig);
 
   useEffect(() => {
     configRepository.getEmpresaConfig().then((data) => {
-      if (data) {
-        setConfig(data);
+      if (data && Object.keys(data).length > 0) {
+        setConfig(prev => ({ ...prev, ...data }));
       }
     });
   }, []);
@@ -70,9 +72,23 @@ export const useEmpresaConfig = () => {
       });
   }, [config, username, role]);
 
+  const resetConfig = useCallback(() => {
+    return configRepository.saveEmpresaConfig(defaultConfig)
+      .then(() => {
+        setConfig(defaultConfig);
+        logService.log(username, role, "CONFIG_CHANGE", "Identidad de la empresa restablecida a valores por defecto");
+        return true;
+      })
+      .catch((error) => {
+        console.error('Error al restablecer la configuración:', error);
+        return false;
+      });
+  }, [username, role]);
+
   return {
     config,
     updateField,
-    saveConfig
+    saveConfig,
+    resetConfig
   };
 };

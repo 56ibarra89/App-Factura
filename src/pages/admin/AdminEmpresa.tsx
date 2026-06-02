@@ -19,23 +19,46 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import SaveIcon from "@mui/icons-material/Save";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import BusinessIcon from "@mui/icons-material/Business";
+import DeleteIcon from "@mui/icons-material/Delete";
 import PhoneIcon from "@mui/icons-material/Phone";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import PageHeader from "../../components/PageHeader";
+import ConfirmDialog from "../../components/ConfirmDialog";
 import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
 import { useEmpresaConfig } from "../../hooks/useEmpresaConfig";
 
 const AdminEmpresa = () => {
-  const { config, updateField, saveConfig } = useEmpresaConfig();
+  const { config, updateField, saveConfig, resetConfig } = useEmpresaConfig();
   const [loading, setLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const [toastOpen, setToastOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async () => {
     setLoading(true);
     try {
       await saveConfig();
+      setToastMessage("¡Identidad de la empresa actualizada con éxito!");
+      setToastOpen(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setConfirmOpen(true);
+  };
+
+  const confirmReset = async () => {
+    setConfirmOpen(false);
+    setLoading(true);
+    try {
+      await resetConfig();
+      setToastMessage("¡Configuración eliminada y restablecida con éxito!");
       setToastOpen(true);
     } catch (error) {
       console.error(error);
@@ -270,7 +293,26 @@ const AdminEmpresa = () => {
                 </Grid>
               </Grid>
 
-              <Box sx={{ mt: 6, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+              <Box sx={{ mt: 6, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="large"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleReset}
+                  disabled={loading}
+                  sx={{
+                    px: 3,
+                    py: 1.5,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  Restablecer / Eliminar
+                </Button>
+
                 <Button
                   variant="contained"
                   color="primary"
@@ -313,9 +355,17 @@ const AdminEmpresa = () => {
           variant="filled"
           sx={{ width: '100%', borderRadius: 2, boxShadow: 3, fontWeight: 600 }}
         >
-          ¡Identidad de la empresa actualizada con éxito!
+          {toastMessage}
         </Alert>
       </Snackbar>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Restablecer Configuración"
+        message="¿Estás seguro de que deseas eliminar el logotipo y restablecer toda la configuración de la empresa a sus valores por defecto? Esta acción no se puede deshacer."
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmReset}
+      />
     </Box>
   );
 };
