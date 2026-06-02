@@ -109,10 +109,10 @@ export default function MesasPage() {
     }
   }, [selectedMesaId, getOrderByTable, isReserved, releaseTable, username, role]);
 
-  const handleConfirmReservation = useCallback((nombre: string, monto: number) => {
+  const handleConfirmReservation = useCallback((nombre: string, monto: number, reservationTime: string, expirationTime: string) => {
     if (!selectedMesaId) return;
 
-    reserveTable(selectedMesaId, { nombre, monto });
+    reserveTable(selectedMesaId, { nombre, monto, reservationTime, expirationTime });
     logService.log(username, role, "CREATE_RESERVATION", `Nueva reserva para ${nombre} en Mesa ${selectedMesaId.split("-M")[1]} por monto: ${monto}`);
     setIsReservationOpen(false);
     restoreFocus();

@@ -10,7 +10,7 @@ interface Props {
   open: boolean;
   mesaId: string | null;
   onClose: () => void;
-  onConfirm: (nombre: string, monto: number) => void;
+  onConfirm: (nombre: string, monto: number, resTime: string, expTime: string) => void;
   disableRestoreFocus?: boolean;
   disableEnforceFocus?: boolean;
 }
@@ -25,7 +25,41 @@ export default function ReservationDialog({
 }: Props) {
   const [nombre, setNombre] = useState("");
   const [monto, setMonto] = useState("");
+  const [reservationTime, setReservationTime] = useState("");
+  const [expirationTime, setExpirationTime] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Set default times when opened
+  useEffect(() => {
+    if (open) {
+      const now = new Date();
+      // Round to next 5 minutes for neatness (optional, but good UX)
+      const coeff = 1000 * 60 * 5;
+      const roundedNow = new Date(Math.ceil(now.getTime() / coeff) * coeff);
+      
+      const exp = new Date(roundedNow.getTime() + 30 * 60000); // +30 minutes
+      
+      const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
+      
+      setReservationTime(formatTime(roundedNow));
+      setExpirationTime(formatTime(exp));
+    }
+  }, [open]);
+
+  // Handle auto-expiration offset when reservation time changes
+  const handleReservationTimeChange = (newTime: string) => {
+    setReservationTime(newTime);
+    if (!newTime) return;
+    
+    // Calculate new expiration time (+30 mins)
+    const [hours, minutes] = newTime.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    date.setMinutes(date.getMinutes() + 30);
+    
+    const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
+    setExpirationTime(formatTime(date));
+  };
 
   // Efecto para forzar el foco en el campo de nombre al abrir el diálogo en Electron
   useEffect(() => {
@@ -38,14 +72,30 @@ export default function ReservationDialog({
   }, [open]);
 
   const handleConfirm = () => {
-    if (!nombre.trim()) return; // Validar que se ingrese un nombre
+    if (!nombre.trim()) return; 
     
     const parsedMonto = parseFloat(monto) || 0;
-    onConfirm(nombre, parsedMonto);
+
+    // Convert times to full ISO strings for today
+    const createIsoDate = (timeStr: string) => {
+      if (!timeStr) return "";
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const date = new Date();
+      date.setHours(hours, minutes, 0, 0);
+      return date.toISOString();
+    };
+
+    onConfirm(
+      nombre, 
+      parsedMonto, 
+      createIsoDate(reservationTime), 
+      createIsoDate(expirationTime)
+    );
     
-    // Resetear formulario para futuras aperturas
     setNombre("");
     setMonto("");
+    setReservationTime("");
+    setExpirationTime("");
   };
 
   const handleCancel = () => {
@@ -97,6 +147,28 @@ export default function ReservationDialog({
               startAdornment: <InputAdornment position="start">$</InputAdornment>,
             }}
           />
+
+          <Box display="flex" gap={2}>
+            <TextField
+              fullWidth
+              label="Hora de Reserva"
+              variant="outlined"
+              type="time"
+              value={reservationTime}
+              onChange={(e) => handleReservationTimeChange(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+            
+            <TextField
+              fullWidth
+              label="Límite de Tolerancia (Auto-vence)"
+              variant="outlined"
+              type="time"
+              value={expirationTime}
+              onChange={(e) => setExpirationTime(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Box>
         </Box>
       </DialogContent>
 
