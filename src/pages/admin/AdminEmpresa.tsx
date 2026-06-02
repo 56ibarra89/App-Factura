@@ -12,7 +12,9 @@ import {
   Alert,
   Paper,
   Divider,
-  InputAdornment
+  InputAdornment,
+  IconButton,
+  Tooltip
 } from "@mui/material";
 import { BackButton } from "../../components/BackButton";
 import StorefrontIcon from "@mui/icons-material/Storefront";
@@ -155,59 +157,87 @@ const AdminEmpresa = () => {
                   ref={fileInputRef} 
                   onChange={handleLogoUpload} 
                 />
-                <Paper
-                  elevation={3}
-                  sx={{
-                    width: 140,
-                    height: 140,
-                    borderRadius: '50%',
-                    position: 'relative',
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                    border: '4px solid white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    bgcolor: 'grey.100',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                      '& .upload-overlay': { opacity: 1 }
-                    }
-                  }}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {config.logoUrl ? (
-                    <Box 
-                      component="img" 
-                      src={config.logoUrl} 
-                      alt="Logotipo" 
-                      sx={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                    />
-                  ) : (
-                    <StorefrontIcon sx={{ fontSize: 60, color: 'grey.400' }} />
-                  )}
-                  
-                  {/* Overlay de Hover */}
-                  <Box 
-                    className="upload-overlay"
+                <Box sx={{ position: 'relative' }}>
+                  <Paper
+                    elevation={3}
                     sx={{
-                      position: 'absolute',
-                      top: 0, left: 0, right: 0, bottom: 0,
-                      bgcolor: 'rgba(0,0,0,0.5)',
-                      color: 'white',
+                      width: 140,
+                      height: 140,
+                      borderRadius: '50%',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      border: '4px solid white',
                       display: 'flex',
-                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      opacity: 0,
-                      transition: 'opacity 0.2s'
+                      bgcolor: 'grey.100',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                        '& .upload-overlay': { opacity: 1 }
+                      }
                     }}
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    <PhotoCameraIcon sx={{ mb: 1 }} />
-                    <Typography variant="caption" fontWeight={600}>Subir Logo</Typography>
-                  </Box>
-                </Paper>
+                    {config.logoUrl ? (
+                      <Box 
+                        component="img" 
+                        src={config.logoUrl} 
+                        alt="Logotipo" 
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                    ) : (
+                      <StorefrontIcon sx={{ fontSize: 60, color: 'grey.400' }} />
+                    )}
+                    
+                    {/* Overlay de Hover */}
+                    <Box 
+                      className="upload-overlay"
+                      sx={{
+                        position: 'absolute',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        bgcolor: 'rgba(0,0,0,0.5)',
+                        color: 'white',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0,
+                        transition: 'opacity 0.2s'
+                      }}
+                    >
+                      <PhotoCameraIcon sx={{ mb: 1 }} />
+                      <Typography variant="caption" fontWeight={600}>Subir Logo</Typography>
+                    </Box>
+                  </Paper>
+
+                  {config.logoUrl && (
+                    <Tooltip title="Eliminar logo" placement="top">
+                      <IconButton
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Avoid triggering the upload click
+                          updateField('logoUrl', '');
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          bottom: 0,
+                          right: 0,
+                          bgcolor: 'white',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                          '&:hover': {
+                            bgcolor: 'error.main',
+                            color: 'white',
+                          }
+                        }}
+                        size="small"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
                 <Typography variant="h6" fontWeight={700} sx={{ mt: 2 }}>
                   {config.businessName || "Tu Empresa"}
                 </Typography>
