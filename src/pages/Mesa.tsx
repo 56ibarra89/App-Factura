@@ -340,6 +340,7 @@ export default function MesasPage() {
           disableRestoreFocus
           disableEnforceFocus
           invoiceNumber={createdInvoiceNumber}
+          cashierName={checkoutOrder.cashierSnapshotName}
         />
       )}
     </Box>

@@ -61,6 +61,7 @@ interface FacturaPreviewDialogProps {
   initialCustomer?: Customer | null;
   initialPhone?: string;
   initialOrderType?: OrderType;
+  cashierName?: string;
 }
 
 export default function FacturaPreviewDialog({
@@ -84,6 +85,7 @@ export default function FacturaPreviewDialog({
   initialPhone = "",
   initialOrderType = "local",
   invoiceNumber,
+  cashierName,
 }: FacturaPreviewDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("EFECTIVO");
   const [splitAmounts, setSplitAmounts] = useState({ efectivo: 0, tarjeta: 0 });
@@ -502,6 +504,7 @@ export default function FacturaPreviewDialog({
         customerAddress={customerAddress}
         orderType={orderType}
         invoiceNumber={invoiceNumber}
+        cashierName={cashierName}
       />
     </>
   );

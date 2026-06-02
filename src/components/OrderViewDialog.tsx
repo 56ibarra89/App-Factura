@@ -25,6 +25,7 @@ interface OrderViewDialogProps {
   customerAddress?: string;
   orderType?: string;
   invoiceNumber?: string;
+  cashierName?: string;
   onClose: () => void;
   onConfirm: () => void;
   title?: string;
@@ -45,6 +46,7 @@ export default function OrderViewDialog({
   customerAddress,
   orderType,
   invoiceNumber,
+  cashierName,
 }: OrderViewDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -137,6 +139,7 @@ export default function OrderViewDialog({
         customerAddress={customerAddress}
         orderType={orderType}
         invoiceNumber={invoiceNumber}
+        cashierName={cashierName}
       />
     </Dialog>
   );

@@ -12,7 +12,9 @@ export const authService: IAuthService = {
       return { 
         success: true, 
         role: result.role, 
-        email: result.email 
+        email: result.email,
+        firstName: result.firstName,
+        lastName: result.lastName
       };
     } catch (error) {
       console.error("Login fallido:", error);

@@ -4,6 +4,7 @@ import { useEmpresaConfig } from "../hooks/useEmpresaConfig";
 import { useGeneralConfigData } from "../hooks/useGeneralConfigData";
 import { useDgiConfig } from "../hooks/useDgiConfig";
 import { formatItemName } from "../utils/formatUtils";
+import { useAuth } from "../context/AuthContext";
 
 interface TicketPrintProps {
   cart: CartItemType[];
@@ -16,6 +17,7 @@ interface TicketPrintProps {
   orderType?: string;
   tableId?: string | null;
   invoiceNumber?: string;
+  cashierName?: string;
 }
 
 const TicketPrint = ({
@@ -29,10 +31,15 @@ const TicketPrint = ({
   orderType,
   tableId,
   invoiceNumber = "000001",
+  cashierName,
 }: TicketPrintProps) => {
   const { config: empresa } = useEmpresaConfig();
   const { config: general } = useGeneralConfigData();
   const { dgiConfig } = useDgiConfig();
+  const { firstName, lastName, username } = useAuth();
+
+  const currentCashier = firstName ? `${firstName} ${lastName || ""}`.trim() : username;
+  const displayCashier = cashierName || currentCashier;
 
   const formatDate = () => {
     const d = new Date();
@@ -146,6 +153,9 @@ const TicketPrint = ({
               Dirección: {customerAddress}
             </Typography>
           )}
+          <Typography variant="body2" fontFamily="inherit">
+            Le atendió: {displayCashier}
+          </Typography>
         </Box>
 
         <Box

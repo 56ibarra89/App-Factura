@@ -14,6 +14,8 @@ interface AuthContextType {
   username: string;
   role: UserRole | null;
   email: string;
+  firstName: string;
+  lastName: string;
   loading: boolean;
   error: string;
   login: (username: string, password: string, remember?: boolean) => Promise<boolean>;
@@ -52,6 +54,12 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
   const [email, setEmail] = useState(
     () => sessionStore.getItem("email") || ""
   );
+  const [firstName, setFirstName] = useState(
+    () => sessionStore.getItem("firstName") || ""
+  );
+  const [lastName, setLastName] = useState(
+    () => sessionStore.getItem("lastName") || ""
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -75,6 +83,8 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
     setUsername("");
     setRole(null);
     setEmail("");
+    setFirstName("");
+    setLastName("");
   }, [username, role]);
 
   // SRP: timer de inactividad delegado a su propio hook
@@ -98,12 +108,16 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           sessionStore.setItem("username", user);
           sessionStore.setItem("role", result.role);
           if (result.email) sessionStore.setItem("email", result.email);
+          if (result.firstName) sessionStore.setItem("firstName", result.firstName);
+          if (result.lastName) sessionStore.setItem("lastName", result.lastName);
           loginLockout.resetLoginAttempts();
 
           setIsLoggedIn(true);
           setUsername(user);
           setRole(result.role);
           if (result.email) setEmail(result.email);
+          if (result.firstName) setFirstName(result.firstName);
+          if (result.lastName) setLastName(result.lastName);
           sessionStore.setItem("lastActivity", Date.now().toString());
 
           logService.log(user, result.role, "LOGIN_PASSWORD", "Inicio de sesión con contraseña");
@@ -151,11 +165,15 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         sessionStore.setItem("loggedIn", "true");
         sessionStore.setItem("username", result.username);
         sessionStore.setItem("role", result.role);
+        sessionStore.setItem("firstName", result.firstName);
+        sessionStore.setItem("lastName", result.lastName);
         pinLockout.resetAttempts();
 
         setIsLoggedIn(true);
         setUsername(result.username);
         setRole(result.role);
+        setFirstName(result.firstName);
+        setLastName(result.lastName);
         sessionStore.setItem("lastActivity", Date.now().toString());
 
         logService.log(result.username, result.role, "LOGIN_PIN", "Inicio de sesión con PIN");
@@ -216,6 +234,8 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         username,
         role,
         email,
+        firstName,
+        lastName,
         loading,
         error,
         login,
