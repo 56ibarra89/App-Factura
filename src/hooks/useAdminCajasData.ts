@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { useAccountManager } from './useAccountManager';
+import { useOrderQueries } from '../context/OrderContext';
 
 // Interfaces para los datos que enviaremos a la vista (SRP)
 export interface CajaActiveMock {
@@ -25,6 +27,9 @@ export interface WaiterPerformanceMock {
  * turnos activos remotos. Por ahora proveemos datos demostrativos estructurados (OCP).
  */
 export const useAdminCajasData = () => {
+  const { users } = useAccountManager();
+  const { orders } = useOrderQueries();
+
   const cajasActivas: CajaActiveMock[] = useMemo(() => [
     {
       id: "C-01",
@@ -55,36 +60,34 @@ export const useAdminCajasData = () => {
     }
   ], []);
 
-  const waiterPerformance: WaiterPerformanceMock[] = useMemo(() => [
-    {
-      id: "W-01",
-      name: "Ana García",
-      revenueTotal: 840.50,
-      ordersServed: 24,
-      avatarColor: "#d32f2f", // primary
-    },
-    {
-      id: "W-02",
-      name: "Roberto Méndez",
-      revenueTotal: 620.00,
-      ordersServed: 18,
-      avatarColor: "#1976d2", // info
-    },
-    {
-      id: "W-03",
-      name: "Lucía Soto",
-      revenueTotal: 530.75,
-      ordersServed: 12,
-      avatarColor: "#2e7d32", // success
-    },
-    {
-      id: "W-04",
-      name: "Diego Franco",
-      revenueTotal: 340.00,
-      ordersServed: 9,
-      avatarColor: "#ed6c02", // warning
-    }
-  ], []);
+  const waiterPerformance: WaiterPerformanceMock[] = useMemo(() => {
+    // Filtrar solo a los usuarios con rol de mesero
+    const meseros = users.filter((u) => u.role === 'mesero');
+    
+    // Si no hay meseros, retornar arreglo vacío
+    if (meseros.length === 0) return [];
+
+    // Colores para alternar en las barras
+    const colors = ["#d32f2f", "#1976d2", "#2e7d32", "#ed6c02", "#9c27b0", "#0288d1"];
+
+    return meseros.map((mesero, index) => {
+      // Calcular métricas reales a partir de las órdenes donde este mesero fue el cajero/creador
+      const waiterOrders = orders.filter(
+        (o) => o.cashierName === mesero.username && o.status === 'paid'
+      );
+      
+      const realRevenue = waiterOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+      const realOrdersCount = waiterOrders.length;
+
+      return {
+        id: mesero.id,
+        name: `${mesero.firstName} ${mesero.lastName}`,
+        revenueTotal: realRevenue,
+        ordersServed: realOrdersCount,
+        avatarColor: colors[index % colors.length],
+      };
+    });
+  }, [users, orders]);
 
   return {
     cajasActivas,

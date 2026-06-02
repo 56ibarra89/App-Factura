@@ -1,49 +1,62 @@
 import { useState, useEffect, useCallback } from "react";
-import { localStore, setJson, tryGetJson } from "../services/storage/storage";
+import { apiClient } from "../config/apiClient";
 import { CashRegisterConfig, ShiftProfileConfig } from "../types/shift.types";
 
 const CAJAS_KEY = "app_factura_cajas_config";
 const TURNOS_KEY = "app_factura_turnos_config";
 
-const DEFAULT_CAJAS: CashRegisterConfig[] = [
-  { id: "C-01", name: "Caja Principal", defaultOpeningAmount: 200.0 },
-  { id: "C-02", name: "Caja Barra", defaultOpeningAmount: 100.0 },
-  { id: "C-03", name: "Caja Drive-Thru", defaultOpeningAmount: 150.0 },
-];
+const DEFAULT_CAJAS: CashRegisterConfig[] = [];
+const DEFAULT_TURNOS: ShiftProfileConfig[] = [];
 
-const DEFAULT_TURNOS: ShiftProfileConfig[] = [
-  { id: "T-01", name: "Matutino", startTime: "08:00", endTime: "16:00", description: "Turno de mañana" },
-  { id: "T-02", name: "Vespertino", startTime: "16:00", endTime: "00:00", description: "Turno de tarde/noche" },
-  { id: "T-03", name: "Nocturno", startTime: "00:00", endTime: "08:00", description: "Turno de madrugada" },
-];
+// Caches globales
+let globalCajasCache: CashRegisterConfig[] | null = null;
+let globalTurnosCache: ShiftProfileConfig[] | null = null;
+const cajasListeners = new Set<(cajas: CashRegisterConfig[]) => void>();
+const turnosListeners = new Set<(turnos: ShiftProfileConfig[]) => void>();
 
 export function useCajasConfig() {
-  const [cajas, setCajas] = useState<CashRegisterConfig[]>([]);
-  const [turnos, setTurnos] = useState<ShiftProfileConfig[]>([]);
+  const [cajas, setCajasState] = useState<CashRegisterConfig[]>(globalCajasCache || DEFAULT_CAJAS);
+  const [turnos, setTurnosState] = useState<ShiftProfileConfig[]>(globalTurnosCache || DEFAULT_TURNOS);
 
-  // Cargar datos
+  // Cargar datos del backend
   useEffect(() => {
-    const savedCajas = tryGetJson<CashRegisterConfig[]>(localStore, CAJAS_KEY);
-    if (savedCajas) {
-      setCajas(savedCajas);
-    } else {
-      setCajas(DEFAULT_CAJAS);
-      setJson(localStore, CAJAS_KEY, DEFAULT_CAJAS);
+    const cajaListener = (newCajas: CashRegisterConfig[]) => setCajasState(newCajas);
+    const turnoListener = (newTurnos: ShiftProfileConfig[]) => setTurnosState(newTurnos);
+    
+    cajasListeners.add(cajaListener);
+    turnosListeners.add(turnoListener);
+
+    if (!globalCajasCache) {
+      apiClient(`/config/${CAJAS_KEY}`).then(res => {
+        const loaded = res?.data && Array.isArray(res.data) && res.data.length > 0 ? res.data : DEFAULT_CAJAS;
+        globalCajasCache = loaded;
+        cajasListeners.forEach(l => l(loaded));
+      }).catch(err => console.error("Error cargando cajas:", err));
     }
 
-    const savedTurnos = tryGetJson<ShiftProfileConfig[]>(localStore, TURNOS_KEY);
-    if (savedTurnos) {
-      setTurnos(savedTurnos);
-    } else {
-      setTurnos(DEFAULT_TURNOS);
-      setJson(localStore, TURNOS_KEY, DEFAULT_TURNOS);
+    if (!globalTurnosCache) {
+      apiClient(`/config/${TURNOS_KEY}`).then(res => {
+        const loaded = res?.data && Array.isArray(res.data) && res.data.length > 0 ? res.data : DEFAULT_TURNOS;
+        globalTurnosCache = loaded;
+        turnosListeners.forEach(l => l(loaded));
+      }).catch(err => console.error("Error cargando turnos:", err));
     }
+
+    return () => {
+      cajasListeners.delete(cajaListener);
+      turnosListeners.delete(turnoListener);
+    };
   }, []);
 
   // CRUD Cajas
   const saveCajas = useCallback((newCajas: CashRegisterConfig[]) => {
-    setCajas(newCajas);
-    setJson(localStore, CAJAS_KEY, newCajas);
+    globalCajasCache = newCajas;
+    cajasListeners.forEach(l => l(newCajas));
+    
+    apiClient(`/config/${CAJAS_KEY}`, {
+      method: "PUT",
+      body: JSON.stringify({ data: newCajas })
+    }).catch(err => console.error("Error guardando cajas:", err));
   }, []);
 
   const addCaja = useCallback((name: string, defaultOpeningAmount: number) => {
@@ -67,8 +80,13 @@ export function useCajasConfig() {
 
   // CRUD Turnos
   const saveTurnos = useCallback((newTurnos: ShiftProfileConfig[]) => {
-    setTurnos(newTurnos);
-    setJson(localStore, TURNOS_KEY, newTurnos);
+    globalTurnosCache = newTurnos;
+    turnosListeners.forEach(l => l(newTurnos));
+
+    apiClient(`/config/${TURNOS_KEY}`, {
+      method: "PUT",
+      body: JSON.stringify({ data: newTurnos })
+    }).catch(err => console.error("Error guardando turnos:", err));
   }, []);
 
   const addTurno = useCallback((name: string, startTime: string, endTime: string, description?: string) => {
