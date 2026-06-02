@@ -321,6 +321,7 @@ const Facturacion = () => {
         initialPhone={deliveryPhone}
         initialOrderType={deliveryCustomer || deliveryPhone ? "delivery" : undefined}
         invoiceNumber={createdInvoiceNumber}
+        cashierName={activeOrder?.cashierName}
       />
 
       <Snackbar

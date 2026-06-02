@@ -16,6 +16,7 @@ interface Props {
   onUnirMesas?: () => void;
   onMoverPedido?: () => void;
   hasActiveOrder?: boolean;
+  canModifyOrder?: boolean;
 }
 
 export default function OrderActions({ 
@@ -26,7 +27,8 @@ export default function OrderActions({
   onCheckout,
   onUnirMesas,
   onMoverPedido,
-  hasActiveOrder = false
+  hasActiveOrder = false,
+  canModifyOrder = true
 }: Props) {
   const successColor = "#2e7d32";
   const cancelColor = "#d32f2f"; // Red for cancel
@@ -53,6 +55,7 @@ export default function OrderActions({
             }
           }}
           onClick={onEditOrder}
+          disabled={!canModifyOrder && hasActiveOrder}
         >
           Pedir / Editar
         </Button>
@@ -80,7 +83,7 @@ export default function OrderActions({
             transition: "all 0.2s"
           }}
           onClick={onCheckout}
-          disabled={!hasActiveOrder}
+          disabled={!hasActiveOrder || !canModifyOrder}
         >
           Cobrar / Cerrar Mesa
         </Button>
@@ -105,6 +108,7 @@ export default function OrderActions({
               boxShadow: "none" 
             }
           }}
+          disabled={!hasActiveOrder || !canModifyOrder}
         >
           Unir Mesa
         </Button>
@@ -116,7 +120,7 @@ export default function OrderActions({
           variant="contained"
           startIcon={<MoveUpIcon />}
           onClick={onMoverPedido}
-          disabled={!hasActiveOrder}
+          disabled={!hasActiveOrder || !canModifyOrder}
           sx={{
             py: 1.5,
             bgcolor: alpha("#ff9800", 0.1),

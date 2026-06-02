@@ -128,6 +128,12 @@ export default function MesasPage() {
 
   const activeOrder = useMemo(() => selectedMesaId ? getOrderByTable(selectedMesaId) : null, [selectedMesaId, getOrderByTable]);
 
+  const canModifyOrder = useMemo(() => {
+    if (!activeOrder) return true;
+    if (role === "admin" || role === "cajero") return true;
+    return activeOrder.cashierName === username;
+  }, [activeOrder, role, username]);
+
   const handleCheckoutTable = useCallback(() => {
     if (!selectedMesaId || !activeOrder) return;
     setCheckoutOrder(activeOrder);
@@ -293,6 +299,7 @@ export default function MesasPage() {
           onUnirMesas={handleUnirMesas}
           onMoverPedido={handleMoverPedido}
           hasActiveOrder={!!activeOrder}
+          canModifyOrder={canModifyOrder}
         />
       </Box>
 
@@ -340,7 +347,7 @@ export default function MesasPage() {
           disableRestoreFocus
           disableEnforceFocus
           invoiceNumber={createdInvoiceNumber}
-          cashierName={checkoutOrder.cashierSnapshotName}
+          cashierName={checkoutOrder.cashierName}
         />
       )}
     </Box>

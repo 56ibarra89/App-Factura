@@ -15,6 +15,7 @@ interface Props {
   onUnirMesas?: () => void;
   onMoverPedido?: () => void;
   hasActiveOrder?: boolean;
+  canModifyOrder?: boolean;
 }
 
 export default function OrderPanel({ 
@@ -26,7 +27,8 @@ export default function OrderPanel({
   onCheckout,
   onUnirMesas,
   onMoverPedido,
-  hasActiveOrder = false
+  hasActiveOrder = false,
+  canModifyOrder = true
 }: Props) {
   return (
     <Paper
@@ -63,6 +65,7 @@ export default function OrderPanel({
             onUnirMesas={onUnirMesas}
             onMoverPedido={onMoverPedido}
             hasActiveOrder={hasActiveOrder}
+            canModifyOrder={canModifyOrder}
           />
         </Box>
       </Box>
