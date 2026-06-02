@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { logService } from '../services/logService';
-import { localStore, setJson, tryGetJson } from "../services/storage/storage";
+import { apiClient } from '../config/apiClient';
 
 export interface Tax {
   id: string;
@@ -20,25 +20,59 @@ const defaultTaxes: Tax[] = [
   { id: '1', name: 'Módulo Principal de ITBMS/IVA', percentage: 15 }
 ];
 
+const defaultConfig: TaxConfig = { taxes: defaultTaxes, isExonerated: false };
+
+// Pequeño caché global y listeners para sincronizar las instancias del hook
+let globalConfigCache: TaxConfig | null = null;
+const listeners = new Set<(config: TaxConfig) => void>();
+
 export const useImpuestosConfig = () => {
   const { username, role } = useAuth();
+  const [config, setConfigState] = useState<TaxConfig>(globalConfigCache || defaultConfig);
 
-  const loadInitialConfig = (): TaxConfig => {
-    const stored = tryGetJson<TaxConfig>(localStore, TAX_STORAGE_KEY);
-    return stored ?? { taxes: defaultTaxes, isExonerated: false };
-  };
-
-  const [config, setConfig] = useState<TaxConfig>(loadInitialConfig());
-
-  useEffect(() => {
-    setJson(localStore, TAX_STORAGE_KEY, config);
+  // Guardar configuración en estado global, notificar y enviar al backend
+  const setConfigAndSave = useCallback((newConfig: TaxConfig | ((prev: TaxConfig) => TaxConfig)) => {
+    const nextConfig = typeof newConfig === 'function' ? newConfig(config) : newConfig;
+    
+    globalConfigCache = nextConfig;
+    listeners.forEach(listener => listener(nextConfig));
+    
+    apiClient(`/config/${TAX_STORAGE_KEY}`, {
+      method: "PUT",
+      body: JSON.stringify({ data: nextConfig }),
+    }).catch(err => console.error("Error saving tax config:", err));
   }, [config]);
+
+  // Cargar del backend en la primera instancia
+  useEffect(() => {
+    const listener = (newConfig: TaxConfig) => setConfigState(newConfig);
+    listeners.add(listener);
+
+    if (!globalConfigCache) {
+      apiClient(`/config/${TAX_STORAGE_KEY}`)
+        .then(res => {
+          if (res && res.data && Array.isArray(res.data.taxes)) {
+            globalConfigCache = res.data;
+            listeners.forEach(l => l(res.data));
+          } else {
+            // Guardar default inicial en DB si no existe data formateada
+            globalConfigCache = defaultConfig;
+            listeners.forEach(l => l(defaultConfig));
+          }
+        })
+        .catch(err => console.error("Error loading tax config:", err));
+    }
+
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
 
   const taxes: Tax[] = config.taxes;
   const isExonerated: boolean = config.isExonerated;
 
   const toggleExoneration = useCallback(() => {
-    setConfig((prev) => {
+    setConfigAndSave((prev) => {
       const next = !prev.isExonerated;
       logService.log(
         username, 
@@ -48,10 +82,10 @@ export const useImpuestosConfig = () => {
       );
       return { ...prev, isExonerated: next };
     });
-  }, [username, role]);
+  }, [username, role, setConfigAndSave]);
 
   const updateTaxRate = useCallback((id: string, newPercentage: number) => {
-    setConfig((prev) => {
+    setConfigAndSave((prev) => {
       const tax = prev.taxes.find((t: Tax) => t.id === id);
       if (tax) {
         logService.log(
@@ -68,7 +102,7 @@ export const useImpuestosConfig = () => {
         )
       };
     });
-  }, [username, role]);
+  }, [username, role, setConfigAndSave]);
 
   return {
     taxes,
