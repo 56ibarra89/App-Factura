@@ -15,6 +15,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { BackButton } from "../components/BackButton";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -33,7 +35,12 @@ import { UserForm } from "../components/cuentas/UserForm";
 import { UserActivity } from "../components/cuentas/UserActivity";
 
 export default function Cuentas() {
-  const { users, saveUser, toggleUserStatus, deleteUser } = useAccountManager();
+  const { users, loading, error, saveUser, toggleUserStatus, deleteUser } = useAccountManager();
+  const [snackbarError, setSnackbarError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (error) setSnackbarError(error);
+  }, [error]);
 
   // Scroll to top upon mounting to prevent inheriting scroll position from previous page
   useEffect(() => {
@@ -303,6 +310,17 @@ export default function Cuentas() {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      <Snackbar
+        open={!!snackbarError}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarError(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSnackbarError(null)} severity="error" sx={{ width: "100%" }}>
+          {snackbarError}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

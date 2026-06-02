@@ -40,7 +40,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
     if (!formData.username || !formData.firstName || !formData.pin) return;
     const userToSave: UserAccount = {
       ...formData,
-      id: formData.id || formData.username || "",
+      id: formData.id || "",
       isActive: formData.isActive !== undefined ? formData.isActive : true,
     } as UserAccount;
     onSave(userToSave);
@@ -103,9 +103,11 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField id="user-username" fullWidth size="small" label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing && currentRole !== "admin"} required variant="filled" helperText={isEditing && currentRole !== "admin" ? "Solo administradores pueden editar el nombre de usuario." : "Usado para iniciar sesión."} />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField id="user-email" fullWidth size="small" label="Correo Electrónico" value={formData.email || ""} onChange={e => handleChange("email", e.target.value)} variant="filled" type="email" />
-          </Grid>
+          {formData.role === "admin" && (
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField id="user-email" fullWidth size="small" label="Correo Electrónico" value={formData.email || ""} onChange={e => handleChange("email", e.target.value)} variant="filled" type="email" />
+            </Grid>
+          )}
           <Grid size={{ xs: 12, sm: 12 }}>
             <TextField id="user-role" fullWidth size="small" select label="Rol en la Empresa" value={formData.role || "cajero"} onChange={e => handleChange("role", e.target.value)} variant="filled" SelectProps={{ native: true }}>
               {(Object.keys(ROLE_LABELS) as UserRole[]).map(role => (
@@ -159,7 +161,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
               type="text" 
               value={formData.password || ""} 
               onChange={e => handleChange("password", e.target.value)} 
-              required 
+              required={!isEditing} 
               variant="filled" 
               helperText={isEditing ? "Escribe para restablecerla." : "Alfanumérica (Ej. ptg2026)"}
               InputProps={{

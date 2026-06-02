@@ -1,133 +1,160 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { UserAccount } from "../types/user";
 import { logService } from "../services/logService";
 import { useAuth } from "../context/AuthContext";
-import { localStore, setJson, tryGetJson } from "../services/storage/storage";
-
-// Simulación de datos iniciales
-const MOCK_INITIAL_USERS: UserAccount[] = [
-  {
-    id: "admin",
-    username: "admin",
-    firstName: "Administrador",
-    lastName: "Principal",
-    pin: "1234",
-    password: "123456",
-    role: "admin",
-    isActive: true,
-    createdAt: new Date(Date.now() - 1000000000).toISOString(),
-    lastVisit: new Date().toISOString()
-  },
-  {
-    id: "fran",
-    username: "fran",
-    firstName: "Fran",
-    lastName: "Cajero",
-    pin: "4321",
-    password: "123456",
-    role: "cajero",
-    isActive: true,
-    createdAt: new Date(Date.now() - 500000000).toISOString(),
-    lastVisit: new Date(Date.now() - 86400000).toISOString()
-  },
-  {
-    id: "engels",
-    username: "engels",
-    firstName: "Engels",
-    lastName: "Mesero",
-    pin: "0000",
-    password: "123456",
-    role: "mesero",
-    isActive: true,
-    createdAt: new Date(Date.now() - 200000000).toISOString(),
-  },
-  {
-    id: "sidney",
-    username: "sidney",
-    firstName: "Sidney",
-    lastName: "Cocinero",
-    pin: "1111",
-    password: "123456",
-    role: "cocinero",
-    isActive: true,
-    createdAt: new Date(Date.now() - 100000000).toISOString(),
-  }
-];
+import { apiClient } from "../config/apiClient";
 
 export function useAccountManager() {
   const { username: adminUser, role: adminRole } = useAuth();
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const STORAGE_KEY = "app_factura_users";
-
-  // Cargar usuarios al inicio
-  useEffect(() => {
+  // Cargar usuarios desde el backend
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
-    const storedUsersRaw = localStore.getItem(STORAGE_KEY);
-    if (storedUsersRaw) {
-      const parsed = tryGetJson<UserAccount[]>(localStore, STORAGE_KEY);
-      if (parsed) {
-        setUsers(parsed);
-      } else {
-        setUsers(MOCK_INITIAL_USERS);
-      }
-    } else {
-      setUsers(MOCK_INITIAL_USERS);
-      setJson(localStore, STORAGE_KEY, MOCK_INITIAL_USERS);
+    setError(null);
+    try {
+      const data = await apiClient("/users");
+      setUsers(data);
+    } catch (err: any) {
+      setError(err.message || "Error al cargar los usuarios");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const saveToStorage = (updatedUsers: UserAccount[]) => {
-    setJson(localStore, STORAGE_KEY, updatedUsers);
-    setUsers(updatedUsers);
-  };
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
-  const saveUser = (user: UserAccount) => {
+  const saveUser = async (user: UserAccount) => {
     setLoading(true);
-    setTimeout(() => { // Simular latencia
-      const exists = users.find(u => u.id === user.id);
-      let updatedUsers;
-      if (exists) {
-        updatedUsers = users.map(u => u.id === user.id ? user : u);
-        logService.log(adminUser, adminRole, "USER_UPDATE", `Usuario actualizado: @${user.username} (${user.firstName} ${user.lastName})`);
-      } else {
-        updatedUsers = [...users, { ...user, createdAt: new Date().toISOString() }];
-        logService.log(adminUser, adminRole, "USER_CREATE", `Nuevo usuario creado: @${user.username} (${user.firstName} ${user.lastName})`);
+    setError(null);
+    try {
+      const isNew = !user.id || user.id === "";
+      let savedUser;
+
+      // Limpiar campos antes de enviar al backend
+      const payload: any = {
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        pin: user.pin,
+        role: user.role,
+        isActive: user.isActive,
+      };
+
+      if (user.email) payload.email = user.email;
+      if (user.password && user.password.trim() !== "") {
+        payload.password = user.password;
       }
-      saveToStorage(updatedUsers);
+
+      if (!isNew) {
+        // Actualizar existente
+        savedUser = await apiClient(`/users/${user.id}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        });
+        
+        setUsers(users.map((u) => (u.id === savedUser.id ? savedUser : u)));
+        logService.log(
+          adminUser,
+          adminRole,
+          "USER_UPDATE",
+          `Usuario actualizado: @${savedUser.username} (${savedUser.firstName} ${savedUser.lastName})`
+        );
+      } else {
+        // Crear nuevo
+        savedUser = await apiClient("/users", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        
+        setUsers([...users, savedUser]);
+        logService.log(
+          adminUser,
+          adminRole,
+          "USER_CREATE",
+          `Nuevo usuario creado: @${savedUser.username} (${savedUser.firstName} ${savedUser.lastName})`
+        );
+      }
+      return true; // Éxito
+    } catch (err: any) {
+      const errMsg = err.message || "Error al guardar el usuario";
+      setError(errMsg);
+      console.error(err);
+      return false; // Fallo
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
-  const toggleUserStatus = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    const updatedUsers = users.map(u => 
-      u.id === userId ? { ...u, isActive: !u.isActive } : u
-    );
-    if (user) {
-      logService.log(adminUser, adminRole, "USER_UPDATE_STATUS", `Usuario @${user.username} ${!user.isActive ? "ACTIVADO" : "DESACTIVADO"}`);
+  const toggleUserStatus = async (userId: string) => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+    
+    // Optimistic UI update
+    setUsers(users.map((u) => (u.id === userId ? { ...u, isActive: !u.isActive } : u)));
+
+    try {
+      await apiClient(`/users/${userId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive: !user.isActive }),
+      });
+      logService.log(
+        adminUser,
+        adminRole,
+        "USER_UPDATE_STATUS",
+        `Usuario @${user.username} ${!user.isActive ? "ACTIVADO" : "DESACTIVADO"}`
+      );
+    } catch (err) {
+      // Revertir si falla
+      setUsers(users.map((u) => (u.id === userId ? { ...u, isActive: user.isActive } : u)));
+      console.error("Error toggling user status", err);
     }
-    saveToStorage(updatedUsers);
   };
 
-  const deleteUser = (userId: string) => {
-    // Evitar eliminar al admin principal
-    if (userId === "admin") return;
-    const user = users.find(u => u.id === userId);
-    const updatedUsers = users.filter(u => u.id !== userId);
-    if (user) {
-      logService.log(adminUser, adminRole, "USER_DELETE", `Usuario eliminado permanentemente: @${user.username}`);
+  const deleteUser = async (userId: string) => {
+    const user = users.find((u) => u.id === userId);
+    if (!user) return;
+
+    // Regla: nadie puede borrar su propia cuenta
+    if (user.username === adminUser) {
+      setError("No puedes eliminar tu propia cuenta.");
+      return;
     }
-    saveToStorage(updatedUsers);
+
+    // Optimistic UI update
+    const previousUsers = [...users];
+    setUsers(users.filter((u) => u.id !== userId));
+
+    try {
+      await apiClient(`/users/${userId}`, {
+        method: "DELETE",
+      });
+      logService.log(
+        adminUser,
+        adminRole,
+        "USER_DELETE",
+        `Usuario eliminado permanentemente: @${user.username}`
+      );
+    } catch (err: any) {
+      // Revertir si falla
+      setUsers(previousUsers);
+      setError(err.message || "Error al eliminar el usuario");
+      console.error("Error deleting user", err);
+    }
   };
 
   return {
     users,
     loading,
+    error,
     saveUser,
     toggleUserStatus,
-    deleteUser
+    deleteUser,
+    refreshUsers: fetchUsers
   };
 }
