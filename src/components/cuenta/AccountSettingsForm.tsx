@@ -44,7 +44,7 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
     <Paper
       elevation={0}
       sx={{
-        bgcolor: "#ffffff",
+        bgcolor: "background.paper",
         p: { xs: 3, md: 5 },
         borderRadius: 4,
         boxShadow: LOGIN_SHADOWS.card,

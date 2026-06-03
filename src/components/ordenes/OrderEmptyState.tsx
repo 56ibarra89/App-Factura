@@ -10,7 +10,7 @@ const OrderEmptyState: React.FC = () => {
       alignItems="center" 
       justifyContent="center" 
       py={10}
-      bgcolor="white"
+      bgcolor="background.paper"
       borderRadius={8}
       boxShadow="0 4px 20px rgba(0,0,0,0.05)"
     >
