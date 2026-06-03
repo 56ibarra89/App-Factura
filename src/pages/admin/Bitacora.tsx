@@ -147,7 +147,7 @@ const Bitacora = () => {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 4,
         pb: 8,
         px: { xs: 2, md: 6 },

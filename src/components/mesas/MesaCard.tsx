@@ -13,7 +13,7 @@ interface Props {
 }
 
 interface MesaTheme {
-  bg: string;
+  bg?: string;
   shadow: string;
   icon: JSX.Element;
   label: string;
@@ -48,7 +48,7 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
       case "disponible":
       default:
         return {
-          bg: "white",
+          bg: undefined,
           shadow: "rgba(0,0,0,0.06)",
           icon: (
             <CheckCircleOutlineIcon
@@ -66,7 +66,7 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
   return (
     <Box sx={{ position: "relative", width: "100%" }} onClick={onClick}>
       <Paper
-        elevation={0}
+        elevation={theme.isNeutral ? 2 : 0}
         sx={{
           width: "100%",
           aspectRatio: "1/1",
@@ -89,14 +89,14 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
           borderColor: isSelected
             ? LOGIN_COLORS.primary
             : theme.isNeutral
-              ? "grey.100"
+              ? "divider"
               : "transparent",
           position: "relative",
           overflow: "hidden",
           "&:hover": {
             transform: "translateY(-8px) scale(1.02)",
             borderColor: theme.isNeutral ? LOGIN_COLORS.primary : "transparent",
-            bgcolor: theme.isNeutral ? LOGIN_COLORS.primarySubtle : "inherit",
+            bgcolor: theme.isNeutral ? "action.hover" : "inherit",
             boxShadow: theme.isNeutral
               ? `0 12px 20px ${LOGIN_COLORS.numpadHoverShadow}`
               : `0 16px 32px ${alpha(theme.shadow, 0.5)}`,
@@ -143,19 +143,22 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
         </Typography>
       </Paper>
 
-      <Box
+      <Paper
+        elevation={theme.isNeutral ? 2 : 0}
         sx={{
           position: "absolute",
           bottom: -10,
           left: "50%",
           transform: "translateX(-50%)",
-          background: theme.isNeutral ? "white" : theme.shadow,
+          background: theme.isNeutral ? undefined : theme.shadow,
           color: theme.isNeutral ? "text.secondary" : "white",
           px: 1.5,
           py: 0.4,
           borderRadius: 2,
           boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-          border: "1px solid rgba(0,0,0,0.05)",
+          border: theme.isNeutral ? "1px solid" : "none",
+          borderColor: "divider",
+          borderTop: "none",
           display: "flex",
           alignItems: "center",
           whiteSpace: "nowrap",
@@ -174,7 +177,7 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
         >
           {theme.label}
         </Typography>
-      </Box>
+      </Paper>
     </Box>
   );
 });

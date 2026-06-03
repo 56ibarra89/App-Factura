@@ -15,7 +15,7 @@ const AdminConfiguracion = () => {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 4,
         pb: 8,
         px: { xs: 2, md: 6 },
@@ -56,7 +56,6 @@ const AdminConfiguracion = () => {
             <Grid size={{ xs: 12, md: 6, lg: 4 }}>
               <PreferencesCard 
                 theme={config.theme} 
-                language={config.language} 
                 onUpdate={updatePreference} 
               />
             </Grid>

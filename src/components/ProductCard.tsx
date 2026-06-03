@@ -24,7 +24,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ name, price, description, onC
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer",
-        bgcolor: "#fff2e6",
+        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'background.paper' : '#fff2e6',
         borderRadius: 3,
         boxShadow: 3,
         position: "relative",

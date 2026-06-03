@@ -112,7 +112,7 @@ const AnularFactura = () => {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 4,
         pb: 4,
         px: { xs: 2, md: 6 },
@@ -199,7 +199,7 @@ const AnularFactura = () => {
       <Paper sx={{ width: '100%', overflow: 'hidden', borderRadius: 4, boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
         <TableContainer>
           <Table sx={{ minWidth: 650 }}>
-            <TableHead sx={{ bgcolor: "grey.100" }}>
+            <TableHead sx={{ bgcolor: "action.hover" }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: "bold" }}>Fecha / Hora</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>ID Factura</TableCell>

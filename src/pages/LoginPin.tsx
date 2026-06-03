@@ -90,7 +90,7 @@ const LoginPin = () => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          bgcolor: "white",
+          bgcolor: "background.paper",
         }}
       >
         <Typography variant="h4" fontWeight="800" color="text.primary" mb={1} align="center">
@@ -115,10 +115,10 @@ const LoginPin = () => {
               sx={{
                 ...numpadButtonSx,
                 ...(lockoutTime > 0 && {
-                  bgcolor: "grey.100",
+                  bgcolor: "action.hover",
                   borderColor: "grey.200",
                   color: "grey.400",
-                  "&:hover": { transform: "none", boxShadow: "none", bgcolor: "grey.100" }
+                  "&:hover": { transform: "none", boxShadow: "none", bgcolor: "action.hover" }
                 })
               }}
             >
@@ -133,10 +133,10 @@ const LoginPin = () => {
             sx={{
               ...numpadButtonSx,
               ...(lockoutTime > 0 && {
-                bgcolor: "grey.100",
+                bgcolor: "action.hover",
                 borderColor: "grey.200",
                 color: "grey.400",
-                "&:hover": { transform: "none", boxShadow: "none", bgcolor: "grey.100" }
+                "&:hover": { transform: "none", boxShadow: "none", bgcolor: "action.hover" }
               })
             }}
           >

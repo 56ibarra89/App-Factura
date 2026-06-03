@@ -65,7 +65,7 @@ const Reportes = () => {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 4,
         pb: 4,
         px: { xs: 2, md: 6 },
@@ -83,7 +83,7 @@ const Reportes = () => {
               size="small"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value as FilterType)}
-              sx={{ bgcolor: "white", borderRadius: 2, minWidth: 150 }}
+              sx={{ bgcolor: "background.paper", borderRadius: 2, minWidth: 150 }}
             >
               <MenuItem value="today">Hoy</MenuItem>
               <MenuItem value="week">Esta Semana</MenuItem>
@@ -100,7 +100,7 @@ const Reportes = () => {
                   value={customStart}
                   onChange={(e) => setCustomStart(e.target.value)}
                   InputLabelProps={{ shrink: true }}
-                  sx={{ bgcolor: "white", borderRadius: 2 }}
+                  sx={{ bgcolor: "background.paper", borderRadius: 2 }}
                 />
                 <TextField
                   type="date"
@@ -109,7 +109,7 @@ const Reportes = () => {
                   value={customEnd}
                   onChange={(e) => setCustomEnd(e.target.value)}
                   InputLabelProps={{ shrink: true }}
-                  sx={{ bgcolor: "white", borderRadius: 2 }}
+                  sx={{ bgcolor: "background.paper", borderRadius: 2 }}
                 />
               </>
             )}
@@ -117,12 +117,12 @@ const Reportes = () => {
             <Box display="flex" gap={1}>
               <IconButton 
                 onClick={() => setPrivacyMode(!privacyMode)}
-                sx={{ bgcolor: "white", boxShadow: 1 }}
+                sx={{ bgcolor: "background.paper", boxShadow: 1 }}
                 title={privacyMode ? "Mostrar montos" : "Ocultar montos (Privacidad)"}
               >
                 {privacyMode ? <VisibilityIcon color="primary" /> : <VisibilityOffIcon color="primary" />}
               </IconButton>
-              <IconButton sx={{ bgcolor: "white", boxShadow: 1 }}>
+              <IconButton sx={{ bgcolor: "background.paper", boxShadow: 1 }}>
                 <LocalPrintshopIcon color="primary" />
               </IconButton>
             </Box>

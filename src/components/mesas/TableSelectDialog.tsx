@@ -108,14 +108,14 @@ export default function TableSelectDialog({
           onClick={handleClose}
           sx={{
             color: 'grey.500',
-            "&:hover": { bgcolor: "grey.100" }
+            "&:hover": { bgcolor: "action.hover" }
           }}
         >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ p: 3, bgcolor: "grey.50", borderTop: "1px solid", borderColor: "grey.200" }}>
+      <DialogContent dividers sx={{ p: 3, bgcolor: "action.hover", borderTop: "1px solid", borderColor: "grey.200" }}>
         {options.length === 0 ? (
           <Box sx={{ py: 6, textAlign: 'center' }}>
             <EventSeatIcon sx={{ fontSize: 60, color: 'grey.300', mb: 2 }} />
@@ -188,7 +188,7 @@ export default function TableSelectDialog({
         )}
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, pt: 2, pb: 3, bgcolor: "grey.50" }}>
+      <DialogActions sx={{ p: 3, pt: 2, pb: 3, bgcolor: "action.hover" }}>
         <Button 
           onClick={handleClose} 
           variant="text" 

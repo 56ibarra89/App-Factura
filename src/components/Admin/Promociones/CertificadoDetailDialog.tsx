@@ -101,7 +101,7 @@ const CertificadoDetailDialog = ({
           <Box
             sx={{
               textAlign: "center",
-              bgcolor: "grey.50",
+              bgcolor: "action.hover",
               border: "2px dashed",
               borderColor: "primary.light",
               borderRadius: 2,

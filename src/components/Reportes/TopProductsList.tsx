@@ -24,7 +24,7 @@ export const TopProductsList: React.FC<TopProductsListProps> = ({ products }) =>
       sx={{
         borderRadius: 4,
         boxShadow: LOGIN_SHADOWS.card,
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         height: '100%'
       }}
     >

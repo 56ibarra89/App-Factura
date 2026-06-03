@@ -53,7 +53,7 @@ class ErrorBoundary extends Component<Props, State> {
             alignItems: "center",
             justifyContent: "center",
             minHeight: "100vh",
-            background: LOGIN_GRADIENTS.pageBackground,
+            bgcolor: 'background.default',
             p: 3
           }}
         >
@@ -80,7 +80,7 @@ class ErrorBoundary extends Component<Props, State> {
 
             <Box 
               sx={{ 
-                bgcolor: "grey.50", 
+                bgcolor: "action.hover", 
                 p: 2, 
                 borderRadius: 2, 
                 mb: 4, 

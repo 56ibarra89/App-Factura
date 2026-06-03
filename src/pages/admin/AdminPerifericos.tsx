@@ -43,10 +43,10 @@ const Perifericos = () => {
           p: 2.5,
           borderRadius: 5,
           border: '1px solid',
-          borderColor: isConnected ? alpha(LOGIN_COLORS.primary, 0.1) : 'grey.200',
+          borderColor: isConnected ? alpha(LOGIN_COLORS.primary, 0.3) : 'divider',
           background: isConnected 
-            ? `linear-gradient(135deg, white 0%, ${alpha(LOGIN_COLORS.primary, 0.02)} 100%)`
-            : 'white',
+            ? (theme) => `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${alpha(LOGIN_COLORS.primary, 0.05)} 100%)`
+            : 'background.paper',
           transition: 'all 0.2s',
           '&:hover': {
             transform: 'translateY(-4px)',
@@ -119,7 +119,7 @@ const Perifericos = () => {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 2,
         pb: 8,
         px: { xs: 2, md: 6 },
@@ -133,7 +133,7 @@ const Perifericos = () => {
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
-              sx={{ borderRadius: 3, bgcolor: 'white', fontWeight: 'bold', textTransform: 'none' }}
+              sx={{ borderRadius: 3, bgcolor: "background.paper", fontWeight: 'bold', textTransform: 'none' }}
             >
               Escanear Dispositivos
             </Button>
@@ -196,7 +196,7 @@ const Perifericos = () => {
           p: 4,
           borderRadius: 6,
           border: '1px solid',
-          borderColor: 'grey.100',
+          borderColor: 'divider',
           bgcolor: alpha(LOGIN_COLORS.primary, 0.02),
           boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
         }}

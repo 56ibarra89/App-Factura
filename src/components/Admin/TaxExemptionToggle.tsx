@@ -18,10 +18,10 @@ export const TaxExemptionToggle: React.FC<Props> = ({ isExonerated, onToggle }) 
         borderRadius: 4,
         background: isExonerated 
           ? `linear-gradient(135deg, ${alpha(LOGIN_COLORS.primary, 0.05)} 0%, ${alpha(LOGIN_COLORS.primary, 0.15)} 100%)` 
-          : "white",
+          : "background.paper",
         boxShadow: isExonerated ? `0 8px 30px ${alpha(LOGIN_COLORS.primary, 0.2)}` : "0 10px 30px rgba(0,0,0,0.04)",
         border: "1px solid",
-        borderColor: isExonerated ? alpha(LOGIN_COLORS.primary, 0.4) : "grey.200",
+        borderColor: isExonerated ? alpha(LOGIN_COLORS.primary, 0.4) : "divider",
         transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         height: '100%',
         display: 'flex',
@@ -55,7 +55,7 @@ export const TaxExemptionToggle: React.FC<Props> = ({ isExonerated, onToggle }) 
         sx={{ 
           p: 2, 
           borderRadius: 2, 
-          bgcolor: isExonerated ? "rgba(255,255,255,0.7)" : alpha("#4caf50", 0.05),
+          bgcolor: isExonerated ? "action.hover" : alpha("#4caf50", 0.05),
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,

@@ -22,7 +22,7 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data, groupByDay }) => {
   return (
     <Box
       sx={{
-        background: "white",
+        bgcolor: "background.paper",
         borderRadius: 4,
         p: 3,
         boxShadow: LOGIN_SHADOWS.card,

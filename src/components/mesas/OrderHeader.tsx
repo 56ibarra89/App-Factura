@@ -32,7 +32,7 @@ export default function OrderHeader() {
 
       {/* Column Headers */}
       <Box sx={{ 
-        bgcolor: "#f8f9fa", 
+        bgcolor: "action.hover", 
         color: "text.secondary", 
         py: 1.2, 
         px: 2,

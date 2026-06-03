@@ -37,7 +37,7 @@ const Cart = ({
     <Box
       width="300px"
       p={2}
-      bgcolor="#f9f9f9"
+      bgcolor="background.paper"
       borderRadius={2}
       display="flex"
       flexDirection="column"
@@ -77,7 +77,7 @@ const Cart = ({
       </Box>
 
       <Divider sx={{ my: 1 }} />
-      <Box position="sticky" bottom={0} bgcolor="#f9f9f9" pt={1}>
+      <Box position="sticky" bottom={0} bgcolor="background.paper" pt={1}>
         <Box display="flex" justifyContent="space-between" mb={0.5}>
           <Typography variant="body2" color="text.secondary">Subtotal:</Typography>
           <Typography variant="body2">C${subTotal.toFixed(2)}</Typography>

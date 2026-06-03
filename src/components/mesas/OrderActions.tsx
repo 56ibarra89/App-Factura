@@ -50,7 +50,7 @@ export default function OrderActions({
             borderWidth: 1.5,
             "&:hover": { 
               borderWidth: 1.5,
-              bgcolor: "grey.50",
+              bgcolor: "action.hover",
               borderColor: "grey.400"
             }
           }}
@@ -159,7 +159,7 @@ export default function OrderActions({
             },
             transition: "all 0.2s",
             "&.Mui-disabled": {
-              bgcolor: "grey.200",
+              bgcolor: "action.selected",
               color: "grey.500"
             }
           }}
@@ -173,15 +173,17 @@ export default function OrderActions({
       <Grid size={6}>
         <Button
           fullWidth
-          variant="text"
+          variant="outlined"
+          color="error"
           startIcon={<LogoutIcon />}
           sx={{ 
             py: 1.5,
             textTransform: "none",
             fontWeight: "700",
             borderRadius: 2.5,
-            color: "error.main",
+            borderWidth: 1.5,
             "&:hover": {
+              borderWidth: 1.5,
               bgcolor: "error.main",
               color: "white",
               transform: "translateY(-2px)"

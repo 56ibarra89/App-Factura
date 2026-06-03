@@ -39,7 +39,7 @@ export default function OrderPanel({
         flexDirection: "column",
         borderRadius: 4,
         boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-        bgcolor: "white",
+        bgcolor: "background.paper",
         overflow: "hidden"
       }}
     >
@@ -52,7 +52,7 @@ export default function OrderPanel({
       <Box sx={{ 
         p: 2.5, 
         borderTop: "1px solid rgba(0,0,0,0.06)",
-        bgcolor: "#fafafa" 
+        bgcolor: "action.hover" 
       }}>
         <OrderSummary order={order} />
         <Box sx={{ mt: 3 }}>

@@ -44,7 +44,7 @@ export default function CerrarCajaPage() {
           p: { xs: 4, md: 6 },
           display: "flex",
           flexDirection: "column",
-          bgcolor: "white",
+          bgcolor: "background.paper",
           overflowY: "auto"
         }}
       >

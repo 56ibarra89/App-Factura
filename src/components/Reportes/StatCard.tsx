@@ -17,7 +17,7 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, subtitle
       sx={{
         borderRadius: 4,
         boxShadow: LOGIN_SHADOWS.card,
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         display: "flex",
         flexDirection: "column",
         p: 2,

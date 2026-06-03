@@ -18,7 +18,7 @@ const MenuCard = ({ label, icon, onClick, disabled }: MenuCardProps) => (
     elevation={disabled ? 1 : 4}
     sx={{
       borderRadius: 3,
-      bgcolor: "white",
+      bgcolor: "background.paper",
       border: "2px solid transparent",
       opacity: disabled ? 0.6 : 1,
       filter: disabled ? "grayscale(0.8)" : "none",

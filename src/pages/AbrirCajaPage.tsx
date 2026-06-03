@@ -46,7 +46,7 @@ export default function AbrirCajaPage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          bgcolor: "white",
+          bgcolor: "background.paper",
         }}
       >
         <Typography variant="h4" fontWeight="900" color="text.primary" mb={1}>

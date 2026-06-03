@@ -155,7 +155,7 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
 
       <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid", borderColor: "grey.100", borderRadius: 3 }}>
         <Table>
-          <TableHead sx={{ bgcolor: "grey.50" }}>
+          <TableHead sx={{ bgcolor: "action.hover" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>ID</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Nombre de Estación</TableCell>

@@ -142,7 +142,7 @@ const CertificacionesTab = ({
           sx={{ borderRadius: 2 }}
         >
           <Table>
-            <TableHead sx={{ bgcolor: "grey.50" }}>
+            <TableHead sx={{ bgcolor: "action.hover" }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 600 }}>Serial Único</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Origen / Empresa</TableCell>

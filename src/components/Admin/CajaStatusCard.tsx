@@ -30,7 +30,7 @@ export const CajaStatusCard = ({ caja }: Props) => {
       sx={{
         p: 3,
         borderRadius: 4,
-        background: "white",
+        bgcolor: "background.paper",
         boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
         position: "relative",
         overflow: "hidden",

@@ -23,7 +23,7 @@ const Home = () => {
       minHeight="100vh"
       boxSizing="border-box"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 4,
         pb: 4,
         px: { xs: 2, md: 6 },
@@ -42,7 +42,7 @@ const Home = () => {
               borderRadius: "20%",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               objectFit: "cover",
-              bgcolor: "white",
+              bgcolor: "background.paper",
             }}
           />
         }

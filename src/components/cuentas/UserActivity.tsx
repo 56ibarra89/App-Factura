@@ -80,7 +80,7 @@ export function UserActivity({ user }: UserActivityProps) {
           elevation={0}
           sx={{
             p: 3,
-            bgcolor: "grey.50",
+            bgcolor: "action.hover",
             borderRadius: 2,
             border: "1px solid",
             borderColor: "grey.200",

@@ -97,7 +97,7 @@ const CustomerTable: React.FC<Props> = ({
       <TableContainer>
         <Table id="customers-table" aria-label="Tabla de clientes">
           <TableHead>
-            <TableRow sx={{ bgcolor: "grey.50" }}>
+            <TableRow sx={{ bgcolor: "action.hover" }}>
               <TableCell sx={{ fontWeight: 700 }}>Nombre</TableCell>
               <TableCell sx={{ fontWeight: 700 }}>Teléfono</TableCell>
               <TableCell sx={{ fontWeight: 700 }} align="center">

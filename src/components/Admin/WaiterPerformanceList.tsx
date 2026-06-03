@@ -17,7 +17,7 @@ export const WaiterPerformanceList = ({ waiters }: Props) => {
       sx={{
         p: 3,
         borderRadius: 4,
-        background: "white",
+        bgcolor: "background.paper",
         boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
         border: "1px solid",
         borderColor: "grey.200",
@@ -80,7 +80,7 @@ export const WaiterPerformanceList = ({ waiters }: Props) => {
               borderColor: idx === 0 ? 'rgba(211, 47, 47, 0.1)' : 'grey.100',
               transition: 'all 0.2s',
               "&:hover": {
-                bgcolor: 'grey.50'
+                bgcolor: "action.hover"
               }
             }}
           >

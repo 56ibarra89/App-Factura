@@ -1,11 +1,12 @@
-import { createTheme } from "@mui/material/styles";
+import { createTheme, PaletteMode } from "@mui/material/styles";
 
 /**
  * Tema global de la aplicación.
  * Centraliza la paleta corporativa para eliminar colores hardcodeados.
  */
-const appTheme = createTheme({
+const getAppTheme = (mode: PaletteMode) => createTheme({
   palette: {
+    mode,
     primary: {
       main: "#d32f2f",
       dark: "#b71c1c",
@@ -13,7 +14,8 @@ const appTheme = createTheme({
       contrastText: "#ffffff",
     },
     background: {
-      default: "#fdfbfb",
+      default: mode === 'dark' ? "#121212" : "#fdfbfb",
+      paper: mode === 'dark' ? "#1e1e1e" : "#ffffff",
     },
   },
   shape: {
@@ -33,4 +35,4 @@ const appTheme = createTheme({
   },
 });
 
-export default appTheme;
+export default getAppTheme;

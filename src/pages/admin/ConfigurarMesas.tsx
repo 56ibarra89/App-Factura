@@ -70,7 +70,7 @@ export default function ConfigurarMesas() {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 4,
         pb: 8,
         px: { xs: 2, md: 6 },
@@ -107,7 +107,7 @@ export default function ConfigurarMesas() {
                   borderRadius: 4,
                   border: "1px solid",
                   borderColor: floor.tableCount > 0 ? alpha(LOGIN_COLORS.primary, 0.3) : "divider",
-                  bgcolor: floor.tableCount > 0 ? alpha(LOGIN_COLORS.primary, 0.03) : "white",
+                  bgcolor: floor.tableCount > 0 ? alpha(LOGIN_COLORS.primary, 0.03) : "background.paper",
                   transition: "all 0.2s",
                   position: "relative",
                   "&:hover": {
@@ -161,7 +161,7 @@ export default function ConfigurarMesas() {
                   value={floor.tableCount === 0 ? "" : floor.tableCount}
                   onChange={(e) => handleUpdate(floor.id, e.target.value)}
                   inputProps={{ min: 0 }}
-                  sx={{ bgcolor: "white" }}
+                  sx={{ bgcolor: "background.paper" }}
                 />
               </Paper>
             </Grid>

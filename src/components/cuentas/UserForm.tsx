@@ -87,7 +87,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
       </Box>
 
       {/* Bloque 1: Información Personal */}
-      <Paper elevation={0} sx={{ p: 1.5, mb: 1, borderRadius: 4, border: '1px solid', borderColor: 'grey.100', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+      <Paper elevation={0} sx={{ p: 1.5, mb: 1, borderRadius: 4, border: '1px solid', borderColor: 'divider', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
         <Box display="flex" alignItems="center" gap={1} mb={1.5}>
           <BadgeIcon color="primary" />
           <Typography variant="subtitle2" fontWeight="bold">Identidad del Usuario</Typography>
@@ -119,7 +119,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
       </Paper>
 
       {/* Bloque 2: Credenciales */}
-      <Paper elevation={0} sx={{ p: 1.5, borderRadius: 4, border: '1px solid', borderColor: 'grey.100', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+      <Paper elevation={0} sx={{ p: 1.5, borderRadius: 4, border: '1px solid', borderColor: 'divider', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
         <Box display="flex" alignItems="center" gap={1} mb={1.5}>
           <VpnKeyIcon color="primary" />
           <Typography variant="subtitle2" fontWeight="bold">Seguridad y Acceso</Typography>

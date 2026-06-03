@@ -33,7 +33,7 @@ const CategoryTabs = ({
       display="flex"
       flexDirection="column"
       height="100%"
-      bgcolor="#f0f0f0"
+      bgcolor="action.hover"
       borderRadius={2}
       p={1}
       sx={{
@@ -44,9 +44,9 @@ const CategoryTabs = ({
         <IconButton 
           onClick={() => navigate("/home")}
           sx={{ 
-            bgcolor: "white", 
+            bgcolor: "background.paper", 
             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            "&:hover": { bgcolor: "#eee" }
+            "&:hover": { bgcolor: "action.selected" }
           }}
         >
           <Home color="primary" />

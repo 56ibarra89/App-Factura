@@ -127,7 +127,7 @@ export default function DeliveryCustomerDialog({
                 sx={{
                   p: 3,
                   textAlign: "center",
-                  bgcolor: "grey.50",
+                  bgcolor: "action.hover",
                   borderRadius: 2,
                   border: "1px dashed",
                   borderColor: "grey.300",

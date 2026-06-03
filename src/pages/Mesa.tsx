@@ -252,7 +252,7 @@ export default function MesasPage() {
       sx={{
         display: "flex",
         height: "100vh",
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         p: 2.5,
         gap: 2.5,
         boxSizing: "border-box",
@@ -272,7 +272,7 @@ export default function MesasPage() {
       <Box
         sx={{
           flexGrow: 1,
-          bgcolor: "white",
+          bgcolor: "background.paper",
           borderRadius: 5,
           boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
           overflowY: "auto",

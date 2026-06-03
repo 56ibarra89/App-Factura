@@ -32,10 +32,10 @@ export const TaxConfigCard: React.FC<Props> = ({ tax, onUpdate, disabled = false
       sx={{
         p: 3,
         borderRadius: 4,
-        background: "white",
+        bgcolor: "background.paper",
         boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
         border: "1px solid",
-        borderColor: "grey.200",
+        borderColor: "divider",
         opacity: disabled ? 0.6 : 1,
         transition: "opacity 0.3s ease",
         height: '100%',

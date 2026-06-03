@@ -37,7 +37,7 @@ export default function ConsultarTurnos() {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         p: { xs: 2, md: 4 }
       }}
     >
@@ -47,7 +47,7 @@ export default function ConsultarTurnos() {
         actions={
           <IconButton 
             onClick={reload} 
-            sx={{ bgcolor: "white", boxShadow: 1, "&:hover": { bgcolor: "grey.100" } }}
+            sx={{ bgcolor: "background.paper", boxShadow: 1, "&:hover": { bgcolor: "action.hover" } }}
           >
             <RefreshIcon color="primary" />
           </IconButton>

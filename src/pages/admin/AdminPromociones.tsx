@@ -187,7 +187,7 @@ const AdminPromociones = () => {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 4,
         pb: 8,
         px: { xs: 2, md: 6 },
@@ -238,7 +238,7 @@ const AdminPromociones = () => {
             elevation={0}
             sx={{
               borderRadius: 3,
-              bgcolor: "white",
+              bgcolor: "background.paper",
               overflow: "hidden",
               boxShadow: "0px 10px 30px rgba(0,0,0,0.05)",
             }}

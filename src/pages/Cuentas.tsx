@@ -96,7 +96,7 @@ export default function Cuentas() {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 2,
         pb: 2,
         px: { xs: 2, md: 6 },
@@ -160,7 +160,7 @@ export default function Cuentas() {
               size="small"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{ mb: 2, bgcolor: "white", borderRadius: 2 }}
+              sx={{ mb: 2, bgcolor: "background.paper", borderRadius: 2 }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -195,7 +195,7 @@ export default function Cuentas() {
           <Paper
             elevation={0}
             sx={{
-              bgcolor: "white",
+              bgcolor: "background.paper",
               borderRadius: 6,
               boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
               display: "flex",
@@ -209,7 +209,7 @@ export default function Cuentas() {
                 borderColor: "divider",
                 px: 4,
                 pt: 2,
-                background: alpha("#f5f5f5", 0.5),
+                background: "action.hover",
               }}
             >
               <Tabs

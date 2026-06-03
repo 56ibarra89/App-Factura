@@ -84,7 +84,7 @@ const AdminEmpresa = () => {
     <Box
       minHeight="100vh"
       sx={{
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: 'background.default',
         pt: 4,
         pb: 8,
         px: { xs: 2, md: 6 },
@@ -128,7 +128,7 @@ const AdminEmpresa = () => {
               borderColor: 'grey.200',
               boxShadow: '0 12px 40px rgba(0,0,0,0.04)',
               overflow: 'hidden',
-              background: 'white'
+              bgcolor: "background.paper"
             }}
           >
             {/* Header decorativo del formulario */}
@@ -167,11 +167,12 @@ const AdminEmpresa = () => {
                       position: 'relative',
                       cursor: 'pointer',
                       overflow: 'hidden',
-                      border: '4px solid white',
+                      border: '4px solid',
+                      borderColor: 'background.paper',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      bgcolor: 'grey.100',
+                      bgcolor: 'background.default',
                       transition: 'all 0.2s',
                       '&:hover': {
                         boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
@@ -224,7 +225,7 @@ const AdminEmpresa = () => {
                           position: 'absolute',
                           bottom: 0,
                           right: 0,
-                          bgcolor: 'white',
+                          bgcolor: "background.paper",
                           boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
                           '&:hover': {
                             bgcolor: 'error.main',
@@ -264,7 +265,7 @@ const AdminEmpresa = () => {
                         </InputAdornment>
                       )
                     }}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'grey.50' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'background.default' } }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -281,7 +282,7 @@ const AdminEmpresa = () => {
                         </InputAdornment>
                       )
                     }}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'grey.50' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'background.default' } }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -298,7 +299,7 @@ const AdminEmpresa = () => {
                         </InputAdornment>
                       )
                     }}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'grey.50' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'background.default' } }}
                   />
                 </Grid>
                 <Grid size={{ xs: 12 }}>
@@ -318,7 +319,7 @@ const AdminEmpresa = () => {
                         </InputAdornment>
                       )
                     }}
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'grey.50' } }}
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2, bgcolor: 'background.default' } }}
                   />
                 </Grid>
               </Grid>

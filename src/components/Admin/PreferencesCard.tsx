@@ -1,24 +1,22 @@
 import React from 'react';
-import { Box, Typography, Paper, FormControl, Select, MenuItem, Switch, alpha } from "@mui/material";
+import { Box, Typography, Paper, Switch, alpha } from "@mui/material";
 import PaletteIcon from '@mui/icons-material/Palette';
-import LanguageIcon from '@mui/icons-material/Language';
 import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { GeneralConfigState } from "../../hooks/useGeneralConfigData";
 
 interface Props {
   theme: GeneralConfigState['theme'];
-  language: GeneralConfigState['language'];
   onUpdate: <K extends keyof GeneralConfigState>(key: K, value: GeneralConfigState[K]) => void;
 }
 
-export const PreferencesCard: React.FC<Props> = ({ theme, language, onUpdate }) => {
+export const PreferencesCard: React.FC<Props> = ({ theme, onUpdate }) => {
   return (
     <Paper
       elevation={0}
       sx={{
         p: 3,
         borderRadius: 4,
-        background: "white",
+        bgcolor: "background.paper",
         boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
         border: "1px solid",
         borderColor: "grey.200",
@@ -44,7 +42,7 @@ export const PreferencesCard: React.FC<Props> = ({ theme, language, onUpdate }) 
           <PaletteIcon />
         </Box>
         <Typography variant="h6" fontWeight="800" color="text.primary">
-          Apariencia e Idioma
+          Apariencia
         </Typography>
       </Box>
 
@@ -69,21 +67,6 @@ export const PreferencesCard: React.FC<Props> = ({ theme, language, onUpdate }) 
               },
             }}
           />
-        </Box>
-
-        <Box>
-          <Typography variant="body2" color="text.secondary" mb={1} display="flex" alignItems="center" gap={1}>
-            <LanguageIcon fontSize="small" /> Idioma del Sistema
-          </Typography>
-          <FormControl fullWidth size="small">
-            <Select
-              value={language}
-              onChange={(e) => onUpdate('language', e.target.value as GeneralConfigState['language'])}
-            >
-              <MenuItem value="es">Español (Latinoamérica)</MenuItem>
-              <MenuItem value="en">English (US)</MenuItem>
-            </Select>
-          </FormControl>
         </Box>
       </Box>
     </Paper>

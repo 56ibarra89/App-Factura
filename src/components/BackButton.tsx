@@ -17,12 +17,12 @@ export const BackButton = ({ to = "/home", sx, ...props }: BackButtonProps) => {
     <IconButton
       onClick={() => navigate(to)}
       sx={{
-        bgcolor: "white",
+        bgcolor: "background.paper",
         boxShadow: 1,
         mr: 2,
         transition: "all 0.2s",
         "&:hover": { 
-          bgcolor: "grey.100",
+          bgcolor: "action.hover",
           transform: "scale(1.1)",
           boxShadow: 2,
         },

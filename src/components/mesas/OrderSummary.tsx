@@ -102,7 +102,7 @@ export default function OrderSummary({ order }: Props) {
           display: "flex",
           alignItems: "center",
           gap: 1,
-          bgcolor: "rgba(0,0,0,0.03)",
+          bgcolor: "action.hover",
           p: 1.5,
           borderRadius: 2,
         }}

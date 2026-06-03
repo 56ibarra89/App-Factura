@@ -174,7 +174,7 @@ export const TurnosConfigTab: React.FC<Props> = ({ turnos, onAdd, onUpdate, onDe
 
       <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid", borderColor: "grey.100", borderRadius: 3 }}>
         <Table>
-          <TableHead sx={{ bgcolor: "grey.50" }}>
+          <TableHead sx={{ bgcolor: "action.hover" }}>
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Nombre de Turno</TableCell>
               <TableCell sx={{ fontWeight: "bold" }} align="center">Horario de Trabajo</TableCell>

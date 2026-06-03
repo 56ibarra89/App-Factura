@@ -13,7 +13,7 @@ export const AuthLayout = ({ children, error = "", onClearError = () => {} }: Au
     sx={{
       minHeight: "100vh",
       display: "flex",
-      background: LOGIN_GRADIENTS.pageBackground,
+      bgcolor: 'background.default',
       padding: 2,
       overflow: "auto",
     }}

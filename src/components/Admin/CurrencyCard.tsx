@@ -44,7 +44,7 @@ export const CurrencyCard: React.FC<Props> = ({ config, onUpdate, onSave }) => {
       sx={{
         p: 3,
         borderRadius: 4,
-        background: "white",
+        bgcolor: "background.paper",
         boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
         border: "1px solid",
         borderColor: "grey.200",

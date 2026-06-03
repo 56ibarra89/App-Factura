@@ -33,10 +33,14 @@ export const AdminModuleCard: React.FC<AdminModuleCardProps> = ({
         opacity: disabled ? 0.6 : 1,
         transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         // Glassmorphism Base
-        background: disabled ? "rgba(255,255,255,0.4)" : "rgba(255, 255, 255, 0.75)",
+        background: (theme) => theme.palette.mode === 'dark' 
+          ? (disabled ? "rgba(255,255,255,0.05)" : "rgba(255, 255, 255, 0.1)")
+          : (disabled ? "rgba(255,255,255,0.4)" : "rgba(255, 255, 255, 0.75)"),
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        border: "1px solid rgba(255, 255, 255, 0.6)",
+        border: (theme) => theme.palette.mode === 'dark' 
+          ? "1px solid rgba(255, 255, 255, 0.1)" 
+          : "1px solid rgba(255, 255, 255, 0.6)",
         boxShadow: "0 8px 32px rgba(0, 0, 0, 0.05)",
         
         "&:hover": {
