@@ -11,11 +11,31 @@ import { es } from "date-fns/locale";
 import PageHeader from "../../components/PageHeader";
 import { logService } from "../../services/logService";
 import type { SystemLog, LogLevel } from "../../types/log.types";
-import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
+import { LOGIN_COLORS } from "../../theme/loginTheme";
 import PinValidationDialog from "../../components/auth/PinValidationDialog";
+import { useAccountManager } from "../../hooks/useAccountManager";
+
+const ACTION_MAP: Record<string, string> = {
+  "ORDER_FINALIZED": "Facturar Orden",
+  "LOGIN_PASSWORD": "Login (Contraseña)",
+  "LOGIN_PIN": "Login (PIN)",
+  "LOGOUT": "Cierre de Sesión",
+  "CONFIG_CHANGE": "Configuración",
+  "CREATE_RESERVATION": "Crear Reserva",
+  "CANCEL_RESERVATION": "Cancelar Reserva",
+  "PRODUCT_CREATE": "Crear Producto",
+  "PRODUCT_UPDATE": "Editar Producto",
+  "PRODUCT_DELETE": "Eliminar Producto",
+  "CLEAR_HISTORY": "Limpiar Historial",
+  "USER_CREATE": "Crear Usuario",
+  "USER_UPDATE": "Editar Usuario",
+  "USER_UPDATE_STATUS": "Estado Usuario",
+  "USER_DELETE": "Eliminar Usuario",
+};
 
 const Bitacora = () => {
   const navigate = useNavigate();
+  const { users } = useAccountManager();
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -92,14 +112,21 @@ const Bitacora = () => {
       field: "role",
       headerName: "Rol",
       width: 120,
-      renderCell: (params: GridRenderCellParams) => (
-        <Chip 
-          label={params.value || "N/A"} 
-          size="small" 
-          variant="outlined"
-          sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem' }}
-        />
-      ),
+      renderCell: (params: GridRenderCellParams) => {
+        let role = params.value;
+        if (!role || role === "N/A") {
+          const userObj = users.find(u => u.username === params.row.user);
+          if (userObj) role = userObj.role;
+        }
+        return (
+          <Chip 
+            label={role || "N/A"} 
+            size="small" 
+            variant="outlined"
+            sx={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem' }}
+          />
+        );
+      },
     },
     {
       field: "action",
@@ -107,7 +134,7 @@ const Bitacora = () => {
       width: 180,
       renderCell: (params: GridRenderCellParams) => (
         <Chip 
-          label={params.value as string} 
+          label={ACTION_MAP[params.value as string] || params.value as string} 
           size="small" 
           color="primary"
           sx={{ fontWeight: 700, borderRadius: 1 }}
@@ -119,6 +146,30 @@ const Bitacora = () => {
       headerName: "Detalles del Evento",
       flex: 1,
       minWidth: 300,
+      renderCell: (params: GridRenderCellParams) => {
+        let detailsText = params.value as string;
+        if (!detailsText) return <Typography variant="body2" color="text.secondary">Sin detalles</Typography>;
+        
+        try {
+          if (detailsText.startsWith("{") && detailsText.endsWith("}")) {
+            const obj = JSON.parse(detailsText);
+            if (obj.invoiceNumber && obj.orderId) {
+              detailsText = `Factura #${obj.invoiceNumber} generada para la orden ${obj.orderId}`;
+              if (obj.issuedNumber) detailsText += ` (Nro interno: ${obj.issuedNumber})`;
+            } else {
+              detailsText = Object.entries(obj).map(([k, v]) => `${k}: ${v}`).join(", ");
+            }
+          }
+        } catch(e) {
+          // Mantiene el texto original si no es JSON válido
+        }
+        
+        return (
+          <Typography variant="body2" sx={{ whiteSpace: "normal", display: 'flex', alignItems: 'center', height: '100%' }}>
+            {detailsText}
+          </Typography>
+        );
+      }
     },
     {
       field: "level",

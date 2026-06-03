@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Box, Typography, Button, Grid, Paper, 
   alpha, Switch, TextField, MenuItem, Divider, Tooltip,
@@ -14,6 +14,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import AddIcon from "@mui/icons-material/Add";
 import PageHeader from "../../components/PageHeader";
 import { LOGIN_COLORS, LOGIN_GRADIENTS } from "../../theme/loginTheme";
+import { apiClient } from "../../config/apiClient";
 
 interface Device {
   id: string;
@@ -24,14 +25,38 @@ interface Device {
   isDefault?: boolean;
 }
 
-const MOCK_DEVICES: Device[] = [
-  { id: '1', name: 'Impresora Térmica Principal', type: 'printer', status: 'connected', details: 'USB - Epson TM-T20II', isDefault: true },
-  { id: '2', name: 'Impresora Cocina', type: 'printer', status: 'connected', details: 'Ethernet - 192.168.1.150' },
-  { id: '3', name: 'Gaveta de Dinero Principal', type: 'drawer', status: 'connected', details: 'Conectada a Impresora Principal' },
-];
-
 const Perifericos = () => {
-  const [devices] = useState<Device[]>(MOCK_DEVICES);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
+
+  useEffect(() => {
+    fetchDevices();
+  }, []);
+
+  const fetchDevices = async () => {
+    try {
+      setLoading(true);
+      const data = await apiClient('/devices');
+      setDevices(data);
+    } catch (error) {
+      console.error("Error al obtener los periféricos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScan = async () => {
+    try {
+      setScanning(true);
+      await apiClient('/devices/scan', { method: 'POST' });
+      await fetchDevices();
+    } catch (error) {
+      console.error("Error al escanear dispositivos:", error);
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const renderDeviceCard = (device: Device) => {
     const isConnected = device.status === 'connected';
@@ -131,11 +156,13 @@ const Perifericos = () => {
         actions={
           <Box display="flex" gap={1.5}>
             <Button
+              onClick={handleScan}
+              disabled={scanning}
               variant="outlined"
               startIcon={<RefreshIcon />}
               sx={{ borderRadius: 3, bgcolor: "background.paper", fontWeight: 'bold', textTransform: 'none' }}
             >
-              Escanear Dispositivos
+              {scanning ? "Escaneando..." : "Escanear Dispositivos"}
             </Button>
             <Button
               variant="contained"

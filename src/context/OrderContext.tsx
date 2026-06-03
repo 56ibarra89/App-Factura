@@ -28,6 +28,7 @@ import {
   syncFinalizeOrder,
   syncUpdateTables
 } from "../services/order/backendSync";
+import { apiClient } from "../config/apiClient";
 
 interface OrderContextProps {
   orders: Order[];
@@ -111,7 +112,13 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     const loadOrders = async () => {
       try {
         const backendOrders = await fetchOrdersFromBackend();
-        const hiddenIds = JSON.parse(localStorage.getItem('hiddenOrderIds') || '[]');
+        let hiddenIds: string[] = [];
+        try {
+          const prefs = await apiClient('/users/me/preferences/hidden-orders');
+          hiddenIds = prefs || [];
+        } catch (e) {
+          console.warn("Preferencias de órdenes ocultas no disponibles (Endpoint en construcción)");
+        }
         setOrders(backendOrders.filter(o => !hiddenIds.includes(o.id)));
       } catch (error) {
         console.error("Failed to load orders from backend", error);
@@ -196,8 +203,10 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       updateOrdersState((prev) => {
         const toHide = prev.filter(o => o.status === 'paid' || o.status === 'cancelled').map(o => o.id);
         if (toHide.length > 0) {
-          const hiddenIds = JSON.parse(localStorage.getItem('hiddenOrderIds') || '[]');
-          localStorage.setItem('hiddenOrderIds', JSON.stringify([...new Set([...hiddenIds, ...toHide])]));
+          apiClient('/users/me/preferences/hidden-orders', {
+            method: 'PATCH',
+            body: JSON.stringify({ addHiddenIds: toHide })
+          }).catch(e => console.error("Error guardando preferencias de historial", e));
         }
         return orderMutations.clearHistory(prev).orders;
       });
