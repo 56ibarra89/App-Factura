@@ -18,20 +18,32 @@ import {
   TableRow,
   TextField,
   Typography,
+  Chip,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  Avatar,
+  Checkbox,
+  ListItemText,
+  SelectChangeEvent
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LocalAtmIcon from "@mui/icons-material/LocalAtm";
+import PersonIcon from "@mui/icons-material/Person";
+import GroupIcon from "@mui/icons-material/Group";
 import ConfirmDialog from "../ConfirmDialog";
-import { CashRegisterConfig } from "../../types/shift.types";
+import { CashRegisterConfig, CashRegisterType } from "../../types/shift.types";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { formatCurrency } from "../../utils/formatUtils";
+import { useAccountManager } from "../../hooks/useAccountManager";
 
 interface Props {
   cajas: CashRegisterConfig[];
-  onAdd: (name: string, defaultOpeningAmount: number) => void;
-  onUpdate: (id: string, name: string, defaultOpeningAmount: number) => void;
+  onAdd: (name: string, defaultOpeningAmount: number, type?: CashRegisterType, assignedUserIds?: string[], assignedUserNames?: string[]) => void;
+  onUpdate: (id: string, name: string, defaultOpeningAmount: number, type?: CashRegisterType, assignedUserIds?: string[], assignedUserNames?: string[]) => void;
   onDelete: (id: string) => void;
 }
 
@@ -40,14 +52,21 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
   const [editingCaja, setEditingCaja] = useState<CashRegisterConfig | null>(null);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
-  const [errors, setErrors] = useState<{ name?: string; amount?: string }>({});
+  const [type, setType] = useState<CashRegisterType | "">("");
+  const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
+  const [errors, setErrors] = useState<{ name?: string; amount?: string; type?: string }>({});
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  const { users } = useAccountManager();
+  const cajeroUsers = users.filter((u) => u.role === "cajero");
 
   const handleOpenAdd = () => {
     setEditingCaja(null);
     setName("");
     setAmount("");
+    setType("Principal");
+    setAssignedUserIds([]);
     setErrors({});
     setOpenDialog(true);
   };
@@ -56,6 +75,8 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
     setEditingCaja(caja);
     setName(caja.name);
     setAmount(String(caja.defaultOpeningAmount));
+    setType(caja.type || "Principal");
+    setAssignedUserIds(caja.assignedUserIds || (caja.assignedUserId ? [caja.assignedUserId] : []));
     setErrors({});
     setOpenDialog(true);
   };
@@ -65,9 +86,12 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
     if (!name.trim()) {
       nextErrors.name = "El nombre de la caja es obligatorio.";
     }
-    const val = parseFloat(amount);
-    if (!amount.trim() || isNaN(val) || val < 0) {
-      nextErrors.amount = "Ingresa un monto de apertura válido (>= 0).";
+    if (!type) {
+      nextErrors.type = "El rol de la caja es obligatorio.";
+    }
+    const val = amount.trim() ? parseFloat(amount) : 0;
+    if (isNaN(val) || val < 0) {
+      nextErrors.amount = "Ingresa un monto válido (puede ser 0 o vacío).";
     }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -77,11 +101,21 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
     e.preventDefault();
     if (!validate()) return;
 
-    const val = parseFloat(amount);
+    const val = amount.trim() ? parseFloat(amount) : 0;
+    const finalType = type as CashRegisterType;
+    let finalAssignedUserNames: string[] | undefined = undefined;
+    
+    if (assignedUserIds.length > 0) {
+      finalAssignedUserNames = assignedUserIds.map(id => {
+        const selectedUser = users.find((u) => u.id === id);
+        return selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}`.trim() : "";
+      }).filter(Boolean);
+    }
+
     if (editingCaja) {
-      onUpdate(editingCaja.id, name.trim(), val);
+      onUpdate(editingCaja.id, name.trim(), val, finalType, assignedUserIds.length > 0 ? assignedUserIds : undefined, finalAssignedUserNames);
     } else {
-      onAdd(name.trim(), val);
+      onAdd(name.trim(), val, finalType, assignedUserIds.length > 0 ? assignedUserIds : undefined, finalAssignedUserNames);
     }
     setOpenDialog(false);
   };
@@ -140,7 +174,41 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
               cajas.map((caja) => (
                 <TableRow key={caja.id} hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
                   <TableCell sx={{ fontWeight: "bold", color: "grey.600" }}>{caja.id}</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>{caja.name}</TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography fontWeight="bold">{caja.name}</Typography>
+                      {caja.type && (
+                        <Chip 
+                          label={caja.type} 
+                          size="small" 
+                          color={caja.type === 'Principal' ? 'primary' : caja.type === 'Delivery' ? 'warning' : 'secondary'}
+                          variant="outlined"
+                          sx={{ fontWeight: "bold", height: 20, fontSize: "0.7rem" }}
+                        />
+                      )}
+                    </Box>
+                    {caja.assignedUserNames && caja.assignedUserNames.length > 0 && (
+                      <Box display="flex" alignItems="center" gap={0.5} mt={0.5} flexWrap="wrap">
+                        {caja.assignedUserNames.length > 1 ? (
+                          <GroupIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                        ) : (
+                          <PersonIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                        )}
+                        <Typography variant="caption" color="text.secondary">
+                          {caja.assignedUserNames.join(", ")}
+                        </Typography>
+                      </Box>
+                    )}
+                    {/* Fallback for old data without assignedUserNames but with assignedUserName */}
+                    {!caja.assignedUserNames && caja.assignedUserName && (
+                      <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
+                        <PersonIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                        <Typography variant="caption" color="text.secondary">
+                          {caja.assignedUserName}
+                        </Typography>
+                      </Box>
+                    )}
+                  </TableCell>
                   <TableCell align="right" sx={{ fontWeight: 800, color: "text.primary" }}>
                     {formatCurrency(caja.defaultOpeningAmount)}
                   </TableCell>
@@ -186,6 +254,53 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
                   sx: { borderRadius: 2 }
                 }}
               />
+              <FormControl fullWidth error={!!errors.type}>
+                <InputLabel>Rol / Etiqueta de la Caja</InputLabel>
+                <Select
+                  value={type}
+                  label="Rol / Etiqueta de la Caja"
+                  onChange={(e) => setType(e.target.value as CashRegisterType)}
+                  sx={{ borderRadius: 2 }}
+                >
+                  <MenuItem value="Principal">Caja Principal</MenuItem>
+                  <MenuItem value="Auxiliar">Caja Auxiliar</MenuItem>
+                  <MenuItem value="Delivery">Caja Delivery</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Usuarios Asignados (Opcional)</InputLabel>
+                <Select
+                  multiple
+                  value={assignedUserIds}
+                  label="Usuarios Asignados (Opcional)"
+                  onChange={(e: SelectChangeEvent<typeof assignedUserIds>) => {
+                    const value = e.target.value;
+                    setAssignedUserIds(typeof value === 'string' ? value.split(',') : value);
+                  }}
+                  renderValue={(selected) => {
+                    if (selected.length === 0) {
+                      return <em>Sin asignar (Cualquiera puede usarla)</em>;
+                    }
+                    return selected.map(id => {
+                      const user = users.find(u => u.id === id);
+                      return user ? user.firstName : id;
+                    }).join(', ');
+                  }}
+                  sx={{ borderRadius: 2 }}
+                >
+                  {cajeroUsers.map((user) => (
+                    <MenuItem key={user.id} value={user.id}>
+                      <Checkbox checked={assignedUserIds.indexOf(user.id) > -1} />
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.8rem', bgcolor: LOGIN_COLORS.primary }}>
+                          {user.firstName[0]}
+                        </Avatar>
+                        <ListItemText primary={`${user.firstName} ${user.lastName} (@${user.username})`} />
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField
                 label="Fondo de Apertura Predeterminado"
                 type="number"
@@ -193,8 +308,7 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 error={!!errors.amount}
-                helperText={errors.amount ?? "Monto de efectivo base inicial para este punto de cobro."}
-                required
+                helperText={errors.amount ?? "Opcional. Deja vacío o en 0 si esta caja no maneja dinero físico."}
                 inputProps={{ min: 0, step: "0.01" }}
                 InputProps={{
                   startAdornment: (

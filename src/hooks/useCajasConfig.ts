@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../config/apiClient";
-import { CashRegisterConfig, ShiftProfileConfig } from "../types/shift.types";
+import { CashRegisterConfig, ShiftProfileConfig, CashRegisterType } from "../types/shift.types";
 
 const CAJAS_KEY = "app_factura_cajas_config";
 const TURNOS_KEY = "app_factura_turnos_config";
@@ -59,17 +59,20 @@ export function useCajasConfig() {
     }).catch(err => console.error("Error guardando cajas:", err));
   }, []);
 
-  const addCaja = useCallback((name: string, defaultOpeningAmount: number) => {
+  const addCaja = useCallback((name: string, defaultOpeningAmount: number, type?: CashRegisterType, assignedUserIds?: string[], assignedUserNames?: string[]) => {
     const newCaja: CashRegisterConfig = {
       id: `C-${Date.now()}`,
       name,
       defaultOpeningAmount,
+      type,
+      assignedUserIds,
+      assignedUserNames,
     };
     saveCajas([...cajas, newCaja]);
   }, [cajas, saveCajas]);
 
-  const updateCaja = useCallback((id: string, name: string, defaultOpeningAmount: number) => {
-    const updated = cajas.map(c => c.id === id ? { ...c, name, defaultOpeningAmount } : c);
+  const updateCaja = useCallback((id: string, name: string, defaultOpeningAmount: number, type?: CashRegisterType, assignedUserIds?: string[], assignedUserNames?: string[]) => {
+    const updated = cajas.map(c => c.id === id ? { ...c, name, defaultOpeningAmount, type, assignedUserIds, assignedUserNames } : c);
     saveCajas(updated);
   }, [cajas, saveCajas]);
 
@@ -89,19 +92,23 @@ export function useCajasConfig() {
     }).catch(err => console.error("Error guardando turnos:", err));
   }, []);
 
-  const addTurno = useCallback((name: string, startTime: string, endTime: string, description?: string) => {
+  const addTurno = useCallback((name: string, startTime: string, endTime: string, description?: string, assignedRole?: string, assignedUserIds?: string[], assignedUserNames?: string[], daysOfWeek?: number[]) => {
     const newTurno: ShiftProfileConfig = {
       id: `T-${Date.now()}`,
       name,
       startTime,
       endTime,
       description,
+      assignedRole,
+      assignedUserIds,
+      assignedUserNames,
+      daysOfWeek,
     };
     saveTurnos([...turnos, newTurno]);
   }, [turnos, saveTurnos]);
 
-  const updateTurno = useCallback((id: string, name: string, startTime: string, endTime: string, description?: string) => {
-    const updated = turnos.map(t => t.id === id ? { ...t, name, startTime, endTime, description } : t);
+  const updateTurno = useCallback((id: string, name: string, startTime: string, endTime: string, description?: string, assignedRole?: string, assignedUserIds?: string[], assignedUserNames?: string[], daysOfWeek?: number[]) => {
+    const updated = turnos.map(t => t.id === id ? { ...t, name, startTime, endTime, description, assignedRole, assignedUserIds, assignedUserNames, daysOfWeek } : t);
     saveTurnos(updated);
   }, [turnos, saveTurnos]);
 

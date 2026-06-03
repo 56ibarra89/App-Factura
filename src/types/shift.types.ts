@@ -18,10 +18,15 @@ export interface Shift {
   cashRegisterName?: string;
 }
 
+export type CashRegisterType = 'Principal' | 'Auxiliar' | 'Delivery';
+
 export interface CashRegisterConfig {
   id: string;
   name: string;
   defaultOpeningAmount: number;
+  type?: CashRegisterType;
+  assignedUserIds?: string[];
+  assignedUserNames?: string[];
 }
 
 export interface ShiftProfileConfig {
@@ -30,4 +35,8 @@ export interface ShiftProfileConfig {
   startTime: string; // "HH:MM"
   endTime: string;   // "HH:MM"
   description?: string;
+  assignedRole?: string;
+  assignedUserIds?: string[];
+  assignedUserNames?: string[];
+  daysOfWeek?: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
 }

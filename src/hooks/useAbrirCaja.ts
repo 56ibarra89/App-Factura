@@ -4,16 +4,34 @@ import { useCaja } from "../context/CajaContext";
 import { useGeneralConfigData } from "./useGeneralConfigData";
 import { shiftRepository } from "../repositories/ShiftRepository";
 import { useCajasConfig } from "./useCajasConfig";
+import { useAuth } from "../context/AuthContext";
+import { useAccountManager } from "./useAccountManager";
 
 export function useAbrirCaja() {
   const navigate = useNavigate();
   const { abrirCaja } = useCaja();
   const { config } = useGeneralConfigData();
   const { cajas } = useCajasConfig();
+  const { username, role } = useAuth();
+  const { users } = useAccountManager();
   
   const [selectedRegisterId, setSelectedRegisterId] = useState("");
   const [amount, setAmount] = useState("");
   const [expectedAmount, setExpectedAmount] = useState<number | null>(null);
+
+  // Determinar qué cajas están disponibles para este usuario
+  const currentUser = users.find(u => u.username === username);
+  const currentUserId = currentUser?.id;
+  
+  const availableCajas = cajas.filter(c => {
+    if (role === 'admin') return true; // Admins ven todas
+    
+    // Si la caja no tiene array de asignados, revisamos el fallback (assignedUserId)
+    const assignedIds = c.assignedUserIds || (c.assignedUserId ? [c.assignedUserId] : []);
+    
+    if (assignedIds.length === 0) return true; // Las sin asignar son públicas
+    return currentUserId ? assignedIds.includes(currentUserId) : false; // Las asignadas son exclusivas
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -33,7 +51,7 @@ export function useAbrirCaja() {
   // Precompletar monto según la caja seleccionada
   useEffect(() => {
     if (selectedRegisterId) {
-      const reg = cajas.find((c) => c.id === selectedRegisterId);
+      const reg = availableCajas.find((c) => c.id === selectedRegisterId);
       if (reg) {
         if (config.requireExactOpeningAmount && expectedAmount !== null) {
           setAmount(String(expectedAmount));
@@ -42,13 +60,13 @@ export function useAbrirCaja() {
         }
       }
     }
-  }, [selectedRegisterId, cajas, config.requireExactOpeningAmount, expectedAmount]);
+  }, [selectedRegisterId, availableCajas, config.requireExactOpeningAmount, expectedAmount]);
 
   const numAmount = Number(amount);
   
   const canSubmit = (() => {
     // Es obligatorio seleccionar una estación de caja si existen estaciones configuradas
-    if (cajas.length > 0 && !selectedRegisterId) return false;
+    if (availableCajas.length > 0 && !selectedRegisterId) return false;
     if (amount === "" || numAmount < 0) return false;
     
     // Si la configuración exige monto exacto y tenemos un turno anterior válido
@@ -60,7 +78,7 @@ export function useAbrirCaja() {
   })();
 
   const handleSubmit = async () => {
-    const selectedRegister = cajas.find((c) => c.id === selectedRegisterId);
+    const selectedRegister = availableCajas.find((c) => c.id === selectedRegisterId);
     const registerName = selectedRegister ? selectedRegister.name : undefined;
 
     console.log("[useAbrirCaja] Ejecutando handleSubmit con monto y caja:", amount, registerName);
@@ -79,7 +97,7 @@ export function useAbrirCaja() {
   };
 
   return {
-    cajas,
+    cajas: availableCajas,
     selectedRegisterId,
     setSelectedRegisterId,
     amount,
