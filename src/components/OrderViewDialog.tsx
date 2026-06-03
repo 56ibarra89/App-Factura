@@ -30,6 +30,7 @@ interface OrderViewDialogProps {
   onConfirm: () => void;
   title?: string;
   confirmText?: string;
+  showConfirmButton?: boolean;
 }
 
 export default function OrderViewDialog({
@@ -40,6 +41,7 @@ export default function OrderViewDialog({
   onConfirm,
   title = "Detalle de Factura",
   confirmText = "Imprimir",
+  showConfirmButton = true,
   subTotal = 0,
   taxAmount = 0,
   customerName,
@@ -119,14 +121,16 @@ export default function OrderViewDialog({
         >
           Cerrar
         </Button>
-        <Button
-          variant="contained"
-          color="error"
-          onClick={onConfirm}
-          sx={{ "@media print": { display: "none" } }}
-        >
-          {confirmText}
-        </Button>
+        {showConfirmButton && (
+          <Button
+            variant="contained"
+            color="error"
+            onClick={onConfirm}
+            sx={{ "@media print": { display: "none" } }}
+          >
+            {confirmText}
+          </Button>
+        )}
       </DialogActions>
 
       {/* Hidden printable ticket */}

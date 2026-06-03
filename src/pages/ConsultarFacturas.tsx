@@ -30,8 +30,10 @@ const ConsultarFacturas = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
+  const [isViewOnly, setIsViewOnly] = useState(false);
 
   const handlePrint = (order: Order) => {
+    setIsViewOnly(false);
     // Si es admin, mostramos el diálogo de previsualización directamente
     if (role === "admin") {
       setSelectedOrder(order);
@@ -41,6 +43,12 @@ const ConsultarFacturas = () => {
       setOrderToPrint(order);
       setPinDialogOpen(true);
     }
+  };
+
+  const handleView = (order: Order) => {
+    setSelectedOrder(order);
+    setIsViewOnly(true);
+    setPreviewOpen(true);
   };
 
   const handlePinSuccess = () => {
@@ -91,6 +99,7 @@ const ConsultarFacturas = () => {
         orders={filteredOrders}
         loading={loading}
         onPrintClick={handlePrint}
+        onViewClick={handleView}
       />
 
       {selectedOrder && (
@@ -108,6 +117,7 @@ const ConsultarFacturas = () => {
           cashierName={selectedOrder.cashierSnapshotName}
           title={`Factura #${selectedOrder.invoiceNumber || "Sin Factura"} - ${selectedOrder.customerName || "Cliente"}`}
           confirmText="Imprimir"
+          showConfirmButton={!isViewOnly}
           onConfirm={() => {
             if (window.ipcRenderer) {
               window.ipcRenderer.send('print-silent');

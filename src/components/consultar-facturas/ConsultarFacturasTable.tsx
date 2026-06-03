@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Typography, Chip, IconButton, TablePagination } from "@mui/material";
 import PrintIcon from "@mui/icons-material/Print";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Order } from "../../types/order.types";
 import { statusLabels, statusColors } from "../../config/orderStatusConfig";
 import { useMesasConfig } from "../../hooks/useMesasConfig";
@@ -10,9 +11,10 @@ interface ConsultarFacturasTableProps {
   orders: Order[];
   loading: boolean;
   onPrintClick: (order: Order) => void;
+  onViewClick: (order: Order) => void;
 }
 
-const ConsultarFacturasTable = ({ orders, loading, onPrintClick }: ConsultarFacturasTableProps) => {
+const ConsultarFacturasTable = ({ orders, loading, onPrintClick, onViewClick }: ConsultarFacturasTableProps) => {
   const { floorsConfig } = useMesasConfig();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -42,7 +44,7 @@ const ConsultarFacturasTable = ({ orders, loading, onPrintClick }: ConsultarFact
                 Estado
               </TableCell>
               <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                Reimprimir
+                Acciones
               </TableCell>
             </TableRow>
           </TableHead>
@@ -109,9 +111,16 @@ const ConsultarFacturasTable = ({ orders, loading, onPrintClick }: ConsultarFact
                     </TableCell>
                     <TableCell align="center">
                       <IconButton
+                        color="info"
+                        onClick={() => onViewClick(order)}
+                        title="Ver Detalles"
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                      <IconButton
                         color="primary"
                         onClick={() => onPrintClick(order)}
-                        title="Ver Detalles y Reimprimir"
+                        title="Reimprimir"
                       >
                         <PrintIcon />
                       </IconButton>
