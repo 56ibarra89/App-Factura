@@ -6,6 +6,7 @@ import Facturacion from "../pages/Facturacion";
 import Producto from "../pages/Producto";
 import Login from "../pages/Login";
 import ForgotPassword from "../pages/ForgotPassword";
+import { ResetPassword } from "../pages/ResetPassword";
 import LoginPin from "../pages/LoginPin";
 import AbrirCajaPage from "../pages/AbrirCajaPage";
 import Mesa from "../pages/Mesa";
@@ -36,6 +37,7 @@ const AppRoutes = () => (
       {/* ── Rutas Públicas ── */}
       <Route path="/" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/login-pin" element={<LoginPin />} />
 
       {/* ── Rutas Privadas (cualquier usuario autenticado) ── */}

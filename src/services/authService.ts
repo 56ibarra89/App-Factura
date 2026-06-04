@@ -11,6 +11,7 @@ export const authService: IAuthService = {
       
       return { 
         success: true, 
+        username: result.username,
         role: result.role, 
         email: result.email,
         firstName: result.firstName,
@@ -33,6 +34,32 @@ export const authService: IAuthService = {
     } catch (error) {
       console.error("Login con PIN fallido:", error);
       return null;
+    }
+  },
+
+  requestPasswordReset: async (identifier: string) => {
+    try {
+      const result = await apiClient("/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email: identifier }),
+      });
+      return { success: true, message: result?.message };
+    } catch (error: any) {
+      console.error("Error solicitando recuperación de contraseña:", error);
+      return { success: false, message: error.message || "Error desconocido" };
+    }
+  },
+
+  resetPassword: async (token: string, newPassword: string) => {
+    try {
+      const result = await apiClient("/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token, newPassword }),
+      });
+      return { success: true, message: result?.message };
+    } catch (error: any) {
+      console.error("Error restableciendo contraseña:", error);
+      return { success: false, message: error.message || "Enlace inválido o expirado." };
     }
   },
 };

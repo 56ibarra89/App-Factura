@@ -104,8 +104,9 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         setLoading(false);
 
         if (result.success && result.role) {
+          const actualUsername = result.username || user;
           sessionStore.setItem("loggedIn", "true");
-          sessionStore.setItem("username", user);
+          sessionStore.setItem("username", actualUsername);
           sessionStore.setItem("role", result.role);
           if (result.email) sessionStore.setItem("email", result.email);
           if (result.firstName) sessionStore.setItem("firstName", result.firstName);
@@ -113,7 +114,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           loginLockout.resetLoginAttempts();
 
           setIsLoggedIn(true);
-          setUsername(user);
+          setUsername(actualUsername);
           setRole(result.role);
           if (result.email) setEmail(result.email);
           if (result.firstName) setFirstName(result.firstName);
