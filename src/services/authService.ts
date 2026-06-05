@@ -15,7 +15,8 @@ export const authService: IAuthService = {
         role: result.role, 
         email: result.email,
         firstName: result.firstName,
-        lastName: result.lastName
+        lastName: result.lastName,
+        access_token: result.access_token
       };
     } catch (error) {
       console.error("Login fallido:", error);

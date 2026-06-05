@@ -111,6 +111,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           if (result.email) sessionStore.setItem("email", result.email);
           if (result.firstName) sessionStore.setItem("firstName", result.firstName);
           if (result.lastName) sessionStore.setItem("lastName", result.lastName);
+          if (result.access_token) sessionStore.setItem("access_token", result.access_token);
           loginLockout.resetLoginAttempts();
 
           setIsLoggedIn(true);
@@ -168,6 +169,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         sessionStore.setItem("role", result.role);
         sessionStore.setItem("firstName", result.firstName);
         sessionStore.setItem("lastName", result.lastName);
+        if (result.access_token) sessionStore.setItem("access_token", result.access_token);
         pinLockout.resetAttempts();
 
         setIsLoggedIn(true);

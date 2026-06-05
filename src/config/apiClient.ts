@@ -1,12 +1,20 @@
+import { sessionStore } from "../services/storage/storage";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  const headers = {
+  const token = sessionStore.getItem("access_token");
+
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
   const response = await fetch(url, {
     cache: "no-store", // Evitar caché agresivo del navegador
@@ -15,6 +23,12 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      sessionStore.clear();
+      window.location.href = "/";
+      throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
+    }
+
     let errorMessage = "Ocurrió un error en la petición al servidor";
     try {
       const errorData = await response.json();
