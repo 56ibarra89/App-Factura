@@ -5,6 +5,8 @@ import { AccountData } from "../../hooks/useAccountSettings";
 import SaveIcon from "@mui/icons-material/Save";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 interface AccountSettingsFormProps {
   data: AccountData;
@@ -21,22 +23,16 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
 
-  const validatePasswordDynamic = (pass: string) => {
-    if (!pass) return null;
-    const requirements = [
-      { regex: /.{8,}/, msg: "Mínimo 8 caracteres" },
-      { regex: /[A-Z]/, msg: "mayúscula" },
-      { regex: /[a-z]/, msg: "minúscula" },
-      { regex: /[0-9]/, msg: "número" },
-      { regex: /[@$!%*?&]/, msg: "especial (@$!%*?&)" },
-    ];
-    const failed = requirements.filter(r => !r.regex.test(pass));
-    return failed.length > 0 ? failed.map(f => f.msg).join(", ") : "¡Contraseña fuerte!";
-  };
+  const requirements = [
+    { regex: /.{8,}/, msg: "Mínimo 8 caracteres" },
+    { regex: /[A-Z]/, msg: "Mayúscula" },
+    { regex: /[a-z]/, msg: "Minúscula" },
+    { regex: /[0-9]/, msg: "Número" },
+    { regex: /[@$!%*?&]/, msg: "Especial (@$!%*?&)" },
+  ];
 
-  const passwordStatus = validatePasswordDynamic(data.nuevaPassword);
-  const isPasswordValid = passwordStatus === "¡Contraseña fuerte!";
   const hasPasswordInput = data.nuevaPassword.length > 0;
+  const isPasswordValid = hasPasswordInput && requirements.every(r => r.regex.test(data.nuevaPassword));
   const passwordsMatch = hasPasswordInput && data.confirmarPassword && data.nuevaPassword === data.confirmarPassword;
   const passwordsMismatch = hasPasswordInput && data.confirmarPassword.length > 0 && data.nuevaPassword !== data.confirmarPassword;
 
@@ -123,49 +119,6 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
           }}
         />
 
-        <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
-          <TextField
-            fullWidth
-            label="Nueva Contraseña"
-            variant="outlined"
-            type={showNewPassword ? "text" : "password"}
-            value={data.nuevaPassword}
-            onChange={(e) => onChange("nuevaPassword", e.target.value)}
-            error={hasPasswordInput && !isPasswordValid}
-            helperText={hasPasswordInput ? (isPasswordValid ? "¡Contraseña fuerte!" : `Falta: ${passwordStatus}`) : "Debe incluir: 8+ caracteres, Mayúscula, Minúscula, Número y Especial (@$!%*?&)"}
-            FormHelperTextProps={isPasswordValid ? { sx: { color: "success.main" } } : {}}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowNewPassword(!showNewPassword)} edge="end" tabIndex={-1}>
-                    {showNewPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            fullWidth
-            label="Confirmar Nueva Contraseña"
-            variant="outlined"
-            type={showConfirmPassword ? "text" : "password"}
-            value={data.confirmarPassword}
-            onChange={(e) => onChange("confirmarPassword", e.target.value)}
-            error={Boolean(passwordsMismatch)}
-            helperText={passwordsMismatch ? "Las contraseñas no coinciden" : (passwordsMatch ? "Las contraseñas coinciden" : "")}
-            FormHelperTextProps={passwordsMatch ? { sx: { color: "success.main" } } : {}}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end" tabIndex={-1}>
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-        
         <TextField
           fullWidth
           label="Contraseña Actual"
@@ -185,6 +138,76 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
             ),
           }}
         />
+
+        <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
+          <Box sx={{ flex: 1 }}>
+            <TextField
+              fullWidth
+              label="Nueva Contraseña"
+              variant="outlined"
+              type={showNewPassword ? "text" : "password"}
+              value={data.nuevaPassword}
+              onChange={(e) => onChange("nuevaPassword", e.target.value)}
+              error={hasPasswordInput && !isPasswordValid}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowNewPassword(!showNewPassword)} edge="end" tabIndex={-1}>
+                      {showNewPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            {hasPasswordInput && (
+              <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.5, pl: 1 }}>
+                {requirements.map((req, idx) => {
+                  const isValid = req.regex.test(data.nuevaPassword);
+                  return (
+                    <Box key={idx} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      {isValid ? (
+                        <CheckCircleIcon sx={{ fontSize: 16, color: "success.main" }} />
+                      ) : (
+                        <CancelIcon sx={{ fontSize: 16, color: "error.main" }} />
+                      )}
+                      <Typography variant="caption" color={isValid ? "success.main" : "text.secondary"}>
+                        {req.msg}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+            {!hasPasswordInput && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, pl: 1.5 }}>
+                Debe incluir: 8+ caracteres, Mayúscula, Minúscula, Número y Especial (@$!%*?&)
+              </Typography>
+            )}
+          </Box>
+
+          <Box sx={{ flex: 1 }}>
+            <TextField
+              fullWidth
+              label="Confirmar Nueva Contraseña"
+              variant="outlined"
+              type={showConfirmPassword ? "text" : "password"}
+              value={data.confirmarPassword}
+              onChange={(e) => onChange("confirmarPassword", e.target.value)}
+              error={Boolean(passwordsMismatch)}
+              helperText={passwordsMismatch ? "Las contraseñas no coinciden" : (passwordsMatch ? "Las contraseñas coinciden" : "")}
+              FormHelperTextProps={passwordsMatch ? { sx: { color: "success.main" } } : {}}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end" tabIndex={-1}>
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+        </Box>
 
         <Box sx={{ mt: "auto", pt: 4, display: "flex", justifyContent: "flex-end" }}>
           <Button

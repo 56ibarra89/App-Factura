@@ -1,5 +1,5 @@
 import { Box, Typography, TextField, Button, Alert, CircularProgress, IconButton, InputAdornment } from "@mui/material";
-import { Visibility, VisibilityOff, LockReset } from "@mui/icons-material";
+import { Visibility, VisibilityOff, LockReset, CheckCircle, Cancel } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../services/authService";
@@ -21,6 +21,17 @@ export const ResetPassword = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const requirements = [
+    { regex: /.{8,}/, msg: "Mínimo 8 caracteres" },
+    { regex: /[A-Z]/, msg: "Mayúscula" },
+    { regex: /[a-z]/, msg: "Minúscula" },
+    { regex: /[0-9]/, msg: "Número" },
+    { regex: /[@$!%*?&]/, msg: "Especial (@$!%*?&)" },
+  ];
+
+  const hasPasswordInput = newPassword.length > 0;
+  const isPasswordValid = hasPasswordInput && requirements.every(r => r.regex.test(newPassword));
+
   useEffect(() => {
     if (!token) {
       setError("Enlace inválido. Falta el token de seguridad.");
@@ -34,8 +45,8 @@ export const ResetPassword = () => {
       return;
     }
 
-    if (!newPassword || newPassword.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres");
+    if (!isPasswordValid) {
+      setError("La contraseña no cumple con los requisitos de seguridad");
       return;
     }
 
@@ -122,6 +133,7 @@ export const ResetPassword = () => {
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           disabled={loading || success !== null || !token}
+          error={hasPasswordInput && !isPasswordValid}
           sx={inputSx}
           InputProps={{
             endAdornment: (
@@ -133,6 +145,31 @@ export const ResetPassword = () => {
             ),
           }}
         />
+
+        {hasPasswordInput && (
+          <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.5, pl: 1 }}>
+            {requirements.map((req, idx) => {
+              const isValid = req.regex.test(newPassword);
+              return (
+                <Box key={idx} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {isValid ? (
+                    <CheckCircle sx={{ fontSize: 16, color: "success.main" }} />
+                  ) : (
+                    <Cancel sx={{ fontSize: 16, color: "error.main" }} />
+                  )}
+                  <Typography variant="caption" color={isValid ? "success.main" : "text.secondary"}>
+                    {req.msg}
+                  </Typography>
+                </Box>
+              );
+            })}
+          </Box>
+        )}
+        {!hasPasswordInput && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, pl: 1.5 }}>
+            Debe incluir: 8+ caracteres, Mayúscula, Minúscula, Número y Especial (@$!%*?&)
+          </Typography>
+        )}
 
         <TextField
           label="Confirmar Contraseña"
