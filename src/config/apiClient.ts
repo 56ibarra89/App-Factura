@@ -25,7 +25,9 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
   if (!response.ok) {
     if (response.status === 401) {
       sessionStore.clear();
-      window.location.href = "/";
+      if (window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
       throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
     }
 

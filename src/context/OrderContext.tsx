@@ -100,7 +100,7 @@ interface OrderProviderProps {
 export const OrderProvider: React.FC<OrderProviderProps> = ({
   children,
 }) => {
-  const { username } = useAuth();
+  const { username, isLoggedIn } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
 
   const ordersRef = React.useRef<Order[]>(orders);
@@ -109,6 +109,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   }, [orders]);
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     const loadOrders = async () => {
       try {
         const backendOrders = await fetchOrdersFromBackend();
@@ -127,7 +129,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     loadOrders();
     const interval = setInterval(loadOrders, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isLoggedIn]);
 
   const updateOrdersState = useCallback((updater: (prev: Order[]) => Order[]) => {
     const next = updater(ordersRef.current);
