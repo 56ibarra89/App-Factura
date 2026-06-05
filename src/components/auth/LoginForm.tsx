@@ -49,7 +49,7 @@ export const LoginForm = ({
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        bgcolor: "white",
+        bgcolor: "background.paper",
       }}
     >
       <Typography variant="h4" fontWeight="800" color="text.primary" mb={1}>
@@ -161,7 +161,7 @@ export const LoginForm = ({
           borderRadius: 3,
           fontWeight: 600,
           fontSize: "1rem",
-          borderColor: "grey.300",
+          borderColor: "divider",
           color: "text.primary",
           "&:hover": {
             borderColor: "primary.main",

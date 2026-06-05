@@ -18,7 +18,7 @@ const numpadButtonSx = {
   fontWeight: 600,
   borderRadius: 4,
   color: "text.primary",
-  borderColor: "grey.200",
+  borderColor: "divider",
   "&:hover": {
     borderColor: LOGIN_COLORS.primary,
     bgcolor: LOGIN_COLORS.primarySubtle,
@@ -134,8 +134,8 @@ const LoginPin = () => {
               ...numpadButtonSx,
               ...(lockoutTime > 0 && {
                 bgcolor: "action.hover",
-                borderColor: "grey.200",
-                color: "grey.400",
+                borderColor: "divider",
+                color: "text.disabled",
                 "&:hover": { transform: "none", boxShadow: "none", bgcolor: "action.hover" }
               })
             }}
