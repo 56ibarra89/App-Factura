@@ -116,6 +116,25 @@ export function useAccountManager() {
     }
   };
 
+  const unlockUser = async (userId: string) => {
+    try {
+      await apiClient(`/users/${userId}/unlock`, {
+        method: "POST",
+      });
+      logService.log(
+        adminUser,
+        adminRole,
+        "USER_UNLOCK",
+        `Usuario desbloqueado: ID ${userId}`
+      );
+      // Actualizar vista localmente
+      setUsers(users.map((u) => (u.id === userId ? { ...u, lockedUntil: undefined, failedLoginAttempts: 0, lockoutLevel: 0 } : u)));
+    } catch (err) {
+      console.error("Error unlocking user", err);
+      throw err;
+    }
+  };
+
   const deleteUser = async (userId: string) => {
     const user = users.find((u) => u.id === userId);
     if (!user) return;
@@ -155,6 +174,7 @@ export function useAccountManager() {
     saveUser,
     toggleUserStatus,
     deleteUser,
+    unlockUser,
     refreshUsers: fetchUsers
   };
 }

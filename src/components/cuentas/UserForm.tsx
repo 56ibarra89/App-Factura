@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Box, Typography, TextField, Button, Paper, Avatar, Divider, alpha, Grid, IconButton, InputAdornment, Tooltip } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import BlockIcon from "@mui/icons-material/Block";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 import SettingsBackupRestoreIcon from "@mui/icons-material/SettingsBackupRestore";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import BadgeIcon from "@mui/icons-material/Badge";
@@ -15,13 +16,14 @@ interface UserFormProps {
   onSave: (user: UserAccount) => void;
   onToggleStatus: (id: string) => void;
   onDelete: (id: string) => void;
+  onUnlock: (id: string) => void;
 }
 
 const DEFAULT_USER: Partial<UserAccount> = {
   firstName: "", lastName: "", username: "", pin: "", password: "", role: "cajero", isActive: true,
 };
 
-export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormProps) {
+export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: UserFormProps) {
   const { role: currentRole } = useAuth();
   const [formData, setFormData] = useState<Partial<UserAccount>>(DEFAULT_USER);
   const isEditing = !!user;
@@ -200,6 +202,15 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete }: UserFormPro
                 sx={{ fontWeight: "bold", borderRadius: 3, px: 3, py: 1.5, opacity: 0.8 }}
               >
                 Eliminar
+              </Button>
+              <Button
+                variant="outlined"
+                color="info"
+                startIcon={<LockOpenIcon />}
+                onClick={() => onUnlock(formData.id!)}
+                sx={{ fontWeight: "bold", borderRadius: 3, px: 3, py: 1.5 }}
+              >
+                Forzar Desbloqueo
               </Button>
             </>
           ) : (

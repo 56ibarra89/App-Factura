@@ -35,8 +35,9 @@ import { UserForm } from "../components/cuentas/UserForm";
 import { UserActivity } from "../components/cuentas/UserActivity";
 
 export default function Cuentas() {
-  const { users, loading, error, saveUser, toggleUserStatus, deleteUser } = useAccountManager();
+  const { users, loading, error, saveUser, toggleUserStatus, deleteUser, unlockUser } = useAccountManager();
   const [snackbarError, setSnackbarError] = useState<string | null>(null);
+  const [snackbarSuccess, setSnackbarSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (error) setSnackbarError(error);
@@ -245,6 +246,14 @@ export default function Cuentas() {
                   }}
                   onToggleStatus={toggleUserStatus}
                   onDelete={handleRequestDelete}
+                  onUnlock={async (id) => {
+                    try {
+                      await unlockUser(id);
+                      setSnackbarSuccess("Usuario desbloqueado exitosamente");
+                    } catch (e) {
+                      setSnackbarError("Error al desbloquear el usuario");
+                    }
+                  }}
                 />
               )}
               {tabIndex === 1 && selectedUser && (
@@ -319,6 +328,17 @@ export default function Cuentas() {
       >
         <Alert onClose={() => setSnackbarError(null)} severity="error" sx={{ width: "100%" }}>
           {snackbarError}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!snackbarSuccess}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarSuccess(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSnackbarSuccess(null)} severity="success" sx={{ width: "100%" }}>
+          {snackbarSuccess}
         </Alert>
       </Snackbar>
     </Box>
