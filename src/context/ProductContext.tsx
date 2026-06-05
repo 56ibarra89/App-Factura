@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { Category, Product } from "../types/product";
 import { apiClient } from "../config/apiClient";
+import { useAuth } from "./AuthContext";
 
 interface ProductContextType {
   categories: Category[];
@@ -10,6 +11,7 @@ interface ProductContextType {
   addCategory: (categoryName: string, icon?: string) => Promise<void>;
   updateCategory: (oldName: string, newName: string, icon?: string) => Promise<void>;
   deleteCategory: (categoryName: string) => Promise<void>;
+  refreshCategories: () => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -22,6 +24,7 @@ export const useProductContext = () => {
 
 export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<Category[]>([]);
+  const { isLoggedIn } = useAuth();
 
   const loadCategories = useCallback(async () => {
     try {
@@ -33,8 +36,12 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
+    if (isLoggedIn) {
+      loadCategories();
+    } else {
+      setCategories([]);
+    }
+  }, [isLoggedIn, loadCategories]);
 
   const addProduct = async (categoryName: string, product: Product) => {
     try {
@@ -144,7 +151,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <ProductContext.Provider
-      value={{ categories, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory }}
+      value={{ categories, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory, refreshCategories: loadCategories }}
     >
       {children}
     </ProductContext.Provider>
