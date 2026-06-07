@@ -9,6 +9,10 @@ export const authService: IAuthService = {
         body: JSON.stringify({ identifier, password }),
       });
       
+      if (!result || result.success === false) {
+        return { success: false };
+      }
+      
       return { 
         success: true, 
         username: result.username,
