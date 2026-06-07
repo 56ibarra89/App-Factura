@@ -40,6 +40,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.username || !formData.firstName || !formData.pin) return;
+    if (hasPasswordInput && !isPasswordValid) return; // Prevent submission if invalid
     const userToSave: UserAccount = {
       ...formData,
       id: formData.id || "",
@@ -54,11 +55,35 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
   };
 
   const generateRandomPassword = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789#$*";
+    const chars = "abcdefghijkmnpqrstuvwxyz";
+    const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const nums = "23456789";
+    const specs = "@$!%*?&";
+    
     let pwd = "";
-    for(let i=0; i<8; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    pwd += upper.charAt(Math.floor(Math.random() * upper.length));
+    pwd += nums.charAt(Math.floor(Math.random() * nums.length));
+    pwd += specs.charAt(Math.floor(Math.random() * specs.length));
+    
+    const all = chars + upper + nums + specs;
+    for(let i=0; i<4; i++) pwd += all.charAt(Math.floor(Math.random() * all.length));
+    
+    // Shuffle the string
+    pwd = pwd.split('').sort(() => 0.5 - Math.random()).join('');
     handleChange("password", pwd);
   };
+
+  const requirements = [
+    { regex: /.{8,}/, msg: "Mínimo 8 caracteres" },
+    { regex: /[A-Z]/, msg: "Mayúscula" },
+    { regex: /[a-z]/, msg: "Minúscula" },
+    { regex: /[0-9]/, msg: "Número" },
+    { regex: /[@$!%*?&]/, msg: "Especial (@$!%*?&)" },
+  ];
+
+  const hasPasswordInput = !!formData.password && formData.password.length > 0;
+  const isPasswordValid = !hasPasswordInput || requirements.every(r => r.regex.test(formData.password!));
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, pb: 1 }}>
@@ -165,7 +190,8 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
               onChange={e => handleChange("password", e.target.value)} 
               required={!isEditing} 
               variant="filled" 
-              helperText={isEditing ? "Escribe para restablecerla." : "Alfanumérica (Ej. ptg2026)"}
+              error={hasPasswordInput && !isPasswordValid}
+              helperText={isEditing ? "Dejar en blanco para mantener la actual." : ""}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -178,6 +204,25 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
                 )
               }}
             />
+            {hasPasswordInput && (
+              <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.5, pl: 1 }}>
+                {requirements.map((req, idx) => {
+                  const isValid = req.regex.test(formData.password!);
+                  return (
+                    <Box key={idx} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      {isValid ? (
+                         <span style={{color: "green", fontSize: 16}}>✓</span>
+                      ) : (
+                         <span style={{color: "red", fontSize: 16}}>✕</span>
+                      )}
+                      <Typography variant="caption" color={isValid ? "success.main" : "text.secondary"}>
+                        {req.msg}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
           </Grid>
         </Grid>
       </Paper>
