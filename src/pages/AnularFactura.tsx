@@ -84,9 +84,9 @@ const AnularFactura = () => {
     setPinDialogOpen(true);
   };
 
-  const handleCancelSuccess = () => {
+  const handleCancelSuccess = (pin?: string) => {
     if (orderToCancel) {
-      updateOrderStatus(orderToCancel.id, "cancelled");
+      updateOrderStatus(orderToCancel.id, "cancelled", undefined, pin);
       // Actualizar localmente la lista de órdenes para reflejar el cambio sin re-feth
       setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: "cancelled" } : o));
     }

@@ -15,7 +15,7 @@ import { logService } from "../../services/logService";
 interface PinValidationDialogProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (pin?: string) => void;
   title?: string;
 }
 
@@ -43,8 +43,9 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
       const result = await validatePinForAction(pin);
       
       if (result.success) {
+        const validPin = pin;
         setPin("");
-        onSuccess();
+        onSuccess(validPin);
       } else {
         setPin("");
         setError(result.error || "Error en la validación");

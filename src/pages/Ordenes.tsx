@@ -10,6 +10,7 @@ import OrderGrid from "../components/ordenes/OrderGrid";
 import OrderEmptyState from "../components/ordenes/OrderEmptyState";
 import ConfirmDialog from "../components/ConfirmDialog";
 import RoleGuard from "../components/auth/RoleGuard";
+import PinValidationDialog from "../components/auth/PinValidationDialog";
 
 // Hooks & Theme
 import { useOrderManagement } from "../hooks/useOrderManagement";
@@ -27,6 +28,8 @@ const Ordenes = () => {
   
   const { username, role: userRole } = useAuth();
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
   const handleClearHistory = () => {
     clearHistory();
@@ -35,7 +38,16 @@ const Ordenes = () => {
   };
 
   const handleDeleteOrder = (id: string) => {
-    updateOrderStatus(id, "cancelled");
+    setOrderToDelete(id);
+    setPinDialogOpen(true);
+  };
+
+  const handleCancelSuccess = (pin?: string) => {
+    if (orderToDelete) {
+      updateOrderStatus(orderToDelete, "cancelled", undefined, pin);
+    }
+    setPinDialogOpen(false);
+    setOrderToDelete(null);
   };
 
   return (
@@ -116,6 +128,17 @@ const Ordenes = () => {
         onConfirm={handleClearHistory}
         disableRestoreFocus
         disableEnforceFocus
+      />
+
+      {/* Security Dialog */}
+      <PinValidationDialog
+        open={pinDialogOpen}
+        onClose={() => {
+          setPinDialogOpen(false);
+          setOrderToDelete(null);
+        }}
+        onSuccess={handleCancelSuccess}
+        title="Anular Factura"
       />
     </Box>
   );
