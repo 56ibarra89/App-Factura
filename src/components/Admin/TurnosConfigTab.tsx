@@ -368,15 +368,15 @@ export const TurnosConfigTab: React.FC<Props> = ({ turnos, onAdd, onUpdate, onDe
                     multiple
                     value={assignedUserIds}
                     label="Usuarios Asignados (Opcional)"
-                    onChange={(e: SelectChangeEvent<typeof assignedUserIds>) => {
+                    onChange={(e: any) => {
                       const value = e.target.value;
                       setAssignedUserIds(typeof value === 'string' ? value.split(',') : value);
                     }}
-                    renderValue={(selected) => {
-                      if (selected.length === 0) {
+                    renderValue={(selected: any) => {
+                      if (!selected || selected.length === 0) {
                         return <em>Sin asignar a nadie en específico</em>;
                       }
-                      return selected.map(id => {
+                      return selected.map((id: string) => {
                         const user = users.find(u => u.id === id);
                         return user ? user.firstName : id;
                       }).join(', ');

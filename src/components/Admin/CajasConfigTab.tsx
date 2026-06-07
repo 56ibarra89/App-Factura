@@ -76,7 +76,7 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
     setName(caja.name);
     setAmount(String(caja.defaultOpeningAmount));
     setType(caja.type || "Principal");
-    setAssignedUserIds(caja.assignedUserIds || (caja.assignedUserId ? [caja.assignedUserId] : []));
+    setAssignedUserIds(caja.assignedUserIds || ((caja as any).assignedUserId ? [(caja as any).assignedUserId] : []));
     setErrors({});
     setOpenDialog(true);
   };
@@ -200,11 +200,11 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
                       </Box>
                     )}
                     {/* Fallback for old data without assignedUserNames but with assignedUserName */}
-                    {!caja.assignedUserNames && caja.assignedUserName && (
+                    {!caja.assignedUserNames && (caja as any).assignedUserName && (
                       <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
                         <PersonIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
                         <Typography variant="caption" color="text.secondary">
-                          {caja.assignedUserName}
+                          {(caja as any).assignedUserName}
                         </Typography>
                       </Box>
                     )}
@@ -273,15 +273,15 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
                   multiple
                   value={assignedUserIds}
                   label="Usuarios Asignados (Opcional)"
-                  onChange={(e: SelectChangeEvent<typeof assignedUserIds>) => {
+                  onChange={(e: any) => {
                     const value = e.target.value;
                     setAssignedUserIds(typeof value === 'string' ? value.split(',') : value);
                   }}
-                  renderValue={(selected) => {
-                    if (selected.length === 0) {
+                  renderValue={(selected: any) => {
+                    if (!selected || selected.length === 0) {
                       return <em>Sin asignar (Cualquiera puede usarla)</em>;
                     }
-                    return selected.map(id => {
+                    return selected.map((id: string) => {
                       const user = users.find(u => u.id === id);
                       return user ? user.firstName : id;
                     }).join(', ');
