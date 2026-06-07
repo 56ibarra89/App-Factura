@@ -114,7 +114,7 @@ const ConsultarFacturas = () => {
           customerAddress={selectedOrder.customerAddress}
           orderType={selectedOrder.orderType}
           invoiceNumber={selectedOrder.invoiceNumber || "Sin Factura"}
-          cashierName={selectedOrder.cashierSnapshotName}
+          cashierName={selectedOrder.cashierName}
           title={`Factura #${selectedOrder.invoiceNumber || "Sin Factura"} - ${selectedOrder.customerName || "Cliente"}`}
           confirmText="Imprimir"
           showConfirmButton={!isViewOnly}

@@ -34,7 +34,7 @@ export function useAccountManager() {
     setError(null);
     try {
       const isNew = !user.id || user.id === "";
-      let savedUser;
+      let savedUser: any;
 
       // Limpiar campos antes de enviar al backend
       const payload: any = {

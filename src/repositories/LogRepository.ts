@@ -8,7 +8,7 @@ class LogRepository implements ILogRepository {
     role: string | null,
     action: string,
     details?: string,
-    level: LogLevel = "INFO"
+    level: LogLevel = "info"
   ): Promise<void> {
     try {
       await apiClient("/system-logs", {
