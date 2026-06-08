@@ -66,6 +66,8 @@ export const useGeneralConfigData = () => {
         const savedConfig = await configRepository.getGeneralConfig();
         if (isMounted && savedConfig) {
           setConfig((prev) => ({ ...prev, ...savedConfig }));
+          // Notificar a App.tsx y otras instancias que la configuración ya cargó desde el backend
+          window.dispatchEvent(new CustomEvent(GENERAL_CONFIG_UPDATED_EVENT, { detail: savedConfig }));
         }
       } catch (error) {
         console.error("Error cargando configuración:", error);
