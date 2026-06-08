@@ -30,6 +30,7 @@ export function useAccountSettings() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     if (!username) return;
@@ -58,6 +59,7 @@ export function useAccountSettings() {
     setData((prev) => ({ ...prev, [field]: value }));
     setError("");
     setSuccess("");
+    setShowLogoutModal(false);
   };
 
   const handleSave = async () => {
@@ -146,7 +148,8 @@ export function useAccountSettings() {
         pin: data.pin,
       };
 
-      if (data.nuevaPassword) {
+      const passwordChanged = !!data.nuevaPassword;
+      if (passwordChanged) {
         updatePayload.password = data.nuevaPassword;
       }
 
@@ -167,6 +170,9 @@ export function useAccountSettings() {
       }));
 
       setSuccess("Datos actualizados correctamente");
+      if (passwordChanged) {
+        setShowLogoutModal(true);
+      }
     } catch (err: any) {
       console.error("Error actualizando perfil", err);
       // Prisma P2002 conflict error will be returned as 409 from the backend with the message
@@ -185,6 +191,8 @@ export function useAccountSettings() {
     loading,
     success,
     error,
+    showLogoutModal,
+    setShowLogoutModal,
     handleChange,
     handleSave,
   };

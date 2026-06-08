@@ -6,9 +6,10 @@ import { BackButton } from "../components/BackButton";
 import { useAccountSettings } from "../hooks/useAccountSettings";
 import { ProfileCard } from "../components/cuenta/ProfileCard";
 import { AccountSettingsForm } from "../components/cuenta/AccountSettingsForm";
+import { LogoutAllDevicesModal } from "../components/cuenta/LogoutAllDevicesModal";
 
 export default function MiCuenta() {
-  const { data, loading, error, success, handleChange, handleSave } = useAccountSettings();
+  const { data, loading, error, success, showLogoutModal, setShowLogoutModal, handleChange, handleSave } = useAccountSettings();
 
   return (
     <Box
@@ -46,6 +47,11 @@ export default function MiCuenta() {
           />
         </Grid>
       </Grid>
+
+      <LogoutAllDevicesModal 
+        open={showLogoutModal} 
+        onClose={() => setShowLogoutModal(false)} 
+      />
     </Box>
   );
 }

@@ -67,4 +67,16 @@ export const authService: IAuthService = {
       return { success: false, message: error.message || "Enlace inválido o expirado." };
     }
   },
+
+  logoutAllDevices: async () => {
+    try {
+      const result = await apiClient("/auth/logout-all", {
+        method: "POST",
+      });
+      return { success: true, message: result?.message };
+    } catch (error: any) {
+      console.error("Error cerrando sesión en todos los dispositivos:", error);
+      return { success: false, message: error.message || "Error al cerrar sesiones." };
+    }
+  },
 };

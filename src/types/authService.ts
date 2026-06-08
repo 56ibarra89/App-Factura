@@ -15,4 +15,5 @@ export interface IAuthService {
   loginWithPin(pin: string): Promise<{ username: string; role: UserRole; firstName: string; lastName: string; access_token: string } | null>;
   requestPasswordReset(identifier: string): Promise<{ success: boolean; message?: string }>;
   resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message?: string }>;
+  logoutAllDevices(): Promise<{ success: boolean; message?: string }>;
 }
