@@ -7,7 +7,6 @@ const GENERAL_CONFIG_UPDATED_EVENT = 'appfactura:general-config-updated';
 
 export interface GeneralConfigState {
   // Preferences
-  theme: 'light' | 'dark';
   language: 'es' | 'en';
   // Currency
   currencyCode: string;
@@ -26,7 +25,6 @@ export const useGeneralConfigData = () => {
   const { username, role } = useAuth();
   // Mock inicial
   const [config, setConfig] = useState<GeneralConfigState>({
-    theme: 'light',
     language: 'es',
     currencyCode: 'NIO',
     currencySymbol: 'C$',

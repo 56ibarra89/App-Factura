@@ -20,7 +20,8 @@ export const authService: IAuthService = {
         email: result.email,
         firstName: result.firstName,
         lastName: result.lastName,
-        access_token: result.access_token
+        access_token: result.access_token,
+        themePreference: result.themePreference
       };
     } catch (error) {
       console.error("Login fallido:", error);

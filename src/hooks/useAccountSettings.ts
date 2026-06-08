@@ -12,6 +12,7 @@ export interface AccountData {
   passwordActual: string;
   nuevaPassword: string;
   confirmarPassword: string;
+  themePreference: 'light' | 'dark';
 }
 
 export function useAccountSettings() {
@@ -25,6 +26,7 @@ export function useAccountSettings() {
     passwordActual: "",
     nuevaPassword: "",
     confirmarPassword: "",
+    themePreference: (localStorage.getItem('appfactura_theme') as 'light' | 'dark') || 'light',
   });
 
   const [loading, setLoading] = useState(false);
@@ -45,7 +47,14 @@ export function useAccountSettings() {
           nombreCompleto: `${user.firstName} ${user.lastName}`.trim(),
           email: user.email || "",
           pin: user.pin || "",
+          themePreference: (user.themePreference as 'light' | 'dark') || 'light',
         }));
+        
+        // Sincronizar con el localStorage local de una vez
+        if (user.themePreference) {
+           localStorage.setItem('appfactura_theme', user.themePreference);
+           window.dispatchEvent(new CustomEvent('appfactura:general-config-updated', { detail: { theme: user.themePreference } }));
+        }
       } catch (err) {
         console.error("Error cargando el perfil", err);
         setError("No se pudo cargar la información del perfil.");
@@ -60,6 +69,20 @@ export function useAccountSettings() {
     setError("");
     setSuccess("");
     setShowLogoutModal(false);
+
+    // Aplicación inmediata del tema visualmente, pero se guarda en backend al darle a Guardar
+    if (field === 'themePreference') {
+      localStorage.setItem('appfactura_theme', value);
+      window.dispatchEvent(new CustomEvent('appfactura:general-config-updated', { detail: { theme: value } }));
+      
+      // Guardar instantáneamente en el backend sin requerir darle a Guardar
+      if (data.id) {
+        apiClient(`/users/${data.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ themePreference: value }),
+        }).catch(err => console.error("Error guardando tema en background", err));
+      }
+    }
   };
 
   const handleSave = async () => {
@@ -146,6 +169,7 @@ export function useAccountSettings() {
         lastName,
         email: data.email,
         pin: data.pin,
+        themePreference: data.themePreference,
       };
 
       const passwordChanged = !!data.nuevaPassword;

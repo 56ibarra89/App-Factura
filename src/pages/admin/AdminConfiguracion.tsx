@@ -4,7 +4,6 @@ import { BackButton } from "../../components/BackButton";
 import PageHeader from "../../components/PageHeader";
 import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
 import { useGeneralConfigData } from "../../hooks/useGeneralConfigData";
-import { PreferencesCard } from "../../components/Admin/PreferencesCard";
 import { CurrencyCard } from "../../components/Admin/CurrencyCard";
 import { CashRegisterBehaviorCard } from "../../components/Admin/CashRegisterBehaviorCard";
 
@@ -52,16 +51,8 @@ const AdminConfiguracion = () => {
 
         <Container maxWidth={false} disableGutters>
           <Grid container spacing={4}>
-            {/* Preferences Column */}
-            <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-              <PreferencesCard 
-                theme={config.theme} 
-                onUpdate={updatePreference} 
-              />
-            </Grid>
-
             {/* Currency Block */}
-            <Grid size={{ xs: 12, md: 6, lg: 4 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CurrencyCard 
                 config={config} 
                 onUpdate={updatePreference} 
@@ -70,7 +61,7 @@ const AdminConfiguracion = () => {
             </Grid>
 
             {/* Behavior Block */}
-            <Grid size={{ xs: 12, lg: 4 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <CashRegisterBehaviorCard 
                 config={config} 
                 onUpdate={updatePreference} 

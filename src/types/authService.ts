@@ -8,11 +8,12 @@ export interface AuthLoginResult {
   firstName?: string;
   lastName?: string;
   access_token?: string;
+  themePreference?: string;
 }
 
 export interface IAuthService {
   login(username: string, password: string): Promise<AuthLoginResult>;
-  loginWithPin(pin: string): Promise<{ username: string; role: UserRole; firstName: string; lastName: string; access_token: string } | null>;
+  loginWithPin(pin: string): Promise<{ username: string; role: UserRole; firstName: string; lastName: string; access_token: string; themePreference: string } | null>;
   requestPasswordReset(identifier: string): Promise<{ success: boolean; message?: string }>;
   resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message?: string }>;
   logoutAllDevices(): Promise<{ success: boolean; message?: string }>;

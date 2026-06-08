@@ -1,4 +1,4 @@
-import { Box, Typography, TextField, Button, CircularProgress, Alert, Paper, Divider, InputAdornment, IconButton } from "@mui/material";
+import { Box, Typography, TextField, Button, CircularProgress, Alert, Paper, Divider, InputAdornment, IconButton, Switch } from "@mui/material";
 import { useState } from "react";
 import { LOGIN_COLORS, LOGIN_SHADOWS } from "../../theme/loginTheme";
 import { AccountData } from "../../hooks/useAccountSettings";
@@ -90,6 +90,31 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
             type="email"
             value={data.email || ""}
             onChange={(e) => onChange("email", e.target.value)}
+          />
+        </Box>
+
+        <Divider sx={{ my: 1 }} />
+
+        <Typography variant="subtitle2" fontWeight="bold" color="primary.main" sx={{ textTransform: "uppercase", letterSpacing: 1 }}>
+          Apariencia
+        </Typography>
+
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 2, bgcolor: "background.default", borderRadius: 2 }}>
+          <Box>
+            <Typography variant="body1" fontWeight="600" color="text.primary">
+              Modo Oscuro
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Activa la interfaz oscura para descansar la vista
+            </Typography>
+          </Box>
+          <Switch
+            checked={data.themePreference === 'dark'}
+            onChange={(e) => onChange("themePreference", e.target.checked ? "dark" : "light")}
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": { color: LOGIN_COLORS.primary },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: LOGIN_COLORS.primary },
+            }}
           />
         </Box>
 

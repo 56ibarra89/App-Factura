@@ -112,6 +112,12 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           if (result.firstName) sessionStore.setItem("firstName", result.firstName);
           if (result.lastName) sessionStore.setItem("lastName", result.lastName);
           if (result.access_token) sessionStore.setItem("access_token", result.access_token);
+          
+          // Aplicar preferencia de tema
+          const themePref = result.themePreference || 'light';
+          localStorage.setItem('appfactura_theme', themePref);
+          window.dispatchEvent(new CustomEvent('appfactura:general-config-updated', { detail: { theme: themePref } }));
+
           loginLockout.resetLoginAttempts();
 
           setIsLoggedIn(true);
@@ -170,6 +176,12 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         sessionStore.setItem("firstName", result.firstName);
         sessionStore.setItem("lastName", result.lastName);
         if (result.access_token) sessionStore.setItem("access_token", result.access_token);
+        
+        // Aplicar preferencia de tema
+        const themePref = result.themePreference || 'light';
+        localStorage.setItem('appfactura_theme', themePref);
+        window.dispatchEvent(new CustomEvent('appfactura:general-config-updated', { detail: { theme: themePref } }));
+
         pinLockout.resetAttempts();
 
         setIsLoggedIn(true);
