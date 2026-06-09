@@ -156,9 +156,9 @@ export default function TableSelectDialog({
                       justifyContent: 'center',
                       borderRadius: 3,
                       borderWidth: 2,
-                      borderColor: isSelected ? LOGIN_COLORS.primary : "grey.300",
-                      color: isSelected ? "white" : "text.secondary",
-                      bgcolor: isSelected ? LOGIN_COLORS.primary : "white",
+                      borderColor: isSelected ? LOGIN_COLORS.primary : "divider",
+                      color: isSelected ? "white" : "text.primary",
+                      bgcolor: isSelected ? LOGIN_COLORS.primary : "background.paper",
                       boxShadow: isSelected ? `0 8px 16px ${alpha(LOGIN_COLORS.primary, 0.4)}` : "none",
                       "&:hover": {
                         borderWidth: 2,

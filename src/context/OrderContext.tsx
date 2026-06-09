@@ -282,7 +282,11 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         return nextOrders;
       });
       if (modifiedOrder) {
-        syncUpdateTables(modifiedOrder.id, modifiedOrder.linkedTables || (modifiedOrder.tableId ? [modifiedOrder.tableId] : [])).catch(console.error);
+        const tablesToSync = Array.from(new Set([
+          ...(modifiedOrder.tableId ? [modifiedOrder.tableId] : []),
+          ...(modifiedOrder.linkedTables || [])
+        ]));
+        syncUpdateTables(modifiedOrder.id, tablesToSync).catch(console.error);
       }
     },
     [updateOrdersState],
@@ -297,7 +301,11 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         return nextOrders;
       });
       if (modifiedOrder) {
-        syncUpdateTables(modifiedOrder.id, modifiedOrder.linkedTables || (modifiedOrder.tableId ? [modifiedOrder.tableId] : [])).catch(console.error);
+        const tablesToSync = Array.from(new Set([
+          ...(modifiedOrder.tableId ? [modifiedOrder.tableId] : []),
+          ...(modifiedOrder.linkedTables || [])
+        ]));
+        syncUpdateTables(modifiedOrder.id, tablesToSync).catch(console.error);
       }
     },
     [updateOrdersState],
