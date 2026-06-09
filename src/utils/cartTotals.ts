@@ -10,7 +10,7 @@ export interface AppliedPromotion {
   discountValue: number;
 }
 
-export function calculateSubtotal(items: CartItemType[]): number {
+function calculateSubtotal(items: CartItemType[]): number {
   return items.reduce((sum, item) => {
     const giftQty = item.giftQuantity || 0;
     const paidQty = Math.max(0, item.quantity - giftQty);
@@ -18,7 +18,7 @@ export function calculateSubtotal(items: CartItemType[]): number {
   }, 0);
 }
 
-export function calculateTaxAmount(
+function calculateTaxAmount(
   subTotal: number,
   taxes: TaxLike[] | undefined,
   isExonerated: boolean

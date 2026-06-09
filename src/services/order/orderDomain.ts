@@ -7,17 +7,7 @@ import {
   PaymentMethod,
 } from "../../types/order.types";
 
-export function hydrateOrdersFromStorage(raw: string | null, now: Date): Order[] {
-  if (!raw) return [];
-  const parsed = JSON.parse(raw) as Order[];
-  return parsed
-    .map((order) => ({ ...order, timestamp: new Date(order.timestamp) }))
-    .filter((order) => {
-      const isToday = order.timestamp.toDateString() === now.toDateString();
-      const isActive = order.status !== "paid" && order.status !== "cancelled";
-      return isToday || isActive;
-    });
-}
+
 
 export const orderSelectors = {
   getActiveOrderByTable(orders: Order[], tableId: string): Order | undefined {

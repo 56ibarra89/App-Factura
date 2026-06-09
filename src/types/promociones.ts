@@ -1,4 +1,4 @@
-export type PromoStatus = "Activo" | "Inactivo" | "Agotado";
+
 
 export type CuponStatus = "Activo" | "Inactivo" | "Agotado" | "Vencido";
 

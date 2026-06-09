@@ -16,7 +16,7 @@ import PinValidationDialog from "../components/auth/PinValidationDialog";
 import { useOrderManagement } from "../hooks/useOrderManagement";
 import { useAuth } from "../context/AuthContext";
 import { logService } from "../services/logService";
-import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../theme/loginTheme";
+import { LOGIN_COLORS } from "../theme/loginTheme";
 
 const Ordenes = () => {
   const { 

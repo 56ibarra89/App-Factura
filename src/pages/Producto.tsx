@@ -13,7 +13,7 @@ import RoleGuard from "../components/auth/RoleGuard";
 import { logService } from "../services/logService";
 import { useAuth } from "../context/AuthContext";
 import PageHeader from "../components/PageHeader";
-import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../theme/loginTheme";
+import { LOGIN_COLORS } from "../theme/loginTheme";
 
 
 const Producto = () => {

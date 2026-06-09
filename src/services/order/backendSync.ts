@@ -1,7 +1,7 @@
 import { Order, OrderStatus, OrderType, PaymentMethod, KitchenStatus } from "../../types/order.types";
 import { apiClient } from "../../config/apiClient";
 
-export function mapBackendOrderToFrontend(backendOrder: any): Order {
+function mapBackendOrderToFrontend(backendOrder: any): Order {
   return {
     id: backendOrder.id,
     items: backendOrder.items.map((i: any) => ({

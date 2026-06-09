@@ -11,7 +11,6 @@ import { StatCard } from "../components/Reportes/StatCard";
 import { TopProductsList } from "../components/Reportes/TopProductsList";
 import { SalesChart } from "../components/Reportes/SalesChart";
 import PageHeader from "../components/PageHeader";
-import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, format } from "date-fns";
 
 type FilterType = "today" | "week" | "month" | "custom";
