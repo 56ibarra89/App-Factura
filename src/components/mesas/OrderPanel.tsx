@@ -50,12 +50,12 @@ export default function OrderPanel({
       </Box>
 
       <Box sx={{ 
-        p: 2.5, 
+        p: 1.5, 
         borderTop: "1px solid rgba(0,0,0,0.06)",
         bgcolor: "action.hover" 
       }}>
         <OrderSummary order={order} />
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{ mt: 1.5 }}>
           <OrderActions 
             onSalir={onSalir} 
             onReservar={onReservar} 

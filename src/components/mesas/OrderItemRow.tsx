@@ -19,7 +19,7 @@ export default function OrderItemRow({ item }: Props) {
       borderRadius: 2, 
       transition: "all 0.2s",
       "&:hover": {
-        bgcolor: "#f8f9fa"
+        bgcolor: "action.hover"
       }
     }}>
       <Grid container alignItems="flex-start">

@@ -34,14 +34,16 @@ export default function OrderActions({
   const cancelColor = "#d32f2f"; // Red for cancel
 
   return (
-    <Grid container spacing={1.5}>
+    <Grid container spacing={0.5}>
       <Grid size={12}>
         <Button
           fullWidth
           variant="outlined"
           startIcon={<EditIcon />}
+          size="small"
           sx={{ 
-            py: 1.5,
+            py: 0.5,
+            fontSize: "0.85rem",
             color: "text.primary",
             borderColor: "grey.300",
             textTransform: "none",
@@ -66,14 +68,15 @@ export default function OrderActions({
           fullWidth
           variant="contained"
           startIcon={<ShoppingCartCheckoutIcon />}
+          size="small"
           sx={{
-            py: 1.5,
+            py: 0.5,
             bgcolor: successColor,
             color: "white",
             textTransform: "none",
-            fontWeight: "900",
-            borderRadius: 2.5,
-            fontSize: "1rem",
+            fontWeight: "800",
+            borderRadius: 2,
+            fontSize: "0.9rem",
             boxShadow: `0 4px 12px ${alpha(successColor, 0.4)}`,
             "&:hover": { 
               bgcolor: "#1b5e20", 
@@ -95,13 +98,15 @@ export default function OrderActions({
           variant="contained"
           startIcon={<MergeTypeIcon />}
           onClick={onUnirMesas}
+          size="small"
           sx={{
-            py: 1.5,
+            py: 0.5,
+            fontSize: "0.85rem",
             bgcolor: LOGIN_COLORS.primarySubtle,
             color: LOGIN_COLORS.primary,
             textTransform: "none",
             fontWeight: "700",
-            borderRadius: 2.5,
+            borderRadius: 2,
             boxShadow: "none",
             "&:hover": { 
               bgcolor: alpha(LOGIN_COLORS.primary, 0.08), 
@@ -121,13 +126,15 @@ export default function OrderActions({
           startIcon={<MoveUpIcon />}
           onClick={onMoverPedido}
           disabled={!hasActiveOrder || !canModifyOrder}
+          size="small"
           sx={{
-            py: 1.5,
+            py: 0.5,
+            fontSize: "0.85rem",
             bgcolor: alpha("#ff9800", 0.1),
             color: "#ed6c02",
             textTransform: "none",
             fontWeight: "700",
-            borderRadius: 2.5,
+            borderRadius: 2,
             boxShadow: "none",
             "&:hover": { 
               bgcolor: alpha("#ff9800", 0.2), 
@@ -144,13 +151,15 @@ export default function OrderActions({
           fullWidth
           variant="contained"
           startIcon={<EventSeatIcon />}
+          size="small"
           sx={{ 
-            py: 1.5,
+            py: 0.5,
+            fontSize: "0.85rem",
             bgcolor: isReserved ? cancelColor : successColor, 
             color: "white",
             textTransform: "none",
             fontWeight: "700",
-            borderRadius: 2.5,
+            borderRadius: 2,
             boxShadow: `0 4px 12px ${alpha(isReserved ? cancelColor : successColor, 0.3)}`,
             "&:hover": { 
               bgcolor: isReserved ? "#b71c1c" : "#1b5e20", 
@@ -176,11 +185,13 @@ export default function OrderActions({
           variant="outlined"
           color="error"
           startIcon={<LogoutIcon />}
+          size="small"
           sx={{ 
-            py: 1.5,
+            py: 0.5,
+            fontSize: "0.85rem",
             textTransform: "none",
             fontWeight: "700",
-            borderRadius: 2.5,
+            borderRadius: 2,
             borderWidth: 1.5,
             "&:hover": {
               borderWidth: 1.5,

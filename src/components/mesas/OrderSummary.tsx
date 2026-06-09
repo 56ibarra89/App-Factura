@@ -31,7 +31,7 @@ export default function OrderSummary({ order }: Props) {
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          mb: 1,
+          mb: 0.5,
           color: "text.secondary",
         }}
       >
@@ -48,7 +48,7 @@ export default function OrderSummary({ order }: Props) {
           sx={{
             display: "flex",
             justifyContent: "space-between",
-            mb: 2,
+            mb: 0.5,
             color: "text.secondary",
           }}
         >
@@ -66,7 +66,7 @@ export default function OrderSummary({ order }: Props) {
           sx={{
             display: "flex",
             justifyContent: "space-between",
-            mb: 2,
+            mb: 0.5,
             color: "success.main",
           }}
         >
@@ -79,20 +79,20 @@ export default function OrderSummary({ order }: Props) {
         </Box>
       )}
 
-      <Divider sx={{ borderStyle: "dashed", opacity: 0.6, my: 2 }} />
+      <Divider sx={{ borderStyle: "dashed", opacity: 0.6, my: 1 }} />
 
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 3,
+          mb: 1.5,
         }}
       >
-        <Typography variant="h5" fontWeight="800" color="text.primary">
+        <Typography variant="h6" fontWeight="800" color="text.primary">
           Total
         </Typography>
-        <Typography variant="h4" fontWeight="900" color="text.primary">
+        <Typography variant="h5" fontWeight="900" color="text.primary">
           C${total.toFixed(2)}
         </Typography>
       </Box>
@@ -103,7 +103,7 @@ export default function OrderSummary({ order }: Props) {
           alignItems: "center",
           gap: 1,
           bgcolor: "action.hover",
-          p: 1.5,
+          p: 1,
           borderRadius: 2,
         }}
       >
