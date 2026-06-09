@@ -2,6 +2,7 @@ import { useOrderCommands, useOrderQueries } from "../context/OrderContext";
 import { useMemo } from "react";
 import { Order } from "../types/order.types";
 import { CartItemType } from "../types/cart";
+import { useState, useCallback } from "react";
 
 // Helper para dividir una orden en múltiples "Tickets de Cocina" agrupados por sentAt
 const splitIntoKitchenTickets = (order: Order): Order[] => {
@@ -53,7 +54,16 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
 
 export const useOrderManagement = () => {
   const { orders } = useOrderQueries();
-  const { updateOrderStatus, removeOrder, clearHistory } = useOrderCommands();
+  const { updateOrderStatus, removeOrder } = useOrderCommands();
+
+  const [hiddenTickets, setHiddenTickets] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("hidden-kitchen-tickets");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Dividir todas las órdenes en tickets virtuales
   const allTickets = useMemo(() => {
@@ -66,15 +76,29 @@ export const useOrderManagement = () => {
   );
 
   const finishedOrders = useMemo(() => 
-    allTickets.filter(t => t.status === 'delivered' || t.status === 'paid' || t.status === 'cancelled'),
-    [allTickets]
+    allTickets.filter(t => {
+      const isFinished = t.status === 'delivered' || t.status === 'paid' || t.status === 'cancelled';
+      if (!isFinished) return false;
+      const ticketId = `${t.id}-${t.timestamp.getTime()}`;
+      return !hiddenTickets.includes(ticketId);
+    }),
+    [allTickets, hiddenTickets]
   );
+
+  const clearKitchenHistory = useCallback(() => {
+    const toHide = finishedOrders.map(t => `${t.id}-${t.timestamp.getTime()}`);
+    setHiddenTickets(prev => {
+      const next = Array.from(new Set([...prev, ...toHide]));
+      localStorage.setItem("hidden-kitchen-tickets", JSON.stringify(next));
+      return next;
+    });
+  }, [finishedOrders]);
 
   return {
     activeOrders,
     finishedOrders,
     updateOrderStatus,
     removeOrder,
-    clearHistory
+    clearHistory: clearKitchenHistory
   };
 };
