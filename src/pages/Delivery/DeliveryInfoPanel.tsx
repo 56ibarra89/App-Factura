@@ -161,7 +161,7 @@ export default function DeliveryInfoPanel({
                 onClick={() => {
                   if (val && val.trim() !== "") {
                     setTransporteInput(val);
-                    setFocusedField("transporte"); // opcional: enfocarlo para ver que se actualizó
+                    setFocusedField("phone"); // Regresar el foco al teléfono para que el teclado numérico siga escribiendo el número del cliente
                   }
                 }}
                 disabled={!val || val.trim() === ""}

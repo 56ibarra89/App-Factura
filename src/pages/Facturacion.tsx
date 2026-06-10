@@ -38,7 +38,7 @@ const Facturacion = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as { deliveryCustomer?: Customer | null; deliveryPhone?: string } | null;
+  const state = location.state as { deliveryCustomer?: Customer | null; deliveryPhone?: string; deliveryCost?: number } | null;
 
   // Estado para la asignación anticipada de cliente (Delivery)
   const [deliveryCustomer, setDeliveryCustomer] = useState<Customer | null>(state?.deliveryCustomer || null);
@@ -83,6 +83,21 @@ const Facturacion = () => {
       handleSetCart(activeOrder.items);
     }
   }, [activeOrder, cart.length, handleSetCart]);
+
+  // Inyectar costo de delivery si viene del panel de delivery
+  useEffect(() => {
+    if (state?.deliveryCost && state.deliveryCost > 0 && cart.length === 0 && !tableId) {
+      handleAddToCartItem({
+        name: "Delivery",
+        price: state.deliveryCost,
+        size: "único",
+        extras: [],
+        note: "Cargo por transporte",
+        quantity: 1,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFinalConfirm = async (
     paymentMethod: PaymentMethod,

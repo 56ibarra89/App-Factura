@@ -43,7 +43,8 @@ export function useDeliveryLogic() {
     navigate("/facturacion", {
       state: { 
         deliveryCustomer: selectedCustomer, 
-        deliveryPhone: selectedCustomer?.phone || phoneInput 
+        deliveryPhone: selectedCustomer?.phone || phoneInput,
+        deliveryCost: parseFloat(transporteInput) || 0
       },
     });
   }, [navigate, selectedCustomer, phoneInput]);
