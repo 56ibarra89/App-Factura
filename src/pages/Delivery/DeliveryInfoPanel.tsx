@@ -63,8 +63,8 @@ export default function DeliveryInfoPanel({
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                 <Typography sx={{ width: 100 }}>Cliente:</Typography>
-                <Typography fontWeight="bold" color="yellow">
-                  {selectedCustomer ? selectedCustomer.name : " "}
+                <Typography fontWeight="bold" color={selectedCustomer ? "yellow" : (phoneInput.length >= 8 ? "warning.main" : "text.secondary")}>
+                  {selectedCustomer ? selectedCustomer.name : (phoneInput.length >= 8 ? "NUEVO CLIENTE" : " ")}
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>

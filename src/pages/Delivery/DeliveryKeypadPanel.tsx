@@ -63,6 +63,20 @@ export default function DeliveryKeypadPanel({
                     Confirmar Orden
                  </Button>
               </>
+            ) : phoneInput.length >= 8 ? (
+              <>
+                 <Avatar sx={{ bgcolor: "warning.main", width: 60, height: 60, mb: 1 }}><PersonIcon fontSize="large" /></Avatar>
+                 <Typography variant="h6" fontWeight="bold" color="warning.main">NUEVO CLIENTE</Typography>
+                 <Button 
+                    variant="contained" 
+                    color="warning" 
+                    fullWidth 
+                    sx={{ mt: 1, borderRadius: 0 }}
+                    onClick={handleConfirm}
+                 >
+                    Crear Orden
+                 </Button>
+              </>
             ) : (
                <Avatar sx={{ width: 60, height: 60, mb: 1 }}><PersonIcon fontSize="large" /></Avatar>
             )}
