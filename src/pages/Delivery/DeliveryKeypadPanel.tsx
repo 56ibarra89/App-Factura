@@ -51,8 +51,8 @@ export default function DeliveryKeypadPanel({
           }}>
             {selectedCustomer ? (
               <>
-                 <Avatar sx={{ bgcolor: "red", width: 60, height: 60, mb: 1 }}><PersonIcon fontSize="large" /></Avatar>
-                 <Typography variant="h6" fontWeight="bold">LISTO!</Typography>
+                 <Avatar sx={{ bgcolor: "success.main", width: 60, height: 60, mb: 1 }}><PersonIcon fontSize="large" /></Avatar>
+                 <Typography variant="h6" fontWeight="bold" color="success.main">LISTO!</Typography>
                  <Button 
                     variant="contained" 
                     color="success" 
