@@ -20,6 +20,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Customer } from "../../types/customer.types";
+import { configRepository } from "../../repositories/ConfigRepository";
 
 interface DeliveryInfoPanelProps {
   phoneInput: string;
@@ -48,6 +49,18 @@ export default function DeliveryInfoPanel({
 }: DeliveryInfoPanelProps) {
   const theme = useTheme();
   const navigate = useNavigate();
+  const [quickPrices, setQuickPrices] = React.useState<string[]>(["30.00", "50.00", "", "", "", ""]);
+
+  React.useEffect(() => {
+    configRepository.getDeliveryPricesConfig().then(prices => {
+      if (prices && Array.isArray(prices)) {
+        // Asegurar 6 espacios
+        const newPrices = [...prices];
+        while (newPrices.length < 6) newPrices.push("");
+        setQuickPrices(newPrices.slice(0, 6));
+      }
+    });
+  }, []);
 
   return (
     <Box sx={{ flex: { xs: 1, lg: 3 }, minWidth: 0 }}>
@@ -141,25 +154,27 @@ export default function DeliveryInfoPanel({
 
         {/* Botones de Moneda Rápidos */}
         <Box sx={{ display: "flex", p: 1, gap: 1, bgcolor: "background.default" }}>
-           {["C$30.00", "C$50.00", "", "", "", "", ""].map((val, idx) => (
+           {quickPrices.map((val, idx) => (
               <Button 
                 key={idx} 
                 variant="outlined" 
                 onClick={() => {
-                  if (val) {
-                    const amount = val.replace("C$", "");
-                    setTransporteInput(amount);
+                  if (val && val.trim() !== "") {
+                    setTransporteInput(val);
                     setFocusedField("transporte"); // opcional: enfocarlo para ver que se actualizó
                   }
                 }}
+                disabled={!val || val.trim() === ""}
                 sx={{ 
                   flex: 1, 
                   height: 40, 
-                  bgcolor: val ? (theme.palette.mode === 'dark' ? 'grey.800' : "#fff9c4") : "transparent",
-                  color: "text.primary"
+                  bgcolor: val && val.trim() !== "" ? (theme.palette.mode === 'dark' ? 'grey.800' : "#fff9c4") : "transparent",
+                  color: val && val.trim() !== "" ? "text.primary" : "transparent",
+                  borderColor: val && val.trim() !== "" ? undefined : "transparent",
+                  "&:disabled": { borderColor: "transparent" }
                 }}
               >
-                {val}
+                {val && val.trim() !== "" ? `C$${val}` : ""}
               </Button>
            ))}
         </Box>

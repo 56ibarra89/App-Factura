@@ -9,7 +9,9 @@ import ProductsTable from "../components/ProductsTable";
 import ProductFormDialog from "../components/ProductFormDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
 import CategoryManagerDialog from "../components/CategoryManagerDialog";
+import DeliveryPricesDialog from "../components/DeliveryPricesDialog";
 import RoleGuard from "../components/auth/RoleGuard";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { logService } from "../services/logService";
 import { useAuth } from "../context/AuthContext";
 import PageHeader from "../components/PageHeader";
@@ -28,6 +30,7 @@ const Producto = () => {
 
   const [showForm, setShowForm] = useState(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [showDeliveryPrices, setShowDeliveryPrices] = useState(false);
   const [editing, setEditing] = useState<null | {
     product: Product;
     category: string;
@@ -116,6 +119,23 @@ const Producto = () => {
                 Gestionar Categorías
               </Button>
               <Button 
+                variant="outlined" 
+                size="small"
+                onClick={() => {
+                  blurActiveElement();
+                  setShowDeliveryPrices(true);
+                }}
+                startIcon={<TwoWheelerIcon />}
+                sx={{ 
+                  borderRadius: 2, 
+                  borderColor: LOGIN_COLORS.primary, 
+                  color: LOGIN_COLORS.primary,
+                  '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
+                }}
+              >
+                Precios Delivery
+              </Button>
+              <Button 
                 ref={addButtonRef}
                 variant="contained" 
                 size="small"
@@ -162,6 +182,11 @@ const Producto = () => {
       <CategoryManagerDialog
         open={showCategoryManager}
         onClose={() => setShowCategoryManager(false)}
+      />
+
+      <DeliveryPricesDialog
+        open={showDeliveryPrices}
+        onClose={() => setShowDeliveryPrices(false)}
       />
     </Box>
   );
