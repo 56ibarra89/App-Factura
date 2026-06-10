@@ -3,6 +3,7 @@ import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
 import Home from "../pages/Home";
 import Facturacion from "../pages/Facturacion";
+import DeliveryPage from "../pages/DeliveryPage";
 import Producto from "../pages/Producto";
 import Login from "../pages/Login";
 import ForgotPassword from "../pages/ForgotPassword";
@@ -49,6 +50,10 @@ const AppRoutes = () => (
       <Route
         path="/facturacion"
         element={<PrivateRoute element={<Facturacion />} />}
+      />
+      <Route
+        path="/delivery"
+        element={<PrivateRoute element={<DeliveryPage />} />}
       />
 
       <Route

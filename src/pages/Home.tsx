@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import AccountMenu from "../components/AccountMenu";
@@ -7,15 +6,12 @@ import PageHeader from "../components/PageHeader";
 import { getMenuItems } from "../data/menuItems";
 import logoImg from "../assets/images/logo.png";
 import { useAuth } from "../context/AuthContext";
-import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { useCaja } from "../context/CajaContext";
-import DeliveryCustomerDialog from "../components/DeliveryCustomerDialog";
 
 const Home = () => {
   const navigate = useNavigate();
   const { username } = useAuth();
   const { currentShift } = useCaja();
-  const [deliveryCustomerOpen, setDeliveryCustomerOpen] = useState(false);
   const menuItems = getMenuItems();
 
   return (
@@ -67,9 +63,7 @@ const Home = () => {
               label={item.label}
               icon={item.icon}
               onClick={
-                item.label === "Delivery"
-                  ? () => setDeliveryCustomerOpen(true)
-                  : item.route
+                item.route
                   ? () => navigate(item.route!)
                   : item.action ?? (() => {})
               }
@@ -78,16 +72,6 @@ const Home = () => {
           );
         })}
       </Box>
-
-      <DeliveryCustomerDialog
-        open={deliveryCustomerOpen}
-        onClose={() => setDeliveryCustomerOpen(false)}
-        onConfirm={(customer, phone) => {
-          navigate("/facturacion", {
-            state: { deliveryCustomer: customer, deliveryPhone: phone },
-          });
-        }}
-      />
     </Box>
   );
 };

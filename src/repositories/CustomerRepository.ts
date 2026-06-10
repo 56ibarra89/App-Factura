@@ -35,10 +35,10 @@ class CustomerRepository implements ICustomerRepository {
 
   /** Actualiza un cliente existente. */
   async update(customer: Customer): Promise<void> {
-    const { id, ...data } = customer;
+    const { id, name, phone } = customer;
     await apiClient(`/customers/${id}`, {
       method: "PATCH",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ name, phone }),
     });
   }
 

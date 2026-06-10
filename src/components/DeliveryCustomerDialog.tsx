@@ -72,13 +72,13 @@ export default function DeliveryCustomerDialog({
       <DialogContent dividers>
         <Box sx={{ mb: 3 }}>
           <Typography variant="body2" color="text.secondary" mb={2}>
-            Ingresa el número de teléfono del cliente para rellenar sus datos automáticamente al momento de facturar.
+            Ingresa el nombre o número de teléfono del cliente para rellenar sus datos automáticamente al momento de facturar.
           </Typography>
           <TextField
             autoFocus
             fullWidth
-            label="Número de Teléfono"
-            placeholder="Ej. 88880000"
+            label="Nombre o Teléfono"
+            placeholder="Ej. Juan Perez o 88880000"
             value={phoneInput}
             onChange={(e) => setPhoneInput(e.target.value)}
             InputProps={{
@@ -158,7 +158,7 @@ export default function DeliveryCustomerDialog({
           startIcon={!hasSuggestions ? <PersonAddAlt1Icon /> : undefined}
         >
           {hasSuggestions
-            ? "Continuar con este número (Nuevo)"
+            ? "Continuar con esto (Nuevo)"
             : "Crear como Nuevo Cliente"}
         </Button>
       </DialogActions>

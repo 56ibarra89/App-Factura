@@ -34,6 +34,7 @@ export const getMenuItems = (): MenuItem[] => [
   {
     label: "Delivery",
     icon: <DeliveryDiningIcon fontSize="large" color="error" />,
+    route: "/delivery",
   },
   {
     label: "Órdenes",
