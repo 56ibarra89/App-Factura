@@ -13,7 +13,9 @@ import {
   TableHead,
   TableRow,
   Divider,
-  useTheme
+  useTheme,
+  Select,
+  MenuItem
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import SearchIcon from "@mui/icons-material/Search";
@@ -21,6 +23,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Customer } from "../../types/customer.types";
 import { configRepository } from "../../repositories/ConfigRepository";
+import { UserAccount } from "../../types/user";
 
 interface DeliveryInfoPanelProps {
   phoneInput: string;
@@ -33,6 +36,9 @@ interface DeliveryInfoPanelProps {
   setSearchDialogOpen: (open: boolean) => void;
   setCustomerFormOpen: (open: boolean) => void;
   setSelectedAddress: (addr: string) => void;
+  drivers: UserAccount[];
+  selectedDriverId: string;
+  setSelectedDriverId: (id: string) => void;
 }
 
 export default function DeliveryInfoPanel({
@@ -46,6 +52,9 @@ export default function DeliveryInfoPanel({
   setSearchDialogOpen,
   setCustomerFormOpen,
   setSelectedAddress,
+  drivers,
+  selectedDriverId,
+  setSelectedDriverId,
 }: DeliveryInfoPanelProps) {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -86,10 +95,30 @@ export default function DeliveryInfoPanel({
                   {selectedAddress || " "}
                 </Typography>
               </Box>
-              <Box sx={{ display: "flex", alignItems: "center", mt: 3 }}>
-                <Typography sx={{ width: 100 }}>Motorizado:</Typography>
-                <Typography fontWeight="bold" color="orange">Ninguno</Typography>
-              </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 3 }}>
+                  <Typography sx={{ width: 100 }}>Motorizado:</Typography>
+                  <Select
+                    size="small"
+                    value={selectedDriverId}
+                    onChange={(e) => setSelectedDriverId(e.target.value)}
+                    displayEmpty
+                    sx={{
+                      minWidth: 150,
+                      color: selectedDriverId ? "orange" : "text.secondary",
+                      fontWeight: "bold",
+                      "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                      "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.2)" },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "orange" },
+                    }}
+                  >
+                    <MenuItem value="">
+                      <em>Ninguno</em>
+                    </MenuItem>
+                    {drivers.map(d => (
+                      <MenuItem key={d.id} value={d.id}>{d.firstName} {d.lastName}</MenuItem>
+                    ))}
+                  </Select>
+                </Box>
             </Grid>
             {/* @ts-expect-error MUI Grid TS typing issue */}
             <Grid item xs={4} sx={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "flex-end" }}>
