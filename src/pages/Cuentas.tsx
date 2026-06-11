@@ -240,9 +240,12 @@ export default function Cuentas() {
               {tabIndex === 0 && (
                 <UserForm
                   user={selectedUser}
-                  onSave={(user) => {
-                    saveUser(user);
-                    setSelectedUserId(user.id);
+                  onSave={async (user) => {
+                    const saved = await saveUser(user);
+                    if (saved) {
+                      setSnackbarSuccess(`Usuario ${user.id ? 'actualizado' : 'creado'} con éxito`);
+                      setSelectedUserId(saved.id);
+                    }
                   }}
                   onToggleStatus={toggleUserStatus}
                   onDelete={handleRequestDelete}
