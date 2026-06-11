@@ -18,6 +18,7 @@ export interface Order {
   customerName?: string;
   orderType?: OrderType;
   customerAddress?: string;
+  driverId?: string;
   promotionCode?: string;
   tableId?: string;
   paymentMethod?: PaymentMethod;

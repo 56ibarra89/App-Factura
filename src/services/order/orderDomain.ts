@@ -45,6 +45,7 @@ export function createOrder(params: {
   customerName?: string;
   orderType?: OrderType;
   customerAddress?: string;
+  driverId?: string;
   tableId?: string;
   paymentMethod?: string;
   splitAmounts?: { efectivo: number; tarjeta: number };
@@ -61,6 +62,7 @@ export function createOrder(params: {
     customerName,
     orderType,
     customerAddress,
+    driverId,
     tableId,
     paymentMethod,
     splitAmounts,
@@ -83,6 +85,7 @@ export function createOrder(params: {
     customerName,
     orderType,
     customerAddress,
+    driverId,
     promotionCode,
     tableId,
     paymentMethod: paymentMethod as PaymentMethod,
