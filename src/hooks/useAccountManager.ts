@@ -80,12 +80,12 @@ export function useAccountManager() {
           `Nuevo usuario creado: @${savedUser.username} (${savedUser.firstName} ${savedUser.lastName})`
         );
       }
-      return true; // Éxito
+      return savedUser; // Éxito
     } catch (err: any) {
       const errMsg = err.message || "Error al guardar el usuario";
       setError(errMsg);
       console.error(err);
-      return false; // Fallo
+      return null; // Fallo
     } finally {
       setLoading(false);
     }
