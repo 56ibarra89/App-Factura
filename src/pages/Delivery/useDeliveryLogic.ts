@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useCustomerSearch } from "../../hooks/useCustomerSearch";
 import { useCustomers } from "../../hooks/useCustomers";
 import { Customer } from "../../types/customer.types";
+import { UserAccount } from "../../types/user";
+import { apiClient } from "../../config/apiClient";
 
 export function useDeliveryLogic() {
   const navigate = useNavigate();
@@ -14,6 +16,8 @@ export function useDeliveryLogic() {
   const [focusedField, setFocusedField] = useState<"phone" | "transporte">("phone");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
+  const [drivers, setDrivers] = useState<UserAccount[]>([]);
+  const [selectedDriverId, setSelectedDriverId] = useState<string>("");
 
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [customerFormOpen, setCustomerFormOpen] = useState(false);
@@ -39,15 +43,29 @@ export function useDeliveryLogic() {
     }
   }, [suggestions]);
 
+  useEffect(() => {
+    const fetchDrivers = async () => {
+      try {
+        const users = await apiClient("/users");
+        const motorizados = users.filter((u: UserAccount) => u.role === "motorizado");
+        setDrivers(motorizados);
+      } catch (err) {
+        console.error("Error fetching motorizados:", err);
+      }
+    };
+    fetchDrivers();
+  }, []);
+
   const handleConfirm = useCallback(() => {
     navigate("/facturacion", {
       state: { 
         deliveryCustomer: selectedCustomer, 
         deliveryPhone: selectedCustomer?.phone || phoneInput,
-        deliveryCost: parseFloat(transporteInput) || 0
+        deliveryCost: parseFloat(transporteInput) || 0,
+        deliveryDriverId: selectedDriverId || undefined,
       },
     });
-  }, [navigate, selectedCustomer, phoneInput]);
+  }, [navigate, selectedCustomer, phoneInput, transporteInput, selectedDriverId]);
 
   const handleKeypadPress = useCallback((val: string) => {
     if (val === "BACK") {
@@ -116,6 +134,9 @@ export function useDeliveryLogic() {
     selectedAddress, setSelectedAddress,
     searchDialogOpen, setSearchDialogOpen,
     customerFormOpen, setCustomerFormOpen,
+    drivers,
+    selectedDriverId,
+    setSelectedDriverId,
     handleKeypadPress, handleConfirm,
     addAddress, removeAddress, updateCustomer
   };
