@@ -38,7 +38,7 @@ const Facturacion = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as { deliveryCustomer?: Customer | null; deliveryPhone?: string; deliveryCost?: number } | null;
+  const state = location.state as { deliveryCustomer?: Customer | null; deliveryPhone?: string; deliveryCost?: number; deliveryDriverId?: string } | null;
 
   // Estado para la asignación anticipada de cliente (Delivery)
   const [deliveryCustomer, setDeliveryCustomer] = useState<Customer | null>(state?.deliveryCustomer || null);
@@ -179,6 +179,7 @@ const Facturacion = () => {
         customerName,
         orderType,
         customerAddress,
+        state?.deliveryDriverId,
       );
       setCreatedInvoiceNumber(invoiceNumber || "000001");
       

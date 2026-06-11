@@ -21,7 +21,8 @@ export function useCheckout(
       splitAmounts?: { efectivo: number; tarjeta: number },
       customerName?: string,
       orderType?: OrderType,
-      customerAddress?: string
+      customerAddress?: string,
+      driverId?: string
     ) => {
       const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated, promotion);
 
@@ -38,7 +39,8 @@ export function useCheckout(
         subTotal,
         taxAmount,
         discountAmount,
-        promotion?.code
+        promotion?.code,
+        driverId
       );
       return invoiceNumber;
     },
