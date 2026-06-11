@@ -1,10 +1,9 @@
 // src/pages/Facturacion.tsx
 import Box from "@mui/material/Box";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useProductContext } from "../context/ProductContext";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import useCart from "../hooks/useCart";
-import { useEffect } from "react";
 import { PaymentMethod, OrderType } from "../types/order.types";
 import { Snackbar, Alert } from "@mui/material";
 import { useAuth } from "../context/AuthContext";
@@ -84,9 +83,12 @@ const Facturacion = () => {
     }
   }, [activeOrder, cart.length, handleSetCart]);
 
+  const deliveryAddedRef = useRef(false);
+
   // Inyectar costo de delivery si viene del panel de delivery
   useEffect(() => {
-    if (state?.deliveryCost && state.deliveryCost > 0 && cart.length === 0 && !tableId) {
+    if (state?.deliveryCost && state.deliveryCost > 0 && cart.length === 0 && !tableId && !deliveryAddedRef.current) {
+      deliveryAddedRef.current = true;
       handleAddToCartItem({
         name: "Delivery",
         price: state.deliveryCost,
