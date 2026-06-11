@@ -23,6 +23,9 @@ export default function DeliveryPage() {
     setSelectedAddress,
     setSearchDialogOpen,
     setCustomerFormOpen,
+    drivers,
+    selectedDriverId,
+    setSelectedDriverId,
     
     handleKeypadPress,
     handleConfirm,
@@ -45,6 +48,9 @@ export default function DeliveryPage() {
           setSearchDialogOpen={setSearchDialogOpen}
           setCustomerFormOpen={setCustomerFormOpen}
           setSelectedAddress={setSelectedAddress}
+          drivers={drivers}
+          selectedDriverId={selectedDriverId}
+          setSelectedDriverId={setSelectedDriverId}
         />
         
         <DeliveryKeypadPanel
