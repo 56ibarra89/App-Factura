@@ -233,6 +233,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       
       if (modifiedOrder) {
         try {
+          await syncUpdateOrderItems(modifiedOrder).catch(console.error);
           const finalizedOrder = await syncFinalizeOrder(modifiedOrder);
           updateOrdersState(current => current.map(o => o.id === modifiedOrder!.id ? { ...o, status: 'paid', invoiceNumber: finalizedOrder.invoiceNumber } : o));
           return finalizedOrder.invoiceNumber;

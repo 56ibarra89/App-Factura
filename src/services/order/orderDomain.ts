@@ -248,20 +248,37 @@ export const orderMutations = {
     return updateOne(
       prev,
       (order) => order.id === orderId,
-      (order) => ({
-        ...order,
-        status: "paid" as OrderStatus,
-        paymentMethod,
-        splitAmounts,
-        customerName: customerName || order.customerName,
-        orderType: orderType || order.orderType,
-        customerAddress: customerAddress || order.customerAddress,
-        promotionCode: promotionCode || order.promotionCode,
-        total: typeof finalTotal === "number" ? finalTotal : order.total,
-        subTotal: typeof subTotal === "number" ? subTotal : order.subTotal,
-        discountAmount: typeof discountAmount === "number" ? discountAmount : order.discountAmount,
-        taxAmount: typeof taxAmount === "number" ? taxAmount : order.taxAmount,
-      }),
+      (order) => {
+        const nowMs = Date.now();
+        const updatedItems = order.items.map((item) => {
+          if (!item.isSentToKitchen) {
+            return {
+              ...item,
+              isSentToKitchen: true,
+              sentAt: nowMs,
+              kitchenStatus: "pending" as KitchenStatus,
+            };
+          }
+          return item;
+        });
+
+        return {
+          ...order,
+          status: "paid" as OrderStatus,
+          paymentMethod,
+          splitAmounts,
+          customerName: customerName || order.customerName,
+          orderType: orderType || order.orderType,
+          customerAddress: customerAddress || order.customerAddress,
+          promotionCode: promotionCode || order.promotionCode,
+          total: typeof finalTotal === "number" ? finalTotal : order.total,
+          subTotal: typeof subTotal === "number" ? subTotal : order.subTotal,
+          discountAmount: typeof discountAmount === "number" ? discountAmount : order.discountAmount,
+          taxAmount: typeof taxAmount === "number" ? taxAmount : order.taxAmount,
+          isSentToKitchen: true,
+          items: updatedItems,
+        };
+      },
     );
   },
 

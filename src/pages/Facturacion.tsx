@@ -95,7 +95,6 @@ const Facturacion = () => {
         size: "único",
         extras: [],
         note: "Cargo por transporte",
-        quantity: 1,
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -52,7 +52,7 @@ export default function DeliveryPricesDialog({ open, onClose }: DeliveryPricesDi
             </Typography>
             <Grid container spacing={2}>
               {prices.map((price, index) => (
-                <Grid item xs={6} key={index}>
+                <Grid size={{ xs: 6 }} key={index}>
                   <TextField
                     label={`Precio ${index + 1}`}
                     size="small"

@@ -91,7 +91,7 @@ export function ProfileCard({ username, fullName }: ProfileCardProps) {
         >
           <ShieldIcon sx={{ fontSize: 18, color: role === "admin" ? "#4caf50" : "#2196f3" }} />
           <Typography variant="caption" fontWeight="bold" sx={{ letterSpacing: 1, textTransform: "uppercase" }}>
-            {ROLE_LABELS[role] || role}
+            {role ? ROLE_LABELS[role as keyof typeof ROLE_LABELS] || role : ""}
           </Typography>
         </Box>
       </Box>
