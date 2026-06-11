@@ -44,7 +44,7 @@ export function useAccountSettings() {
           ...prev,
           id: user.id,
           nombreUsuario: user.username || "",
-          nombreCompleto: `${user.firstName} ${user.lastName}`.trim(),
+          nombreCompleto: [user.firstName, user.lastName].filter(Boolean).join(" ").trim(),
           email: user.email || "",
           pin: user.pin || "",
           themePreference: (user.themePreference as 'light' | 'dark') || 'light',
