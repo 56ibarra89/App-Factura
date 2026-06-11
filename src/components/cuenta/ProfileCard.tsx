@@ -3,6 +3,8 @@ import PersonIcon from "@mui/icons-material/Person";
 import ShieldIcon from "@mui/icons-material/Security";
 import { LOGIN_GRADIENTS, LOGIN_SHADOWS } from "../../theme/loginTheme";
 import logo from "../../assets/images/logo.png"; // Usamos el logo
+import { useAuth } from "../../context/AuthContext";
+import { ROLE_LABELS } from "../../types/user";
 
 interface ProfileCardProps {
   username: string;
@@ -10,6 +12,8 @@ interface ProfileCardProps {
 }
 
 export function ProfileCard({ username, fullName }: ProfileCardProps) {
+  const { role } = useAuth();
+  
   return (
     <Paper
       elevation={0}

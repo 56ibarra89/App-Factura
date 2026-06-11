@@ -7,6 +7,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { useAuth } from "../../context/AuthContext";
 
 interface AccountSettingsFormProps {
   data: AccountData;
@@ -22,6 +23,7 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const { role } = useAuth();
 
   const requirements = [
     { regex: /.{8,}/, msg: "Mínimo 8 caracteres" },
