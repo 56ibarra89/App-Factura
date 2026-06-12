@@ -75,7 +75,12 @@ export default function DeliveryInfoPanel({
     <Box sx={{ flex: { xs: 1, lg: 3 }, minWidth: 0 }}>
       <Paper sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: "background.paper", overflow: "hidden" }}>
         {/* Header / Info Section */}
-        <Box sx={{ bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.800', color: "white", p: 2 }}>
+        <Box sx={{ 
+          background: theme.palette.mode === 'dark' ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)' : `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`, 
+          color: "white", 
+          p: 2,
+          boxShadow: "inset 0 -2px 10px rgba(0,0,0,0.1)"
+        }}>
           <Grid container spacing={2}>
             {/* @ts-expect-error MUI Grid TS typing issue */}
             <Grid item xs={8}>
@@ -85,83 +90,87 @@ export default function DeliveryInfoPanel({
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                 <Typography sx={{ width: 100 }}>Cliente:</Typography>
-                <Typography fontWeight="bold" color={selectedCustomer ? "yellow" : (phoneInput.length >= 8 ? "warning.main" : "text.secondary")}>
-                  {selectedCustomer ? selectedCustomer.name : (phoneInput.length >= 8 ? "NUEVO CLIENTE" : " ")}
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Typography sx={{ width: 100 }}>Direccion:</Typography>
-                <Typography fontWeight="bold" color="yellow">
-                  {selectedAddress || " "}
-                </Typography>
-              </Box>
-                <Box sx={{ display: "flex", alignItems: "center", mt: 3 }}>
-                  <Typography sx={{ width: 100 }}>Motorizado:</Typography>
-                  <Select
-                    size="small"
-                    value={selectedDriverId}
-                    onChange={(e) => setSelectedDriverId(e.target.value)}
-                    displayEmpty
-                    sx={{
-                      minWidth: 150,
-                      color: selectedDriverId ? "orange" : "text.secondary",
-                      fontWeight: "bold",
-                      "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
-                      "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.2)" },
-                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "orange" },
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>Ninguno</em>
-                    </MenuItem>
-                    {drivers.map(d => (
-                      <MenuItem key={d.id} value={d.id}>{d.firstName} {d.lastName}</MenuItem>
-                    ))}
-                  </Select>
+                  <Typography fontWeight="bold" color={selectedCustomer ? "#ffd54f" : (phoneInput.length >= 8 ? "#ffb74d" : "rgba(255,255,255,0.7)")}>
+                    {selectedCustomer ? selectedCustomer.name : (phoneInput.length >= 8 ? "NUEVO CLIENTE" : " ")}
+                  </Typography>
                 </Box>
-            </Grid>
-            {/* @ts-expect-error MUI Grid TS typing issue */}
-            <Grid item xs={4} sx={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "flex-end" }}>
-               <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <Typography sx={{ mr: 1 }}>Transporte:</Typography>
-                  <TextField 
-                     size="small" 
-                     value={transporteInput}
-                     onClick={() => setFocusedField("transporte")}
-                     inputProps={{ style: { textAlign: "right" } }}
-                     sx={{ 
-                       width: 80,
-                       bgcolor: focusedField === "transporte" 
-                         ? (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#ffffcc') 
-                         : (theme.palette.mode === 'dark' ? 'transparent' : 'white'),
-                       input: { color: "text.primary" }
-                     }}
-                  />
-               </Box>
-            </Grid>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <Typography sx={{ width: 100, color: "rgba(255,255,255,0.8)" }}>Direccion:</Typography>
+                  <Typography fontWeight="bold" color="#ffd54f">
+                    {selectedAddress || " "}
+                  </Typography>
+                </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", mt: 3 }}>
+                    <Typography sx={{ width: 100, color: "rgba(255,255,255,0.8)" }}>Motorizado:</Typography>
+                    <Select
+                      size="small"
+                      value={selectedDriverId}
+                      onChange={(e) => setSelectedDriverId(e.target.value)}
+                      displayEmpty
+                      sx={{
+                        minWidth: 150,
+                        color: selectedDriverId ? "#ffd54f" : "rgba(255,255,255,0.8)",
+                        fontWeight: "bold",
+                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                        "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.3)" },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#ffd54f" },
+                        "& .MuiSvgIcon-root": { color: "rgba(255,255,255,0.8)" }
+                      }}
+                    >
+                      <MenuItem value="">
+                        <em>Ninguno</em>
+                      </MenuItem>
+                      {drivers.map(d => (
+                        <MenuItem key={d.id} value={d.id}>{d.firstName} {d.lastName}</MenuItem>
+                      ))}
+                    </Select>
+                  </Box>
+              </Grid>
+              {/* @ts-expect-error MUI Grid TS typing issue */}
+              <Grid item xs={4} sx={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "flex-end" }}>
+                 <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Typography sx={{ mr: 1, color: "rgba(255,255,255,0.8)" }}>Transporte:</Typography>
+                    <TextField 
+                       size="small" 
+                       value={transporteInput}
+                       onClick={() => setFocusedField("transporte")}
+                       inputProps={{ style: { textAlign: "right" } }}
+                       sx={{ 
+                         width: 90,
+                         bgcolor: focusedField === "transporte" ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                         borderRadius: 1,
+                         input: { color: "white", fontWeight: "bold" },
+                         "& fieldset": { border: "none" }
+                       }}
+                    />
+                 </Box>
+              </Grid>
           </Grid>
         </Box>
 
         {/* Acciones */}
-        <Box sx={{ display: "flex", bgcolor: theme.palette.action.hover, p: 0.5, flexWrap: "wrap" }}>
-           <Button size="small" onClick={() => navigate("/home")} startIcon={<ArrowBackIcon />} sx={{ flex: 1, minWidth: 100, color: "text.primary", textTransform: "none" }}>Volver</Button>
-           <Divider orientation="vertical" flexItem />
-           <Button size="small" onClick={() => setSearchDialogOpen(true)} startIcon={<SearchIcon />} sx={{ flex: 1, minWidth: 120, color: "text.primary", textTransform: "none" }}>Buscar</Button>
-           <Divider orientation="vertical" flexItem />
-           <Button size="small" onClick={() => selectedCustomer && setCustomerFormOpen(true)} disabled={!selectedCustomer} startIcon={<PersonIcon />} sx={{ flex: 1, minWidth: 140, color: "text.primary", textTransform: "none" }}>Modifica Cliente</Button>
-           <Divider orientation="vertical" flexItem />
-           <Button size="small" onClick={() => selectedCustomer && setCustomerFormOpen(true)} disabled={!selectedCustomer} sx={{ flex: 1, minWidth: 150, color: "text.primary", textTransform: "none" }}>Modificar Direccion</Button>
-           <Divider orientation="vertical" flexItem />
-           <Button size="small" onClick={() => selectedCustomer && setCustomerFormOpen(true)} disabled={!selectedCustomer} sx={{ flex: 1, minWidth: 150, color: "text.primary", textTransform: "none" }}>Agregar Direccion</Button>
+        <Box sx={{ 
+          display: "flex", 
+          bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100', 
+          p: 1, 
+          gap: 1,
+          flexWrap: "wrap",
+          borderBottom: `1px solid ${theme.palette.divider}`
+        }}>
+           <Button variant="outlined" size="small" onClick={() => navigate("/home")} startIcon={<ArrowBackIcon />} sx={{ flex: 1, minWidth: 100, textTransform: "none", borderRadius: 2 }}>Volver</Button>
+           <Button variant="outlined" size="small" onClick={() => setSearchDialogOpen(true)} startIcon={<SearchIcon />} sx={{ flex: 1, minWidth: 120, textTransform: "none", borderRadius: 2 }}>Buscar</Button>
+           <Button variant="contained" color="primary" disableElevation size="small" onClick={() => selectedCustomer && setCustomerFormOpen(true)} disabled={!selectedCustomer} startIcon={<PersonIcon />} sx={{ flex: 1, minWidth: 140, textTransform: "none", borderRadius: 2 }}>Modificar Cliente</Button>
+           <Button variant="contained" color="secondary" disableElevation size="small" onClick={() => selectedCustomer && setCustomerFormOpen(true)} disabled={!selectedCustomer} sx={{ flex: 1, minWidth: 150, textTransform: "none", borderRadius: 2 }}>Modificar Direccion</Button>
+           <Button variant="contained" color="success" disableElevation size="small" onClick={() => selectedCustomer && setCustomerFormOpen(true)} disabled={!selectedCustomer} sx={{ flex: 1, minWidth: 150, textTransform: "none", borderRadius: 2 }}>Agregar Direccion</Button>
         </Box>
 
         {/* Tabla Direcciones */}
         <TableContainer sx={{ flexGrow: 1, bgcolor: "background.paper" }}>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.300' }}>
-                <TableCell sx={{ width: "30%", fontWeight: "bold" }}>No TELEFONO</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>DIRECCION</TableCell>
+              <TableRow sx={{ bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50' }}>
+                <TableCell sx={{ width: "30%", fontWeight: "bold", color: "text.secondary" }}>N° TELEFONO</TableCell>
+                <TableCell sx={{ fontWeight: "bold", color: "text.secondary" }}>DIRECCION</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
