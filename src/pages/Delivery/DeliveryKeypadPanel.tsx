@@ -40,14 +40,20 @@ export default function DeliveryKeypadPanel({
         {/* Top Area (Listo / Profile) */}
         <Box sx={{ 
             height: 180, 
-            bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.200',
+            bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50',
             mb: 1, 
             display: "flex", 
             flexDirection: "column", 
             alignItems: "center", 
             justifyContent: "center",
-            borderRadius: 1,
-            ...(selectedCustomer && { bgcolor: theme.palette.mode === 'dark' ? 'success.dark' : "#fff176" })
+            borderRadius: 3,
+            border: `1px solid ${theme.palette.divider}`,
+            ...(selectedCustomer && { 
+              bgcolor: theme.palette.mode === 'dark' ? 'success.dark' : "success.light",
+              color: theme.palette.mode === 'dark' ? 'white' : 'success.contrastText',
+              border: 'none',
+              boxShadow: "0 4px 14px rgba(0,0,0,0.1)"
+            })
           }}>
             {selectedCustomer ? (
               <>
