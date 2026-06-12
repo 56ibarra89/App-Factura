@@ -18,8 +18,8 @@ function App() {
         setThemeMode(customEvent.detail.theme);
       }
     };
-    window.addEventListener('appfactura:general-config-updated', onUpdated);
-    return () => window.removeEventListener('appfactura:general-config-updated', onUpdated);
+    window.addEventListener('appfactura:theme-updated', onUpdated);
+    return () => window.removeEventListener('appfactura:theme-updated', onUpdated);
   }, []);
 
   const theme = getAppTheme(themeMode);

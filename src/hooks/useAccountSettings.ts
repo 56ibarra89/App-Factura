@@ -53,7 +53,7 @@ export function useAccountSettings() {
         // Sincronizar con el localStorage local de una vez
         if (user.themePreference) {
            localStorage.setItem('appfactura_theme', user.themePreference);
-           window.dispatchEvent(new CustomEvent('appfactura:general-config-updated', { detail: { theme: user.themePreference } }));
+           window.dispatchEvent(new CustomEvent('appfactura:theme-updated', { detail: { theme: user.themePreference } }));
         }
       } catch (err) {
         console.error("Error cargando el perfil", err);
@@ -73,7 +73,7 @@ export function useAccountSettings() {
     // Aplicación inmediata del tema visualmente, pero se guarda en backend al darle a Guardar
     if (field === 'themePreference') {
       localStorage.setItem('appfactura_theme', value);
-      window.dispatchEvent(new CustomEvent('appfactura:general-config-updated', { detail: { theme: value } }));
+      window.dispatchEvent(new CustomEvent('appfactura:theme-updated', { detail: { theme: value } }));
       
       // Guardar instantáneamente en el backend sin requerir darle a Guardar
       if (data.id) {

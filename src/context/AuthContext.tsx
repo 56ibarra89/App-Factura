@@ -116,7 +116,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           // Aplicar preferencia de tema
           const themePref = result.themePreference || 'light';
           localStorage.setItem('appfactura_theme', themePref);
-          window.dispatchEvent(new CustomEvent('appfactura:general-config-updated', { detail: { theme: themePref } }));
+          window.dispatchEvent(new CustomEvent('appfactura:theme-updated', { detail: { theme: themePref } }));
 
           loginLockout.resetLoginAttempts();
 
@@ -180,7 +180,7 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         // Aplicar preferencia de tema
         const themePref = result.themePreference || 'light';
         localStorage.setItem('appfactura_theme', themePref);
-        window.dispatchEvent(new CustomEvent('appfactura:general-config-updated', { detail: { theme: themePref } }));
+        window.dispatchEvent(new CustomEvent('appfactura:theme-updated', { detail: { theme: themePref } }));
 
         pinLockout.resetAttempts();
 
