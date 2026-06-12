@@ -112,26 +112,29 @@ export default function DeliveryKeypadPanel({
              if (btn === "CHECK2") return null; // Omitimos este botón, "CHECK" ocupará 2 filas
 
              let content: React.ReactNode = btn;
-             let bgcolor = theme.palette.mode === 'dark' ? 'grey.700' : "#ffecb3"; // amarillo claro
-             const color = "text.primary";
+             let bgcolor = theme.palette.mode === 'dark' ? 'grey.800' : "background.paper";
+             let color = theme.palette.mode === 'dark' ? "white" : "text.primary";
              let gridRowSpan = 1;
              
              if (btn === "BACK") {
                 content = <BackspaceIcon color="action" />;
-                bgcolor = theme.palette.mode === 'dark' ? 'grey.800' : "#e0e0e0";
+                bgcolor = theme.palette.mode === 'dark' ? 'grey.900' : "grey.200";
              } else if (btn === "CLEAR") {
-                content = "C"; // Botón de limpiar
-                bgcolor = theme.palette.mode === 'dark' ? 'warning.dark' : "#ffcc80"; // naranja claro
+                content = "C";
+                bgcolor = theme.palette.mode === 'dark' ? 'warning.dark' : "warning.light";
+                color = theme.palette.mode === 'dark' ? "white" : "warning.contrastText";
              } else if (btn === "CHECK") {
-                content = <CheckCircleIcon sx={{ color: "white", fontSize: 40 }} />;
-                bgcolor = theme.palette.mode === 'dark' ? 'success.dark' : "#9ccc65";
-                gridRowSpan = 2; // Ocupa esta fila y la de abajo
+                content = <CheckCircleIcon sx={{ fontSize: 40 }} />;
+                bgcolor = theme.palette.mode === 'dark' ? 'success.dark' : "success.main";
+                color = "white";
+                gridRowSpan = 2;
              }
 
              return (
                <Button
                  key={idx}
                  variant="contained"
+                 disableElevation={theme.palette.mode === 'dark'}
                  onClick={() => {
                    if (btn === "CHECK" && selectedCustomer) {
                      handleConfirm();
@@ -145,7 +148,12 @@ export default function DeliveryKeypadPanel({
                     gridRow: `span ${gridRowSpan}`,
                     fontSize: "1.5rem",
                     fontWeight: "bold",
-                    "&:hover": { filter: "brightness(0.9)" }
+                    borderRadius: 3,
+                    border: theme.palette.mode === 'light' && btn !== "CHECK" && btn !== "CLEAR" ? `1px solid ${theme.palette.divider}` : 'none',
+                    "&:hover": { 
+                      filter: "brightness(0.9)", 
+                      bgcolor: btn === "CHECK" ? "success.dark" : undefined 
+                    }
                  }}
                >
                  {content}
