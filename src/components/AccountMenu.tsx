@@ -13,6 +13,8 @@ import Logout from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import NotificationsMenu from "./notifications/NotificationsMenu";
+import { Box } from "@mui/material";
 
 const AccountMenu: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +34,8 @@ const AccountMenu: React.FC = () => {
   };
 
   return (
-    <>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <NotificationsMenu />
       <Tooltip title="Configuración de cuenta">
         <IconButton
           onClick={handleClick}
@@ -101,7 +104,7 @@ const AccountMenu: React.FC = () => {
           Cerrar sesión
         </MenuItem>
       </Menu>
-    </>
+    </Box>
   );
 };
 
