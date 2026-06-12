@@ -191,30 +191,46 @@ export default function DeliveryInfoPanel({
         </TableContainer>
 
         {/* Botones de Moneda Rápidos */}
-        <Box sx={{ display: "flex", p: 1, gap: 1, bgcolor: "background.default" }}>
-           {quickPrices.map((val, idx) => (
+        <Box sx={{ display: "flex", p: 1.5, gap: 1, bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50', borderTop: `1px solid ${theme.palette.divider}` }}>
+           {quickPrices.map((val, idx) => {
+              const hasVal = val && val.trim() !== "";
+              return (
               <Button 
                 key={idx} 
-                variant="outlined" 
+                variant={hasVal ? "contained" : "outlined"} 
+                disableElevation
                 onClick={() => {
-                  if (val && val.trim() !== "") {
+                  if (hasVal) {
                     setTransporteInput(val);
-                    setFocusedField("phone"); // Regresar el foco al teléfono para que el teclado numérico siga escribiendo el número del cliente
+                    setFocusedField("phone");
                   }
                 }}
-                disabled={!val || val.trim() === ""}
+                disabled={!hasVal}
                 sx={{ 
                   flex: 1, 
-                  height: 40, 
-                  bgcolor: val && val.trim() !== "" ? (theme.palette.mode === 'dark' ? 'grey.800' : "#fff9c4") : "transparent",
-                  color: val && val.trim() !== "" ? "text.primary" : "transparent",
-                  borderColor: val && val.trim() !== "" ? undefined : "transparent",
-                  "&:disabled": { borderColor: "transparent" }
+                  height: 44,
+                  borderRadius: 6,
+                  fontWeight: "bold",
+                  fontSize: "1.1rem",
+                  ...(hasVal && theme.palette.mode === 'light' && {
+                    bgcolor: "primary.main",
+                    color: "white",
+                    border: "none",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                    "&:hover": { bgcolor: "primary.dark" }
+                  }),
+                  ...(hasVal && theme.palette.mode === 'dark' && {
+                    bgcolor: "grey.800",
+                    color: "white",
+                    border: `1px solid ${theme.palette.divider}`,
+                    "&:hover": { bgcolor: "grey.700" }
+                  }),
+                  ...(!hasVal && { borderColor: "transparent" })
                 }}
               >
-                {val && val.trim() !== "" ? `C$${val}` : ""}
+                {hasVal ? `C$${val}` : ""}
               </Button>
-           ))}
+           )})}
         </Box>
       </Paper>
     </Box>
