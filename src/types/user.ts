@@ -12,6 +12,7 @@ export interface UserAccount {
   isActive: boolean; // Para suspender la cuenta sin borrarla
   createdAt: string; // ISO string
   lastVisit?: string; // ISO string
+  workDays?: string[];
 }
 
 

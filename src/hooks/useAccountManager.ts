@@ -44,6 +44,7 @@ export function useAccountManager() {
         pin: user.pin,
         role: user.role,
         isActive: user.isActive,
+        workDays: user.workDays,
       };
 
       if (user.email) payload.email = user.email;

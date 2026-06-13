@@ -32,6 +32,7 @@ import AdminPromociones from "../pages/admin/AdminPromociones";
 import AdminCorrelativos from "../pages/admin/AdminCorrelativos";
 import AdminRespaldos from "../pages/admin/AdminRespaldos";
 import AdminClientes from "../pages/admin/AdminClientes";
+import AdminHorarios from "../pages/admin/AdminHorarios";
 const AppRoutes = () => (
   <CajaProvider>
     <Routes>
@@ -92,6 +93,10 @@ const AppRoutes = () => (
       <Route
         path="/admin/cuentas"
         element={<AdminRoute element={<Cuentas />} />}
+      />
+      <Route
+        path="/admin/horarios"
+        element={<AdminRoute element={<AdminHorarios />} />}
       />
       <Route
         path="/admin/mesas"

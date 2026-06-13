@@ -10,6 +10,7 @@ import PrintIcon from "@mui/icons-material/Print";
 import SecurityIcon from "@mui/icons-material/Security";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SaveIcon from "@mui/icons-material/Save";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -53,6 +54,14 @@ export const adminModules: AdminModuleItem[] = [
   },
 
   // --- OPERATIVA ---
+  {
+    id: "horarios",
+    category: "Operativa",
+    title: "Horarios de Empleados",
+    description: "Gestiona los días de trabajo de cada empleado. Útil para habilitar la lista de motorizados por día.",
+    icon: <CalendarMonthIcon fontSize="large" />,
+    path: "/admin/horarios",
+  },
   {
     id: "usuarios",
     category: "Operativa",

@@ -47,7 +47,18 @@ export function useDeliveryLogic() {
     const fetchDrivers = async () => {
       try {
         const users = await apiClient("/users");
-        const motorizados = users.filter((u: UserAccount) => u.role === "motorizado");
+        
+        const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+        const todayStr = days[new Date().getDay()];
+
+        const motorizados = users.filter((u: UserAccount) => {
+          if (u.role !== "motorizado") return false;
+          // Si no tiene días configurados o el arreglo está vacío, NO aparece.
+          if (!u.workDays || u.workDays.length === 0) return false;
+          // Si tiene días, comprobar si el día de hoy está incluido
+          return u.workDays.includes(todayStr);
+        });
+        
         setDrivers(motorizados);
       } catch (err) {
         console.error("Error fetching motorizados:", err);
