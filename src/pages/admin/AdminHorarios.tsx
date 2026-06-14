@@ -10,6 +10,11 @@ import {
   Alert,
   Avatar,
   Fade,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Chip,
 } from "@mui/material";
 import { 
   EventNote, 
@@ -18,7 +23,8 @@ import {
   RestaurantMenu, 
   Person,
   CheckCircle,
-  RadioButtonUnchecked
+  RadioButtonUnchecked,
+  CalendarToday,
 } from "@mui/icons-material";
 import { BackButton } from "../../components/BackButton";
 import PageHeader from "../../components/PageHeader";
@@ -54,8 +60,9 @@ const stringAvatar = (firstName: string, lastName: string) => {
 };
 
 export default function AdminHorarios() {
-  const { users, loading, saveUser } = useAccountManager();
+  const { users, loading, saveUser, addExtraDay, removeExtraDay, fetchDeliveryStats } = useAccountManager();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ userId: string; todayDeliveries: number }[]>([]);
 
   // Excluir administradores
   const filteredUsers = useMemo(() => {
@@ -70,6 +77,12 @@ export default function AdminHorarios() {
     message: "",
     severity: "success",
   });
+
+  useEffect(() => {
+    fetchDeliveryStats().then((data) => {
+      if (Array.isArray(data)) setStats(data);
+    });
+  }, [fetchDeliveryStats]);
 
   useEffect(() => {
     if (selectedUser) {
@@ -113,6 +126,38 @@ export default function AdminHorarios() {
     setToast((prev) => ({ ...prev, open: false }));
   };
 
+  const todayStr = new Date().toISOString().split("T")[0];
+  const hasExtraDayToday = selectedUser?.extraDays?.some((d) =>
+    d.date.startsWith(todayStr)
+  );
+  
+  const currentMonthPrefix = new Date().toISOString().slice(0, 7); // e.g. "2026-06"
+  const pastExtraDays = selectedUser?.extraDays?.filter(d => 
+    !d.date.startsWith(todayStr) && d.date.startsWith(currentMonthPrefix)
+  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) || [];
+
+  const handleToggleExtraDay = async () => {
+    if (!selectedUser) return;
+    try {
+      if (hasExtraDayToday) {
+        await removeExtraDay(selectedUser.id, todayStr);
+      } else {
+        await addExtraDay(selectedUser.id, todayStr);
+      }
+      setToast({
+        open: true,
+        message: hasExtraDayToday ? "Día extra removido." : "Día extra añadido para hoy.",
+        severity: "success",
+      });
+    } catch {
+      setToast({
+        open: true,
+        message: "Error al actualizar día extra.",
+        severity: "error",
+      });
+    }
+  };
+
   return (
     <Box
       minHeight="100vh"
@@ -146,6 +191,9 @@ export default function AdminHorarios() {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
             {filteredUsers.map((user) => {
               const isSelected = selectedUserId === user.id;
+              const userStats = stats.find((s) => s.userId === user.id);
+              const deliveriesCount = userStats?.todayDeliveries || 0;
+
               return (
                 <Paper
                   key={user.id}
@@ -153,43 +201,39 @@ export default function AdminHorarios() {
                   elevation={isSelected ? 3 : 0}
                   sx={{
                     p: 2,
-                    cursor: "pointer",
-                    borderRadius: 3,
-                    border: `1px solid ${
-                      isSelected ? LOGIN_COLORS.primary : "rgba(0,0,0,0.08)"
-                    }`,
-                    bgcolor: isSelected ? "rgba(227, 26, 26, 0.04)" : "white",
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    "&:hover": {
-                      transform: "translateY(-2px)",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                      borderColor: isSelected ? LOGIN_COLORS.primary : "rgba(0,0,0,0.15)",
-                    },
+                    mb: 2,
                     display: "flex",
                     alignItems: "center",
-                    gap: 2
+                    gap: 2,
+                    cursor: "pointer",
+                    borderRadius: 3,
+                    border: `2px solid ${isSelected ? LOGIN_COLORS.primary : "transparent"}`,
+                    bgcolor: isSelected ? "rgba(227, 26, 26, 0.04)" : "white",
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      transform: isSelected ? "none" : "translateY(-2px)",
+                      boxShadow: isSelected ? "none" : "0 4px 12px rgba(0,0,0,0.05)",
+                    }
                   }}
                 >
                   <Avatar 
                     sx={{ 
                       bgcolor: isSelected ? LOGIN_COLORS.primary : "grey.200",
                       color: isSelected ? "white" : "text.secondary",
-                      fontWeight: "bold",
-                      width: 48,
-                      height: 48,
-                      boxShadow: isSelected ? `0 0 0 3px rgba(227, 26, 26, 0.2)` : 'none'
+                      fontWeight: "bold"
                     }}
                   >
                     {stringAvatar(user.firstName, user.lastName)}
                   </Avatar>
                   <Box flex={1}>
-                    <Typography variant="subtitle1" fontWeight="700" color={isSelected ? "text.primary" : "text.secondary"}>
+                    <Typography variant="subtitle1" fontWeight={isSelected ? "800" : "600"} color={isSelected ? "text.primary" : "text.secondary"}>
                       {user.firstName} {user.lastName}
                     </Typography>
                     <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
                       {getRoleIcon(user.role)}
                       <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
                         {user.role}
+                        {user.role === "motorizado" && ` • ${deliveriesCount} Entregas hoy`}
                       </Typography>
                     </Box>
                   </Box>
@@ -294,6 +338,72 @@ export default function AdminHorarios() {
                       })}
                     </Box>
                   </Box>
+
+                  {/* Asignación de Día Extra */}
+                  {selectedUser.role === "motorizado" && (
+                    <Box mb={4}>
+                      <Typography variant="subtitle1" fontWeight="700" mb={2} color="text.primary">
+                        Días Extra (Fuera de Horario)
+                      </Typography>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          borderRadius: 3,
+                          border: "1px dashed rgba(0,0,0,0.2)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          bgcolor: hasExtraDayToday ? "success.50" : "transparent",
+                          borderColor: hasExtraDayToday ? "success.main" : "rgba(0,0,0,0.2)"
+                        }}
+                      >
+                        <Box>
+                          <Typography variant="body1" fontWeight="bold" color={hasExtraDayToday ? "success.main" : "text.primary"}>
+                            Habilitar turno extra hoy
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Si el empleado no trabaja hoy, puedes agregarlo excepcionalmente para que aparezca en Delivery.
+                          </Typography>
+                        </Box>
+                        <Button
+                          variant={hasExtraDayToday ? "contained" : "outlined"}
+                          color={hasExtraDayToday ? "success" : "primary"}
+                          onClick={handleToggleExtraDay}
+                          sx={{ textTransform: "none", fontWeight: "bold", borderRadius: 2 }}
+                        >
+                          {hasExtraDayToday ? "Día Extra Activo" : "Activar Día Extra"}
+                        </Button>
+                      </Paper>
+
+                      {pastExtraDays.length > 0 && (
+                        <Box mt={3}>
+                          <Typography variant="subtitle2" color="text.secondary" mb={1} sx={{ textTransform: "uppercase", letterSpacing: 0.5, fontWeight: "bold" }}>
+                            Días Extra (Este Mes)
+                          </Typography>
+                          <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+                            <List disablePadding>
+                              {pastExtraDays.map((extraDay, index) => {
+                                const d = new Date(extraDay.date);
+                                const formattedDate = d.toLocaleDateString("es-ES", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                                return (
+                                  <ListItem key={extraDay.date} divider={index < pastExtraDays.length - 1} sx={{ py: 1.5 }}>
+                                    <ListItemIcon sx={{ minWidth: 40 }}>
+                                      <CalendarToday fontSize="small" color="primary" />
+                                    </ListItemIcon>
+                                    <ListItemText 
+                                      primary={<Typography variant="body2" fontWeight="600" sx={{ textTransform: "capitalize" }}>{formattedDate}</Typography>}
+                                    />
+                                    <Chip label="Completado" size="small" color="default" variant="outlined" sx={{ fontWeight: "bold", fontSize: "0.7rem" }} />
+                                  </ListItem>
+                                );
+                              })}
+                            </List>
+                          </Paper>
+                        </Box>
+                      )}
+                    </Box>
+                  )}
 
                   <Box mt="auto" display="flex" justifyContent="flex-end" pt={4}>
                     <Button

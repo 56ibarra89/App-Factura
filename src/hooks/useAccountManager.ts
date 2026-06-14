@@ -17,8 +17,8 @@ export function useAccountManager() {
     try {
       const data = await apiClient("/users");
       setUsers(data);
-    } catch (err: any) {
-      setError(err.message || "Error al cargar los usuarios");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al cargar los usuarios");
       console.error(err);
     } finally {
       setLoading(false);
@@ -34,10 +34,10 @@ export function useAccountManager() {
     setError(null);
     try {
       const isNew = !user.id || user.id === "";
-      let savedUser: any;
+      let savedUser: UserAccount;
 
       // Limpiar campos antes de enviar al backend
-      const payload: any = {
+      const payload: Partial<UserAccount> & { password?: string } = {
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -82,8 +82,8 @@ export function useAccountManager() {
         );
       }
       return savedUser; // Éxito
-    } catch (err: any) {
-      const errMsg = err.message || "Error al guardar el usuario";
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Error al guardar el usuario";
       setError(errMsg);
       console.error(err);
       return null; // Fallo
@@ -160,11 +160,53 @@ export function useAccountManager() {
         "USER_DELETE",
         `Usuario eliminado permanentemente: @${user.username}`
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Revertir si falla
       setUsers(previousUsers);
-      setError(err.message || "Error al eliminar el usuario");
+      setError(err instanceof Error ? err.message : "Error al eliminar el usuario");
       console.error("Error deleting user", err);
+    }
+  };
+
+  const fetchDeliveryStats = async (dateStr?: string) => {
+    try {
+      let url = "/users/motorizados/delivery-stats";
+      if (dateStr) {
+        url += `?date=${dateStr}`;
+      }
+      return await apiClient(url);
+    } catch (err) {
+      console.error("Error fetching delivery stats", err);
+      return [];
+    }
+  };
+
+  const addExtraDay = async (userId: string, date: string, notes?: string) => {
+    try {
+      await apiClient(`/users/${userId}/extra-days`, {
+        method: "POST",
+        body: JSON.stringify({ date, notes }),
+      });
+      // Refetch to get updated extraDays
+      await fetchUsers();
+      return true;
+    } catch (err) {
+      console.error("Error adding extra day", err);
+      throw err;
+    }
+  };
+
+  const removeExtraDay = async (userId: string, date: string) => {
+    try {
+      await apiClient(`/users/${userId}/extra-days/${date}`, {
+        method: "DELETE",
+      });
+      // Refetch to get updated extraDays
+      await fetchUsers();
+      return true;
+    } catch (err) {
+      console.error("Error removing extra day", err);
+      throw err;
     }
   };
 
@@ -176,6 +218,9 @@ export function useAccountManager() {
     toggleUserStatus,
     deleteUser,
     unlockUser,
+    fetchDeliveryStats,
+    addExtraDay,
+    removeExtraDay,
     refreshUsers: fetchUsers
   };
 }

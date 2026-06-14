@@ -13,6 +13,7 @@ export interface UserAccount {
   createdAt: string; // ISO string
   lastVisit?: string; // ISO string
   workDays?: string[];
+  extraDays?: { date: string; notes?: string }[];
 }
 
 

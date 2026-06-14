@@ -18,6 +18,7 @@ export function useDeliveryLogic() {
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [drivers, setDrivers] = useState<UserAccount[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
+  const [stats, setStats] = useState<{ userId: string; todayDeliveries: number }[]>([]);
 
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [customerFormOpen, setCustomerFormOpen] = useState(false);
@@ -44,27 +45,32 @@ export function useDeliveryLogic() {
   }, [suggestions]);
 
   useEffect(() => {
-    const fetchDrivers = async () => {
+    const fetchDriversAndStats = async () => {
       try {
         const users = await apiClient("/users");
-        
+        const todayStr = new Date().toISOString().split("T")[0];
         const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-        const todayStr = days[new Date().getDay()];
+        const todayNameStr = days[new Date().getDay()];
 
         const motorizados = users.filter((u: UserAccount) => {
           if (u.role !== "motorizado") return false;
-          // Si no tiene días configurados o el arreglo está vacío, NO aparece.
-          if (!u.workDays || u.workDays.length === 0) return false;
-          // Si tiene días, comprobar si el día de hoy está incluido
-          return u.workDays.includes(todayStr);
+          
+          const isScheduled = u.workDays && u.workDays.includes(todayNameStr);
+          const hasExtraDay = u.extraDays && u.extraDays.some(d => d.date.startsWith(todayStr));
+          
+          return isScheduled || hasExtraDay;
         });
         
         setDrivers(motorizados);
+
+        // Fetch stats
+        const statsData = await apiClient(`/users/motorizados/delivery-stats?date=${todayStr}`);
+        setStats(statsData);
       } catch (err) {
-        console.error("Error fetching motorizados:", err);
+        console.error("Error fetching motorizados or stats:", err);
       }
     };
-    fetchDrivers();
+    fetchDriversAndStats();
   }, []);
 
   const handleConfirm = useCallback(() => {
@@ -112,7 +118,7 @@ export function useDeliveryLogic() {
          }
       }
     }
-  }, [focusedField, phoneInput, transporteInput, handleConfirm]);
+  }, [focusedField, handleConfirm]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -146,6 +152,7 @@ export function useDeliveryLogic() {
     searchDialogOpen, setSearchDialogOpen,
     customerFormOpen, setCustomerFormOpen,
     drivers,
+    stats,
     selectedDriverId,
     setSelectedDriverId,
     handleKeypadPress, handleConfirm,

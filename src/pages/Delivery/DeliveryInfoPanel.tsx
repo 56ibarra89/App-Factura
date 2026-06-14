@@ -12,7 +12,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Divider,
   useTheme,
   Select,
   MenuItem
@@ -39,6 +38,7 @@ interface DeliveryInfoPanelProps {
   drivers: UserAccount[];
   selectedDriverId: string;
   setSelectedDriverId: (id: string) => void;
+  stats: { userId: string; todayDeliveries: number }[];
 }
 
 export default function DeliveryInfoPanel({
@@ -55,6 +55,7 @@ export default function DeliveryInfoPanel({
   drivers,
   selectedDriverId,
   setSelectedDriverId,
+  stats,
 }: DeliveryInfoPanelProps) {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -120,9 +121,15 @@ export default function DeliveryInfoPanel({
                       <MenuItem value="">
                         <em>Ninguno</em>
                       </MenuItem>
-                      {drivers.map(d => (
-                        <MenuItem key={d.id} value={d.id}>{d.firstName} {d.lastName}</MenuItem>
-                      ))}
+                      {drivers.map(d => {
+                        const driverStats = stats.find((s) => s.userId === d.id);
+                        const count = driverStats?.todayDeliveries || 0;
+                        return (
+                          <MenuItem key={d.id} value={d.id}>
+                            {d.firstName} {d.lastName} ({count})
+                          </MenuItem>
+                        );
+                      })}
                     </Select>
                   </Box>
               </Grid>

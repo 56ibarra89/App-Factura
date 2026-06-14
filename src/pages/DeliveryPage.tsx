@@ -24,6 +24,7 @@ export default function DeliveryPage() {
     setSearchDialogOpen,
     setCustomerFormOpen,
     drivers,
+    stats,
     selectedDriverId,
     setSelectedDriverId,
     
@@ -49,6 +50,7 @@ export default function DeliveryPage() {
           setCustomerFormOpen={setCustomerFormOpen}
           setSelectedAddress={setSelectedAddress}
           drivers={drivers}
+          stats={stats}
           selectedDriverId={selectedDriverId}
           setSelectedDriverId={setSelectedDriverId}
         />
