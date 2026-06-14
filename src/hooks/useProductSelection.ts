@@ -31,10 +31,7 @@ export function useProductSelection(onConfirm: (item: { name: string; price: num
           });
         }
       } else {
-        const validPrices = item.prices.filter((p) =>
-          ["familiar", "mediana", "personal"].includes(p.size)
-        );
-        setSelectedProduct({ name: item.name, prices: validPrices, product: item });
+        setSelectedProduct({ name: item.name, prices: item.prices, product: item });
       }
     }
   }, [onConfirm]);

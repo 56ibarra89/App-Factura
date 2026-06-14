@@ -10,6 +10,7 @@ import ProductFormDialog from "../components/ProductFormDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
 import CategoryManagerDialog from "../components/CategoryManagerDialog";
 import DeliveryPricesDialog from "../components/DeliveryPricesDialog";
+import PackagingSizesDialog from "../components/PackagingSizesDialog";
 import RoleGuard from "../components/auth/RoleGuard";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { logService } from "../services/logService";
@@ -31,6 +32,7 @@ const Producto = () => {
   const [showForm, setShowForm] = useState(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showDeliveryPrices, setShowDeliveryPrices] = useState(false);
+  const [showPackagingSizes, setShowPackagingSizes] = useState(false);
   const [editing, setEditing] = useState<null | {
     product: Product;
     category: string;
@@ -136,6 +138,23 @@ const Producto = () => {
                 Precios Delivery
               </Button>
               <Button 
+                variant="outlined" 
+                size="small"
+                onClick={() => {
+                  blurActiveElement();
+                  setShowPackagingSizes(true);
+                }}
+                startIcon={<span role="img" aria-label="box">📦</span>}
+                sx={{ 
+                  borderRadius: 2, 
+                  borderColor: LOGIN_COLORS.primary, 
+                  color: LOGIN_COLORS.primary,
+                  '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
+                }}
+              >
+                Gestionar Empaques
+              </Button>
+              <Button 
                 ref={addButtonRef}
                 variant="contained" 
                 size="small"
@@ -184,9 +203,13 @@ const Producto = () => {
         onClose={() => setShowCategoryManager(false)}
       />
 
-      <DeliveryPricesDialog
-        open={showDeliveryPrices}
-        onClose={() => setShowDeliveryPrices(false)}
+      <DeliveryPricesDialog 
+        open={showDeliveryPrices} 
+        onClose={() => setShowDeliveryPrices(false)} 
+      />
+      <PackagingSizesDialog 
+        open={showPackagingSizes} 
+        onClose={() => setShowPackagingSizes(false)} 
       />
     </Box>
   );

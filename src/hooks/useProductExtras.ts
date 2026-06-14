@@ -1,19 +1,18 @@
 import { useCallback, useState } from "react";
 import { ExtraFormItem } from "../types/product";
-import { EMPTY_EXTRA_PRICES } from "../config/constants";
 
-const emptyExtra = (hasMultipleSizes: boolean): ExtraFormItem => ({
+const emptyExtra = (hasMultipleSizes: boolean, dynamicSizes: string[]): ExtraFormItem => ({
   name: "",
   prices: hasMultipleSizes 
-    ? EMPTY_EXTRA_PRICES.map((p) => ({ ...p }))
+    ? dynamicSizes.map((size) => ({ size, price: "" }))
     : [{ size: "único", price: "" }],
 });
 
 export function useProductExtras() {
   const [extras, setExtras] = useState<ExtraFormItem[]>([]);
 
-  const addExtra = useCallback((hasMultipleSizes: boolean) => 
-    setExtras((prev) => [...prev, emptyExtra(hasMultipleSizes)]), []);
+  const addExtra = useCallback((hasMultipleSizes: boolean, dynamicSizes: string[]) => 
+    setExtras((prev) => [...prev, emptyExtra(hasMultipleSizes, dynamicSizes)]), []);
 
   const removeExtra = useCallback((index: number) =>
     setExtras((prev) => prev.filter((_, i) => i !== index)), []);

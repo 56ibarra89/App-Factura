@@ -22,13 +22,24 @@ export function useCheckout(
       customerName?: string,
       orderType?: OrderType,
       customerAddress?: string,
-      driverId?: string
+      driverId?: string,
+      packagingItems?: { name: string, price: number, quantity: number }[]
     ) => {
-      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated, promotion);
+      const extraCartItems: CartItemType[] = (packagingItems || []).map(pkg => ({
+        id: crypto.randomUUID(),
+        name: `Empaque ${pkg.name}`,
+        price: pkg.price,
+        size: "único",
+        quantity: pkg.quantity,
+        extras: [],
+      }));
+      const fullCart = [...cart, ...extraCartItems];
+
+      const { total, subTotal, taxAmount } = calculateCartTotals(fullCart, taxes, isExonerated, promotion);
 
       // Crear y persistir la orden
       const invoiceNumber = await addOrder(
-        cart,
+        fullCart,
         total,
         customerName,
         orderType,
@@ -73,9 +84,23 @@ export function useCheckout(
       splitAmounts?: { efectivo: number; tarjeta: number },
       customerName?: string,
       orderType?: OrderType,
-      customerAddress?: string
+      customerAddress?: string,
+      packagingItems?: { name: string, price: number, quantity: number }[]
     ) => {
-      const { total, subTotal, taxAmount } = calculateCartTotals(cart, taxes, isExonerated, promotion);
+      const extraCartItems: CartItemType[] = (packagingItems || []).map(pkg => ({
+        id: crypto.randomUUID(),
+        name: `Empaque ${pkg.name}`,
+        price: pkg.price,
+        size: "único",
+        quantity: pkg.quantity,
+        extras: [],
+      }));
+      const fullCart = [...cart, ...extraCartItems];
+
+      const { total, subTotal, taxAmount } = calculateCartTotals(fullCart, taxes, isExonerated, promotion);
+      // Wait, updateOrderItems needs to be called to persist the fullCart
+      await updateOrderItems(orderId, fullCart, total, subTotal, taxAmount);
+
       const invoiceNumber = await finalizeOrder(
         orderId,
         paymentMethod,

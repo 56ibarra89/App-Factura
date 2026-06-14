@@ -33,6 +33,8 @@ import { AppliedPromotion } from "../utils/cartTotals";
 import { useCustomerSearch } from "../hooks/useCustomerSearch";
 import { formatItemName } from "../utils/formatUtils";
 import { useGeneralConfigData } from "../hooks/useGeneralConfigData";
+import { configRepository } from "../repositories/ConfigRepository";
+import { PackagingSizeConfig } from "../types/product";
 
 interface FacturaPreviewDialogProps {
   open: boolean;
@@ -52,6 +54,7 @@ interface FacturaPreviewDialogProps {
     customerName?: string,
     orderType?: OrderType,
     customerAddress?: string,
+    packagingItems?: { name: string, price: number, quantity: number }[]
   ) => void;
   title?: string;
   confirmText?: string;
@@ -97,11 +100,19 @@ export default function FacturaPreviewDialog({
   const [customerAddress, setCustomerAddress] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [toastOpen, setToastOpen] = useState(false);
+  const [packagingConfig, setPackagingConfig] = useState<PackagingSizeConfig[]>([]);
+  const [packagingQuantities, setPackagingQuantities] = useState<{ [name: string]: number }>({});
 
   const { saveCustomer } = useCustomerSearch();
   const { config } = useGeneralConfigData();
   const exchangeRateVal = config.exchangeRate > 0 ? config.exchangeRate : 36.50;
   const totalInUSD = total / exchangeRateVal;
+
+  useEffect(() => {
+    configRepository.getPackagingSizesConfig().then(data => {
+      if (data) setPackagingConfig(data);
+    });
+  }, []);
 
   // Reiniciar campos cuando el diálogo se abre, usando valores iniciales si se proveen
   useEffect(() => {
@@ -123,6 +134,7 @@ export default function FacturaPreviewDialog({
       } else {
         setCustomerAddress("");
       }
+      setPackagingQuantities({});
     }
   }, [open, total, initialCustomer, initialPhone, initialOrderType]);
 
@@ -170,6 +182,13 @@ export default function FacturaPreviewDialog({
       )
       .map((a) => a.address) ?? [];
 
+  const totalPackagingCost = (orderType === "llevar" || orderType === "delivery")
+    ? packagingConfig.reduce((sum, pkg) => sum + (pkg.price * (packagingQuantities[pkg.name] || 0)), 0)
+    : 0;
+  
+  const finalTotal = total + totalPackagingCost;
+  const finalTotalInUSD = finalTotal / exchangeRateVal;
+
   /** Lógica de validación de pago basada en el método seleccionado */
   const isPaymentValid = () => {
     if (isTableMode) return true; // En modo mesa el pago se procesa diferente o después
@@ -178,12 +197,12 @@ export default function FacturaPreviewDialog({
         Number(receivedLocal || 0) +
         Number(receivedSecondary || 0) * exchangeRateVal;
       // Permitir una pequeña diferencia por redondeo de decimales
-      return totalReceived >= (total - 0.01);
+      return totalReceived >= (finalTotal - 0.01);
     }
     // Para otros métodos (TARJETA, APP, MIXTO) la validación es más sencilla o ya está manejada
     if (paymentMethod === "MIXTO") {
       const sum = splitAmounts.efectivo + splitAmounts.tarjeta;
-      return Math.abs(sum - total) < 0.01;
+      return Math.abs(sum - finalTotal) < 0.01;
     }
     return true; // TARJETA y APP se asumen válidos al confirmar
   };
@@ -198,12 +217,19 @@ export default function FacturaPreviewDialog({
       );
       if (isNew) setToastOpen(true);
     }
+    const packagingItems = (orderType === "llevar" || orderType === "delivery")
+      ? packagingConfig
+          .filter(pkg => (packagingQuantities[pkg.name] || 0) > 0)
+          .map(pkg => ({ name: pkg.name, price: pkg.price, quantity: packagingQuantities[pkg.name] || 0 }))
+      : [];
+
     onConfirm(
       paymentMethod,
       paymentMethod === "MIXTO" ? splitAmounts : undefined,
       customerName,
       orderType,
       customerAddress,
+      packagingItems
     );
   };
 
@@ -289,15 +315,21 @@ export default function FacturaPreviewDialog({
             <Typography>Impuestos:</Typography>
             <Typography>C${taxAmount.toFixed(2)}</Typography>
           </Box>
+          {totalPackagingCost > 0 && (
+            <Box display="flex" justifyContent="space-between" mb={1}>
+              <Typography>Empaques:</Typography>
+              <Typography>C${totalPackagingCost.toFixed(2)}</Typography>
+            </Box>
+          )}
           <Box display="flex" justifyContent="space-between" mb={2}>
             <Typography fontWeight="bold">Total:</Typography>
             <Box textAlign="right">
               <Typography fontWeight="bold" color="error.main">
-                {config.currencySymbol}{total.toFixed(2)}
+                {config.currencySymbol}{finalTotal.toFixed(2)}
               </Typography>
               {config.enableSecondaryCurrency && (
                 <Typography variant="caption" color="text.secondary" display="block">
-                  Equivalente: {config.secondaryCurrencySymbol}{totalInUSD.toFixed(2)} (Tasa: {config.currencySymbol}{exchangeRateVal})
+                  Equivalente: {config.secondaryCurrencySymbol}{finalTotalInUSD.toFixed(2)} (Tasa: {config.currencySymbol}{exchangeRateVal})
                 </Typography>
               )}
             </Box>
@@ -436,12 +468,47 @@ export default function FacturaPreviewDialog({
                   </Box>
                 )}
 
+                {/* ── Empaques Utilizados ── */}
+                {(orderType === "llevar" || orderType === "delivery") && packagingConfig.length > 0 && (
+                  <Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 1, border: 1, borderColor: "divider" }}>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Empaques Utilizados
+                    </Typography>
+                    {packagingConfig.map(pkg => (
+                      <Box key={pkg.name} display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                        <Typography variant="body2">{pkg.name} (C${pkg.price.toFixed(2)})</Typography>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Button 
+                            size="small" 
+                            variant="outlined" 
+                            style={{ minWidth: 32, padding: 0 }} 
+                            onClick={() => setPackagingQuantities(p => ({ ...p, [pkg.name]: Math.max(0, (p[pkg.name] || 0) - 1) }))}
+                          >
+                            -
+                          </Button>
+                          <Typography variant="body2" width={20} textAlign="center">
+                            {packagingQuantities[pkg.name] || 0}
+                          </Typography>
+                          <Button 
+                            size="small" 
+                            variant="outlined" 
+                            style={{ minWidth: 32, padding: 0 }} 
+                            onClick={() => setPackagingQuantities(p => ({ ...p, [pkg.name]: (p[pkg.name] || 0) + 1 }))}
+                          >
+                            +
+                          </Button>
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+
               </Box>
 
               <Divider sx={{ my: 2 }} />
 
               <PaymentMethodSelector
-                total={total}
+                total={finalTotal}
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
                 splitAmounts={splitAmounts}

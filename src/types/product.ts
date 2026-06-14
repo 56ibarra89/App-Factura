@@ -2,7 +2,12 @@
 // Tipos relacionados con productos y categorías
 import { ExtraIngredientDef } from "./extras";
 
-export type ProductSize = "familiar" | "mediana" | "personal" | "único";
+export type ProductSize = string;
+
+export interface PackagingSizeConfig {
+  name: string;
+  price: number;
+}
 
 export interface ProductPrice {
   size: ProductSize;

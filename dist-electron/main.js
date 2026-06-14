@@ -1,57 +1,41 @@
-import { app, BrowserWindow, ipcMain } from "electron";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
-process.env.APP_ROOT = path.join(__dirname$1, "..");
-const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
-let win;
-function createWindow() {
-  win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "icon.png"),
+import { app as o, BrowserWindow as i, ipcMain as d } from "electron";
+import { fileURLToPath as m } from "node:url";
+import n from "node:path";
+const r = n.dirname(m(import.meta.url));
+process.env.APP_ROOT = n.join(r, "..");
+const t = process.env.VITE_DEV_SERVER_URL, f = n.join(process.env.APP_ROOT, "dist-electron"), s = n.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = t ? n.join(process.env.APP_ROOT, "public") : s;
+let e;
+function a() {
+  e = new i({
+    icon: n.join(process.env.VITE_PUBLIC, "icon.png"),
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs"),
-      sandbox: true,
-      contextIsolation: true,
-      nodeIntegration: false
+      preload: n.join(r, "preload.mjs"),
+      sandbox: !0,
+      contextIsolation: !0,
+      nodeIntegration: !1
     }
-  });
-  win.setMenu(null);
-  win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  });
-  ipcMain.on("print-silent", (event) => {
-    const webContents = event.sender;
-    webContents.print({
-      silent: true,
-      printBackground: true,
+  }), e.setMenu(null), e.webContents.on("did-finish-load", () => {
+    e == null || e.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  }), d.on("print-silent", (l) => {
+    l.sender.print({
+      silent: !0,
+      printBackground: !0,
       margins: { marginType: "none" }
-    }, (success, failureReason) => {
-      if (!success) console.error("Error al imprimir:", failureReason);
+    }, (c, p) => {
+      c || console.error("Error al imprimir:", p);
     });
-  });
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
-  }
+  }), t ? e.loadURL(t) : e.loadFile(n.join(s, "index.html"));
 }
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-    win = null;
-  }
+o.on("window-all-closed", () => {
+  process.platform !== "darwin" && (o.quit(), e = null);
 });
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+o.on("activate", () => {
+  i.getAllWindows().length === 0 && a();
 });
-app.whenReady().then(createWindow);
+o.whenReady().then(a);
 export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
+  f as MAIN_DIST,
+  s as RENDERER_DIST,
+  t as VITE_DEV_SERVER_URL
 };

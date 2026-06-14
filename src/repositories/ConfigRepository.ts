@@ -1,4 +1,5 @@
 import { apiClient } from "../config/apiClient";
+import { PackagingSizeConfig } from "../types/product";
 import { GeneralConfigState } from "../hooks/useGeneralConfigData";
 import { EmpresaConfigState } from "../hooks/useEmpresaConfig";
 
@@ -66,6 +67,36 @@ export const configRepository = {
       });
     } catch (error) {
       console.error("Error guardando precios de delivery:", error);
+      throw error;
+    }
+  },
+
+  async getPackagingSizesConfig(): Promise<PackagingSizeConfig[] | null> {
+    try {
+      const response = await apiClient("/config/packaging_sizes");
+      const sizes = response.data?.sizes;
+      if (!sizes) return null;
+      // Handle backwards compatibility where sizes might be an array of strings
+      return sizes.map((s: any) => {
+        if (typeof s === "string") {
+          return { name: s, price: 0 };
+        }
+        return s as PackagingSizeConfig;
+      });
+    } catch (error) {
+      console.error("Error obteniendo empaques:", error);
+      return null;
+    }
+  },
+
+  async savePackagingSizesConfig(sizes: PackagingSizeConfig[]): Promise<void> {
+    try {
+      await apiClient("/config/packaging_sizes", {
+        method: "PUT",
+        body: JSON.stringify({ data: { sizes } }),
+      });
+    } catch (error) {
+      console.error("Error guardando empaques:", error);
       throw error;
     }
   }

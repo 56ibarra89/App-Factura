@@ -106,6 +106,7 @@ const Facturacion = () => {
     customerName?: string,
     orderType?: OrderType,
     customerAddress?: string,
+    packagingItems?: { name: string, price: number, quantity: number }[]
   ) => {
     // 1. Marcar vales como entregados
     try {
@@ -147,6 +148,7 @@ const Facturacion = () => {
           customerName,
           orderType,
           customerAddress,
+          packagingItems
         );
         setCreatedInvoiceNumber(invoiceNumber || "000001");
         
@@ -181,6 +183,7 @@ const Facturacion = () => {
         orderType,
         customerAddress,
         state?.deliveryDriverId,
+        packagingItems
       );
       setCreatedInvoiceNumber(invoiceNumber || "000001");
       

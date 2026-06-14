@@ -1,17 +1,17 @@
 import { Product, ProductSize, ProductFormState, ExtraFormItem } from "../types/product";
 import { ExtraIngredientDef } from "../types/extras";
-import { PIZZA_SIZES, PIZZA_DEFAULTS } from "../config/constants";
 
 export const productMapper = {
   /** Map a domain Product to Form state */
-  toFormState: (product: Product | null, category: string): ProductFormState => {
+  toFormState: (product: Product | null, category: string, dynamicSizes: string[]): ProductFormState => {
+    const defaults = dynamicSizes.map(size => ({ size, price: "" }));
     if (!product) {
       return {
         name: "",
         description: "",
         category: "",
         hasMultipleSizes: false,
-        prices: PIZZA_DEFAULTS.map((p: { size: string; price: string }) => ({ ...p })),
+        prices: defaults,
         singlePrice: "",
       };
     }
@@ -27,19 +27,19 @@ export const productMapper = {
             size: p.size,
             price: p.price.toString(),
           }))
-        : PIZZA_DEFAULTS.map((p: { size: string; price: string }) => ({ ...p })),
-      singlePrice: hasMultipleSizes ? "" : product.prices[0].price.toString(),
+        : defaults,
+      singlePrice: hasMultipleSizes ? "" : product.prices[0]?.price.toString() || "",
     };
   },
 
   /** Map Domain extras to Form extras */
-  toFormExtras: (extras: ExtraIngredientDef[] | undefined, hasMultipleSizes: boolean): ExtraFormItem[] => {
+  toFormExtras: (extras: ExtraIngredientDef[] | undefined, hasMultipleSizes: boolean, dynamicSizes: string[]): ExtraFormItem[] => {
     if (!extras?.length) return [];
 
     return extras.map((ext) => ({
       name: ext.name,
       prices: hasMultipleSizes 
-        ? PIZZA_SIZES.map((s) => {
+        ? dynamicSizes.map((s) => {
             const found = ext.prices.find((p) => p.size === s);
             return { size: s, price: found ? found.price.toString() : "" };
           })

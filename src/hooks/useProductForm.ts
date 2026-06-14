@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Product, ProductFormState } from "../types/product";
-import { PIZZA_DEFAULTS } from "../config/constants";
+import { configRepository } from "../repositories/ConfigRepository";
 import { productMapper } from "../services/productMapper";
 import { useProductExtras } from "./useProductExtras";
 
@@ -11,7 +11,8 @@ interface UseProductFormArgs {
 }
 
 export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) {
-  const [form, setForm] = useState<ProductFormState>(productMapper.toFormState(null, ""));
+  const [dynamicSizes, setDynamicSizes] = useState<string[]>(["familiar", "mediana", "personal"]);
+  const [form, setForm] = useState<ProductFormState>(productMapper.toFormState(null, "", ["familiar", "mediana", "personal"]));
 
   const {
     extras,
@@ -25,13 +26,17 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
   // Handle initial form load for editing
   useEffect(() => {
     if (open) {
-      if (editing) {
-        setForm(productMapper.toFormState(editing.product, editing.category));
-        setExtras(productMapper.toFormExtras(editing.product.extras, editing.product.hasMultipleSizes ?? false));
-      } else {
-        setForm(productMapper.toFormState(null, ""));
-        setExtras([]);
-      }
+      configRepository.getPackagingSizesConfig().then((data) => {
+        const sizes = data && data.length > 0 ? data.map(d => d.name) : ["familiar", "mediana", "personal"];
+        setDynamicSizes(sizes);
+        if (editing) {
+          setForm(productMapper.toFormState(editing.product, editing.category, sizes));
+          setExtras(productMapper.toFormExtras(editing.product.extras, editing.product.hasMultipleSizes ?? false, sizes));
+        } else {
+          setForm(productMapper.toFormState(null, "", sizes));
+          setExtras([]);
+        }
+      });
     }
   }, [open, editing, setExtras]);
 
@@ -47,7 +52,7 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
       ...prev,
       hasMultipleSizes: hasMultiple,
       prices: hasMultiple
-        ? PIZZA_DEFAULTS.map((p) => ({ ...p, price: "" }))
+        ? dynamicSizes.map((size) => ({ size, price: "" }))
         : [{ size: "único", price: "" }],
       singlePrice: "",
     }));
@@ -95,7 +100,7 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     // Category and extra actions
     handleCategoryChange,
     handleMultipleSizesToggle,
-    handleAddExtra: () => addExtra(form.hasMultipleSizes),
+    handleAddExtra: () => addExtra(form.hasMultipleSizes, dynamicSizes),
     handleRemoveExtra: removeExtra,
     handleExtraNameChange: changeExtraName,
     handleExtraPriceChange: changeExtraPrice,
