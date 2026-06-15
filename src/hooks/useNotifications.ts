@@ -24,7 +24,7 @@ export function useNotifications() {
       const data = await apiClient("/notifications", { method: 'GET' });
       if (Array.isArray(data)) {
         setNotifications(data);
-        setUnreadCount(data.length);
+        setUnreadCount(data.filter(n => !n.isRead).length);
       }
     } catch (e) {
       console.error('Error fetching notifications', e);
@@ -68,5 +68,15 @@ export function useNotifications() {
     }
   };
 
-  return { notifications, unreadCount, removeNotification };
+  const markAsRead = async (id: string) => {
+    try {
+      await apiClient(`/notifications/${id}/read`, { method: 'PATCH' });
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (e) {
+      console.error('Error marking notification as read', e);
+    }
+  };
+
+  return { notifications, unreadCount, removeNotification, markAsRead };
 }

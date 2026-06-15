@@ -19,7 +19,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function NotificationsMenu() {
   const { role } = useAuth();
   const theme = useTheme();
-  const { notifications, unreadCount, removeNotification } = useNotifications();
+  const { notifications, unreadCount, removeNotification, markAsRead } = useNotifications();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   if (role !== 'admin' && role !== 'cajero') {
@@ -83,8 +83,11 @@ export default function NotificationsMenu() {
                     </IconButton>
                   }
                   sx={{ 
-                    bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50',
+                    bgcolor: notif.isRead 
+                      ? (theme.palette.mode === 'dark' ? 'transparent' : 'transparent')
+                      : (theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50'),
                     mb: 0.5,
+                    opacity: notif.isRead ? 0.7 : 1,
                     '&:hover': { bgcolor: theme.palette.mode === 'dark' ? 'grey.700' : 'grey.100' }
                   }}
                 >
@@ -104,9 +107,28 @@ export default function NotificationsMenu() {
                         >
                           {notif.message}
                         </Typography>
-                        <Typography component="span" variant="caption" color="text.secondary">
+                        <Typography component="span" variant="caption" color="text.secondary" sx={{ display: 'block', mb: notif.isRead ? 0 : 1 }}>
                           {new Date(notif.createdAt).toLocaleString()}
                         </Typography>
+                        {!notif.isRead && (
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsRead(notif.id);
+                            }}
+                            sx={{ 
+                              cursor: 'pointer', 
+                              textDecoration: 'underline', 
+                              fontWeight: 'bold',
+                              color: theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800',
+                              '&:hover': { color: theme.palette.primary.main }
+                            }}
+                          >
+                            Marcar leída
+                          </Typography>
+                        )}
                       </React.Fragment>
                     }
                   />
