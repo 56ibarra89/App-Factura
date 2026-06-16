@@ -23,16 +23,29 @@ export function useCheckout(
       orderType?: OrderType,
       customerAddress?: string,
       driverId?: string,
-      packagingItems?: { name: string, price: number, quantity: number }[]
+      customerTendered?: number,
+      packagingItems?: { name: string, price: number, quantity: number }[],
+      deliveryCost?: number
     ) => {
-      const extraCartItems: CartItemType[] = (packagingItems || []).map(pkg => ({
-        id: crypto.randomUUID(),
+      let extraCartItems: CartItemType[] = (packagingItems || []).map(pkg => ({
         name: `Empaque ${pkg.name}`,
         price: pkg.price,
-        size: "único",
+        size: "único" as const,
         quantity: pkg.quantity,
         extras: [],
       }));
+
+      if (deliveryCost && deliveryCost > 0) {
+        extraCartItems.push({
+          name: "Delivery",
+          price: deliveryCost,
+          size: "único" as const,
+          quantity: 1,
+          extras: [],
+          note: "Cargo por transporte",
+        });
+      }
+
       const fullCart = [...cart, ...extraCartItems];
 
       const { total, subTotal, taxAmount } = calculateCartTotals(fullCart, taxes, isExonerated, promotion);
@@ -51,7 +64,8 @@ export function useCheckout(
         taxAmount,
         discountAmount,
         promotion?.code,
-        driverId
+        driverId,
+        customerTendered
       );
       return invoiceNumber;
     },

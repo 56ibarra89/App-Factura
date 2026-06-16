@@ -22,3 +22,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   // You can expose other APTs you need here.
   // ...
 })
+
+contextBridge.exposeInMainWorld('authAPI', {
+  setToken: (token: string, apiUrl: string) => ipcRenderer.send('set-secure-token', token, apiUrl),
+  clearToken: () => ipcRenderer.send('clear-secure-token'),
+})

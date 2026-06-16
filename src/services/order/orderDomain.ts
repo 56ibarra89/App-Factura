@@ -53,6 +53,7 @@ export function createOrder(params: {
   taxAmount?: number;
   discountAmount?: number;
   promotionCode?: string;
+  customerTendered?: number;
   nowMs: number;
 }): Order {
   const {
@@ -70,8 +71,14 @@ export function createOrder(params: {
     taxAmount,
     discountAmount,
     promotionCode,
+    customerTendered,
     nowMs,
   } = params;
+
+  let deliveryChange: number | undefined = undefined;
+  if (customerTendered !== undefined && customerTendered > total) {
+    deliveryChange = customerTendered - total;
+  }
 
   const baseOrder: Order = {
     id: `ORD-${nowMs}`,
@@ -86,6 +93,8 @@ export function createOrder(params: {
     orderType,
     customerAddress,
     driverId,
+    customerTendered,
+    deliveryChange,
     promotionCode,
     tableId,
     paymentMethod: paymentMethod as PaymentMethod,
@@ -122,6 +131,7 @@ export const orderMutations = {
       splitAmounts?: { efectivo: number; tarjeta: number };
       discountAmount?: number;
       promotionCode?: string;
+      customerTendered?: number;
       nowMs: number;
     },
   ): UpdateResult {

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, safeStorage, session } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
@@ -49,7 +49,42 @@ app.on("activate", () => {
     createWindow();
   }
 });
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  let encryptedToken = null;
+  let targetApiUrl = null;
+  ipcMain.on("set-secure-token", (event, token, apiUrl) => {
+    if (safeStorage.isEncryptionAvailable()) {
+      encryptedToken = safeStorage.encryptString(token);
+      targetApiUrl = apiUrl;
+      console.log("[Main] Token encriptado y guardado en memoria segura.");
+    } else {
+      console.warn("[Main] safeStorage no disponible. Token guardado sin encriptar en memoria.");
+      encryptedToken = Buffer.from(token, "utf-8");
+      targetApiUrl = apiUrl;
+    }
+  });
+  ipcMain.on("clear-secure-token", () => {
+    encryptedToken = null;
+    console.log("[Main] Token eliminado de memoria segura.");
+  });
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    if (encryptedToken && targetApiUrl && details.url.startsWith(targetApiUrl)) {
+      try {
+        let tokenStr = "";
+        if (safeStorage.isEncryptionAvailable()) {
+          tokenStr = safeStorage.decryptString(encryptedToken);
+        } else {
+          tokenStr = encryptedToken.toString("utf-8");
+        }
+        details.requestHeaders["Authorization"] = `Bearer ${tokenStr}`;
+      } catch (e) {
+        console.error("[Main] Error desencriptando token:", e);
+      }
+    }
+    callback({ requestHeaders: details.requestHeaders });
+  });
+});
 export {
   MAIN_DIST,
   RENDERER_DIST,

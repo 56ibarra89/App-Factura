@@ -21,6 +21,8 @@ function mapBackendOrderToFrontend(backendOrder: any): Order {
     discountAmount: backendOrder.discountAmount !== null ? Number(backendOrder.discountAmount) : undefined,
     taxAmount: backendOrder.taxAmount !== null ? Number(backendOrder.taxAmount) : undefined,
     total: Number(backendOrder.total),
+    customerTendered: backendOrder.customerTendered !== null && backendOrder.customerTendered !== undefined ? Number(backendOrder.customerTendered) : undefined,
+    deliveryChange: backendOrder.deliveryChange !== null && backendOrder.deliveryChange !== undefined ? Number(backendOrder.deliveryChange) : undefined,
     status: backendOrder.status.toLowerCase() as OrderStatus,
     timestamp: new Date(backendOrder.timestamp),
     customerName: backendOrder.customerSnapshotName || undefined,
@@ -73,13 +75,19 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     orderType: order.orderType ? order.orderType.toLowerCase() : undefined,
     customerAddress: order.customerAddress,
     driverId: order.driverId,
+    customerTendered: order.customerTendered,
+    deliveryChange: order.deliveryChange,
     cashierSnapshotName: order.cashierName,
     isSentToKitchen: order.isSentToKitchen,
     linkedTables: order.linkedTables && order.linkedTables.length > 0 ? order.linkedTables : (order.tableId ? [order.tableId] : undefined),
-    payments: order.paymentMethod ? [{
-      method: order.paymentMethod.toUpperCase(),
-      amount: order.total,
-    }] : undefined,
+    payments: order.paymentMethod ? 
+      (order.paymentMethod === 'MIXTO' && order.splitAmounts ? [
+        { method: 'EFECTIVO', amount: order.splitAmounts.efectivo },
+        { method: 'TARJETA', amount: order.splitAmounts.tarjeta }
+      ].filter(p => p.amount > 0) : [{
+        method: order.paymentMethod.toUpperCase(),
+        amount: order.total,
+      }]) : undefined,
   };
 
   const response = await apiClient('/orders', {

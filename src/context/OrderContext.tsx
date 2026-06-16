@@ -46,6 +46,7 @@ interface OrderContextProps {
     discountAmount?: number,
     promotionCode?: string,
     driverId?: string,
+    customerTendered?: number,
   ) => Promise<string | void>;
   updateOrderStatus: (
     orderId: string,
@@ -141,11 +142,11 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
 
   const addOrder = useCallback<OrderCommandsContextProps["addOrder"]>(
     async (
-      items, total, customerName, orderType, customerAddress, tableId, paymentMethod, splitAmounts, subTotal, taxAmount, discountAmount, promotionCode, driverId
+      items, total, customerName, orderType, customerAddress, tableId, paymentMethod, splitAmounts, subTotal, taxAmount, discountAmount, promotionCode, driverId, customerTendered
     ) => {
       const nowMs = Date.now();
       const newOrder = createOrder({
-        items, total, username, customerName, orderType, customerAddress, tableId, paymentMethod, splitAmounts, subTotal, taxAmount, discountAmount, promotionCode, driverId, nowMs
+        items, total, username, customerName, orderType, customerAddress, tableId, paymentMethod, splitAmounts, subTotal, taxAmount, discountAmount, promotionCode, driverId, customerTendered, nowMs
       });
 
       updateOrdersState((prev) => [newOrder, ...prev]);

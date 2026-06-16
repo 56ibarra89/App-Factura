@@ -78,6 +78,9 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
     if (username) {
       logService.log(username, role, "LOGOUT", "Cierre de sesión de usuario");
     }
+    if (window.authAPI) {
+      window.authAPI.clearToken();
+    }
     sessionStore.clear();
     setIsLoggedIn(false);
     setUsername("");
@@ -111,7 +114,11 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           if (result.email) sessionStore.setItem("email", result.email);
           if (result.firstName) sessionStore.setItem("firstName", result.firstName);
           if (result.lastName) sessionStore.setItem("lastName", result.lastName);
-          if (result.access_token) sessionStore.setItem("access_token", result.access_token);
+          if (result.access_token) {
+            if (window.authAPI) {
+              window.authAPI.setToken(result.access_token, import.meta.env.VITE_API_BASE_URL || "http://localhost:3000");
+            }
+          }
           
           // Aplicar preferencia de tema
           const themePref = result.themePreference || 'light';
@@ -175,7 +182,11 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         sessionStore.setItem("role", result.role);
         sessionStore.setItem("firstName", result.firstName);
         sessionStore.setItem("lastName", result.lastName);
-        if (result.access_token) sessionStore.setItem("access_token", result.access_token);
+        if (result.access_token) {
+          if (window.authAPI) {
+            window.authAPI.setToken(result.access_token, import.meta.env.VITE_API_BASE_URL || "http://localhost:3000");
+          }
+        }
         
         // Aplicar preferencia de tema
         const themePref = result.themePreference || 'light';

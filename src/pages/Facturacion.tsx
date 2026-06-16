@@ -36,8 +36,8 @@ const Facturacion = () => {
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<string | undefined>(undefined);
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const state = location.state as { deliveryCustomer?: Customer | null; deliveryPhone?: string; deliveryCost?: number; deliveryDriverId?: string } | null;
+  const location = useLocation() as any;
+  const state = location.state as { deliveryCustomer?: Customer | null; deliveryPhone?: string; deliveryCost?: number; deliveryDriverId?: string; deliveryCustomerTendered?: number } | null;
 
   // Estado para la asignación anticipada de cliente (Delivery)
   const [deliveryCustomer, setDeliveryCustomer] = useState<Customer | null>(state?.deliveryCustomer || null);
@@ -106,7 +106,10 @@ const Facturacion = () => {
     customerName?: string,
     orderType?: OrderType,
     customerAddress?: string,
-    packagingItems?: { name: string, price: number, quantity: number }[]
+    packagingItems?: { name: string, price: number, quantity: number }[],
+    customerTendered?: number,
+    driverId?: string,
+    deliveryCost?: number
   ) => {
     // 1. Marcar vales como entregados
     try {
@@ -182,8 +185,10 @@ const Facturacion = () => {
         customerName,
         orderType,
         customerAddress,
-        state?.deliveryDriverId,
-        packagingItems
+        driverId || state?.deliveryDriverId,
+        customerTendered,
+        packagingItems,
+        deliveryCost
       );
       setCreatedInvoiceNumber(invoiceNumber || "000001");
       
@@ -340,6 +345,8 @@ const Facturacion = () => {
         initialCustomer={deliveryCustomer}
         initialPhone={deliveryPhone}
         initialOrderType={deliveryCustomer || deliveryPhone ? "delivery" : undefined}
+        lockOrderType={!!(deliveryCustomer || deliveryPhone)}
+        initialDriverId={state?.deliveryDriverId}
         invoiceNumber={createdInvoiceNumber}
         cashierName={activeOrder?.cashierName}
       />

@@ -16,18 +16,14 @@ import { Customer } from "../../types/customer.types";
 
 interface DeliveryKeypadPanelProps {
   phoneInput: string;
-  focusedField: "phone" | "transporte";
   selectedCustomer: Customer | null;
-  setFocusedField: (field: "phone" | "transporte") => void;
   handleConfirm: () => void;
   handleKeypadPress: (val: string) => void;
 }
 
 export default function DeliveryKeypadPanel({
   phoneInput,
-  focusedField,
   selectedCustomer,
-  setFocusedField,
   handleConfirm,
   handleKeypadPress
 }: DeliveryKeypadPanelProps) {
@@ -88,10 +84,9 @@ export default function DeliveryKeypadPanel({
             )}
         </Box>
 
-        {/* Input activo visible arriba del teclado */}
         <Box sx={{ bgcolor: "background.default", p: 1, mb: 1, textAlign: "center", border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
-            <Typography variant="h5" fontWeight="bold" onClick={() => setFocusedField("phone")} sx={{ cursor: "pointer" }}>
-               {focusedField === "phone" ? phoneInput || "Ingrese Teléfono" : phoneInput}
+            <Typography variant="h5" fontWeight="bold">
+               {phoneInput || "Ingrese Teléfono"}
             </Typography>
         </Box>
 

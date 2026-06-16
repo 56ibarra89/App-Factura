@@ -114,10 +114,6 @@ export default function PaymentMethodSelector({
           <CreditCardIcon />
           <Typography variant="caption" fontWeight="bold" mt={1}>TARJETA</Typography>
         </ToggleButton>
-        <ToggleButton value="APP" aria-label="App" sx={{ display: 'flex', flexDirection: 'column', py: 2 }}>
-          <PhoneIphoneIcon />
-          <Typography variant="caption" fontWeight="bold" mt={1}>APP</Typography>
-        </ToggleButton>
         <ToggleButton value="MIXTO" aria-label="Mixto" sx={{ display: 'flex', flexDirection: 'column', py: 2 }}>
           <CallSplitIcon />
           <Typography variant="caption" fontWeight="bold" mt={1}>MIXTO</Typography>

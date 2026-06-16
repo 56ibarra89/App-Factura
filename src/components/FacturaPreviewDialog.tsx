@@ -18,12 +18,17 @@ import {
   InputAdornment,
   Snackbar,
   Alert,
+  MenuItem,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import { CartItemType } from "../types/cart";
 import { PaymentMethod, OrderType } from "../types/order.types";
 import { Customer } from "../types/customer.types";
+import { UserAccount } from "../types/user";
+import { CertificadoRule } from "../types/promociones";
+import { apiClient } from "../config/apiClient";
+import { useImpuestosConfig } from "../hooks/useImpuestosConfig";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import CustomerAutocomplete from "./CustomerAutocomplete";
 import TicketPrint from "./TicketPrint";
@@ -54,7 +59,10 @@ interface FacturaPreviewDialogProps {
     customerName?: string,
     orderType?: OrderType,
     customerAddress?: string,
-    packagingItems?: { name: string, price: number, quantity: number }[]
+    packagingItems?: { name: string, price: number, quantity: number }[],
+    customerTendered?: number,
+    driverId?: string,
+    deliveryCost?: number
   ) => void;
   title?: string;
   confirmText?: string;
@@ -64,6 +72,8 @@ interface FacturaPreviewDialogProps {
   initialCustomer?: Customer | null;
   initialPhone?: string;
   initialOrderType?: OrderType;
+  initialDriverId?: string;
+  lockOrderType?: boolean;
   cashierName?: string;
 }
 
@@ -87,6 +97,8 @@ export default function FacturaPreviewDialog({
   initialCustomer = null,
   initialPhone = "",
   initialOrderType = "local",
+  initialDriverId = "",
+  lockOrderType = false,
   invoiceNumber,
   cashierName,
 }: FacturaPreviewDialogProps) {
@@ -102,6 +114,11 @@ export default function FacturaPreviewDialog({
   const [toastOpen, setToastOpen] = useState(false);
   const [packagingConfig, setPackagingConfig] = useState<PackagingSizeConfig[]>([]);
   const [packagingQuantities, setPackagingQuantities] = useState<{ [name: string]: number }>({});
+  const [drivers, setDrivers] = useState<UserAccount[]>([]);
+  const [selectedDriverId, setSelectedDriverId] = useState<string>("");
+  const [deliveryCost, setDeliveryCost] = useState<number>(0);
+  const [deliveryPrices, setDeliveryPrices] = useState<string[]>([]);
+  const [stats, setStats] = useState<{ userId: string; todayDeliveries: number }[]>([]);
 
   const { saveCustomer } = useCustomerSearch();
   const { config } = useGeneralConfigData();
@@ -112,7 +129,38 @@ export default function FacturaPreviewDialog({
     configRepository.getPackagingSizesConfig().then(data => {
       if (data) setPackagingConfig(data);
     });
+    configRepository.getDeliveryPricesConfig().then(prices => {
+      if (prices) setDeliveryPrices(prices.filter(p => p.trim() !== ""));
+    });
   }, []);
+
+  useEffect(() => {
+    if (orderType === "delivery") {
+      const fetchDrivers = async () => {
+        try {
+          const users = await apiClient("/users");
+          const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+          const todayNameStr = days[new Date().getDay()];
+
+          const motorizados = users.filter((u: UserAccount) => {
+            if (u.role !== "motorizado") return false;
+            const isScheduled = u.workDays && u.workDays.includes(todayNameStr);
+            const hasExtraDay = u.extraDays && u.extraDays.some(d => d.date.startsWith(todayStr));
+            return isScheduled || hasExtraDay;
+          });
+          
+          setDrivers(motorizados);
+
+          const statsData = await apiClient(`/users/motorizados/delivery-stats?date=${todayStr}`);
+          setStats(statsData);
+        } catch (err) {
+          console.error("Error fetching motorizados:", err);
+        }
+      };
+      fetchDrivers();
+    }
+  }, [orderType]);
 
   // Reiniciar campos cuando el diálogo se abre, usando valores iniciales si se proveen
   useEffect(() => {
@@ -135,8 +183,10 @@ export default function FacturaPreviewDialog({
         setCustomerAddress("");
       }
       setPackagingQuantities({});
+      setDeliveryCost(0);
+      setSelectedDriverId(initialDriverId || "");
     }
-  }, [open, total, initialCustomer, initialPhone, initialOrderType]);
+  }, [open, total, initialCustomer, initialPhone, initialOrderType, initialDriverId]);
 
   // Cuando el tipo cambia a "delivery" y ya hay un cliente con direcciones,
   // prellenar con la dirección usada más recientemente
@@ -186,7 +236,12 @@ export default function FacturaPreviewDialog({
     ? packagingConfig.reduce((sum, pkg) => sum + (pkg.price * (packagingQuantities[pkg.name] || 0)), 0)
     : 0;
   
-  const finalTotal = total + totalPackagingCost;
+  const { taxes, isExonerated } = useImpuestosConfig();
+  const taxPercentage = isExonerated ? 0 : (taxes?.[0]?.percentage || 0);
+  const extraCostsSubtotal = totalPackagingCost + (orderType === "delivery" ? deliveryCost : 0);
+  const extraCostsTax = extraCostsSubtotal * (taxPercentage / 100);
+  
+  const finalTotal = total + extraCostsSubtotal + extraCostsTax;
   const finalTotalInUSD = finalTotal / exchangeRateVal;
 
   /** Lógica de validación de pago basada en el método seleccionado */
@@ -229,7 +284,10 @@ export default function FacturaPreviewDialog({
       customerName,
       orderType,
       customerAddress,
-      packagingItems
+      packagingItems,
+      paymentMethod === "EFECTIVO" ? (Number(receivedLocal) || undefined) : undefined,
+      orderType === "delivery" ? selectedDriverId : undefined,
+      orderType === "delivery" ? deliveryCost : undefined
     );
   };
 
@@ -313,12 +371,18 @@ export default function FacturaPreviewDialog({
           )}
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography>Impuestos:</Typography>
-            <Typography>C${taxAmount.toFixed(2)}</Typography>
+            <Typography>C${(taxAmount + extraCostsTax).toFixed(2)}</Typography>
           </Box>
           {totalPackagingCost > 0 && (
             <Box display="flex" justifyContent="space-between" mb={1}>
               <Typography>Empaques:</Typography>
               <Typography>C${totalPackagingCost.toFixed(2)}</Typography>
+            </Box>
+          )}
+          {orderType === "delivery" && deliveryCost > 0 && (
+            <Box display="flex" justifyContent="space-between" mb={1}>
+              <Typography>Transporte:</Typography>
+              <Typography>C${deliveryCost.toFixed(2)}</Typography>
             </Box>
           )}
           <Box display="flex" justifyContent="space-between" mb={2}>
@@ -374,32 +438,36 @@ export default function FacturaPreviewDialog({
                   }}
                 />
 
-                <Typography
-                  variant="subtitle2"
-                  gutterBottom
-                  fontWeight="bold"
-                  sx={{ color: "text.secondary", mb: 1 }}
-                >
-                  Tipo de Pedido:
-                </Typography>
-                <ToggleButtonGroup
-                  value={orderType}
-                  exclusive
-                  onChange={(_, val) => val && setOrderType(val)}
-                  fullWidth
-                  color="error"
-                  size="small"
-                >
-                  <ToggleButton value="local" sx={{ py: 1 }}>
-                    LOCAL
-                  </ToggleButton>
-                  <ToggleButton value="llevar" sx={{ py: 1 }}>
-                    LLEVAR
-                  </ToggleButton>
-                  <ToggleButton value="delivery" sx={{ py: 1 }}>
-                    DELIVERY
-                  </ToggleButton>
-                </ToggleButtonGroup>
+                {!lockOrderType && (
+                  <>
+                    <Typography
+                      variant="subtitle2"
+                      gutterBottom
+                      fontWeight="bold"
+                      sx={{ color: "text.secondary", mb: 1 }}
+                    >
+                      Tipo de Pedido:
+                    </Typography>
+                    <ToggleButtonGroup
+                      value={orderType}
+                      exclusive
+                      onChange={(_, val) => val && setOrderType(val)}
+                      fullWidth
+                      color="error"
+                      size="small"
+                    >
+                      <ToggleButton value="local" sx={{ py: 1 }}>
+                        LOCAL
+                      </ToggleButton>
+                      <ToggleButton value="llevar" sx={{ py: 1 }}>
+                        LLEVAR
+                      </ToggleButton>
+                      <ToggleButton value="delivery" sx={{ py: 1 }}>
+                        DELIVERY
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                  </>
+                )}
 
                 {/* ── Dirección de Entrega ── */}
                 {orderType === "delivery" && (
@@ -465,6 +533,45 @@ export default function FacturaPreviewDialog({
                         }}
                       />
                     )}
+
+                    <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                      <TextField
+                        select
+                        label="Motorizado"
+                        value={selectedDriverId}
+                        onChange={(e) => setSelectedDriverId(e.target.value)}
+                        size="small"
+                        sx={{ flex: 1 }}
+                      >
+                        <MenuItem value="">
+                          <em>Ninguno</em>
+                        </MenuItem>
+                        {drivers.map((driver) => {
+                          const driverStats = stats.find(s => s.userId === driver.id);
+                          const count = driverStats ? driverStats.todayDeliveries : 0;
+                          return (
+                            <MenuItem key={driver.id} value={driver.id}>
+                              {driver.firstName} {driver.lastName} {count > 0 ? `(${count})` : ""}
+                            </MenuItem>
+                          );
+                        })}
+                      </TextField>
+
+                      <TextField
+                        select
+                        label="Transporte"
+                        value={deliveryCost === 0 ? "" : deliveryCost.toString()}
+                        onChange={(e) => setDeliveryCost(parseFloat(e.target.value) || 0)}
+                        size="small"
+                        sx={{ width: 120 }}
+                      >
+                        {deliveryPrices.map((price, idx) => (
+                          <MenuItem key={idx} value={price}>
+                            C$ {price}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    </Box>
                   </Box>
                 )}
 

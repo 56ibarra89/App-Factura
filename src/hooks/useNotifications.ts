@@ -38,10 +38,7 @@ export function useNotifications() {
   useEffect(() => {
     if (role !== 'admin' && role !== 'cajero') return;
 
-    const token = sessionStore.getItem("access_token");
-    if (!token) return;
-
-    const eventSource = new EventSource(`${API_BASE_URL}/notifications/stream?token=${token}`);
+    const eventSource = new EventSource(`${API_BASE_URL}/notifications/stream`);
 
     eventSource.onmessage = (event) => {
       try {

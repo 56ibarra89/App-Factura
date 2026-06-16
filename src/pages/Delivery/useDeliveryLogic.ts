@@ -13,7 +13,6 @@ export function useDeliveryLogic() {
 
   const [phoneInput, setPhoneInput] = useState("");
   const [transporteInput, setTransporteInput] = useState("0.00");
-  const [focusedField, setFocusedField] = useState<"phone" | "transporte">("phone");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [drivers, setDrivers] = useState<UserAccount[]>([]);
@@ -48,7 +47,8 @@ export function useDeliveryLogic() {
     const fetchDriversAndStats = async () => {
       try {
         const users = await apiClient("/users");
-        const todayStr = new Date().toISOString().split("T")[0];
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
         const todayNameStr = days[new Date().getDay()];
 
@@ -86,39 +86,15 @@ export function useDeliveryLogic() {
 
   const handleKeypadPress = useCallback((val: string) => {
     if (val === "BACK") {
-      if (focusedField === "phone") {
-         setPhoneInput((prev) => prev.slice(0, -1));
-      } else {
-         setTransporteInput((prev) => prev.slice(0, -1));
-      }
-    } else if (val === "CLEAR") {
-      if (focusedField === "phone") {
-         setPhoneInput("");
-      } else {
-         setTransporteInput("0.00");
-      }
+       setPhoneInput((prev) => prev.slice(0, -1));
+    } else if (val === "CLEAR" || val === "C") {
+       setPhoneInput("");
     } else if (val === "CHECK" || val === "CHECK2") {
-      if (focusedField === "phone") {
-        setFocusedField("transporte");
-      } else {
-        handleConfirm();
-      }
-    } else if (val === ".") {
-      if (focusedField === "transporte" && !transporteInput.includes(".")) {
-         setTransporteInput((prev) => prev + ".");
-      }
-    } else {
-      if (focusedField === "phone") {
-         setPhoneInput((prev) => prev + val);
-      } else {
-         if (transporteInput === "0.00") {
-             setTransporteInput(val);
-         } else {
-             setTransporteInput((prev) => prev + val);
-         }
-      }
+       handleConfirm();
+    } else if (val !== ".") {
+       setPhoneInput((prev) => prev + val);
     }
-  }, [focusedField, handleConfirm]);
+  }, [handleConfirm]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -134,8 +110,6 @@ export function useDeliveryLogic() {
         } else {
           handleKeypadPress("CHECK");
         }
-      } else if (e.key === ".") {
-        handleKeypadPress(".");
       }
     };
 
@@ -146,7 +120,6 @@ export function useDeliveryLogic() {
   return {
     phoneInput, setPhoneInput,
     transporteInput, setTransporteInput,
-    focusedField, setFocusedField,
     selectedCustomer, setSelectedCustomer,
     selectedAddress, setSelectedAddress,
     searchDialogOpen, setSearchDialogOpen,

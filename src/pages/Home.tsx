@@ -7,12 +7,17 @@ import { getMenuItems } from "../data/menuItems";
 import logoImg from "../assets/images/logo.png";
 import { useAuth } from "../context/AuthContext";
 import { useCaja } from "../context/CajaContext";
+import { Fab, Tooltip } from "@mui/material";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import DriverDeliveriesModal from "../components/DriverDeliveriesModal";
+import React, { useState } from "react";
 
 const Home = () => {
   const navigate = useNavigate();
   const { username } = useAuth();
   const { currentShift } = useCaja();
   const menuItems = getMenuItems();
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <Box
@@ -72,6 +77,30 @@ const Home = () => {
           );
         })}
       </Box>
+
+      {/* FAB Control Motorizados */}
+      <Tooltip title="Control Motorizados" placement="left">
+        <Fab
+          color="secondary"
+          aria-label="motorizados"
+          onClick={() => setModalOpen(true)}
+          sx={{
+            position: "fixed",
+            bottom: 32,
+            right: 32,
+            zIndex: 1000,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          }}
+        >
+          <TwoWheelerIcon />
+        </Fab>
+      </Tooltip>
+
+      {/* Modal */}
+      <DriverDeliveriesModal 
+        open={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+      />
     </Box>
   );
 };

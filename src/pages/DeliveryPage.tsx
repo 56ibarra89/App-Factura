@@ -10,7 +10,6 @@ export default function DeliveryPage() {
   const {
     phoneInput,
     transporteInput,
-    focusedField,
     selectedCustomer,
     selectedAddress,
     searchDialogOpen,
@@ -18,7 +17,6 @@ export default function DeliveryPage() {
     
     setPhoneInput,
     setTransporteInput,
-    setFocusedField,
     setSelectedCustomer,
     setSelectedAddress,
     setSearchDialogOpen,
@@ -41,10 +39,8 @@ export default function DeliveryPage() {
         <DeliveryInfoPanel
           phoneInput={phoneInput}
           transporteInput={transporteInput}
-          focusedField={focusedField}
           selectedCustomer={selectedCustomer}
           selectedAddress={selectedAddress}
-          setFocusedField={setFocusedField}
           setTransporteInput={setTransporteInput}
           setSearchDialogOpen={setSearchDialogOpen}
           setCustomerFormOpen={setCustomerFormOpen}
@@ -57,9 +53,7 @@ export default function DeliveryPage() {
         
         <DeliveryKeypadPanel
           phoneInput={phoneInput}
-          focusedField={focusedField}
           selectedCustomer={selectedCustomer}
-          setFocusedField={setFocusedField}
           handleConfirm={handleConfirm}
           handleKeypadPress={handleKeypadPress}
         />

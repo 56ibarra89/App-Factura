@@ -27,10 +27,8 @@ import { UserAccount } from "../../types/user";
 interface DeliveryInfoPanelProps {
   phoneInput: string;
   transporteInput: string;
-  focusedField: "phone" | "transporte";
   selectedCustomer: Customer | null;
   selectedAddress: string;
-  setFocusedField: (field: "phone" | "transporte") => void;
   setTransporteInput: (val: string) => void;
   setSearchDialogOpen: (open: boolean) => void;
   setCustomerFormOpen: (open: boolean) => void;
@@ -44,10 +42,8 @@ interface DeliveryInfoPanelProps {
 export default function DeliveryInfoPanel({
   phoneInput,
   transporteInput,
-  focusedField,
   selectedCustomer,
   selectedAddress,
-  setFocusedField,
   setTransporteInput,
   setSearchDialogOpen,
   setCustomerFormOpen,
@@ -140,11 +136,11 @@ export default function DeliveryInfoPanel({
                     <TextField 
                        size="small" 
                        value={transporteInput}
-                       onClick={() => setFocusedField("transporte")}
+                       onChange={(e) => setTransporteInput(e.target.value)}
                        inputProps={{ style: { textAlign: "right" } }}
                        sx={{ 
                          width: 90,
-                         bgcolor: focusedField === "transporte" ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                         bgcolor: 'rgba(255, 255, 255, 0.1)',
                          borderRadius: 1,
                          input: { color: "white", fontWeight: "bold" },
                          "& fieldset": { border: "none" }
@@ -209,7 +205,6 @@ export default function DeliveryInfoPanel({
                 onClick={() => {
                   if (hasVal) {
                     setTransporteInput(val);
-                    setFocusedField("phone");
                   }
                 }}
                 disabled={!hasVal}

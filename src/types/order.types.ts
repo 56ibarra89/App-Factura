@@ -21,6 +21,8 @@ export interface Order {
   driverId?: string;
   promotionCode?: string;
   tableId?: string;
+  customerTendered?: number;
+  deliveryChange?: number;
   paymentMethod?: PaymentMethod;
   splitAmounts?: { efectivo: number; tarjeta: number };
   cashierName?: string;
