@@ -139,13 +139,14 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
   return mapBackendOrderToFrontend(response);
 }
 
-export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, sentAt?: number, adminPin?: string) {
+export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number) {
   await apiClient(`/orders/${orderId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({
       status: status.toLowerCase(),
       ...(sentAt ? { sentAt } : {}),
-      ...(adminPin ? { adminPin } : {})
+      ...(adminPin ? { adminPin } : {}),
+      ...(cancelReason ? { cancelReason } : {}),
     }),
   });
 }
