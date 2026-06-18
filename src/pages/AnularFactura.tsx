@@ -7,6 +7,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
 import { BackButton } from "../components/BackButton";
 import PageHeader from "../components/PageHeader";
 import { useOrderContext } from "../context/OrderContext";
@@ -39,6 +43,8 @@ const AnularFactura = () => {
   const [orders, setOrders] = useState<Order[]>([]);
 
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [reasonDialogOpen, setReasonDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -81,17 +87,25 @@ const AnularFactura = () => {
 
   const handleOpenCancelDialog = (order: Order) => {
     setOrderToCancel(order);
+    setCancelReason("");
+    setReasonDialogOpen(true);
+  };
+
+  const handleReasonSubmit = () => {
+    if (!cancelReason.trim()) return;
+    setReasonDialogOpen(false);
     setPinDialogOpen(true);
   };
 
   const handleCancelSuccess = (pin?: string) => {
     if (orderToCancel) {
-      updateOrderStatus(orderToCancel.id, "cancelled", undefined, pin);
+      updateOrderStatus(orderToCancel.id, "cancelled", cancelReason, pin);
       // Actualizar localmente la lista de órdenes para reflejar el cambio sin re-feth
-      setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: "cancelled" } : o));
+      setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: "cancelled", cancelReason } : o));
     }
     setPinDialogOpen(false);
     setOrderToCancel(null);
+    setCancelReason("");
   };
 
   const [page, setPage] = useState(0);
@@ -275,6 +289,35 @@ const AnularFactura = () => {
           labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`}
         />
       </Paper>
+      {/* Reason Dialog */}
+      <Dialog open={reasonDialogOpen} onClose={() => setReasonDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontWeight: 'bold', color: LOGIN_COLORS.primary }}>Motivo de Anulación</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" mb={2} mt={1}>
+            Por favor, explica brevemente por qué estás anulando esta factura (ej: Intento de robo, fraude con tarjeta, etc.).
+          </Typography>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            rows={3}
+            placeholder="Escribe el motivo aquí..."
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button onClick={() => setReasonDialogOpen(false)} color="inherit">Cancelar</Button>
+          <Button 
+            onClick={handleReasonSubmit} 
+            variant="contained" 
+            sx={{ bgcolor: LOGIN_COLORS.primary, '&:hover': { bgcolor: LOGIN_COLORS.primaryDark } }}
+            disabled={!cancelReason.trim()}
+          >
+            Siguiente
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Security Dialog */}
       <PinValidationDialog
