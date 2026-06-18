@@ -27,8 +27,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
   const { floorsConfig } = useMesasConfig();
   const timeElapsed = Math.floor((new Date().getTime() - new Date(order.timestamp).getTime()) / 60000);
 
-  // Obtener el sentAt del primer ítem (todos los ítems del ticket comparten el mismo sentAt)
-  const ticketSentAt = order.items[0]?.sentAt;
+  // Obtener el sentAt del primer ítem que sí se manda a cocina (ignorar Delivery, etc)
+  const ticketSentAt = order.items.find(i => i.isSentToKitchen)?.sentAt;
 
   return (
     <Card 
