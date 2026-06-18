@@ -153,8 +153,15 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       updateOrdersState((prev) => [newOrder, ...prev]);
       try {
         const createdOrder = await syncAddOrderToBackend(newOrder);
-        updateOrdersState(prev => prev.map(o => o.id === newOrder.id ? { ...o, invoiceNumber: createdOrder.invoiceNumber } : o));
-        return createdOrder.invoiceNumber;
+        let finalInvoiceNumber = createdOrder.invoiceNumber;
+
+        if (!finalInvoiceNumber && newOrder.paymentMethod && newOrder.orderType === 'delivery') {
+          const finalizedOrder = await syncFinalizeOrder(newOrder);
+          finalInvoiceNumber = finalizedOrder.invoiceNumber;
+        }
+
+        updateOrdersState(prev => prev.map(o => o.id === newOrder.id ? { ...o, invoiceNumber: finalInvoiceNumber } : o));
+        return finalInvoiceNumber;
       } catch (error) {
         console.error(error);
       }
