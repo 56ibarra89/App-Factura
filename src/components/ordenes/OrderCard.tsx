@@ -19,7 +19,7 @@ import { useMesasConfig } from "../../hooks/useMesasConfig";
 
 interface OrderCardProps {
   order: Order;
-  onUpdateStatus: (id: string, status: OrderStatus, sentAt?: number) => void;
+  onUpdateStatus: (id: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number) => void;
   onDelete: (id: string) => void;
 }
 
@@ -106,7 +106,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
             <Button 
               size="small" 
               variant="contained" 
-              onClick={() => onUpdateStatus(order.id, 'preparing', ticketSentAt)}
+              onClick={() => onUpdateStatus(order.id, 'preparing', undefined, undefined, ticketSentAt)}
               sx={{ bgcolor: LOGIN_COLORS.primary, '&:hover': { bgcolor: LOGIN_COLORS.primaryDark } }}
             >
               Preparar
@@ -117,7 +117,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
               size="small" 
               variant="contained" 
               color="success"
-              onClick={() => onUpdateStatus(order.id, 'ready', ticketSentAt)}
+              onClick={() => onUpdateStatus(order.id, 'ready', undefined, undefined, ticketSentAt)}
               startIcon={<CheckCircleIcon />}
             >
               Listo
@@ -127,7 +127,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
             <Button 
               size="small" 
               variant="outlined" 
-              onClick={() => onUpdateStatus(order.id, 'delivered', ticketSentAt)}
+              onClick={() => onUpdateStatus(order.id, 'delivered', undefined, undefined, ticketSentAt)}
             >
               Entregar
             </Button>

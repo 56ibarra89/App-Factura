@@ -5,7 +5,7 @@ import OrderCard from "./OrderCard";
 
 interface OrderGridProps {
   orders: Order[];
-  onUpdateStatus: (id: string, status: OrderStatus) => void;
+  onUpdateStatus: (id: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number) => void;
   onDelete: (id: string) => void;
 }
 
