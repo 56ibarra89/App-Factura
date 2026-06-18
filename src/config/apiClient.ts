@@ -22,8 +22,8 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
         window.authAPI.clearToken();
       }
       sessionStore.clear();
-      if (window.location.pathname !== "/") {
-        window.location.href = "/";
+      if (window.location.hash !== "#/") {
+        window.location.hash = "#/";
       }
       throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
     }
