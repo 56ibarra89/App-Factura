@@ -1,16 +1,58 @@
 import { Order, OrderStatus, OrderType, PaymentMethod, KitchenStatus } from "../../types/order.types";
 import { apiClient } from "../../config/apiClient";
 
-function mapBackendOrderToFrontend(backendOrder: any): Order {
+interface BackendExtra {
+  name: string;
+  price: number | string;
+}
+
+interface BackendItem {
+  id?: string | number;
+  name: string;
+  price: number | string;
+  size: string;
+  quantity: number | string;
+  extras: BackendExtra[];
+  note?: string;
+  giftQuantity?: number;
+  isSentToKitchen?: boolean;
+  sentAt?: string | Date;
+  kitchenStatus?: string;
+}
+
+interface BackendOrder {
+  id: string;
+  items: BackendItem[];
+  subTotal?: number | string | null;
+  discountAmount?: number | string | null;
+  taxAmount?: number | string | null;
+  total: number | string;
+  customerTendered?: number | string | null;
+  deliveryChange?: number | string | null;
+  status: string;
+  timestamp: string | Date;
+  customerSnapshotName?: string;
+  orderType?: string;
+  customerAddress?: string;
+  driverId?: string;
+  linkedTables?: string[];
+  payments?: { method: string; amount: number | string; cashierId?: string; cashierSnapshotName?: string }[];
+  cashierSnapshotName?: string;
+  isSentToKitchen?: boolean;
+  invoice?: { invoiceNumber: string };
+  invoiceNumber?: string;
+}
+
+function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
   return {
     id: backendOrder.id,
-    items: backendOrder.items.map((i: any) => ({
+    items: backendOrder.items.map((i: BackendItem) => ({
       id: Math.random(), // Temporary ID for frontend list rendering
       name: i.name,
       price: Number(i.price),
       size: i.size.toLowerCase(),
       quantity: Number(i.quantity),
-      extras: i.extras.map((e: any) => ({ name: e.name, price: Number(e.price) })),
+      extras: i.extras.map((e: BackendExtra) => ({ name: e.name, price: Number(e.price) })),
       note: i.note,
       giftQuantity: i.giftQuantity,
       isSentToKitchen: i.isSentToKitchen,
