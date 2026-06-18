@@ -190,7 +190,8 @@ export async function syncFinalizeOrder(order: Order): Promise<Order> {
       subTotal: order.subTotal,
       taxAmount: order.taxAmount,
       discountAmount: order.discountAmount,
-      finalTotal: order.total
+      finalTotal: order.total,
+      status: order.status
     }),
   });
   return mapBackendOrderToFrontend(response);
