@@ -74,12 +74,6 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
               </Stack>
             )}
           </Box>
-          <Chip 
-            label={statusLabels[order.status]} 
-            color={statusColors[order.status]} 
-            size="small" 
-            sx={{ fontWeight: 'bold' }}
-          />
         </Box>
 
         <Divider sx={{ mb: 2 }} />
