@@ -101,6 +101,22 @@ export default function DriverDeliveriesModal({
     }
   };
 
+  const handleMarkAsPaid = async (orderId: string) => {
+    try {
+      await apiClient(`/orders/${orderId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "paid" }),
+      });
+      if (selectedDriverId) {
+        fetchOrders(selectedDriverId);
+      }
+    } catch (e) {
+      console.error("Error al marcar como pagado:", e);
+      alert("No se pudo actualizar la orden a pagado.");
+    }
+  };
+
+
   const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'paid');
   const totalRevenue = completedOrders.reduce((acc, order) => acc + order.total, 0);
   const totalChangeGiven = completedOrders.reduce((acc, order) => acc + (order.deliveryChange || 0), 0);
@@ -176,11 +192,23 @@ export default function DriverDeliveriesModal({
                             <TableRow key={order.id}>
                               <TableCell>{order.invoiceNumber || order.id.slice(-6)}</TableCell>
                               <TableCell>
-                                <Chip 
-                                  label={statusLabels[order.status] || order.status} 
-                                  color={statusColors[order.status] || 'default'} 
-                                  size="small" 
-                                />
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Chip 
+                                    label={statusLabels[order.status] || order.status} 
+                                    color={statusColors[order.status] || 'default'} 
+                                    size="small" 
+                                  />
+                                  {order.status === 'delivered' && (
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      color="success"
+                                      onClick={() => handleMarkAsPaid(order.id)}
+                                    >
+                                      Cobrar
+                                    </Button>
+                                  )}
+                                </Box>
                               </TableCell>
                               <TableCell>
                                 {order.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}
