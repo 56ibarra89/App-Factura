@@ -168,7 +168,7 @@ export function useAccountManager() {
     }
   };
 
-  const fetchDeliveryStats = async (dateStr?: string) => {
+  const fetchDeliveryStats = useCallback(async (dateStr?: string) => {
     try {
       let url = "/users/motorizados/delivery-stats";
       if (dateStr) {
@@ -179,9 +179,9 @@ export function useAccountManager() {
       console.error("Error fetching delivery stats", err);
       return [];
     }
-  };
+  }, []);
 
-  const addExtraDay = async (userId: string, date: string, notes?: string) => {
+  const addExtraDay = useCallback(async (userId: string, date: string, notes?: string) => {
     try {
       await apiClient(`/users/${userId}/extra-days`, {
         method: "POST",
@@ -194,9 +194,9 @@ export function useAccountManager() {
       console.error("Error adding extra day", err);
       throw err;
     }
-  };
+  }, [fetchUsers]);
 
-  const removeExtraDay = async (userId: string, date: string) => {
+  const removeExtraDay = useCallback(async (userId: string, date: string) => {
     try {
       await apiClient(`/users/${userId}/extra-days/${date}`, {
         method: "DELETE",
@@ -208,7 +208,7 @@ export function useAccountManager() {
       console.error("Error removing extra day", err);
       throw err;
     }
-  };
+  }, [fetchUsers]);
 
   return {
     users,
