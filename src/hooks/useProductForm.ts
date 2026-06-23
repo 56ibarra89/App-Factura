@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Product, ProductFormState } from "../types/product";
-import { configRepository } from "../repositories/ConfigRepository";
 import { productMapper } from "../services/productMapper";
 import { useProductExtras } from "./useProductExtras";
 
@@ -26,17 +25,15 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
   // Handle initial form load for editing
   useEffect(() => {
     if (open) {
-      configRepository.getPackagingSizesConfig().then((data) => {
-        const sizes = data && data.length > 0 ? data.map(d => d.name) : ["familiar", "mediana", "personal"];
-        setDynamicSizes(sizes);
-        if (editing) {
-          setForm(productMapper.toFormState(editing.product, editing.category, sizes));
-          setExtras(productMapper.toFormExtras(editing.product.extras, editing.product.hasMultipleSizes ?? false, sizes));
-        } else {
-          setForm(productMapper.toFormState(null, "", sizes));
-          setExtras([]);
-        }
-      });
+      const sizes = ["familiar", "mediana", "personal"];
+      setDynamicSizes(sizes);
+      if (editing) {
+        setForm(productMapper.toFormState(editing.product, editing.category, sizes));
+        setExtras(productMapper.toFormExtras(editing.product.extras, editing.product.hasMultipleSizes ?? false, sizes));
+      } else {
+        setForm(productMapper.toFormState(null, "", sizes));
+        setExtras([]);
+      }
     }
   }, [open, editing, setExtras]);
 
@@ -48,16 +45,11 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
   };
 
   const handleMultipleSizesToggle = (hasMultiple: boolean) => {
-    const isPizza = form.category.toLowerCase().includes('pizza');
-    const filteredSizes = isPizza 
-      ? dynamicSizes.filter(s => ['familiar', 'mediana', 'personal'].includes(s.toLowerCase()))
-      : dynamicSizes;
-
     setForm((prev) => ({
       ...prev,
       hasMultipleSizes: hasMultiple,
       prices: hasMultiple
-        ? filteredSizes.map((size) => ({ size, price: "" }))
+        ? dynamicSizes.map((size) => ({ size, price: "" }))
         : [{ size: "único", price: "" }],
       singlePrice: "",
     }));
