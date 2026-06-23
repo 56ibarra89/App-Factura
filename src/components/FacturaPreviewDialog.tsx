@@ -262,6 +262,26 @@ export default function FacturaPreviewDialog({
     return true; // TARJETA y APP se asumen válidos al confirmar
   };
 
+  /** Validar que se puedan confirmar los datos de la orden */
+  const canConfirm = () => {
+    if (!isPaymentValid()) return false;
+
+    if (orderType === "delivery") {
+      if (!customerAddress || customerAddress.trim() === "") return false;
+      if (!selectedDriverId) return false;
+      if (!deliveryCost || deliveryCost <= 0) return false;
+    }
+
+    if (orderType === "llevar" || orderType === "delivery") {
+      if (packagingConfig.length > 0) {
+        const hasPackaging = Object.values(packagingQuantities).some(qty => qty > 0);
+        if (!hasPackaging) return false;
+      }
+    }
+
+    return true;
+  };
+
   /** Confirmar pedido: guarda el cliente y luego llama al callback del padre */
   const handleConfirm = async () => {
     if (customerName.trim()) {
@@ -643,7 +663,7 @@ export default function FacturaPreviewDialog({
             variant="contained"
             color="error"
             onClick={handleConfirm}
-            disabled={!isPaymentValid()}
+            disabled={!canConfirm()}
             sx={{ "@media print": { display: "none" } }}
           >
             {confirmText}
