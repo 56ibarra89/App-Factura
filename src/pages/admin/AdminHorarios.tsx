@@ -188,7 +188,24 @@ export default function AdminHorarios() {
               Empleados ({filteredUsers.length})
             </Typography>
           </Box>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+          <Box sx={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            gap: 1.5,
+            maxHeight: { xs: "400px", md: "calc(100vh - 200px)" },
+            overflowY: "auto",
+            pr: 1,
+            "&::-webkit-scrollbar": {
+              width: "6px",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "transparent",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "text.disabled",
+              borderRadius: "10px",
+            },
+          }}>
             {filteredUsers.map((user) => {
               const isSelected = selectedUserId === user.id;
               const userStats = stats.find((s) => s.userId === user.id);
