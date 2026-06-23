@@ -4,7 +4,7 @@ import { ExtraIngredientDef } from "../types/extras";
 export const productMapper = {
   /** Map a domain Product to Form state */
   toFormState: (product: Product | null, category: string, dynamicSizes: string[]): ProductFormState => {
-    const defaults = dynamicSizes.map(size => ({ size, price: "" }));
+    const defaults: { size: string; price: string }[] = [];
     if (!product) {
       return {
         name: "",
@@ -69,10 +69,12 @@ export const productMapper = {
       description: form.description.trim() || undefined,
       hasMultipleSizes,
       prices: hasMultipleSizes
-        ? form.prices.map((p: { size: string; price: string }) => ({
-            size: p.size as ProductSize,
-            price: parseFloat(p.price),
-          }))
+        ? form.prices
+            .filter((p: { price: string }) => p.price !== "" && parseFloat(p.price) > 0)
+            .map((p: { size: string; price: string }) => ({
+              size: p.size as ProductSize,
+              price: parseFloat(p.price),
+            }))
         : [
             {
               size: "único",

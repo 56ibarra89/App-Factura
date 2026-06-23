@@ -12,6 +12,7 @@ import {
   Select,
   FormControlLabel,
   Switch,
+  Typography,
 } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { Product } from "../types/product";
@@ -39,10 +40,9 @@ const ProductFormDialog = ({
 
   useEffect(() => {
     if (!open) return;
-    const timer = window.setTimeout(() => {
+    setTimeout(() => {
       nameInputRef.current?.focus();
-    }, 150);
-    return () => window.clearTimeout(timer);
+    }, 100);
   }, [open]);
 
   const {
@@ -70,39 +70,32 @@ const ProductFormDialog = ({
       <DialogTitle>
         {editing ? "Editar producto" : "Agregar producto"}
       </DialogTitle>
-
-      <DialogContent dividers>
-        <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
+        <DialogContent>
           <TextField
-            inputRef={nameInputRef}
-            autoFocus
             fullWidth
             label="Nombre"
-            name="name"
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, mt: 1 }}
             value={form.name}
+            inputRef={nameInputRef}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
+            error={form.name.trim() === ""}
+            helperText={form.name.trim() === "" ? "El nombre es obligatorio" : ""}
           />
-
           <TextField
             fullWidth
             label="Descripción"
-            name="description"
             multiline
-            minRows={2}
-            maxRows={4}
+            rows={3}
             sx={{ mb: 2 }}
-            placeholder="Ej: Incluye queso mozzarella, salsa de tomate, pepperoni..."
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="category-label">Categoría</InputLabel>
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel>Categoría</InputLabel>
             <Select
-              labelId="category-label"
               value={form.category}
-              name="category"
               label="Categoría"
               onChange={(e) => handleCategoryChange(e.target.value as string)}
             >
@@ -123,8 +116,13 @@ const ProductFormDialog = ({
               />
             }
             label="El producto tiene múltiples tamaños"
-            sx={{ mb: 2 }}
+            sx={{ mb: 0 }}
           />
+          {form.hasMultipleSizes && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2, ml: 4 }}>
+              Deja en blanco el precio de los tamaños que no apliquen para este producto.
+            </Typography>
+          )}
 
           {form.hasMultipleSizes
             ? form.prices.map((p, i) => (
@@ -179,16 +177,32 @@ const ProductFormDialog = ({
             />
           </>
 
-          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-            <Button type="submit" variant="contained" fullWidth disabled={!isFormValid}>
-              {editing ? "Actualizar" : "Guardar"}
+          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              disabled={!isFormValid}
+              sx={{
+                bgcolor: "#e0e0e0",
+                color: "text.primary",
+                "&:hover": { bgcolor: "#d5d5d5" },
+                "&:disabled": { opacity: 0.5 },
+              }}
+            >
+              Guardar
             </Button>
-            <Button fullWidth variant="outlined" onClick={onClose}>
+            <Button
+              onClick={onClose}
+              variant="outlined"
+              color="error"
+              fullWidth
+            >
               Cancelar
             </Button>
           </Stack>
-        </form>
-      </DialogContent>
+        </DialogContent>
+      </form>
     </Dialog>
   );
 };

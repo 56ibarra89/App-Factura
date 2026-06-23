@@ -48,11 +48,16 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
   };
 
   const handleMultipleSizesToggle = (hasMultiple: boolean) => {
+    const isPizza = form.category.toLowerCase().includes('pizza');
+    const filteredSizes = isPizza 
+      ? dynamicSizes.filter(s => ['familiar', 'mediana', 'personal'].includes(s.toLowerCase()))
+      : dynamicSizes;
+
     setForm((prev) => ({
       ...prev,
       hasMultipleSizes: hasMultiple,
       prices: hasMultiple
-        ? dynamicSizes.map((size) => ({ size, price: "" }))
+        ? filteredSizes.map((size) => ({ size, price: "" }))
         : [{ size: "único", price: "" }],
       singlePrice: "",
     }));
@@ -63,7 +68,8 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     form.name.trim() !== "" &&
     form.category !== "" &&
     (form.hasMultipleSizes
-      ? form.prices.every((p) => p.price !== "" && parseFloat(p.price) > 0)
+      ? form.prices.some((p) => p.price !== "" && parseFloat(p.price) > 0) &&
+        form.prices.every((p) => p.price === "" || parseFloat(p.price) > 0)
       : form.singlePrice !== "" && parseFloat(form.singlePrice) > 0);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -92,7 +98,7 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
   };
 
   return {
-    // Form and extras state
+    dynamicSizes,
     form,
     setForm,
     extras,
