@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "cajero" | "mesero" | "cocinero" | "motorizado";
+export type UserRole = "admin" | "cajero" | "mesero" | "cocinero" | "motorizado" | "despachador";
 
 export interface UserAccount {
   id: string; // Puede ser el nombre de usuario para simplificar (debe ser único)
@@ -22,5 +22,6 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   cajero: "Cajero",
   mesero: "Mesero",
   cocinero: "Cocinero",
-  motorizado: "Motorizado"
+  motorizado: "Motorizado",
+  despachador: "Despachador"
 };

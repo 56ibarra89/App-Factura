@@ -26,6 +26,7 @@ import { Order } from "../types/order.types";
 import { apiClient } from "../config/apiClient";
 import { statusLabels, statusColors } from "../config/orderStatusConfig";
 import Chip from "@mui/material/Chip";
+import { useAuth } from "../context/AuthContext";
 
 interface DriverDeliveriesModalProps {
   open: boolean;
@@ -36,6 +37,7 @@ export default function DriverDeliveriesModal({
   open,
   onClose,
 }: DriverDeliveriesModalProps) {
+  const { role } = useAuth();
   const [drivers, setDrivers] = useState<UserAccount[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -198,7 +200,7 @@ export default function DriverDeliveriesModal({
                                     color={statusColors[order.status] || 'default'} 
                                     size="small" 
                                   />
-                                  {order.status === 'delivered' && (
+                                  {order.status === 'delivered' && role !== 'despachador' && (
                                     <Button
                                       variant="outlined"
                                       size="small"

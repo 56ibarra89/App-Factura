@@ -14,9 +14,15 @@ import React, { useState } from "react";
 
 const Home = () => {
   const navigate = useNavigate();
-  const { username } = useAuth();
+  const { username, role } = useAuth();
   const { currentShift } = useCaja();
-  const menuItems = getMenuItems();
+  const allMenuItems = getMenuItems();
+  
+  // Filter menu items for despachador
+  const menuItems = role === 'despachador' 
+    ? allMenuItems.filter(item => item.label === 'Delivery')
+    : allMenuItems;
+
   const [modalOpen, setModalOpen] = useState(false);
 
   return (

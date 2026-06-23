@@ -55,7 +55,7 @@ export default function DeliveryInfoPanel({
 }: DeliveryInfoPanelProps) {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [quickPrices, setQuickPrices] = React.useState<string[]>(["30.00", "50.00", "", "", "", ""]);
+  const [quickPrices, setQuickPrices] = React.useState<string[]>(["", "", "", "", "", ""]);
 
   React.useEffect(() => {
     configRepository.getDeliveryPricesConfig().then(prices => {
