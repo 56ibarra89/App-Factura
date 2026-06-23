@@ -162,7 +162,7 @@ export default function AdminHorarios() {
     <Box
       minHeight="100vh"
       sx={{
-        bgcolor: '#f8fafc', // Fondo sutilmente más moderno
+        bgcolor: 'background.default',
         pt: 2,
         pb: 4,
         px: { xs: 2, md: 6 },
@@ -208,7 +208,7 @@ export default function AdminHorarios() {
                     cursor: "pointer",
                     borderRadius: 3,
                     border: `2px solid ${isSelected ? LOGIN_COLORS.primary : "transparent"}`,
-                    bgcolor: isSelected ? "rgba(227, 26, 26, 0.04)" : "white",
+                    bgcolor: isSelected ? "action.selected" : "background.paper",
                     transition: "all 0.2s ease-in-out",
                     "&:hover": {
                       transform: isSelected ? "none" : "translateY(-2px)",
@@ -218,7 +218,7 @@ export default function AdminHorarios() {
                 >
                   <Avatar 
                     sx={{ 
-                      bgcolor: isSelected ? LOGIN_COLORS.primary : "grey.200",
+                      bgcolor: isSelected ? LOGIN_COLORS.primary : "action.hover",
                       color: isSelected ? "white" : "text.secondary",
                       fontWeight: "bold"
                     }}
@@ -241,7 +241,7 @@ export default function AdminHorarios() {
               );
             })}
             {filteredUsers.length === 0 && !loading && (
-              <Box textAlign="center" py={4} bgcolor="white" borderRadius={3} border="1px dashed rgba(0,0,0,0.1)">
+              <Box textAlign="center" py={4} bgcolor="background.paper" borderRadius={3} border="1px dashed rgba(0,0,0,0.1)">
                 <Typography color="text.secondary">
                   No hay empleados registrados.
                 </Typography>
@@ -354,7 +354,7 @@ export default function AdminHorarios() {
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "space-between",
-                          bgcolor: hasExtraDayToday ? "success.50" : "transparent",
+                          bgcolor: hasExtraDayToday ? "rgba(46, 125, 50, 0.1)" : "transparent",
                           borderColor: hasExtraDayToday ? "success.main" : "rgba(0,0,0,0.2)"
                         }}
                       >
@@ -442,7 +442,7 @@ export default function AdminHorarios() {
                 minHeight={400}
                 sx={{ opacity: 0.6 }}
               >
-                <Avatar sx={{ width: 80, height: 80, bgcolor: "grey.100", color: "grey.400", mb: 2 }}>
+                <Avatar sx={{ width: 80, height: 80, bgcolor: "action.hover", color: "text.disabled", mb: 2 }}>
                   <EventNote sx={{ fontSize: 40 }} />
                 </Avatar>
                 <Typography variant="h6" color="text.secondary" fontWeight="600">

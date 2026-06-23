@@ -3,7 +3,7 @@ import { useState } from "react";
 import { BackButton } from "../../components/BackButton";
 
 import PageHeader from "../../components/PageHeader";
-import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
+import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { useAdminCajasData } from "../../hooks/useAdminCajasData";
 import { useCajasConfig } from "../../hooks/useCajasConfig";
 import { CajaStatusCard } from "../../components/Admin/CajaStatusCard";
