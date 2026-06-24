@@ -260,7 +260,7 @@ const AdminPromociones = () => {
                   },
                 }}
               >
-                <Tab label="Descuentos Automáticos" {...a11yProps(0)} />
+                <Tab label="Descuentos Predefinidos" {...a11yProps(0)} />
                 <Tab label="Happy Hour" {...a11yProps(1)} />
                 <Tab label="Cupones Manuales" {...a11yProps(2)} />
                 <Tab label="Certificaciones (Vales)" {...a11yProps(3)} />
