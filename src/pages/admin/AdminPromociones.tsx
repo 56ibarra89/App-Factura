@@ -8,7 +8,7 @@ import {
   Paper,
 } from "@mui/material";
 import { BackButton } from "../../components/BackButton";
-import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
+import { LOGIN_COLORS } from "../../theme/loginTheme";
 import DescuentosTab from "../../components/Admin/Promociones/DescuentosTab";
 import HappyHourTab from "../../components/Admin/Promociones/HappyHourTab";
 import CuponesTab from "../../components/Admin/Promociones/CuponesTab";
