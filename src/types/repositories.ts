@@ -10,6 +10,7 @@ export interface IShiftRepository {
   openShift(data: any): Promise<Shift>;
   closeShift(id: string, data: any): Promise<Shift>;
   getAll(): Promise<Shift[]>;
+  getActiveShiftForUser(username: string): Promise<Shift | null>;
 }
 
 /**

@@ -70,6 +70,31 @@ export const CajaProvider = ({
     return null;
   });
 
+  // Limpiar el turno si el usuario logueado cambia o cierra sesión
+  useEffect(() => {
+    if (currentShift) {
+      // Si no hay usuario logueado (cerró sesión) o si el turno le pertenece a otro usuario
+      if (!username || currentShift.cashierName !== username) {
+        console.log("[CajaContext] Usuario deslogueado o turno de otro usuario. Limpiando estado.");
+        setCurrentShift(null);
+      }
+    }
+  }, [username, currentShift]);
+
+  // Recuperar el turno activo desde el backend cuando el usuario inicia sesión
+  useEffect(() => {
+    let isMounted = true;
+    if (username) {
+      repository.getActiveShiftForUser(username).then((shift) => {
+        if (isMounted && shift) {
+          console.log("[CajaContext] Turno activo recuperado del backend para:", username);
+          setCurrentShift(shift);
+        }
+      }).catch(err => console.error("Error al recuperar turno activo:", err));
+    }
+    return () => { isMounted = false; };
+  }, [username, repository]);
+
   useEffect(() => {
     if (currentShift) {
       console.log("[CajaContext] Guardando turno en localStorage:", currentShift.id);

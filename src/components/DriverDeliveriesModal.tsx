@@ -105,16 +105,22 @@ export default function DriverDeliveriesModal({
 
   const handleMarkAsPaid = async (orderId: string) => {
     try {
+      const orderToPay = orders.find(o => o.id === orderId);
+      if (!orderToPay) return;
+      
+      const paymentMethod = (orderToPay.paymentMethod || 'EFECTIVO').toUpperCase();
+      const payments = [{ method: paymentMethod, amount: orderToPay.total }];
+
       await apiClient(`/orders/${orderId}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ status: "paid" }),
+        body: JSON.stringify({ status: "paid", payments }),
       });
       if (selectedDriverId) {
         fetchOrders(selectedDriverId);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error al marcar como pagado:", e);
-      alert("No se pudo actualizar la orden a pagado.");
+      alert(`No se pudo actualizar la orden a pagado: ${e.message}`);
     }
   };
 
