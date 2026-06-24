@@ -181,14 +181,9 @@ const ProductFormDialog = ({
             <Button
               type="submit"
               variant="contained"
+              color="primary"
               fullWidth
               disabled={!isFormValid}
-              sx={{
-                bgcolor: "#e0e0e0",
-                color: "text.primary",
-                "&:hover": { bgcolor: "#d5d5d5" },
-                "&:disabled": { opacity: 0.5 },
-              }}
             >
               Guardar
             </Button>
