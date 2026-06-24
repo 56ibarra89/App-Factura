@@ -13,7 +13,6 @@ import { shiftRepository as defaultShiftRepository } from "../repositories/Shift
 import { useOrderQueries } from "./OrderContext";
 import { useAuth } from "./AuthContext";
 import { calculateShiftSales } from "../utils/shiftUtils";
-import { localStore } from "../services/storage/storage";
 
 interface CajaContextType {
   currentShift: Shift | null;
@@ -43,33 +42,7 @@ export const CajaProvider = ({
   const { username } = useAuth();
   const { orders } = useOrderQueries();
 
-  const [currentShift, setCurrentShift] = useState<Shift | null>(() => {
-    const saved = localStore.getItem("currentShift");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        console.log("[CajaContext] Restaurando turno desde localStorage:", parsed);
-
-        const startTime = new Date(parsed.startTime);
-        if (isNaN(startTime.getTime())) {
-          console.error("[CajaContext] Fecha de inicio inválida. Limpiando localStorage.");
-          localStore.removeItem("currentShift");
-          return null;
-        }
-
-        return {
-          ...parsed,
-          startTime,
-          endTime: parsed.endTime ? new Date(parsed.endTime) : undefined,
-        };
-      } catch (e) {
-        console.error("[CajaContext] Error al parsear shift guardado:", e);
-        return null;
-      }
-    }
-    return null;
-  });
-
+  const [currentShift, setCurrentShift] = useState<Shift | null>(null);
   // Limpiar el turno si el usuario logueado cambia o cierra sesión
   useEffect(() => {
     if (currentShift) {
@@ -95,15 +68,7 @@ export const CajaProvider = ({
     return () => { isMounted = false; };
   }, [username, repository]);
 
-  useEffect(() => {
-    if (currentShift) {
-      console.log("[CajaContext] Guardando turno en localStorage:", currentShift.id);
-      localStore.setItem("currentShift", JSON.stringify(currentShift));
-    } else {
-      console.log("[CajaContext] Limpiando turno de localStorage");
-      localStore.removeItem("currentShift");
-    }
-  }, [currentShift]);
+
 
   const calculateCurrentShiftSales = useCallback((): ShiftSales => {
     if (!currentShift) return { cash: 0, card: 0, app: 0, total: 0 };

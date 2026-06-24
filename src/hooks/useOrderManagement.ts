@@ -2,7 +2,8 @@ import { useOrderCommands, useOrderQueries } from "../context/OrderContext";
 import { useMemo } from "react";
 import { Order } from "../types/order.types";
 import { CartItemType } from "../types/cart";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { apiClient } from "../config/apiClient";
 
 // Helper para dividir una orden en múltiples "Tickets de Cocina" agrupados por sentAt
 const splitIntoKitchenTickets = (order: Order): Order[] => {
@@ -56,14 +57,21 @@ export const useOrderManagement = () => {
   const { orders } = useOrderQueries();
   const { updateOrderStatus, removeOrder } = useOrderCommands();
 
-  const [hiddenTickets, setHiddenTickets] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem("hidden-kitchen-tickets");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [hiddenTickets, setHiddenTickets] = useState<string[]>([]);
+
+  // Fetch initial hidden tickets from backend
+  useEffect(() => {
+    let isMounted = true;
+    apiClient('/orders/kitchen/hidden-tickets')
+      .then((data: string[]) => {
+        if (isMounted && Array.isArray(data)) {
+          setHiddenTickets(data);
+        }
+      })
+      .catch(e => console.error("Error fetching hidden kitchen tickets:", e));
+    
+    return () => { isMounted = false; };
+  }, []);
 
   // Dividir todas las órdenes en tickets virtuales
   const allTickets = useMemo(() => {
@@ -87,11 +95,17 @@ export const useOrderManagement = () => {
 
   const clearKitchenHistory = useCallback(() => {
     const toHide = finishedOrders.map(t => `${t.id}-${t.timestamp.getTime()}`);
+    if (toHide.length === 0) return;
+
     setHiddenTickets(prev => {
       const next = Array.from(new Set([...prev, ...toHide]));
-      localStorage.setItem("hidden-kitchen-tickets", JSON.stringify(next));
       return next;
     });
+
+    apiClient('/orders/kitchen/hidden-tickets', {
+      method: 'POST',
+      body: JSON.stringify({ ticketIds: toHide })
+    }).catch(e => console.error("Error saving hidden kitchen tickets:", e));
   }, [finishedOrders]);
 
   return {
