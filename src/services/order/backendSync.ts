@@ -177,13 +177,18 @@ export async function syncUpdateOrderItems(order: Order) {
 }
 
 export async function syncFinalizeOrder(order: Order): Promise<Order> {
+  const paymentsPayload = order.paymentMethod === 'MIXTO' && order.splitAmounts ? [
+    { method: 'EFECTIVO', amount: order.splitAmounts.efectivo },
+    { method: 'TARJETA', amount: order.splitAmounts.tarjeta }
+  ].filter(p => p.amount > 0) : [{
+    method: order.paymentMethod?.toUpperCase() || 'EFECTIVO',
+    amount: order.total
+  }];
+
   const response = await apiClient(`/orders/${order.id}/finalize`, {
     method: 'PATCH',
     body: JSON.stringify({
-      payments: [{
-        method: order.paymentMethod?.toUpperCase() || 'EFECTIVO',
-        amount: order.total
-      }],
+      payments: paymentsPayload,
       customerSnapshotName: order.customerName,
       orderType: order.orderType?.toLowerCase(),
       customerAddress: order.customerAddress,
