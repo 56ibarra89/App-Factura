@@ -57,6 +57,7 @@ export default function MesasPage() {
   
   // Checkout snapshot state
   const [checkoutOrder, setCheckoutOrder] = useState<any>(null);
+  const [checkoutPromotion, setCheckoutPromotion] = useState<any>(null);
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<string | undefined>(undefined);
 
   // Obtener órdenes activas desde el contexto
@@ -184,9 +185,9 @@ export default function MesasPage() {
   );
   
   const checkoutCart: CartItemType[] = useMemo(() => checkoutOrder ? checkoutOrder.items : [], [checkoutOrder]);
-  const { subTotal: checkoutSubTotal, taxAmount: checkoutTaxAmount, total: checkoutTotal } = useMemo(
-    () => calculateCartTotals(checkoutCart, taxes, isExonerated),
-    [checkoutCart, taxes, isExonerated]
+  const { subTotal: checkoutSubTotal, taxAmount: checkoutTaxAmount, total: checkoutTotal, discountAmount: checkoutDiscountAmount } = useMemo(
+    () => calculateCartTotals(checkoutCart, taxes, isExonerated, checkoutPromotion),
+    [checkoutCart, taxes, isExonerated, checkoutPromotion]
   );
 
   const handleFinalConfirm = useCallback(async (
@@ -206,6 +207,10 @@ export default function MesasPage() {
       orderType,
       customerAddress,
       checkoutTotal,
+      checkoutSubTotal,
+      checkoutTaxAmount,
+      checkoutDiscountAmount,
+      checkoutPromotion?.code
     );
 
     setCreatedInvoiceNumber(invoiceNumber || "000001");
@@ -242,6 +247,8 @@ export default function MesasPage() {
   const closePreview = useCallback(() => {
     setIsPreviewOpen(false);
     setCheckoutOrder(null);
+    setCheckoutPromotion(null);
+    setCreatedInvoiceNumber(undefined);
     restoreFocus();
   }, [restoreFocus]);
 
@@ -336,14 +343,19 @@ export default function MesasPage() {
         <FacturaPreviewDialog
           open={isPreviewOpen}
           cart={checkoutCart}
+          promotion={checkoutPromotion}
           subTotal={checkoutSubTotal}
+          discountAmount={checkoutDiscountAmount}
           taxAmount={checkoutTaxAmount}
           total={checkoutTotal}
+          onApplyPromotion={(promo) => setCheckoutPromotion(promo)}
+          onRemovePromotion={() => setCheckoutPromotion(null)}
           onClose={closePreview}
           onConfirm={handleFinalConfirm}
           title={`Cerrar Cuenta Mesa ${selectedMesaId}`}
           confirmText="Finalizar y Cobrar"
           isTableMode={false}
+          hideDeliveryOption={true}
           disableRestoreFocus
           disableEnforceFocus
           invoiceNumber={createdInvoiceNumber}
@@ -353,5 +365,3 @@ export default function MesasPage() {
     </Box>
   );
 }
-
-

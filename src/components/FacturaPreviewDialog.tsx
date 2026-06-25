@@ -74,6 +74,7 @@ interface FacturaPreviewDialogProps {
   initialOrderType?: OrderType;
   initialDriverId?: string;
   lockOrderType?: boolean;
+  hideDeliveryOption?: boolean;
   cashierName?: string;
 }
 
@@ -99,6 +100,7 @@ export default function FacturaPreviewDialog({
   initialOrderType = "local",
   initialDriverId = "",
   lockOrderType = false,
+  hideDeliveryOption = false,
   invoiceNumber,
   cashierName,
 }: FacturaPreviewDialogProps) {
@@ -108,7 +110,7 @@ export default function FacturaPreviewDialog({
   const [receivedSecondary, setReceivedSecondary] = useState<number | "">("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [orderType, setOrderType] = useState<OrderType>("local");
+  const [orderType, setOrderType] = useState<OrderType>(initialOrderType || "local");
   const [customerAddress, setCustomerAddress] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [toastOpen, setToastOpen] = useState(false);
@@ -482,9 +484,11 @@ export default function FacturaPreviewDialog({
                       <ToggleButton value="llevar" sx={{ py: 1 }}>
                         LLEVAR
                       </ToggleButton>
-                      <ToggleButton value="delivery" sx={{ py: 1 }}>
-                        DELIVERY
-                      </ToggleButton>
+                      {!hideDeliveryOption && (
+                        <ToggleButton value="delivery" sx={{ py: 1 }}>
+                          DELIVERY
+                        </ToggleButton>
+                      )}
                     </ToggleButtonGroup>
                   </>
                 )}
