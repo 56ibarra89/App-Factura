@@ -13,14 +13,20 @@ export function useMesasConfig() {
   const [initialFloors, setInitialFloors] = useState<FloorConfig[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchFloors = async () => {
     try {
+      setIsLoading(true);
+      setError(null);
       const data = await apiClient('/mesas/config');
       setFloors(data);
       setInitialFloors(data);
     } catch (e: unknown) {
       console.error('Error fetching floors config:', e);
+      setError('Error al cargar la configuración de mesas. El servidor podría estar ocupado.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -81,7 +87,9 @@ export function useMesasConfig() {
     saveAllChanges,
     hasUnsavedChanges,
     isSaving,
+    isLoading,
     error,
-    clearError
+    clearError,
+    retryFetch: fetchFloors
   };
 }

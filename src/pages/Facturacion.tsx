@@ -37,6 +37,7 @@ const Facturacion = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const navigate = useNavigate();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const location = useLocation() as any;
   const state = location.state as { deliveryCustomer?: Customer | null; deliveryPhone?: string; deliveryCost?: number; deliveryDriverId?: string; deliveryCustomerTendered?: number } | null;
 
@@ -215,7 +216,11 @@ const Facturacion = () => {
         }
       }, 500);
     }
+    } finally {
+      setIsProcessing(false);
+    }
   };
+
 
   const { markAsSentToKitchenByTable } = useOrderCommands();
 

@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import { useState, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SectionSidebar from "../components/mesas/SectionSidebar";
@@ -21,7 +21,7 @@ import { useImpuestosConfig } from "../hooks/useImpuestosConfig";
 import { calculateCartTotals } from "../utils/cartTotals";
 
 export default function MesasPage() {
-  const { floorsConfig } = useMesasConfig();
+  const { floorsConfig, isLoading, error, retryFetch } = useMesasConfig();
   const { tableStatusMap, reservationDetails, reserveTable, releaseTable } =
     useTableReservations();
   const { username, role } = useAuth();
@@ -277,6 +277,20 @@ export default function MesasPage() {
     setCreatedInvoiceNumber(undefined);
     restoreFocus();
   }, [restoreFocus]);
+
+  if (!isLoading && (error || activeFloors.length === 0)) {
+    return (
+      <Box sx={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 2 }}>
+        <Typography variant="h5" color="error">Oops, no se pudieron cargar las mesas.</Typography>
+        <Typography variant="body1" color="text.secondary">
+          {error || 'El servidor parece estar ocupado o no hay zonas configuradas.'}
+        </Typography>
+        <Button variant="contained" color="primary" onClick={retryFetch}>
+          Reintentar
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box
