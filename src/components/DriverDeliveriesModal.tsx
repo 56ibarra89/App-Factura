@@ -20,6 +20,8 @@ import {
   ListItemButton,
   ListItemText,
   Divider,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { UserAccount } from "../types/user";
 import { Order } from "../types/order.types";
@@ -43,6 +45,7 @@ export default function DriverDeliveriesModal({
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingDrivers, setLoadingDrivers] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -111,7 +114,7 @@ export default function DriverDeliveriesModal({
       const paymentMethod = (orderToPay.paymentMethod || 'EFECTIVO').toUpperCase();
       const payments = [{ method: paymentMethod, amount: orderToPay.total }];
 
-      await apiClient(`/orders/${orderId}/status`, {
+      await apiClient(`/orders/${orderId}/finalize`, {
         method: "PATCH",
         body: JSON.stringify({ status: "paid", payments }),
       });
@@ -120,7 +123,7 @@ export default function DriverDeliveriesModal({
       }
     } catch (e: any) {
       console.error("Error al marcar como pagado:", e);
-      alert(`No se pudo actualizar la orden a pagado: ${e.message}`);
+      setErrorMessage(`No se pudo actualizar la orden a pagado: ${e.message}`);
     }
   };
 
@@ -266,6 +269,21 @@ export default function DriverDeliveriesModal({
           Cerrar
         </Button>
       </DialogActions>
+
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={6000}
+        onClose={() => setErrorMessage(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setErrorMessage(null)}
+          severity="error"
+          sx={{ width: "100%", fontSize: "1rem" }}
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Dialog>
   );
 }
