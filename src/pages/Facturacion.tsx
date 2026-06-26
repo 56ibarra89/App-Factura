@@ -34,6 +34,7 @@ const Facturacion = () => {
   const [isKitchenConfirmOpen, setIsKitchenConfirmOpen] = useState(false);
   const [certificadoOpen, setCertificadoOpen] = useState(false);
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<string | undefined>(undefined);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation() as any;
@@ -111,9 +112,13 @@ const Facturacion = () => {
     driverId?: string,
     deliveryCost?: number
   ) => {
-    // 1. Marcar vales como entregados
+    if (isProcessing) return;
+    setIsProcessing(true);
+    
     try {
-      for (const item of cart) {
+      // 1. Marcar vales como entregados
+      try {
+        for (const item of cart) {
         if (item.note && item.note.startsWith("Vale: ")) {
           const serial = item.note.replace("Vale: ", "").trim();
           try {
@@ -172,7 +177,7 @@ const Facturacion = () => {
         }, 500);
       } else {
         // Solo guardar cambios en la mesa
-        handleSaveTableOrder(activeOrder?.id, tableId);
+        await handleSaveTableOrder(activeOrder?.id, tableId);
         handleClearCart();
         setPreviewOpen(false);
         navigate("/mesas");
@@ -220,32 +225,37 @@ const Facturacion = () => {
   };
 
   const handleConfirmKitchenDispatch = async () => {
-    if (!tableId) return;
+    if (!tableId || isProcessing) return;
+    setIsProcessing(true);
 
-    // Primero guardamos el estado actual para no perder nada
-    await handleSaveTableOrder(activeOrder?.id, tableId);
+    try {
+      // Primero guardamos el estado actual para no perder nada
+      await handleSaveTableOrder(activeOrder?.id, tableId);
 
-    // Luego marcamos la mesa como enviada a cocina
-    markAsSentToKitchenByTable(tableId);
+      // Luego marcamos la mesa como enviada a cocina
+      markAsSentToKitchenByTable(tableId);
 
-    const nowMs = Date.now();
-    const updatedCart = cart.map((item) => ({
-      ...item,
-      isSentToKitchen: true,
-      sentAt: item.isSentToKitchen ? item.sentAt : nowMs,
-      kitchenStatus: item.isSentToKitchen ? item.kitchenStatus : "pending",
-    }));
-    handleSetCart(updatedCart);
+      const nowMs = Date.now();
+      const updatedCart = cart.map((item) => ({
+        ...item,
+        isSentToKitchen: true,
+        sentAt: item.isSentToKitchen ? item.sentAt : nowMs,
+        kitchenStatus: item.isSentToKitchen ? item.kitchenStatus : "pending",
+      }));
+      handleSetCart(updatedCart);
 
-    logService.log(
-      username,
-      role,
-      "KITCHEN_DISPATCH",
-      `Pedido enviado a cocina para Mesa ${tableId.split("-M")[1]}`,
-    );
+      logService.log(
+        username,
+        role,
+        "KITCHEN_DISPATCH",
+        `Pedido enviado a cocina para Mesa ${tableId.split("-M")[1]}`,
+      );
 
-    setSnackbarOpen(true);
-    setIsKitchenConfirmOpen(false);
+      setSnackbarOpen(true);
+      setIsKitchenConfirmOpen(false);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleApplyCertificado = (cert: CertificadoRule) => {
