@@ -8,7 +8,7 @@ import ReservationDialog from "../components/mesas/ReservationDialog";
 import TableSelectDialog from "../components/mesas/TableSelectDialog";
 import { Mesa } from "../types/mesa.types";
 
-import { LOGIN_GRADIENTS } from "../theme/loginTheme";
+
 import { useMesasConfig } from "../hooks/useMesasConfig";
 import { useTableReservations } from "../hooks/useTableReservations";
 import { useOrderContext } from "../context/OrderContext";
@@ -56,12 +56,14 @@ export default function MesasPage() {
   >(null);
   
   // Checkout snapshot state
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [checkoutOrder, setCheckoutOrder] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [checkoutPromotion, setCheckoutPromotion] = useState<any>(null);
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<string | undefined>(undefined);
 
   // Obtener órdenes activas desde el contexto
-  const { getOrderByTable, moveOrder, unirMesas, finalizeOrder } =
+  const { getOrderByTable, moveOrder, unirMesas, finalizeOrder, updateOrderItems } =
     useOrderContext();
 
   // Generar mesas dinámicamente según la planta seleccionada
@@ -179,7 +181,7 @@ export default function MesasPage() {
   // Obtener la orden de la mesa seleccionada
   const currentOrder: CartItemType[] = useMemo(() => activeOrder ? activeOrder.items : [], [activeOrder]);
 
-  const { subTotal: orderSubTotal, taxAmount: orderTaxAmount, total: orderTotal } = useMemo(
+  useMemo(
     () => calculateCartTotals(currentOrder, taxes, isExonerated),
     [currentOrder, taxes, isExonerated]
   );
@@ -196,8 +198,32 @@ export default function MesasPage() {
     customerName?: string,
     orderType?: OrderType,
     customerAddress?: string,
+    packagingItems?: { name: string, price: number, quantity: number }[]
   ) => {
     if (!checkoutOrder) return;
+
+    let finalCheckoutTotal = checkoutTotal;
+    let finalCheckoutSubTotal = checkoutSubTotal;
+    let finalCheckoutTaxAmount = checkoutTaxAmount;
+
+    // Si hay empaques (llevar o delivery), debemos agregarlos a la orden antes de facturar
+    if (packagingItems && packagingItems.length > 0) {
+      const extraCartItems: CartItemType[] = packagingItems.map(pkg => ({
+        id: crypto.randomUUID(),
+        name: `Empaque ${pkg.name}`,
+        price: pkg.price,
+        size: "único",
+        quantity: pkg.quantity,
+        extras: [],
+      }));
+      const fullCart = [...checkoutCart, ...extraCartItems];
+      const newTotals = calculateCartTotals(fullCart, taxes, isExonerated, checkoutPromotion);
+      finalCheckoutTotal = newTotals.total;
+      finalCheckoutSubTotal = newTotals.subTotal;
+      finalCheckoutTaxAmount = newTotals.taxAmount;
+      
+      await updateOrderItems(checkoutOrder.id, fullCart, finalCheckoutTotal, finalCheckoutSubTotal, finalCheckoutTaxAmount);
+    }
 
     const invoiceNumber = await finalizeOrder(
       checkoutOrder.id,
@@ -206,9 +232,9 @@ export default function MesasPage() {
       customerName,
       orderType,
       customerAddress,
-      checkoutTotal,
-      checkoutSubTotal,
-      checkoutTaxAmount,
+      finalCheckoutTotal,
+      finalCheckoutSubTotal,
+      finalCheckoutTaxAmount,
       checkoutDiscountAmount,
       checkoutPromotion?.code
     );
@@ -230,7 +256,7 @@ export default function MesasPage() {
         restoreFocus();
       }
     }, 500);
-  }, [checkoutOrder, finalizeOrder, checkoutTotal, restoreFocus]);
+    }, [checkoutOrder, finalizeOrder, checkoutTotal, restoreFocus, checkoutCart, checkoutDiscountAmount, checkoutPromotion, checkoutSubTotal, checkoutTaxAmount, isExonerated, taxes, updateOrderItems]);
 
   const handleSalir = () => navigate("/home");
 
