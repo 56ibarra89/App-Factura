@@ -39,7 +39,18 @@ export function calculateCartTotals(
   let discountAmount = 0;
   if (promotion) {
     if (promotion.discountType === "porcentaje") {
-      discountAmount = subTotal * (promotion.discountValue / 100);
+      // Calculate discountable subtotal by excluding packaging and delivery
+      const discountableSubtotal = items.reduce((sum, item) => {
+        const isPackaging = item.name.toLowerCase().startsWith('empaque');
+        const isDelivery = item.name.toLowerCase() === 'delivery';
+        if (isPackaging || isDelivery) return sum;
+        
+        const giftQty = item.giftQuantity || 0;
+        const paidQty = Math.max(0, item.quantity - giftQty);
+        return sum + item.price * paidQty;
+      }, 0);
+      
+      discountAmount = discountableSubtotal * (promotion.discountValue / 100);
     } else {
       discountAmount = promotion.discountValue;
     }

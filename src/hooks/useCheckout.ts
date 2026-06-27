@@ -27,7 +27,7 @@ export function useCheckout(
       packagingItems?: { name: string, price: number, quantity: number }[],
       deliveryCost?: number
     ) => {
-      let extraCartItems: CartItemType[] = (packagingItems || []).map(pkg => ({
+      const extraCartItems: CartItemType[] = (packagingItems || []).map(pkg => ({
         name: `Empaque ${pkg.name}`,
         price: pkg.price,
         size: "único" as const,
@@ -48,7 +48,7 @@ export function useCheckout(
 
       const fullCart = [...cart, ...extraCartItems];
 
-      const { total, subTotal, taxAmount } = calculateCartTotals(fullCart, taxes, isExonerated, promotion);
+      const { total, subTotal, taxAmount, discountAmount: newDiscountAmount } = calculateCartTotals(fullCart, taxes, isExonerated, promotion);
 
       // Crear y persistir la orden
       const invoiceNumber = await addOrder(
@@ -62,14 +62,14 @@ export function useCheckout(
         splitAmounts,
         subTotal,
         taxAmount,
-        discountAmount,
+        newDiscountAmount,
         promotion?.code,
         driverId,
         customerTendered
       );
       return invoiceNumber;
     },
-    [cart, taxes, isExonerated, promotion, discountAmount, addOrder]
+    [cart, taxes, isExonerated, promotion, addOrder]
   );
 
   const saveTableOrder = useCallback(
@@ -111,7 +111,7 @@ export function useCheckout(
       }));
       const fullCart = [...cart, ...extraCartItems];
 
-      const { total, subTotal, taxAmount } = calculateCartTotals(fullCart, taxes, isExonerated, promotion);
+      const { total, subTotal, taxAmount, discountAmount: newDiscountAmount } = calculateCartTotals(fullCart, taxes, isExonerated, promotion);
       // Wait, updateOrderItems needs to be called to persist the fullCart
       await updateOrderItems(orderId, fullCart, total, subTotal, taxAmount);
 
@@ -125,12 +125,12 @@ export function useCheckout(
         total,
         subTotal,
         taxAmount,
-        discountAmount,
+        newDiscountAmount,
         promotion?.code
       );
       return invoiceNumber;
     },
-    [cart, taxes, isExonerated, promotion, discountAmount, finalizeOrder]
+    [cart, taxes, isExonerated, promotion, updateOrderItems, finalizeOrder]
   );
 
   return {

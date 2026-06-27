@@ -205,6 +205,7 @@ export default function MesasPage() {
     let finalCheckoutTotal = checkoutTotal;
     let finalCheckoutSubTotal = checkoutSubTotal;
     let finalCheckoutTaxAmount = checkoutTaxAmount;
+    let finalCheckoutDiscountAmount = checkoutDiscountAmount;
 
     // Si hay empaques (llevar o delivery), debemos agregarlos a la orden antes de facturar
     if (packagingItems && packagingItems.length > 0) {
@@ -221,6 +222,7 @@ export default function MesasPage() {
       finalCheckoutTotal = newTotals.total;
       finalCheckoutSubTotal = newTotals.subTotal;
       finalCheckoutTaxAmount = newTotals.taxAmount;
+      finalCheckoutDiscountAmount = newTotals.discountAmount;
       
       await updateOrderItems(checkoutOrder.id, fullCart, finalCheckoutTotal, finalCheckoutSubTotal, finalCheckoutTaxAmount);
     }
@@ -235,7 +237,7 @@ export default function MesasPage() {
       finalCheckoutTotal,
       finalCheckoutSubTotal,
       finalCheckoutTaxAmount,
-      checkoutDiscountAmount,
+      finalCheckoutDiscountAmount,
       checkoutPromotion?.code
     );
 
