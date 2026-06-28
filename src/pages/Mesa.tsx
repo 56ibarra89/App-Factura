@@ -10,6 +10,7 @@ import { Mesa } from "../types/mesa.types";
 
 
 import { useMesasConfig } from "../hooks/useMesasConfig";
+import { useMyTodayZone } from "../hooks/useMyTodayZone";
 import { useTableReservations } from "../hooks/useTableReservations";
 import { useOrderContext } from "../context/OrderContext";
 import { useAuth } from "../context/AuthContext";
@@ -21,7 +22,8 @@ import { useImpuestosConfig } from "../hooks/useImpuestosConfig";
 import { calculateCartTotals } from "../utils/cartTotals";
 
 export default function MesasPage() {
-  const { floorsConfig, isLoading, error, retryFetch } = useMesasConfig();
+  const { floorsConfig, isLoading: isLoadingConfig, error, retryFetch } = useMesasConfig();
+  const { assignedFloorId, loadingZone } = useMyTodayZone();
   const { tableStatusMap, reservationDetails, reserveTable, releaseTable } =
     useTableReservations();
   const { username, role } = useAuth();
@@ -36,15 +38,28 @@ export default function MesasPage() {
     }, 300);
   }, []);
 
-  // Filtrar plantas que tengan mesas asignadas
-  const activeFloors = useMemo(() => floorsConfig.filter((f) => f.tableCount > 0), [floorsConfig]);
+  // Filtrar plantas que tengan mesas asignadas y que pertenezcan al mesero (si es mesero)
+  const activeFloors = useMemo(() => {
+    let base = floorsConfig.filter((f) => f.tableCount > 0);
+    if (role === "mesero" && assignedFloorId !== null) {
+      base = base.filter((f) => f.id === assignedFloorId);
+    }
+    return base;
+  }, [floorsConfig, role, assignedFloorId]);
   const floors = useMemo(() => 
     activeFloors.length > 0
       ? activeFloors.map((f) => ({ id: f.id, name: f.name }))
       : [], 
   [activeFloors]);
 
-  const [selectedFloor, setSelectedFloor] = useState(1);
+  const [selectedFloor, setSelectedFloor] = useState<number>(activeFloors[0]?.id || 1);
+
+  // Sincronizar el selectedFloor si cambian los activeFloors y el actual ya no es válido
+  useMemo(() => {
+    if (activeFloors.length > 0 && !activeFloors.find(f => f.id === selectedFloor)) {
+      setSelectedFloor(activeFloors[0].id);
+    }
+  }, [activeFloors, selectedFloor]);
   const [selectedMesaId, setSelectedMesaId] = useState<string | null>(null);
 
   // Dialog state
@@ -280,7 +295,31 @@ export default function MesasPage() {
     restoreFocus();
   }, [restoreFocus]);
 
-  if (!isLoading && (error || activeFloors.length === 0)) {
+  const isLoading = isLoadingConfig || loadingZone;
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 2 }}>
+        <Typography variant="h6" color="text.secondary">Cargando...</Typography>
+      </Box>
+    );
+  }
+
+  if (role === "mesero" && !assignedFloorId) {
+    return (
+      <Box sx={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 2, bgcolor: "background.default" }}>
+        <Typography variant="h5" color="text.primary" fontWeight="bold">Acceso Restringido</Typography>
+        <Typography variant="body1" color="text.secondary">
+          No tienes zona asignada para el día de hoy.
+        </Typography>
+        <Button variant="contained" color="primary" onClick={handleSalir} sx={{ mt: 2 }}>
+          Volver al Inicio
+        </Button>
+      </Box>
+    );
+  }
+
+  if (!isLoadingConfig && (error || activeFloors.length === 0)) {
     return (
       <Box sx={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 2 }}>
         <Typography variant="h5" color="error">Oops, no se pudieron cargar las mesas.</Typography>

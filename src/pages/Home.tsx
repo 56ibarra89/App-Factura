@@ -18,10 +18,16 @@ const Home = () => {
   const { currentShift } = useCaja();
   const allMenuItems = getMenuItems();
   
-  // Filter menu items for despachador
-  const menuItems = role === 'despachador' 
-    ? allMenuItems.filter(item => item.label === 'Delivery')
-    : allMenuItems;
+  // Filtrar items según el rol
+  const menuItems = React.useMemo(() => {
+    if (role === 'despachador') {
+      return allMenuItems.filter(item => item.label === 'Delivery');
+    }
+    if (role === 'mesero') {
+      return allMenuItems.filter(item => item.label === 'Mesas');
+    }
+    return allMenuItems;
+  }, [role, allMenuItems]);
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -85,22 +91,24 @@ const Home = () => {
       </Box>
 
       {/* FAB Control Motorizados */}
-      <Tooltip title="Control Motorizados" placement="left">
-        <Fab
-          color="secondary"
-          aria-label="motorizados"
-          onClick={() => setModalOpen(true)}
-          sx={{
-            position: "fixed",
-            bottom: 32,
-            right: 32,
-            zIndex: 1000,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-          }}
-        >
-          <TwoWheelerIcon />
-        </Fab>
-      </Tooltip>
+      {role !== 'mesero' && (
+        <Tooltip title="Control Motorizados" placement="left">
+          <Fab
+            color="secondary"
+            aria-label="motorizados"
+            onClick={() => setModalOpen(true)}
+            sx={{
+              position: "fixed",
+              bottom: 32,
+              right: 32,
+              zIndex: 1000,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            }}
+          >
+            <TwoWheelerIcon />
+          </Fab>
+        </Tooltip>
+      )}
 
       {/* Modal */}
       <DriverDeliveriesModal 

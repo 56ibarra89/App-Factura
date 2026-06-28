@@ -22,7 +22,7 @@ export default function NotificationsMenu() {
   const { notifications, unreadCount, removeNotification, markAsRead } = useNotifications();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
-  if (role !== 'admin' && role !== 'cajero' && role !== 'despachador') {
+  if (role !== 'admin' && role !== 'cajero' && role !== 'despachador' && role !== 'mesero') {
     return null;
   }
 
