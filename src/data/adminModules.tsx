@@ -11,6 +11,7 @@ import SecurityIcon from "@mui/icons-material/Security";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SaveIcon from "@mui/icons-material/Save";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -61,6 +62,14 @@ export const adminModules: AdminModuleItem[] = [
     description: "Gestiona los días de trabajo de cada empleado. Útil para habilitar la lista de motorizados por día.",
     icon: <CalendarMonthIcon fontSize="large" />,
     path: "/admin/horarios",
+  },
+  {
+    id: "zonas-meseros",
+    category: "Operativa",
+    title: "Zonas de Meseros",
+    description: "Asigna en qué planta o área trabajará cada mesero dependiendo del día de la semana.",
+    icon: <LocationOnIcon fontSize="large" />,
+    path: "/admin/zonas-meseros",
   },
   {
     id: "usuarios",
