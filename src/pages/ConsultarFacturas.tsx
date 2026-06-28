@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Box, Typography } from "@mui/material";
 import { BackButton } from "../components/BackButton";
 import PageHeader from "../components/PageHeader";
-import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { Order } from "../types/order.types";
 import OrderViewDialog from "../components/OrderViewDialog";
 import { useOrderHistory } from "../hooks/useOrderHistory";
@@ -109,6 +108,7 @@ const ConsultarFacturas = () => {
           cart={selectedOrder.items}
           subTotal={selectedOrder.subTotal || 0}
           taxAmount={selectedOrder.taxAmount || 0}
+          discountAmount={selectedOrder.discountAmount || 0}
           total={selectedOrder.total}
           customerName={selectedOrder.customerName}
           customerAddress={selectedOrder.customerAddress}

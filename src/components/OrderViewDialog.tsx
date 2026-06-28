@@ -26,6 +26,7 @@ interface OrderViewDialogProps {
   orderType?: string;
   invoiceNumber?: string;
   cashierName?: string;
+  discountAmount?: number;
   onClose: () => void;
   onConfirm: () => void;
   title?: string;
@@ -44,6 +45,7 @@ export default function OrderViewDialog({
   showConfirmButton = true,
   subTotal = 0,
   taxAmount = 0,
+  discountAmount = 0,
   customerName,
   customerAddress,
   orderType,
@@ -107,6 +109,24 @@ export default function OrderViewDialog({
           ))}
         </List>
         <Divider sx={{ my: 2 }} />
+        
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography>Subtotal:</Typography>
+          <Typography>C${subTotal.toFixed(2)}</Typography>
+        </Box>
+        
+        {discountAmount > 0 && (
+          <Box display="flex" justifyContent="space-between" mb={1}>
+            <Typography color="success.main">Descuento aplicado:</Typography>
+            <Typography color="success.main">-C${discountAmount.toFixed(2)}</Typography>
+          </Box>
+        )}
+        
+        <Box display="flex" justifyContent="space-between" mb={2}>
+          <Typography>Impuestos:</Typography>
+          <Typography>C${taxAmount.toFixed(2)}</Typography>
+        </Box>
+
         <Box display="flex" justifyContent="space-between">
           <Typography fontWeight="bold">Total:</Typography>
           <Typography fontWeight="bold" color="error.main">
