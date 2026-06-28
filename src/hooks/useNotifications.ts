@@ -19,7 +19,7 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchUnread = useCallback(async () => {
-    if (role !== 'admin' && role !== 'cajero' && role !== 'despachador') return;
+    if (role !== 'admin' && role !== 'cajero' && role !== 'despachador' && role !== 'mesero') return;
     try {
       const data = await apiClient("/notifications", { method: 'GET' });
       if (Array.isArray(data)) {
@@ -36,7 +36,7 @@ export function useNotifications() {
   }, [fetchUnread]);
 
   useEffect(() => {
-    if (role !== 'admin' && role !== 'cajero' && role !== 'despachador') return;
+    if (role !== 'admin' && role !== 'cajero' && role !== 'despachador' && role !== 'mesero') return;
 
     const eventSource = new EventSource(`${API_BASE_URL}/notifications/stream`);
 
