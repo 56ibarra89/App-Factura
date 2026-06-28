@@ -57,8 +57,8 @@ class ShiftRepository implements IShiftRepository {
   async getActiveShiftForUser(username: string): Promise<Shift | null> {
     try {
       const response = await apiClient("/shifts?status=OPEN&limit=50");
-      const openShifts = response.map((s: any) => this.mapToFrontendShift(s));
-      const userShift = openShifts.find(s => s.cashierName === username && s.status === 'open');
+      const openShifts: Shift[] = response.map((s: any) => this.mapToFrontendShift(s));
+      const userShift = openShifts.find((s: Shift) => s.cashierName === username && s.status === 'open');
       return userShift || null;
     } catch (error) {
       console.error("Error obteniendo turno activo del backend:", error);
