@@ -5,6 +5,7 @@ import MergeTypeIcon from '@mui/icons-material/MergeType';
 import MoveUpIcon from '@mui/icons-material/MoveUp';
 import EventSeatIcon from '@mui/icons-material/EventSeat';
 import LogoutIcon from '@mui/icons-material/Logout';
+import PeopleIcon from '@mui/icons-material/People';
 import { LOGIN_COLORS } from "../../theme/loginTheme";
 
 interface Props {
@@ -17,6 +18,9 @@ interface Props {
   onMoverPedido?: () => void;
   hasActiveOrder?: boolean;
   canModifyOrder?: boolean;
+  onToggleOccupancy?: () => void;
+  isOccupied?: boolean;
+  cannotReleaseTable?: boolean;
 }
 
 export default function OrderActions({ 
@@ -28,7 +32,10 @@ export default function OrderActions({
   onUnirMesas,
   onMoverPedido,
   hasActiveOrder = false,
-  canModifyOrder = true
+  canModifyOrder = true,
+  onToggleOccupancy,
+  isOccupied = false,
+  cannotReleaseTable = false
 }: Props) {
   const successColor = "#2e7d32";
   const cancelColor = "#d32f2f"; // Red for cancel
@@ -89,6 +96,42 @@ export default function OrderActions({
           disabled={!hasActiveOrder || !canModifyOrder}
         >
           Cobrar / Cerrar Mesa
+        </Button>
+      </Grid>
+
+      <Grid size={12}>
+        <Button
+          fullWidth
+          variant="contained"
+          startIcon={<PeopleIcon />}
+          size="small"
+          sx={{
+            py: 0.5,
+            bgcolor: isOccupied ? "#f57c00" : "#1976d2", // Orange if occupied, Blue if free
+            color: "white",
+            textTransform: "none",
+            fontWeight: "800",
+            borderRadius: 2,
+            fontSize: "0.9rem",
+            boxShadow: `0 4px 12px ${alpha(isOccupied ? "#f57c00" : "#1976d2", 0.4)}`,
+            "&:hover": { 
+              bgcolor: isOccupied ? "#e65100" : "#1565c0", 
+              boxShadow: `0 6px 16px ${alpha(isOccupied ? "#f57c00" : "#1976d2", 0.5)}`,
+              transform: "translateY(-2px)"
+            },
+            transition: "all 0.2s",
+            "&.Mui-disabled": {
+              bgcolor: "action.disabledBackground",
+              color: "text.disabled",
+              boxShadow: "none"
+            }
+          }}
+          onClick={onToggleOccupancy}
+          // Removemos el disabled de MUI aquí para que el click pase y muestre el alert de validación.
+          // O si preferimos, lo dejamos disabled pero con estilos correctos. Lo dejaremos disabled.
+          disabled={cannotReleaseTable && isOccupied}
+        >
+          {isOccupied ? "Liberar Mesa" : "Ocupar Mesa"}
         </Button>
       </Grid>
 

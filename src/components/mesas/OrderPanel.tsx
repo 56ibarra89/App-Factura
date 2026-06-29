@@ -16,6 +16,9 @@ interface Props {
   onMoverPedido?: () => void;
   hasActiveOrder?: boolean;
   canModifyOrder?: boolean;
+  onToggleOccupancy?: () => void;
+  isOccupied?: boolean;
+  cannotReleaseTable?: boolean;
 }
 
 export default function OrderPanel({ 
@@ -28,7 +31,10 @@ export default function OrderPanel({
   onUnirMesas,
   onMoverPedido,
   hasActiveOrder = false,
-  canModifyOrder = true
+  canModifyOrder = true,
+  onToggleOccupancy,
+  isOccupied = false,
+  cannotReleaseTable = false
 }: Props) {
   return (
     <Paper
@@ -66,6 +72,9 @@ export default function OrderPanel({
             onMoverPedido={onMoverPedido}
             hasActiveOrder={hasActiveOrder}
             canModifyOrder={canModifyOrder}
+            onToggleOccupancy={onToggleOccupancy}
+            isOccupied={isOccupied}
+            cannotReleaseTable={cannotReleaseTable}
           />
         </Box>
       </Box>

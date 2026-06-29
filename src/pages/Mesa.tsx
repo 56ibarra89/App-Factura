@@ -24,7 +24,7 @@ import { calculateCartTotals } from "../utils/cartTotals";
 export default function MesasPage() {
   const { floorsConfig, isLoading: isLoadingConfig, error, retryFetch } = useMesasConfig();
   const { assignedFloorId, loadingZone } = useMyTodayZone();
-  const { tableStatusMap, reservationDetails, reserveTable, releaseTable } =
+  const { tableStatusMap, reservationDetails, reserveTable, releaseTable, setTableStatus } =
     useTableReservations();
   const { username, role } = useAuth();
   const { taxes, isExonerated } = useImpuestosConfig();
@@ -78,12 +78,23 @@ export default function MesasPage() {
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<string | undefined>(undefined);
 
   // Obtener órdenes activas desde el contexto
-  const { getOrderByTable, moveOrder, unirMesas, finalizeOrder, updateOrderItems } =
+  const { orders, getOrderByTable, moveOrder, unirMesas, finalizeOrder, updateOrderItems } =
     useOrderContext();
 
   // Generar mesas dinámicamente según la planta seleccionada
   const activeFloorConfig = useMemo(() => activeFloors.find((f) => f.id === selectedFloor), [activeFloors, selectedFloor]);
   const tableCount = activeFloorConfig ? activeFloorConfig.tableCount : 0;
+
+  const isTableBlocked = useCallback((tableId: string) => {
+    return orders.some(o => 
+      (o.tableId === tableId || o.linkedTables?.includes(tableId)) &&
+      o.status !== "cancelled" &&
+      (
+        o.status !== "paid" || 
+        o.items.some(item => item.isSentToKitchen && item.kitchenStatus !== "delivered")
+      )
+    );
+  }, [orders]);
 
   const mesas: Mesa[] = useMemo(() => {
     return Array.from({ length: tableCount }).map((_, idx) => {
@@ -91,8 +102,8 @@ export default function MesasPage() {
       const uniqueId = `F${selectedFloor}-M${tableNum}`;
 
       // Si hay una orden activa en esta mesa, está ocupada
-      const hasActiveOrder = !!getOrderByTable(uniqueId);
-      const estado = hasActiveOrder
+      const hasBlockingOrder = isTableBlocked(uniqueId);
+      const estado = hasBlockingOrder
         ? "ocupado"
         : tableStatusMap[uniqueId] || "disponible";
 
@@ -103,7 +114,7 @@ export default function MesasPage() {
         reservationName: reservationDetails[uniqueId]?.nombre,
       };
     });
-  }, [tableCount, selectedFloor, getOrderByTable, tableStatusMap, reservationDetails]);
+  }, [tableCount, selectedFloor, isTableBlocked, tableStatusMap, reservationDetails]);
 
   const selectedMesaStatus = useMemo(() => 
     selectedMesaId ? tableStatusMap[selectedMesaId] || "disponible" : null,
@@ -141,10 +152,37 @@ export default function MesasPage() {
   const handleEditOrder = useCallback(() => {
     if (!selectedMesaId) return;
     if (isReserved) releaseTable(selectedMesaId);
+    
+    // Si la mesa está disponible, la marcamos como ocupada automáticamente
+    if (!tableStatusMap[selectedMesaId] || tableStatusMap[selectedMesaId] === "disponible") {
+      setTableStatus(selectedMesaId, "ocupado");
+    }
+
     navigate(`/facturacion?tableId=${selectedMesaId}`);
-  }, [selectedMesaId, isReserved, releaseTable, navigate]);
+  }, [selectedMesaId, isReserved, releaseTable, tableStatusMap, setTableStatus, navigate]);
 
   const activeOrder = useMemo(() => selectedMesaId ? getOrderByTable(selectedMesaId) : null, [selectedMesaId, getOrderByTable]);
+
+  const handleToggleOccupancy = useCallback(() => {
+    if (!selectedMesaId) return;
+
+    if (isTableBlocked(selectedMesaId)) {
+      alert("No se puede liberar la mesa porque hay cuentas pendientes o pedidos sin entregar.");
+      return;
+    }
+
+    if (selectedMesaStatus === "ocupado" || selectedMesaStatus === "reservado") {
+      // Liberar
+      if (selectedMesaStatus === "reservado") {
+        releaseTable(selectedMesaId);
+      } else {
+        setTableStatus(selectedMesaId, "disponible");
+      }
+    } else {
+      // Ocupar
+      setTableStatus(selectedMesaId, "ocupado");
+    }
+  }, [selectedMesaId, selectedMesaStatus, isTableBlocked, setTableStatus, releaseTable]);
 
   const canModifyOrder = useMemo(() => {
     if (!activeOrder) return true;
@@ -388,6 +426,9 @@ export default function MesasPage() {
           onMoverPedido={handleMoverPedido}
           hasActiveOrder={!!activeOrder}
           canModifyOrder={canModifyOrder}
+          onToggleOccupancy={handleToggleOccupancy}
+          isOccupied={selectedMesaStatus === "ocupado" || !!activeOrder || (selectedMesaId ? isTableBlocked(selectedMesaId) : false)}
+          cannotReleaseTable={selectedMesaId ? isTableBlocked(selectedMesaId) : false}
         />
       </Box>
 
