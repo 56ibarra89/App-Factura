@@ -53,6 +53,7 @@ app.whenReady().then(() => {
   createWindow();
   let encryptedToken = null;
   let targetApiUrl = null;
+  ipcMain.removeAllListeners("set-secure-token");
   ipcMain.on("set-secure-token", (event, token, apiUrl) => {
     if (safeStorage.isEncryptionAvailable()) {
       encryptedToken = safeStorage.encryptString(token);
@@ -64,6 +65,7 @@ app.whenReady().then(() => {
       targetApiUrl = apiUrl;
     }
   });
+  ipcMain.removeAllListeners("clear-secure-token");
   ipcMain.on("clear-secure-token", () => {
     encryptedToken = null;
     console.log("[Main] Token eliminado de memoria segura.");

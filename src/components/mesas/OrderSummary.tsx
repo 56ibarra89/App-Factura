@@ -6,10 +6,12 @@ import { useImpuestosConfig } from "../../hooks/useImpuestosConfig";
 
 interface Props {
   order: CartItemType[];
+  cashierName?: string;
 }
 
-export default function OrderSummary({ order }: Props) {
+export default function OrderSummary({ order, cashierName }: Props) {
   const { username } = useAuth();
+  const displayUsername = cashierName || username;
   const { taxes, isExonerated } = useImpuestosConfig();
 
   const subTotal = order.reduce(
@@ -114,7 +116,7 @@ export default function OrderSummary({ order }: Props) {
             component="span"
             sx={{ color: "text.primary", fontWeight: "700" }}
           >
-            {username}
+            {displayUsername}
           </Box>
         </Typography>
       </Box>

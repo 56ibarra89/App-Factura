@@ -119,6 +119,7 @@ export default function MesasPage() {
       <Box sx={{ width: 400, flexShrink: 0 }}>
         <OrderPanel
           order={currentOrder}
+          cashierName={logic.activeOrder?.cashierName}
           onSalir={handleSalir}
           onReservar={logic.handleReservar}
           isReserved={logic.isReserved}

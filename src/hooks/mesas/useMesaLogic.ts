@@ -26,7 +26,7 @@ export function useMesaLogic({
   const navigate = useNavigate();
   const { tableStatusMap, reservationDetails, reserveTable, releaseTable, setTableStatus } =
     useTableReservations();
-  const { orders, getOrderByTable, moveOrder, unirMesas, updateOrderStatus } = useOrderContext();
+  const { orders, getOrderByTable, moveOrder, unirMesas, updateOrderStatus, addOrder } = useOrderContext();
 
   // Filtrar plantas que tengan mesas asignadas y que pertenezcan al mesero (si es mesero)
   const activeFloors = useMemo(() => {
@@ -57,14 +57,17 @@ export function useMesaLogic({
   const tableCount = activeFloorConfig ? activeFloorConfig.tableCount : 0;
 
   const isTableBlocked = useCallback((tableId: string) => {
-    return orders.some(o => 
-      (o.tableId === tableId || o.linkedTables?.includes(tableId)) &&
+    return orders.some(o => {
+      // Un pedido en blanco no bloquea la mesa, permitiendo liberarla
+      if (!o.items || o.items.length === 0) return false;
+
+      return (o.tableId === tableId || o.linkedTables?.includes(tableId)) &&
       o.status !== "cancelled" &&
       (
         o.status !== "paid" || 
         o.items.some(item => item.isSentToKitchen && item.kitchenStatus !== "delivered")
-      )
-    );
+      );
+    });
   }, [orders]);
 
   const mesas: Mesa[] = useMemo(() => {
@@ -159,8 +162,9 @@ export function useMesaLogic({
       }
     } else {
       setTableStatus(selectedMesaId, "ocupado");
+      addOrder([], 0, undefined, "local", undefined, selectedMesaId);
     }
-  }, [selectedMesaId, selectedMesaStatus, isTableBlocked, setTableStatus, releaseTable, getOrderByTable, updateOrderStatus]);
+  }, [selectedMesaId, selectedMesaStatus, isTableBlocked, setTableStatus, releaseTable, getOrderByTable, updateOrderStatus, addOrder]);
 
   const handleUnirMesas = useCallback(() => {
     if (!selectedMesaId) return;

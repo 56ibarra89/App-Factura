@@ -7,6 +7,7 @@ import { CartItemType } from "../../types/cart";
 
 interface Props {
   order: CartItemType[];
+  cashierName?: string;
   onSalir: () => void;
   onReservar: () => void;
   isReserved?: boolean;
@@ -23,6 +24,7 @@ interface Props {
 
 export default function OrderPanel({ 
   order, 
+  cashierName,
   onSalir, 
   onReservar, 
   isReserved = false, 
@@ -60,7 +62,7 @@ export default function OrderPanel({
         borderTop: "1px solid rgba(0,0,0,0.06)",
         bgcolor: "action.hover" 
       }}>
-        <OrderSummary order={order} />
+        <OrderSummary order={order} cashierName={cashierName} />
         <Box sx={{ mt: 1.5 }}>
           <OrderActions 
             onSalir={onSalir} 
