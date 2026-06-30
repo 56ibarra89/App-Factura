@@ -156,7 +156,7 @@ export default function OrderActions({
               boxShadow: "none" 
             }
           }}
-          disabled={!hasActiveOrder || !canModifyOrder}
+          disabled={!canModifyOrder}
         >
           Unir Mesa
         </Button>
@@ -168,7 +168,7 @@ export default function OrderActions({
           variant="contained"
           startIcon={<MoveUpIcon />}
           onClick={onMoverPedido}
-          disabled={!hasActiveOrder || !canModifyOrder}
+          disabled={!canModifyOrder}
           size="small"
           sx={{
             py: 0.5,

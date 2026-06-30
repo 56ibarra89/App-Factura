@@ -5,7 +5,6 @@ import { calculateCartTotals } from "../../utils/cartTotals";
 import { CartItemType } from "../../types/cart";
 import { PaymentMethod, OrderType } from "../../types/order.types";
 import { Order } from "../../types/order.types";
-
 export function useMesaCheckout(restoreFocus: () => void) {
   const { finalizeOrder, updateOrderItems } = useOrderContext();
   const { taxes, isExonerated } = useImpuestosConfig();
@@ -104,9 +103,7 @@ export function useMesaCheckout(restoreFocus: () => void) {
       setCreatedInvoiceNumber(invoiceNumber || "000001");
 
       setTimeout(() => {
-        // @ts-expect-error
         if (window.ipcRenderer) {
-          // @ts-expect-error
           window.ipcRenderer.send("print-silent");
           setTimeout(() => {
             setIsPreviewOpen(false);

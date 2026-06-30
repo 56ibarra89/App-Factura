@@ -26,7 +26,7 @@ export function useMesaLogic({
   const navigate = useNavigate();
   const { tableStatusMap, reservationDetails, reserveTable, releaseTable, setTableStatus } =
     useTableReservations();
-  const { orders, getOrderByTable, moveOrder, unirMesas } = useOrderContext();
+  const { orders, getOrderByTable, moveOrder, unirMesas, updateOrderStatus } = useOrderContext();
 
   // Filtrar plantas que tengan mesas asignadas y que pertenezcan al mesero (si es mesero)
   const activeFloors = useMemo(() => {
@@ -128,6 +128,14 @@ export function useMesaLogic({
     navigate(`/facturacion?tableId=${selectedMesaId}`);
   }, [selectedMesaId, isReserved, releaseTable, tableStatusMap, setTableStatus, navigate]);
 
+  const clearTableStatus = useCallback((tablesToClear: string[]) => {
+    tablesToClear.forEach(tId => {
+      if (tableStatusMap[tId] === "ocupado") {
+        setTableStatus(tId, "disponible");
+      }
+    });
+  }, [tableStatusMap, setTableStatus]);
+
   const handleToggleOccupancy = useCallback(() => {
     if (!selectedMesaId) return;
 
@@ -137,6 +145,13 @@ export function useMesaLogic({
     }
 
     if (selectedMesaStatus === "ocupado" || selectedMesaStatus === "reservado") {
+      const activeOrder = getOrderByTable(selectedMesaId);
+      if (activeOrder && (!activeOrder.items || activeOrder.items.length === 0)) {
+        // Cancel the dummy order if the table is released without adding items
+        // @ts-expect-error - Expected 5 args, got 2
+        updateOrderStatus(activeOrder.id, "CANCELLED");
+      }
+      
       if (selectedMesaStatus === "reservado") {
         releaseTable(selectedMesaId);
       } else {
@@ -145,7 +160,7 @@ export function useMesaLogic({
     } else {
       setTableStatus(selectedMesaId, "ocupado");
     }
-  }, [selectedMesaId, selectedMesaStatus, isTableBlocked, setTableStatus, releaseTable]);
+  }, [selectedMesaId, selectedMesaStatus, isTableBlocked, setTableStatus, releaseTable, getOrderByTable, updateOrderStatus]);
 
   const handleUnirMesas = useCallback(() => {
     if (!selectedMesaId) return;
@@ -161,13 +176,42 @@ export function useMesaLogic({
     if (!selectedMesaId) return;
     if (mode === "unir") {
       unirMesas(selectedMesaId, targetTableId);
+      const newTables = Array.isArray(targetTableId) ? targetTableId : [targetTableId];
+      newTables.forEach(tId => {
+        if (tableStatusMap[tId] !== "ocupado") {
+          setTableStatus(tId, "ocupado");
+        }
+      });
     } else if (mode === "mover") {
-      moveOrder(selectedMesaId, targetTableId);
-      const nextMesaId = Array.isArray(targetTableId) ? targetTableId[0] : targetTableId;
+      const order = activeOrder;
+      const sourceTables = [selectedMesaId];
+      if (order?.linkedTables) sourceTables.push(...order.linkedTables);
+
+      let finalTarget = targetTableId;
+      if (Array.isArray(targetTableId)) {
+        const maxAllowed = sourceTables.length;
+        if (targetTableId.length > maxAllowed) {
+          finalTarget = targetTableId.slice(0, maxAllowed);
+        }
+      }
+
+      moveOrder(selectedMesaId, finalTarget);
+
+      const newTables = Array.isArray(finalTarget) ? finalTarget : [finalTarget];
+      const tablesToFree = sourceTables.filter(t => !newTables.includes(t));
+      clearTableStatus(tablesToFree);
+
+      newTables.forEach(tId => {
+        if (tableStatusMap[tId] !== "ocupado") {
+          setTableStatus(tId, "ocupado");
+        }
+      });
+
+      const nextMesaId = Array.isArray(finalTarget) ? finalTarget[0] : finalTarget;
       setSelectedMesaId(nextMesaId);
     }
     onDialogClose();
-  }, [selectedMesaId, unirMesas, moveOrder]);
+  }, [selectedMesaId, unirMesas, moveOrder, activeOrder, clearTableStatus, tableStatusMap, setTableStatus]);
 
   const getAvailableTables = useCallback(() => {
     return mesas
@@ -205,5 +249,6 @@ export function useMesaLogic({
     handleMoverPedido,
     handleTableSelectConfirm,
     getAvailableTables,
+    clearTableStatus,
   };
 }

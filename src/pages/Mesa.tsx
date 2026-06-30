@@ -152,8 +152,8 @@ export default function MesasPage() {
         options={logic.getAvailableTables()}
         multiSelect={true}
         maxSelection={
-          dialogs.tableSelectMode === "mover" && logic.activeOrder
-            ? (logic.activeOrder.linkedTables?.length || 0) + 1
+          dialogs.tableSelectMode === "mover"
+            ? (logic.activeOrder?.linkedTables?.length || 0) + 1
             : undefined
         }
         title={

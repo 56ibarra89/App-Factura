@@ -54,7 +54,6 @@ export function createOrder(params: {
   discountAmount?: number;
   promotionCode?: string;
   customerTendered?: number;
-  nowMs: number;
 }): Order {
   const {
     items,
@@ -72,9 +71,9 @@ export function createOrder(params: {
     discountAmount,
     promotionCode,
     customerTendered,
-    nowMs,
   } = params;
 
+  const nowMs = Date.now();
   let deliveryChange: number | undefined = undefined;
   if (customerTendered !== undefined && customerTendered > total) {
     deliveryChange = customerTendered - total;

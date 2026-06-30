@@ -122,10 +122,47 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         try {
           const prefs = await apiClient('/users/me/preferences/hidden-orders');
           hiddenIds = prefs || [];
-        } catch (e) {
+        } catch {
           console.warn("Preferencias de órdenes ocultas no disponibles (Endpoint en construcción)");
         }
-        setOrders(backendOrders.filter(o => !hiddenIds.includes(o.id)));
+        const sanitizedBackendOrders = backendOrders.map(bOrder => {
+          if (bOrder.tableId && bOrder.linkedTables?.includes(bOrder.tableId)) {
+            return {
+              ...bOrder,
+              linkedTables: bOrder.linkedTables.filter(t => t !== bOrder.tableId)
+            };
+          }
+          return bOrder;
+        });
+        
+        const currentOrders = ordersRef.current;
+        const merged = sanitizedBackendOrders.map(bOrder => {
+          const existing = currentOrders.find(o => o.id === bOrder.id);
+          if (existing) {
+            const backendHasLinkedTables = bOrder.linkedTables && bOrder.linkedTables.length > 0;
+            const frontendHasLinkedTables = existing.linkedTables && existing.linkedTables.length > 0;
+            
+            // Si el backend no tiene linkedTables pero el frontend sí, preservamos el del frontend
+            // Esto evita que el polling borre las mesas unidas si el backend no lo soportó.
+            if (!backendHasLinkedTables && frontendHasLinkedTables) {
+              return {
+                ...bOrder,
+                tableId: existing.tableId,
+                linkedTables: existing.linkedTables
+              };
+            }
+          }
+          return bOrder;
+        });
+
+        // Conservar órdenes locales muy recientes (menos de 15 segundos) que aún no han llegado en el polling
+        const backendOrderIds = new Set(backendOrders.map(o => o.id));
+        const recentLocalOrders = currentOrders.filter(o => 
+          !backendOrderIds.has(o.id) && (Date.now() - new Date(o.timestamp).getTime() < 15000)
+        );
+
+        const finalOrders = [...merged, ...recentLocalOrders];
+        setOrders(finalOrders.filter(o => !hiddenIds.includes(o.id)));
       } catch (error) {
         console.error("Failed to load orders from backend", error);
       }
@@ -145,9 +182,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     async (
       items, total, customerName, orderType, customerAddress, tableId, paymentMethod, splitAmounts, subTotal, taxAmount, discountAmount, promotionCode, driverId, customerTendered
     ) => {
-      const nowMs = Date.now();
       const newOrder = createOrder({
-        items, total, username, customerName, orderType, customerAddress, tableId, paymentMethod, splitAmounts, subTotal, taxAmount, discountAmount, promotionCode, driverId, customerTendered, nowMs
+        items, total, username, customerName, orderType, customerAddress, tableId, paymentMethod, splitAmounts, subTotal, taxAmount, discountAmount, promotionCode, driverId, customerTendered
       });
 
       updateOrdersState((prev) => [newOrder, ...prev]);
@@ -306,20 +342,43 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   const unirMesas = useCallback<OrderCommandsContextProps["unirMesas"]>(
     (sourceTableId, destTableId) => {
       let modifiedOrder: Order | undefined;
+      let isNew = false;
       updateOrdersState((prev) => {
-        const { orders: nextOrders, modified } = orderMutations.unirMesas(prev, sourceTableId, destTableId);
+        let { orders: nextOrders, modified } = orderMutations.unirMesas(prev, sourceTableId, destTableId);
+        
+        // Si no existe una orden activa para esta mesa pero queremos unirla,
+        // creamos una orden en blanco para poder registrar la unión.
+        if (!modified) {
+          modified = createOrder({
+            items: [],
+            total: 0,
+            tableId: sourceTableId,
+            username: username || "admin",
+            orderType: "local"
+          });
+          const newTables = Array.isArray(destTableId) ? destTableId : [destTableId];
+          modified.linkedTables = newTables;
+          nextOrders = [modified, ...nextOrders];
+          isNew = true;
+        }
+        
         modifiedOrder = modified;
         return nextOrders;
       });
+      
       if (modifiedOrder) {
-        const tablesToSync = Array.from(new Set([
-          ...(modifiedOrder.tableId ? [modifiedOrder.tableId] : []),
-          ...(modifiedOrder.linkedTables || [])
-        ]));
-        syncUpdateTables(modifiedOrder.id, tablesToSync).catch(console.error);
+        if (isNew) {
+          syncAddOrderToBackend(modifiedOrder).catch(console.error);
+        } else {
+          const tablesToSync = Array.from(new Set([
+            ...(modifiedOrder.tableId ? [modifiedOrder.tableId] : []),
+            ...(modifiedOrder.linkedTables || [])
+          ]));
+          syncUpdateTables(modifiedOrder.id, tablesToSync).catch(console.error);
+        }
       }
     },
-    [updateOrdersState],
+    [updateOrdersState, username],
   );
 
   const queriesValue = useMemo<OrderQueriesContextProps>(
