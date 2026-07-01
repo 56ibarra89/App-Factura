@@ -188,12 +188,18 @@ export function useMesaLogic({
       });
     } else if (mode === "mover") {
       const order = activeOrder;
-      const sourceTables = [selectedMesaId];
-      if (order?.linkedTables) sourceTables.push(...order.linkedTables);
+      const sourceTables: string[] = [];
+      if (order) {
+        if (order.tableId) sourceTables.push(order.tableId);
+        if (order.linkedTables) sourceTables.push(...order.linkedTables);
+      } else {
+        sourceTables.push(selectedMesaId);
+      }
+      const uniqueSourceTables = Array.from(new Set(sourceTables));
 
       let finalTarget = targetTableId;
       if (Array.isArray(targetTableId)) {
-        const maxAllowed = sourceTables.length;
+        const maxAllowed = uniqueSourceTables.length;
         if (targetTableId.length > maxAllowed) {
           finalTarget = targetTableId.slice(0, maxAllowed);
         }
@@ -202,7 +208,7 @@ export function useMesaLogic({
       moveOrder(selectedMesaId, finalTarget);
 
       const newTables = Array.isArray(finalTarget) ? finalTarget : [finalTarget];
-      const tablesToFree = sourceTables.filter(t => !newTables.includes(t));
+      const tablesToFree = uniqueSourceTables.filter(t => !newTables.includes(t));
       clearTableStatus(tablesToFree);
 
       newTables.forEach(tId => {
