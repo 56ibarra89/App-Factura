@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Typography, Stack, Button } from "@mui/material";
+import { Box, Typography, Stack, Button, Tabs, Tab } from "@mui/material";
 import { BackButton } from "../components/BackButton";
 import TimerIcon from "@mui/icons-material/Timer";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -14,6 +14,7 @@ import PinValidationDialog from "../components/auth/PinValidationDialog";
 
 // Hooks & Theme
 import { useOrderManagement } from "../hooks/useOrderManagement";
+import { useKitchens } from "../hooks/useKitchens";
 import { useAuth } from "../context/AuthContext";
 import { logService } from "../services/logService";
 import { LOGIN_COLORS } from "../theme/loginTheme";
@@ -30,6 +31,16 @@ const Ordenes = () => {
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+
+  const { kitchens } = useKitchens();
+  const [selectedKitchenId, setSelectedKitchenId] = useState<string>(() => {
+    return localStorage.getItem("selectedKitchenId") || "";
+  });
+
+  const handleKitchenChange = (event: React.SyntheticEvent, newValue: string) => {
+    setSelectedKitchenId(newValue);
+    localStorage.setItem("selectedKitchenId", newValue);
+  };
 
   const handleClearHistory = () => {
     clearHistory();
@@ -93,6 +104,15 @@ const Ordenes = () => {
         }
       />
 
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={selectedKitchenId} onChange={handleKitchenChange} variant="scrollable" scrollButtons="auto">
+          <Tab label="Todas las áreas" value="" />
+          {kitchens.filter(k => k.isActive).map(k => (
+            <Tab key={k.id} label={k.name} value={k.id} />
+          ))}
+        </Tabs>
+      </Box>
+
       <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, mt: 2 }}>
         Órdenes Activas
       </Typography>
@@ -102,6 +122,7 @@ const Ordenes = () => {
       ) : (
         <OrderGrid 
           orders={activeOrders} 
+          selectedKitchenId={selectedKitchenId}
           onUpdateStatus={updateOrderStatus} 
           onDelete={handleDeleteOrder} 
         />
@@ -114,6 +135,7 @@ const Ordenes = () => {
           </Typography>
           <OrderGrid 
             orders={finishedOrders.slice(0, 50)} 
+            selectedKitchenId={selectedKitchenId}
             onUpdateStatus={updateOrderStatus} 
             onDelete={handleDeleteOrder} 
           />

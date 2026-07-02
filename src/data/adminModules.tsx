@@ -12,6 +12,7 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SaveIcon from "@mui/icons-material/Save";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
+import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -110,6 +111,14 @@ export const adminModules: AdminModuleItem[] = [
     description: "Edita visualmente el diseño del restaurante, acomodando identificadores y salas libremente.",
     icon: <DashboardCustomizeIcon fontSize="large" />,
     path: "/admin/mesas",
+  },
+  {
+    id: "cocinas",
+    category: "Operativa",
+    title: "Gestión de Cocinas",
+    description: "Crea y administra diferentes áreas de preparación (Cocina Principal, Bar, etc.) para enrutar los tickets correctamente.",
+    icon: <SoupKitchenIcon fontSize="large" />,
+    path: "/admin/cocinas",
   },
   
   // --- HARDWARE Y SISTEMA ---

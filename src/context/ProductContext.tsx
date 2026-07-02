@@ -8,8 +8,8 @@ interface ProductContextType {
   addProduct: (category: string, product: Product) => Promise<void>;
   updateProduct: (category: string, oldName: string, updatedProduct: Product) => Promise<void>;
   deleteProduct: (category: string, productName: string) => Promise<void>;
-  addCategory: (categoryName: string, icon?: string) => Promise<void>;
-  updateCategory: (oldName: string, newName: string, icon?: string) => Promise<void>;
+  addCategory: (categoryName: string, icon?: string, kitchenId?: string) => Promise<void>;
+  updateCategory: (oldName: string, newName: string, icon?: string, kitchenId?: string) => Promise<void>;
   deleteCategory: (categoryName: string) => Promise<void>;
   refreshCategories: () => Promise<void>;
 }
@@ -106,12 +106,12 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addCategory = async (categoryName: string, icon?: string) => {
+  const addCategory = async (categoryName: string, icon?: string, kitchenId?: string) => {
     try {
       if (categories.some(cat => cat.label === categoryName)) return;
       await apiClient('/products/categories', {
         method: 'POST',
-        body: JSON.stringify({ label: categoryName, icon })
+        body: JSON.stringify({ label: categoryName, icon, kitchenId })
       });
       await loadCategories();
     } catch (error) {
@@ -120,13 +120,13 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateCategory = async (oldName: string, newName: string, icon?: string) => {
+  const updateCategory = async (oldName: string, newName: string, icon?: string, kitchenId?: string) => {
     try {
       const cat = categories.find(c => c.label === oldName);
       if (cat?.id) {
         await apiClient(`/products/categories/${cat.id}`, {
           method: 'PATCH',
-          body: JSON.stringify({ label: newName, icon })
+          body: JSON.stringify({ label: newName, icon, kitchenId })
         });
         await loadCategories();
       }

@@ -13,19 +13,21 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
   const sentItems = order.items.filter(i => i.isSentToKitchen);
   if (sentItems.length === 0) return [];
 
-  // Agrupar items por sentAt (si no tienen sentAt, agrupar bajo un timestamp por defecto)
+  // Agrupar items por sentAt y kitchenId
   const defaultSentAt = new Date(order.timestamp).getTime();
-  const groups: Record<number, CartItemType[]> = {};
+  const groups: Record<string, CartItemType[]> = {};
 
   sentItems.forEach(item => {
-    const key = item.sentAt || defaultSentAt;
+    const timeKey = item.sentAt || defaultSentAt;
+    const kitchenKey = item.kitchenId || 'unassigned';
+    const key = `${timeKey}-${kitchenKey}`;
     if (!groups[key]) groups[key] = [];
     groups[key].push(item);
   });
 
   // Convertir los grupos en órdenes virtuales
-  return Object.entries(groups).map(([sentAtStr, items]) => {
-    const sentAt = Number(sentAtStr);
+  return Object.entries(groups).map(([groupKey, items]) => {
+    const sentAt = Number(groupKey.split('-')[0]);
     
     // El estado del ticket se determina por el kitchenStatus de sus ítems
     const allDelivered = items.every(i => i.kitchenStatus === 'delivered');
@@ -87,14 +89,14 @@ export const useOrderManagement = () => {
     allTickets.filter(t => {
       const isFinished = t.status === 'delivered' || t.status === 'paid' || t.status === 'cancelled';
       if (!isFinished) return false;
-      const ticketId = `${t.id}-${t.timestamp.getTime()}`;
+      const ticketId = `${t.id}-${t.timestamp.getTime()}-${t.items[0]?.kitchenId || 'unassigned'}`;
       return !hiddenTickets.includes(ticketId);
     }),
     [allTickets, hiddenTickets]
   );
 
   const clearKitchenHistory = useCallback(() => {
-    const toHide = finishedOrders.map(t => `${t.id}-${t.timestamp.getTime()}`);
+    const toHide = finishedOrders.map(t => `${t.id}-${t.timestamp.getTime()}-${t.items[0]?.kitchenId || 'unassigned'}`);
     if (toHide.length === 0) return;
 
     setHiddenTickets(prev => {

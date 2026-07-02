@@ -54,6 +54,7 @@ interface OrderContextProps {
     cancelReason?: string,
     adminPin?: string,
     sentAt?: number,
+    kitchenId?: string,
   ) => void;
   removeOrder: (orderId: string) => void;
   clearHistory: () => void;
@@ -206,12 +207,12 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   );
 
   const updateOrderStatus = useCallback<OrderCommandsContextProps["updateOrderStatus"]>(
-    (orderId, status, cancelReason, adminPin, sentAt) => {
+    (orderId, status, cancelReason, adminPin, sentAt, kitchenId) => {
       updateOrdersState((prev) => {
-        const { orders: nextOrders } = orderMutations.updateOrderStatus(prev, orderId, status, sentAt);
+        const { orders: nextOrders } = orderMutations.updateOrderStatus(prev, orderId, status, sentAt, kitchenId);
         return nextOrders;
       });
-      syncUpdateOrderStatus(orderId, status, cancelReason, adminPin, sentAt).catch(console.error);
+      syncUpdateOrderStatus(orderId, status, cancelReason, adminPin, sentAt, kitchenId).catch(console.error);
     },
     [updateOrdersState],
   );

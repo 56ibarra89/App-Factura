@@ -34,6 +34,7 @@ import AdminRespaldos from "../pages/admin/AdminRespaldos";
 import AdminClientes from "../pages/admin/AdminClientes";
 import AdminHorarios from "../pages/admin/AdminHorarios";
 import AdminZonasMeseros from "../pages/admin/AdminZonasMeseros";
+import AdminCocinas from "../pages/admin/AdminCocinas";
 const AppRoutes = () => (
   <CajaProvider>
     <Routes>
@@ -127,8 +128,16 @@ const AppRoutes = () => (
         path="/admin/bitacora"
         element={<AdminRoute element={<Bitacora />} />}
       />
-      <Route
-        path="/admin/perifericos"
+        <Route
+          path="/admin/cocinas"
+          element={
+            <AdminRoute
+              element={<AdminCocinas />}
+            />
+          }
+        />
+        <Route
+          path="/admin/perifericos"
         element={<AdminRoute element={<Perifericos />} />}
       />
       <Route

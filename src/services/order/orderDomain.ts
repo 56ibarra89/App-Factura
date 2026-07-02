@@ -144,6 +144,7 @@ export const orderMutations = {
     orderId: string,
     status: OrderStatus,
     sentAt?: number,
+    kitchenId?: string,
   ): UpdateResult {
     return updateOne(
       prev,
@@ -151,9 +152,14 @@ export const orderMutations = {
       (order) => {
         if (sentAt) {
           const kitchenStatus = status as KitchenStatus;
-          const updatedItems = order.items.map((item) =>
-            item.sentAt === sentAt ? { ...item, kitchenStatus } : item,
-          );
+          const updatedItems = order.items.map((item) => {
+            const matchSentAt = item.sentAt === sentAt;
+            const matchKitchenId = kitchenId ? item.kitchenId === kitchenId : true;
+            if (matchSentAt && matchKitchenId) {
+              return { ...item, kitchenStatus };
+            }
+            return item;
+          });
 
           const allDelivered = updatedItems.every(
             (item) => item.kitchenStatus === "delivered" || !item.isSentToKitchen,

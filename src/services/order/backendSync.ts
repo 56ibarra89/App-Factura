@@ -18,6 +18,7 @@ interface BackendItem {
   isSentToKitchen?: boolean;
   sentAt?: string | Date;
   kitchenStatus?: string;
+  kitchenId?: string;
 }
 
 interface BackendOrder {
@@ -58,6 +59,7 @@ function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       isSentToKitchen: i.isSentToKitchen,
       sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
       kitchenStatus: i.kitchenStatus ? (i.kitchenStatus.toLowerCase() as KitchenStatus) : undefined,
+      kitchenId: i.kitchenId,
     })),
     subTotal: backendOrder.subTotal !== null ? Number(backendOrder.subTotal) : undefined,
     discountAmount: backendOrder.discountAmount !== null ? Number(backendOrder.discountAmount) : undefined,
@@ -106,6 +108,7 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
       isSentToKitchen: !!i.isSentToKitchen,
       sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
       kitchenStatus: i.kitchenStatus,
+      kitchenId: i.kitchenId,
     })),
     total: order.total,
     subTotal: order.subTotal,
@@ -139,12 +142,13 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
   return mapBackendOrderToFrontend(response);
 }
 
-export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number) {
+export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number, kitchenId?: string) {
   await apiClient(`/orders/${orderId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({
       status: status.toLowerCase(),
       ...(sentAt ? { sentAt } : {}),
+      ...(kitchenId ? { kitchenId } : {}),
       ...(adminPin ? { adminPin } : {}),
       ...(cancelReason ? { cancelReason } : {}),
     }),
@@ -163,9 +167,10 @@ export async function syncUpdateOrderItems(order: Order) {
         extras: i.extras ? i.extras.map(e => ({ name: e.name, price: e.price })) : [],
         note: i.note,
         giftQuantity: i.giftQuantity || 0,
-      isSentToKitchen: !!i.isSentToKitchen,
-      sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
-      kitchenStatus: i.kitchenStatus,
+        isSentToKitchen: !!i.isSentToKitchen,
+        sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
+        kitchenStatus: i.kitchenStatus,
+        kitchenId: i.kitchenId,
       })),
       total: order.total,
       subTotal: order.subTotal,

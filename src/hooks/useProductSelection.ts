@@ -8,11 +8,11 @@ export interface PendingItem {
   price: number;
 }
 
-export function useProductSelection(onConfirm: (item: { name: string; price: number; size: ProductSize; extras: SelectedExtra[]; note?: string }) => void) {
-  const [selectedProduct, setSelectedProduct] = useState<null | { name: string; prices: ProductPrice[]; product: Product }>(null);
-  const [pendingItem, setPendingItem] = useState<PendingItem | null>(null);
+export function useProductSelection(onConfirm: (item: { name: string; price: number; size: ProductSize; extras: SelectedExtra[]; note?: string; kitchenId?: string }) => void) {
+  const [selectedProduct, setSelectedProduct] = useState<null | { name: string; prices: ProductPrice[]; product: Product; kitchenId?: string }>(null);
+  const [pendingItem, setPendingItem] = useState<PendingItem & { kitchenId?: string } | null>(null);
 
-  const startSelection = useCallback((item: Product) => {
+  const startSelection = useCallback((item: Product, kitchenId?: string) => {
     if (item?.prices?.length) {
       const isUniquePrice = item.prices.length === 1 && item.prices[0].size === "único";
       if (isUniquePrice) {
@@ -21,6 +21,7 @@ export function useProductSelection(onConfirm: (item: { name: string; price: num
             product: item,
             size: "único",
             price: item.prices[0].price,
+            kitchenId,
           });
         } else {
           onConfirm({
@@ -28,10 +29,11 @@ export function useProductSelection(onConfirm: (item: { name: string; price: num
             price: item.prices[0].price,
             size: "único",
             extras: [],
+            kitchenId,
           });
         }
       } else {
-        setSelectedProduct({ name: item.name, prices: item.prices, product: item });
+        setSelectedProduct({ name: item.name, prices: item.prices, product: item, kitchenId });
       }
     }
   }, [onConfirm]);
@@ -45,9 +47,10 @@ export function useProductSelection(onConfirm: (item: { name: string; price: num
         product,
         size: selected.size,
         price: selected.price,
+        kitchenId: selectedProduct?.kitchenId,
       });
     } else {
-      onConfirm({ ...selected, extras: [] });
+      onConfirm({ ...selected, extras: [], kitchenId: selectedProduct?.kitchenId });
     }
   }, [selectedProduct, onConfirm]);
 
@@ -60,6 +63,7 @@ export function useProductSelection(onConfirm: (item: { name: string; price: num
       size: pendingItem.size,
       extras: selectedExtras,
       note,
+      kitchenId: pendingItem.kitchenId,
     });
     setPendingItem(null);
   }, [pendingItem, onConfirm]);

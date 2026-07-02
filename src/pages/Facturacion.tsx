@@ -287,7 +287,7 @@ const Facturacion = () => {
 
       <ProductGrid
         products={currentProducts}
-        onProductClick={handleAddToCart}
+        onProductClick={(product) => handleAddToCart(product, categories[selectedTab]?.kitchenId)}
       />
 
       <Cart

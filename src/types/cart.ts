@@ -14,6 +14,7 @@ export interface CartItemType {
   isSentToKitchen?: boolean;
   sentAt?: number;
   kitchenStatus?: KitchenStatus;
+  kitchenId?: string;
 }
 
 

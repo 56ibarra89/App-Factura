@@ -19,6 +19,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useProductContext } from "../context/ProductContext";
 import { AVAILABLE_ICONS } from "../config/icons";
+import { useKitchens } from "../hooks/useKitchens";
 
 interface CategoryManagerDialogProps {
   open: boolean;
@@ -29,10 +30,13 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
   const { categories, addCategory, updateCategory, deleteCategory } = useProductContext();
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryIcon, setNewCategoryIcon] = useState("Restaurant");
+  const [newKitchenId, setNewKitchenId] = useState<string>("");
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [editingIcon, setEditingIcon] = useState("Restaurant");
+  const [editingKitchenId, setEditingKitchenId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const { kitchens } = useKitchens();
 
   const handleAdd = () => {
     const trimmedName = newCategoryName.trim();
@@ -43,9 +47,10 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
       return;
     }
 
-    addCategory(trimmedName, newCategoryIcon);
+    addCategory(trimmedName, newCategoryIcon, newKitchenId || undefined);
     setNewCategoryName("");
     setNewCategoryIcon("Restaurant");
+    setNewKitchenId("");
     setError(null);
   };
 
@@ -61,10 +66,11 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
       return;
     }
 
-    updateCategory(editingCategory, trimmedName, editingIcon);
+    updateCategory(editingCategory, trimmedName, editingIcon, editingKitchenId || undefined);
     setEditingCategory(null);
     setEditingName("");
     setEditingIcon("Restaurant");
+    setEditingKitchenId("");
     setError(null);
   };
 
@@ -95,6 +101,20 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                     {AVAILABLE_ICONS[iconKey]}
                   </Box>
                 </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <Select
+              value={newKitchenId}
+              onChange={(e) => setNewKitchenId(e.target.value as string)}
+              displayEmpty
+            >
+              <MenuItem value="">
+                <em>Ninguna cocina</em>
+              </MenuItem>
+              {kitchens.map((k) => (
+                <MenuItem key={k.id} value={k.id}>{k.name}</MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -131,6 +151,7 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                       setEditingCategory(cat.label);
                       setEditingName(cat.label);
                       setEditingIcon(cat.icon || "Restaurant");
+                      setEditingKitchenId(cat.kitchenId || "");
                       setError(null);
                     }}
                   >
@@ -164,6 +185,20 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                       ))}
                     </Select>
                   </FormControl>
+                  <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <Select
+                      value={editingKitchenId}
+                      onChange={(e) => setEditingKitchenId(e.target.value as string)}
+                      displayEmpty
+                    >
+                      <MenuItem value="">
+                        <em>Ninguna cocina</em>
+                      </MenuItem>
+                      {kitchens.map((k) => (
+                        <MenuItem key={k.id} value={k.id}>{k.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                   <TextField
                     size="small"
                     fullWidth
@@ -192,7 +227,12 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                   {AVAILABLE_ICONS[cat.icon || "Restaurant"]}
                   <ListItemText
                     primary={cat.label}
-                    secondary={`${cat.items.length} productos`}
+                    secondary={
+                      <>
+                        {cat.items.length} productos
+                        {cat.kitchenId && ` • Cocina: ${kitchens.find(k => k.id === cat.kitchenId)?.name || 'Desconocida'}`}
+                      </>
+                    }
                   />
                 </Box>
               )}

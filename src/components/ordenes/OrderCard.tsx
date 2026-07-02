@@ -13,22 +13,25 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { Order, OrderStatus } from "../../types/order.types";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
-import { statusColors, statusLabels } from "../../config/orderStatusConfig";
 import { formatItemName, formatTableName } from "../../utils/formatUtils";
 import { useMesasConfig } from "../../hooks/useMesasConfig";
 
 interface OrderCardProps {
   order: Order;
-  onUpdateStatus: (id: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number) => void;
+  filteredItems?: Order["items"];
+  selectedKitchenId?: string;
+  onUpdateStatus: (id: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number, kitchenId?: string) => void;
   onDelete: (id: string) => void;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ order, filteredItems, selectedKitchenId, onUpdateStatus, onDelete }) => {
   const { floorsConfig } = useMesasConfig();
   const timeElapsed = Math.floor((new Date().getTime() - new Date(order.timestamp).getTime()) / 60000);
 
+  const itemsToUse = filteredItems || order.items;
   // Obtener el sentAt del primer ítem que sí se manda a cocina (ignorar Delivery, etc)
-  const ticketSentAt = order.items.find(i => i.isSentToKitchen)?.sentAt;
+  const ticketSentAt = itemsToUse.find(i => i.isSentToKitchen)?.sentAt;
+  const ticketKitchenId = selectedKitchenId || itemsToUse.find(i => i.isSentToKitchen)?.kitchenId;
 
   return (
     <Card 
@@ -79,7 +82,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
         <Divider sx={{ mb: 2 }} />
 
         <Stack spacing={1}>
-          {order.items.map((item, idx) => (
+          {(filteredItems || order.items).map((item, idx) => (
             <Box key={idx} sx={{ p: 0.5, bgcolor: item.note ? 'rgba(255, 193, 7, 0.08)' : 'transparent', borderRadius: 1 }}>
               <Typography variant="body2" fontWeight="medium">
                 {item.quantity}x {formatItemName(item.name, item.size)}
@@ -100,7 +103,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
             <Button 
               size="small" 
               variant="contained" 
-              onClick={() => onUpdateStatus(order.id, 'preparing', undefined, undefined, ticketSentAt)}
+              onClick={() => onUpdateStatus(order.id, 'preparing', undefined, undefined, ticketSentAt, ticketKitchenId)}
               sx={{ bgcolor: LOGIN_COLORS.primary, '&:hover': { bgcolor: LOGIN_COLORS.primaryDark } }}
             >
               Preparar
@@ -111,7 +114,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
               size="small" 
               variant="contained" 
               color="success"
-              onClick={() => onUpdateStatus(order.id, 'ready', undefined, undefined, ticketSentAt)}
+              onClick={() => onUpdateStatus(order.id, 'ready', undefined, undefined, ticketSentAt, ticketKitchenId)}
               startIcon={<CheckCircleIcon />}
             >
               Listo
@@ -121,7 +124,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus, onDelete }
             <Button 
               size="small" 
               variant="outlined" 
-              onClick={() => onUpdateStatus(order.id, 'delivered', undefined, undefined, ticketSentAt)}
+              onClick={() => onUpdateStatus(order.id, 'delivered', undefined, undefined, ticketSentAt, ticketKitchenId)}
             >
               Entregar
             </Button>

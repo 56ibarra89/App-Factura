@@ -45,7 +45,7 @@ export function useCartStore() {
   const promotion = manualPromotion || activeHappyHour;
 
   const addItem = useCallback(
-    (newItem: { name: string; price: number; size: ProductSize; extras: SelectedExtra[]; note?: string; giftQuantity?: number }) => {
+    (newItem: { name: string; price: number; size: ProductSize; extras: SelectedExtra[]; note?: string; giftQuantity?: number; kitchenId?: string }) => {
       // Sanitización y Validación (ISO 27001)
       const sanitizedPrice = Math.max(0, newItem.price);
       const sanitizedNote = newItem.note ? newItem.note.substring(0, 200).replace(/[<>]/g, "") : "";
