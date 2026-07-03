@@ -15,6 +15,7 @@ import { Order, OrderStatus } from "../../types/order.types";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { formatItemName, formatTableName } from "../../utils/formatUtils";
 import { useMesasConfig } from "../../hooks/useMesasConfig";
+import { useKitchens } from "../../hooks/useKitchens";
 
 interface OrderCardProps {
   order: Order;
@@ -26,6 +27,7 @@ interface OrderCardProps {
 
 const OrderCard: React.FC<OrderCardProps> = ({ order, filteredItems, selectedKitchenId, onUpdateStatus, onDelete }) => {
   const { floorsConfig } = useMesasConfig();
+  const { kitchens } = useKitchens();
   const timeElapsed = Math.floor((new Date().getTime() - new Date(order.timestamp).getTime()) / 60000);
 
   const itemsToUse = filteredItems || order.items;
@@ -77,63 +79,74 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, filteredItems, selectedKit
               </Stack>
             )}
           </Box>
+          <IconButton size="small" color="error" onClick={() => onDelete(order.id)}>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
         </Box>
 
         <Divider sx={{ mb: 2 }} />
 
         <Stack spacing={1}>
-          {(filteredItems || order.items).map((item, idx) => (
-            <Box key={idx} sx={{ p: 0.5, bgcolor: item.note ? 'rgba(255, 193, 7, 0.08)' : 'transparent', borderRadius: 1 }}>
-              <Typography variant="body2" fontWeight="medium">
-                {item.quantity}x {formatItemName(item.name, item.size)}
-              </Typography>
-              {item.note && (
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, pl: 1, fontStyle: 'italic', borderLeft: '2px solid', borderColor: '#ffc107' }}>
-                  Nota: {item.note}
-                </Typography>
-              )}
-            </Box>
-          ))}
+          {(filteredItems || order.items).map((item, idx) => {
+            const kitchenName = kitchens.find(k => k.id === item.kitchenId)?.name || 'Sin área';
+            const status = item.kitchenStatus || order.status;
+
+            return (
+              <Box key={idx} sx={{ p: 1, bgcolor: item.note ? 'rgba(255, 193, 7, 0.08)' : 'transparent', borderRadius: 1, border: '1px solid rgba(0,0,0,0.05)' }}>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box>
+                    <Typography variant="body2" fontWeight="medium">
+                      {item.quantity}x {formatItemName(item.name, item.size)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {kitchenName}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    {status === 'pending' && (
+                      <Button 
+                        size="small" 
+                        variant="contained" 
+                        onClick={() => onUpdateStatus(order.id, 'preparing', undefined, undefined, ticketSentAt, item.kitchenId)}
+                        sx={{ bgcolor: LOGIN_COLORS.primary, '&:hover': { bgcolor: LOGIN_COLORS.primaryDark }, minWidth: '80px' }}
+                      >
+                        Preparar
+                      </Button>
+                    )}
+                    {status === 'preparing' && (
+                      <Button 
+                        size="small" 
+                        variant="contained" 
+                        color="success"
+                        onClick={() => onUpdateStatus(order.id, 'ready', undefined, undefined, ticketSentAt, item.kitchenId)}
+                        startIcon={<CheckCircleIcon sx={{ fontSize: '1rem' }}/>}
+                        sx={{ minWidth: '80px' }}
+                      >
+                        Listo
+                      </Button>
+                    )}
+                    {status === 'ready' && (
+                      <Button 
+                        size="small" 
+                        variant="outlined" 
+                        onClick={() => onUpdateStatus(order.id, 'delivered', undefined, undefined, ticketSentAt, item.kitchenId)}
+                        sx={{ minWidth: '80px' }}
+                      >
+                        Entregar
+                      </Button>
+                    )}
+                  </Box>
+                </Box>
+                {item.note && (
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5, pl: 1, fontStyle: 'italic', borderLeft: '2px solid', borderColor: '#ffc107' }}>
+                    Nota: {item.note}
+                  </Typography>
+                )}
+              </Box>
+            );
+          })}
         </Stack>
       </CardContent>
-
-      <CardActions sx={{ p: 2, pt: 0, justifyContent: 'space-between' }}>
-        <Box>
-          {order.status === 'pending' && (
-            <Button 
-              size="small" 
-              variant="contained" 
-              onClick={() => onUpdateStatus(order.id, 'preparing', undefined, undefined, ticketSentAt, ticketKitchenId)}
-              sx={{ bgcolor: LOGIN_COLORS.primary, '&:hover': { bgcolor: LOGIN_COLORS.primaryDark } }}
-            >
-              Preparar
-            </Button>
-          )}
-          {order.status === 'preparing' && (
-            <Button 
-              size="small" 
-              variant="contained" 
-              color="success"
-              onClick={() => onUpdateStatus(order.id, 'ready', undefined, undefined, ticketSentAt, ticketKitchenId)}
-              startIcon={<CheckCircleIcon />}
-            >
-              Listo
-            </Button>
-          )}
-          {order.status === 'ready' && (
-            <Button 
-              size="small" 
-              variant="outlined" 
-              onClick={() => onUpdateStatus(order.id, 'delivered', undefined, undefined, ticketSentAt, ticketKitchenId)}
-            >
-              Entregar
-            </Button>
-          )}
-        </Box>
-        <IconButton size="small" color="error" onClick={() => onDelete(order.id)}>
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </CardActions>
     </Card>
   );
 };
