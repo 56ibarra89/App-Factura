@@ -5,10 +5,11 @@ import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { useGeneralConfigData } from "./hooks/useGeneralConfigData";
 import getAppTheme from "./theme/appTheme";
+import { getThemePreference } from "./services/themePreference";
 
 function App() {
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(
-    (localStorage.getItem('appfactura_theme') as 'light' | 'dark') || 'light'
+    getThemePreference()
   );
 
   useEffect(() => {

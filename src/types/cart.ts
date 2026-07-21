@@ -4,6 +4,7 @@ import { SelectedExtra } from "./extras";
 import { KitchenStatus } from "./order.types";
 
 export interface CartItemType {
+  id?: number | string;
   name: string;
   price: number;
   size: ProductSize;

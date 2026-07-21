@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import CardActions from "@mui/material/CardActions";
+
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
@@ -15,25 +15,30 @@ import { Order, OrderStatus } from "../../types/order.types";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { formatItemName, formatTableName } from "../../utils/formatUtils";
 import { useMesasConfig } from "../../hooks/useMesasConfig";
-import { useKitchens } from "../../hooks/useKitchens";
+import { Kitchen } from "../../hooks/useKitchens";
 
 interface OrderCardProps {
   order: Order;
   filteredItems?: Order["items"];
-  selectedKitchenId?: string;
-  onUpdateStatus: (id: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number, kitchenId?: string) => void;
+  kitchens: Kitchen[];
+  onUpdateStatus: (id: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number, kitchenId?: string, itemId?: number | string) => void;
   onDelete: (id: string) => void;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({ order, filteredItems, selectedKitchenId, onUpdateStatus, onDelete }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ order, filteredItems, kitchens, onUpdateStatus, onDelete }) => {
   const { floorsConfig } = useMesasConfig();
-  const { kitchens } = useKitchens();
   const timeElapsed = Math.floor((new Date().getTime() - new Date(order.timestamp).getTime()) / 60000);
 
   const itemsToUse = filteredItems || order.items;
+  
+  // Extraer si hay algún empaque en la orden original (para mostrar el badge)
+  const hasPackaging = order.items.some(item => item.name.toLowerCase().includes('empaque'));
+  
+  // Filtrar los items para no mostrar los empaques como productos individuales en la tarjeta
+  const displayItems = itemsToUse.filter(item => !item.name.toLowerCase().includes('empaque'));
+
   // Obtener el sentAt del primer ítem que sí se manda a cocina (ignorar Delivery, etc)
-  const ticketSentAt = itemsToUse.find(i => i.isSentToKitchen)?.sentAt;
-  const ticketKitchenId = selectedKitchenId || itemsToUse.find(i => i.isSentToKitchen)?.kitchenId;
+  const ticketSentAt = displayItems.find(i => i.isSentToKitchen)?.sentAt;
 
   return (
     <Card 
@@ -57,8 +62,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, filteredItems, selectedKit
             <Typography variant="caption" color="text.secondary" display="block">
               {new Date(order.timestamp).toLocaleTimeString()} ({timeElapsed} min)
             </Typography>
-            {(order.customerName || order.tableId) && (
-              <Stack direction="row" spacing={1} mt={0.5}>
+            {(order.customerName || order.tableId || hasPackaging) && (
+              <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" useFlexGap sx={{ rowGap: 1 }}>
                 {order.customerName && (
                   <Chip 
                     label={order.customerName} 
@@ -76,6 +81,14 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, filteredItems, selectedKit
                     sx={{ height: 20, fontSize: '0.65rem' }} 
                   />
                 )}
+                {hasPackaging && (
+                  <Chip 
+                    label="Requiere Empaque" 
+                    size="small" 
+                    color="warning"
+                    sx={{ height: 20, fontSize: '0.65rem', fontWeight: 'bold' }} 
+                  />
+                )}
               </Stack>
             )}
           </Box>
@@ -87,7 +100,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, filteredItems, selectedKit
         <Divider sx={{ mb: 2 }} />
 
         <Stack spacing={1}>
-          {(filteredItems || order.items).map((item, idx) => {
+          {displayItems.map((item, idx) => {
             const kitchenName = kitchens.find(k => k.id === item.kitchenId)?.name || 'Sin área';
             const status = item.kitchenStatus || order.status;
 

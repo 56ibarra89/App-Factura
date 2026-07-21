@@ -8,6 +8,7 @@ import { usePinLockout } from "../hooks/usePinLockout";
 import { useLoginLockout } from "../hooks/useLoginLockout";
 import { useInactivityTimer } from "../hooks/useInactivityTimer";
 import { localStore, sessionStore } from "../services/storage/storage";
+import { setThemePreference, type ThemePreference } from "../services/themePreference";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -121,9 +122,8 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
           }
           
           // Aplicar preferencia de tema
-          const themePref = result.themePreference || 'light';
-          localStorage.setItem('appfactura_theme', themePref);
-          window.dispatchEvent(new CustomEvent('appfactura:theme-updated', { detail: { theme: themePref } }));
+          const themePref: ThemePreference = result.themePreference === 'dark' ? 'dark' : 'light';
+          setThemePreference(themePref);
 
           loginLockout.resetLoginAttempts();
 
@@ -189,9 +189,8 @@ export const AuthProvider = ({ children, service = defaultAuthService }: AuthPro
         }
         
         // Aplicar preferencia de tema
-        const themePref = result.themePreference || 'light';
-        localStorage.setItem('appfactura_theme', themePref);
-        window.dispatchEvent(new CustomEvent('appfactura:theme-updated', { detail: { theme: themePref } }));
+        const themePref: ThemePreference = result.themePreference === 'dark' ? 'dark' : 'light';
+        setThemePreference(themePref);
 
         pinLockout.resetAttempts();
 

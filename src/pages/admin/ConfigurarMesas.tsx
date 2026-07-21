@@ -1,5 +1,23 @@
 import { useState } from "react";
-import { Box, Typography, Button, Paper, TextField, Divider, Grid, alpha, Snackbar, Alert, IconButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  TextField,
+  Divider,
+  Grid,
+  alpha,
+  Snackbar,
+  Alert,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  CircularProgress,
+} from "@mui/material";
 import { BackButton } from "../../components/BackButton";
 import SaveIcon from "@mui/icons-material/Save";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -9,17 +27,33 @@ import EditIcon from "@mui/icons-material/Edit";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/PageHeader";
 import { useMesasConfig } from "../../hooks/useMesasConfig";
-import { LOGIN_COLORS, LOGIN_GRADIENTS } from "../../theme/loginTheme";
+import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { useAuth } from "../../context/AuthContext";
 import { logService } from "../../services/logService";
 
 export default function ConfigurarMesas() {
   const navigate = useNavigate();
   const { username, role } = useAuth();
-  const { floorsConfig, updateFloorTables, addFloor, removeFloor, updateFloorName, error, clearError, saveAllChanges, hasUnsavedChanges, isSaving } = useMesasConfig();
+  const {
+    floorsConfig,
+    updateFloorTables,
+    addFloor,
+    removeFloor,
+    updateFloorName,
+    error,
+    clearError,
+    saveAllChanges,
+    hasUnsavedChanges,
+    isSaving,
+  } = useMesasConfig();
   const [showSuccess, setShowSuccess] = useState(false);
-  const [deleteData, setDeleteData] = useState<{ id: number; name: string } | null>(null);
-  const [editData, setEditData] = useState<{ id: number; name: string } | null>(null);
+  const [deleteData, setDeleteData] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+  const [editData, setEditData] = useState<{ id: number; name: string } | null>(
+    null,
+  );
 
   const handleUpdate = (floorId: number, val: string) => {
     const count = parseInt(val) || 0;
@@ -58,10 +92,10 @@ export default function ConfigurarMesas() {
     if (success) {
       setShowSuccess(true);
       logService.log(
-        username, 
-        role, 
-        "CONFIG_CHANGE", 
-        `Cambio en plano de mesas: Configuración actualizada manualmente`
+        username,
+        role,
+        "CONFIG_CHANGE",
+        `Cambio en plano de mesas: Configuración actualizada manualmente`,
       );
     }
   };
@@ -70,7 +104,7 @@ export default function ConfigurarMesas() {
     <Box
       minHeight="100vh"
       sx={{
-        bgcolor: 'background.default',
+        bgcolor: "background.default",
         pt: 4,
         pb: 8,
         px: { xs: 2, md: 6 },
@@ -81,17 +115,38 @@ export default function ConfigurarMesas() {
         startContent={<BackButton to="/admin" />}
       />
 
-      <Paper elevation={0} sx={{ mt: 4, borderRadius: 5, p: { xs: 3, md: 5 }, boxShadow: "0 12px 40px rgba(0,0,0,0.08)" }}>
+      <Paper
+        elevation={0}
+        sx={{
+          mt: 4,
+          borderRadius: 5,
+          p: { xs: 3, md: 5 },
+          boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
+        }}
+      >
         <Box mb={4}>
-          <Typography variant="h5" fontWeight="900" color="primary" display="flex" alignItems="center" gap={1}>
+          <Typography
+            variant="h5"
+            fontWeight="900"
+            color="primary"
+            display="flex"
+            alignItems="center"
+            gap={1}
+          >
             <CheckCircleIcon /> Distribución de Mesas por Planta
           </Typography>
           <Typography variant="body1" color="text.secondary" mt={1}>
-            Ingresa la cantidad de mesas disponibles en cada área. La numeración se reinicia por planta.
-            Si una planta tiene "0", se ocultará de la vista principal. 
+            Ingresa la cantidad de mesas disponibles en cada área. La numeración
+            se reinicia por planta. Si una planta tiene "0", se ocultará de la
+            vista principal.
             {hasUnsavedChanges && (
-              <Typography component="span" color="warning.main" fontWeight="bold">
-                {" "}¡Tienes cambios sin guardar!
+              <Typography
+                component="span"
+                color="warning.main"
+                fontWeight="bold"
+              >
+                {" "}
+                ¡Tienes cambios sin guardar!
               </Typography>
             )}
           </Typography>
@@ -106,17 +161,30 @@ export default function ConfigurarMesas() {
                   p: 3,
                   borderRadius: 4,
                   border: "1px solid",
-                  borderColor: floor.tableCount > 0 ? alpha(LOGIN_COLORS.primary, 0.3) : "divider",
-                  bgcolor: floor.tableCount > 0 ? alpha(LOGIN_COLORS.primary, 0.03) : "background.paper",
+                  borderColor:
+                    floor.tableCount > 0
+                      ? alpha(LOGIN_COLORS.primary, 0.3)
+                      : "divider",
+                  bgcolor:
+                    floor.tableCount > 0
+                      ? alpha(LOGIN_COLORS.primary, 0.03)
+                      : "background.paper",
                   transition: "all 0.2s",
                   position: "relative",
                   "&:hover": {
                     borderColor: LOGIN_COLORS.primary,
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.05)"
-                  }
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.05)",
+                  },
                 }}
               >
-                <Box sx={{ position: "absolute", top: 8, right: 8, display: "flex" }}>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    display: "flex",
+                  }}
+                >
                   <IconButton
                     size="small"
                     onClick={() => {
@@ -137,7 +205,13 @@ export default function ConfigurarMesas() {
                   </IconButton>
                 </Box>
 
-                <Box display="flex" flexDirection="column" gap={1} mb={2} pr={7}>
+                <Box
+                  display="flex"
+                  flexDirection="column"
+                  gap={1}
+                  mb={2}
+                  pr={7}
+                >
                   <Box display="flex" alignItems="center" gap={1}>
                     <Typography
                       variant="h6"
@@ -148,7 +222,18 @@ export default function ConfigurarMesas() {
                     </Typography>
                   </Box>
                   {floor.tableCount > 0 && (
-                    <Typography variant="caption" fontWeight="bold" color="primary" sx={{ bgcolor: alpha(LOGIN_COLORS.primary, 0.08), px: 1, py: 0.3, borderRadius: 1, alignSelf: "flex-start" }}>
+                    <Typography
+                      variant="caption"
+                      fontWeight="bold"
+                      color="primary"
+                      sx={{
+                        bgcolor: alpha(LOGIN_COLORS.primary, 0.08),
+                        px: 1,
+                        py: 0.3,
+                        borderRadius: 1,
+                        alignSelf: "flex-start",
+                      }}
+                    >
                       {floor.tableCount} mesas
                     </Typography>
                   )}
@@ -166,7 +251,7 @@ export default function ConfigurarMesas() {
               </Paper>
             </Grid>
           ))}
-          
+
           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Button
               fullWidth
@@ -183,10 +268,15 @@ export default function ConfigurarMesas() {
                 "&:hover": {
                   borderStyle: "dashed",
                   borderWidth: 2,
-                }
+                },
               }}
             >
-              <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                gap={1}
+              >
                 <AddIcon fontSize="large" />
                 <Typography fontWeight="bold">Añadir Planta</Typography>
               </Box>
@@ -196,11 +286,23 @@ export default function ConfigurarMesas() {
 
         <Divider sx={{ my: 4 }} />
 
-        <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={2}
+        >
           <Button
             variant="outlined"
             onClick={() => navigate("/mesas")}
-            sx={{ borderRadius: 4, fontWeight: "bold", textTransform: "none", color: "text.secondary", borderColor: "divider" }}
+            sx={{
+              borderRadius: 4,
+              fontWeight: "bold",
+              textTransform: "none",
+              color: "text.secondary",
+              borderColor: "divider",
+            }}
           >
             ← Volver a Vista de Mesas
           </Button>
@@ -209,8 +311,23 @@ export default function ConfigurarMesas() {
             color="primary"
             onClick={handleSave}
             disabled={!hasUnsavedChanges || isSaving}
-            startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-            sx={{ borderRadius: 4, fontWeight: "bold", textTransform: "none", px: 4, py: 1.5, boxShadow: hasUnsavedChanges ? "0 4px 14px rgba(0,0,0,0.2)" : "none" }}
+            startIcon={
+              isSaving ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <SaveIcon />
+              )
+            }
+            sx={{
+              borderRadius: 4,
+              fontWeight: "bold",
+              textTransform: "none",
+              px: 4,
+              py: 1.5,
+              boxShadow: hasUnsavedChanges
+                ? "0 4px 14px rgba(0,0,0,0.2)"
+                : "none",
+            }}
           >
             {isSaving ? "Guardando..." : "Guardar Cambios"}
           </Button>
@@ -258,10 +375,13 @@ export default function ConfigurarMesas() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          Confirmar Eliminación
+        </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Estás seguro que deseas eliminar la planta <strong>"{deleteData?.name}"</strong>?
+            ¿Estás seguro que deseas eliminar la planta{" "}
+            <strong>"{deleteData?.name}"</strong>?
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -285,7 +405,9 @@ export default function ConfigurarMesas() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>Editar Nombre de Planta</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>
+          Editar Nombre de Planta
+        </DialogTitle>
         <DialogContent>
           <DialogContentText mb={2}>
             Ingresa el nuevo nombre para esta planta:
@@ -295,9 +417,11 @@ export default function ConfigurarMesas() {
             fullWidth
             variant="outlined"
             value={editData?.name || ""}
-            onChange={(e) => editData && setEditData({ ...editData, name: e.target.value })}
+            onChange={(e) =>
+              editData && setEditData({ ...editData, name: e.target.value })
+            }
             onKeyPress={(e) => {
-              if (e.key === 'Enter') handleConfirmEdit();
+              if (e.key === "Enter") handleConfirmEdit();
             }}
           />
         </DialogContent>

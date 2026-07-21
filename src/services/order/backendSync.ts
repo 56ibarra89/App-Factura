@@ -48,7 +48,7 @@ function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
   return {
     id: backendOrder.id,
     items: backendOrder.items.map((i: BackendItem) => ({
-      id: Math.random(), // Temporary ID for frontend list rendering
+      id: i.id ? Number(i.id) : undefined,
       name: i.name,
       price: Number(i.price),
       size: i.size.toLowerCase(),
@@ -142,13 +142,14 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
   return mapBackendOrderToFrontend(response);
 }
 
-export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number, kitchenId?: string) {
+export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number, kitchenId?: string, itemId?: number | string) {
   await apiClient(`/orders/${orderId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({
       status: status.toLowerCase(),
       ...(sentAt ? { sentAt } : {}),
       ...(kitchenId ? { kitchenId } : {}),
+      ...(typeof itemId === 'number' ? { itemId } : {}),
       ...(adminPin ? { adminPin } : {}),
       ...(cancelReason ? { cancelReason } : {}),
     }),
@@ -156,7 +157,7 @@ export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus
 }
 
 export async function syncUpdateOrderItems(order: Order) {
-  await apiClient(`/orders/${order.id}/items`, {
+  const response = await apiClient(`/orders/${order.id}/items`, {
     method: 'PATCH',
     body: JSON.stringify({
       items: order.items.map(i => ({
@@ -179,6 +180,7 @@ export async function syncUpdateOrderItems(order: Order) {
       isSentToKitchen: order.isSentToKitchen,
     }),
   });
+  return mapBackendOrderToFrontend(response);
 }
 
 export async function syncFinalizeOrder(order: Order): Promise<Order> {

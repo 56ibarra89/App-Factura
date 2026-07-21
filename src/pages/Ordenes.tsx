@@ -18,6 +18,7 @@ import { useKitchens } from "../hooks/useKitchens";
 import { useAuth } from "../context/AuthContext";
 import { logService } from "../services/logService";
 import { LOGIN_COLORS } from "../theme/loginTheme";
+import { getSelectedKitchenId, setSelectedKitchenId as saveSelectedKitchenId } from "../services/selectedKitchenPreference";
 
 const Ordenes = () => {
   const { 
@@ -33,13 +34,13 @@ const Ordenes = () => {
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
   const { kitchens } = useKitchens();
-  const [selectedKitchenId, setSelectedKitchenId] = useState<string>(() => {
-    return localStorage.getItem("selectedKitchenId") || "";
+  const [selectedKitchenId, setSelectedKitchen] = useState<string>(() => {
+    return getSelectedKitchenId();
   });
 
   const handleKitchenChange = (event: React.SyntheticEvent, newValue: string) => {
-    setSelectedKitchenId(newValue);
-    localStorage.setItem("selectedKitchenId", newValue);
+    setSelectedKitchen(newValue);
+    saveSelectedKitchenId(newValue);
   };
 
   const handleClearHistory = () => {
@@ -123,6 +124,7 @@ const Ordenes = () => {
         <OrderGrid 
           orders={activeOrders} 
           selectedKitchenId={selectedKitchenId}
+          kitchens={kitchens}
           onUpdateStatus={updateOrderStatus} 
           onDelete={handleDeleteOrder} 
         />
@@ -136,6 +138,7 @@ const Ordenes = () => {
           <OrderGrid 
             orders={finishedOrders.slice(0, 50)} 
             selectedKitchenId={selectedKitchenId}
+            kitchens={kitchens}
             onUpdateStatus={updateOrderStatus} 
             onDelete={handleDeleteOrder} 
           />

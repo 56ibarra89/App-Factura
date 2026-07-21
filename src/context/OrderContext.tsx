@@ -55,6 +55,7 @@ interface OrderContextProps {
     adminPin?: string,
     sentAt?: number,
     kitchenId?: string,
+    itemId?: number | string,
   ) => void;
   removeOrder: (orderId: string) => void;
   clearHistory: () => void;
@@ -197,7 +198,16 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
           finalInvoiceNumber = finalizedOrder.invoiceNumber;
         }
 
-        updateOrdersState(prev => prev.map(o => o.id === newOrder.id ? { ...o, invoiceNumber: finalInvoiceNumber } : o));
+        updateOrdersState(prev => prev.map(o => {
+          if (o.id === newOrder.id) {
+            return { 
+              ...o, 
+              invoiceNumber: finalInvoiceNumber,
+              items: createdOrder.items || o.items 
+            };
+          }
+          return o;
+        }));
         return finalInvoiceNumber;
       } catch (error) {
         console.error(error);
@@ -207,12 +217,12 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   );
 
   const updateOrderStatus = useCallback<OrderCommandsContextProps["updateOrderStatus"]>(
-    (orderId, status, cancelReason, adminPin, sentAt, kitchenId) => {
+    (orderId, status, cancelReason, adminPin, sentAt, kitchenId, itemId) => {
       updateOrdersState((prev) => {
-        const { orders: nextOrders } = orderMutations.updateOrderStatus(prev, orderId, status, sentAt, kitchenId);
+        const { orders: nextOrders } = orderMutations.updateOrderStatus(prev, orderId, status, sentAt, kitchenId, itemId);
         return nextOrders;
       });
-      syncUpdateOrderStatus(orderId, status, cancelReason, adminPin, sentAt, kitchenId).catch(console.error);
+      syncUpdateOrderStatus(orderId, status, cancelReason, adminPin, sentAt, kitchenId, itemId).catch(console.error);
     },
     [updateOrdersState],
   );
@@ -237,7 +247,12 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
         return nextOrders;
       });
       if (modifiedOrder) {
-        await syncUpdateOrderItems(modifiedOrder).catch(console.error);
+        try {
+          const updatedOrder = await syncUpdateOrderItems(modifiedOrder);
+          updateOrdersState(prev => prev.map(o => o.id === orderId ? { ...o, items: updatedOrder.items || o.items } : o));
+        } catch (error) {
+          console.error(error);
+        }
       }
     },
     [updateOrdersState],
