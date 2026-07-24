@@ -40,6 +40,11 @@ export interface CuponRule {
   status: CuponStatus;
 }
 
+export type CuponFormOutput = Omit<
+  CuponRule,
+  "discount" | "usage" | "expires" | "status"
+> & { manualStatus: CuponStatus };
+
 export interface CertificadoRule {
   id: number;
   serial: string;

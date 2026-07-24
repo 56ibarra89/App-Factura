@@ -17,7 +17,7 @@ import {
 import { useEffect, useRef } from "react";
 import { Product } from "../types/product";
 import { useProductForm } from "../hooks/useProductForm";
-import { useProductContext } from "../context/ProductContext";
+import { useProductContext } from "../hooks/useProductContext";
 import ExtrasFormSection from "./ExtrasFormSection";
 import { blockInvalidChar } from "../utils/inputUtils";
 

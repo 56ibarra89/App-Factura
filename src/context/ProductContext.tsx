@@ -1,39 +1,32 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { useState, useEffect, ReactNode, useCallback } from "react";
 import { Category, Product } from "../types/product";
-import { apiClient } from "../config/apiClient";
 import { useAuth } from "./AuthContext";
+import { ProductContext } from "./ProductContextDefinition";
+import {
+  productGateway,
+  type ProductGateway,
+} from "../services/products/productGateway";
 
-interface ProductContextType {
-  categories: Category[];
-  addProduct: (category: string, product: Product) => Promise<void>;
-  updateProduct: (category: string, oldName: string, updatedProduct: Product) => Promise<void>;
-  deleteProduct: (category: string, productName: string) => Promise<void>;
-  addCategory: (categoryName: string, icon?: string, kitchenId?: string) => Promise<void>;
-  updateCategory: (oldName: string, newName: string, icon?: string, kitchenId?: string) => Promise<void>;
-  deleteCategory: (categoryName: string) => Promise<void>;
-  refreshCategories: () => Promise<void>;
+interface ProductProviderProps {
+  children: ReactNode;
+  gateway?: ProductGateway;
 }
 
-const ProductContext = createContext<ProductContextType | undefined>(undefined);
-
-export const useProductContext = () => {
-  const context = useContext(ProductContext);
-  if (!context) throw new Error("useProductContext debe usarse dentro de ProductProvider");
-  return context;
-};
-
-export const ProductProvider = ({ children }: { children: ReactNode }) => {
+export const ProductProvider = ({
+  children,
+  gateway = productGateway,
+}: ProductProviderProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const { isLoggedIn } = useAuth();
 
   const loadCategories = useCallback(async () => {
     try {
-      const data = await apiClient("/products/categories");
+      const data = await gateway.listCategories();
       setCategories(data);
     } catch (error) {
       console.error("Error al cargar categorías desde el backend:", error);
     }
-  }, []);
+  }, [gateway]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -48,17 +41,14 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       const cat = categories.find(c => c.label === categoryName);
       if (!cat?.id) throw new Error("Categoría no encontrada");
       
-      await apiClient('/products', {
-        method: 'POST',
-        body: JSON.stringify({
-          categoryId: cat.id,
-          name: product.name,
-          description: product.description,
-          isActive: true,
-          hasMultipleSizes: product.hasMultipleSizes ?? false,
-          prices: product.prices,
-          extras: product.extras || []
-        })
+      await gateway.createProduct({
+        categoryId: cat.id,
+        name: product.name,
+        description: product.description,
+        isActive: true,
+        hasMultipleSizes: product.hasMultipleSizes ?? false,
+        prices: product.prices,
+        extras: product.extras || [],
       });
       await loadCategories();
     } catch (error) {
@@ -73,17 +63,14 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       const prod = cat?.items.find(p => p.name === oldName);
       if (!cat?.id || !prod?.id) throw new Error("Categoría o Producto no encontrado");
 
-      await apiClient(`/products/${prod.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          categoryId: cat.id,
-          name: updatedProduct.name,
-          description: updatedProduct.description,
-          isActive: true,
-          hasMultipleSizes: updatedProduct.hasMultipleSizes ?? false,
-          prices: updatedProduct.prices,
-          extras: updatedProduct.extras || []
-        })
+      await gateway.updateProduct(prod.id, {
+        categoryId: cat.id,
+        name: updatedProduct.name,
+        description: updatedProduct.description,
+        isActive: true,
+        hasMultipleSizes: updatedProduct.hasMultipleSizes ?? false,
+        prices: updatedProduct.prices,
+        extras: updatedProduct.extras || [],
       });
       await loadCategories();
     } catch (error) {
@@ -97,7 +84,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
       const cat = categories.find(c => c.label === categoryName);
       const prod = cat?.items.find(p => p.name === productName);
       if (prod?.id) {
-        await apiClient(`/products/${prod.id}`, { method: 'DELETE' });
+        await gateway.deleteProduct(prod.id);
         await loadCategories();
       }
     } catch (error) {
@@ -109,10 +96,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
   const addCategory = async (categoryName: string, icon?: string, kitchenId?: string) => {
     try {
       if (categories.some(cat => cat.label === categoryName)) return;
-      await apiClient('/products/categories', {
-        method: 'POST',
-        body: JSON.stringify({ label: categoryName, icon, kitchenId })
-      });
+      await gateway.createCategory({ label: categoryName, icon, kitchenId });
       await loadCategories();
     } catch (error) {
       console.error("Error al crear categoría:", error);
@@ -124,9 +108,10 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     try {
       const cat = categories.find(c => c.label === oldName);
       if (cat?.id) {
-        await apiClient(`/products/categories/${cat.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ label: newName, icon, kitchenId })
+        await gateway.updateCategory(cat.id, {
+          label: newName,
+          icon,
+          kitchenId,
         });
         await loadCategories();
       }
@@ -140,7 +125,7 @@ export const ProductProvider = ({ children }: { children: ReactNode }) => {
     try {
       const cat = categories.find(c => c.label === categoryName);
       if (cat?.id) {
-        await apiClient(`/products/categories/${cat.id}`, { method: 'DELETE' });
+        await gateway.deleteCategory(cat.id);
         await loadCategories();
       }
     } catch (error) {

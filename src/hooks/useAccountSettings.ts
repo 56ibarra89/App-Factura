@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { apiClient } from "../config/apiClient";
 import { authService } from "../services/authService";
 import { getThemePreference, setThemePreference, type ThemePreference } from "../services/themePreference";
 import { validatePasswordStrength } from "../utils/passwordValidation";
+import {
+  usersGateway,
+  type UserMutationPayload,
+  type UserProfileGateway,
+} from "../services/users/usersGateway";
 
 export interface AccountData {
   id?: string;
@@ -17,7 +21,9 @@ export interface AccountData {
   themePreference: 'light' | 'dark';
 }
 
-export function useAccountSettings() {
+export function useAccountSettings(
+  gateway: UserProfileGateway = usersGateway,
+) {
   const { username, email, updateUsername } = useAuth();
 
   const [data, setData] = useState<AccountData>({
@@ -41,7 +47,7 @@ export function useAccountSettings() {
 
     const fetchProfile = async () => {
       try {
-        const user = await apiClient(`/users/username/${username}`);
+        const user = await gateway.findByUsername(username);
         setData((prev) => ({
           ...prev,
           id: user.id,
@@ -63,7 +69,7 @@ export function useAccountSettings() {
     };
 
     fetchProfile();
-  }, [username]);
+  }, [gateway, username]);
 
   const handleChange = (field: keyof AccountData, value: string) => {
     setData((prev) => ({ ...prev, [field]: value }));
@@ -77,10 +83,11 @@ export function useAccountSettings() {
       
       // Guardar instantáneamente en el backend sin requerir darle a Guardar
       if (data.id) {
-        apiClient(`/users/${data.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ themePreference: value }),
-        }).catch(err => console.error("Error guardando tema en background", err));
+        gateway
+          .update(data.id, { themePreference: value as ThemePreference })
+          .catch((err) =>
+            console.error("Error guardando tema en background", err),
+          );
       }
     }
   };
@@ -130,7 +137,7 @@ export function useAccountSettings() {
           setLoading(false);
           return;
         }
-      } catch (err) {
+      } catch {
         setError("Error validando la contraseña actual");
         setLoading(false);
         return;
@@ -148,7 +155,7 @@ export function useAccountSettings() {
       const firstName = parts[0] || "";
       const lastName = parts.slice(1).join(" ") || "";
 
-      const updatePayload: any = {
+      const updatePayload: UserMutationPayload = {
         username: data.nombreUsuario.trim(),
         firstName,
         lastName,
@@ -162,10 +169,7 @@ export function useAccountSettings() {
         updatePayload.password = data.nuevaPassword;
       }
 
-      await apiClient(`/users/${data.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(updatePayload),
-      });
+      await gateway.update(data.id, updatePayload);
 
       if (username !== data.nombreUsuario.trim()) {
         updateUsername(data.nombreUsuario.trim());
@@ -182,13 +186,14 @@ export function useAccountSettings() {
       if (passwordChanged) {
         setShowLogoutModal(true);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error actualizando perfil", err);
       // Prisma P2002 conflict error will be returned as 409 from the backend with the message
-      if (err.message && err.message.toLowerCase().includes("existe")) {
+      const message = err instanceof Error ? err.message : "";
+      if (message.toLowerCase().includes("existe")) {
          setError("Ese nombre de usuario, PIN o correo ya está en uso por otra cuenta.");
       } else {
-         setError(err.message || "Error al actualizar los datos");
+         setError(message || "Error al actualizar los datos");
       }
     } finally {
       setLoading(false);

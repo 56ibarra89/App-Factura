@@ -1,32 +1,35 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiClient } from "../config/apiClient";
+import {
+  tablesGateway,
+  type TableReservationGateway,
+  type TableStateGateway,
+} from "../services/tables/tablesGateway";
+import type {
+  MesaEstado as TableStatus,
+  ReservationInfo,
+} from "../types/mesa.types";
 
-export interface ReservationInfo {
-  nombre: string;
-  monto: number;
-  reservationTime?: string;
-  expirationTime?: string;
+export type {
+  MesaEstado as TableStatus,
+  ReservationInfo,
+} from "../types/mesa.types";
+
+export interface TableReservationsGateways {
+  state: TableStateGateway;
+  reservation: TableReservationGateway;
 }
 
-export type TableStatus = "disponible" | "reservado" | "ocupado";
-
-interface BackendMesa {
-  id: string;
-  floor: number;
-  number: number;
-  estado: "DISPONIBLE" | "RESERVADO" | "OCUPADO";
-  reservationName: string | null;
-  reservationAmount: number | null;
-}
-
-export function useTableReservations() {
+export function useTableReservations({
+  state = tablesGateway,
+  reservation = tablesGateway,
+}: Partial<TableReservationsGateways> = {}) {
   const [tableStatusMap, setTableStatusMap] = useState<Record<string, TableStatus>>({});
   const [reservationDetails, setReservationDetails] = useState<Record<string, ReservationInfo>>({});
 
   // Cargar datos iniciales del servidor
   const fetchMesas = useCallback(async () => {
     try {
-      const mesas: BackendMesa[] = await apiClient("/mesas");
+      const mesas = await state.list();
       
       const newStatusMap: Record<string, TableStatus> = {};
       const newReservationDetails: Record<string, ReservationInfo> = {};
@@ -49,7 +52,7 @@ export function useTableReservations() {
     } catch (err) {
       console.error("Error al cargar estado de mesas:", err);
     }
-  }, []);
+  }, [state]);
 
   useEffect(() => {
     fetchMesas();
@@ -62,10 +65,7 @@ export function useTableReservations() {
 
     try {
       const backendStatus = status.toUpperCase();
-      await apiClient(`/mesas/${tableId}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ estado: backendStatus }),
-      });
+      await state.updateStatus(tableId, backendStatus);
     } catch (err) {
       console.error("Error updating table status:", err);
       // Revert if failed
@@ -86,9 +86,7 @@ export function useTableReservations() {
     });
 
     try {
-      await apiClient(`/mesas/${tableId}/release`, {
-        method: "PATCH",
-      });
+      await reservation.release(tableId);
     } catch (err) {
       console.error("Error releasing table:", err);
       // Revert if failed
@@ -106,14 +104,11 @@ export function useTableReservations() {
     setReservationDetails(prev => ({ ...prev, [tableId]: info }));
 
     try {
-      await apiClient(`/mesas/${tableId}/reserve`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          reservationName: info.nombre,
-          reservationAmount: info.monto,
-          reservationTime: info.reservationTime,
-          expirationTime: info.expirationTime,
-        }),
+      await reservation.reserve(tableId, {
+        reservationName: info.nombre,
+        reservationAmount: info.monto,
+        reservationTime: info.reservationTime,
+        expirationTime: info.expirationTime,
       });
     } catch (err) {
       console.error("Error reserving table:", err);

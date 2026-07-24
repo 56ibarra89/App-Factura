@@ -1,47 +1,44 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '../config/apiClient';
+import {
+  kitchensGateway,
+  type CookAssignmentPayload,
+  type CookUser,
+  type KitchensGateway,
+} from '../services/kitchens/kitchensGateway';
 
-export interface CookKitchenAssignment {
-  id: string;
-  userId: string;
-  kitchenId: string;
-  dayOfWeek: string;
-}
+export type {
+  CookKitchenAssignment,
+  CookUser,
+} from '../services/kitchens/kitchensGateway';
 
-export interface CookUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  workDays?: string[];
-  kitchenAssignments: CookKitchenAssignment[];
-}
-
-export function useCookAssignments() {
+export function useCookAssignments(
+  gateway: KitchensGateway = kitchensGateway,
+) {
   const [cooks, setCooks] = useState<CookUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchCooks = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await apiClient('/kitchens/cooks/assignments');
+      const data = await gateway.listCookAssignments();
       setCooks(data);
     } catch (error) {
       console.error('Error fetching cook assignments:', error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [gateway]);
 
   useEffect(() => {
     fetchCooks();
   }, [fetchCooks]);
 
-  const updateAssignments = async (userId: string, assignments: { dayOfWeek: string; kitchenId: string | null }[]) => {
+  const updateAssignments = async (
+    userId: string,
+    assignments: CookAssignmentPayload[],
+  ) => {
     try {
-      await apiClient(`/kitchens/cooks/${userId}/assignments`, {
-        method: 'PATCH',
-        body: JSON.stringify({ assignments }),
-      });
+      await gateway.updateCookAssignments(userId, assignments);
       await fetchCooks(); // Refresh to get the latest data
     } catch (error) {
       console.error('Error updating assignments:', error);

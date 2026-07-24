@@ -1,41 +1,25 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { logService } from '../services/logService';
-import { configRepository } from '../repositories/ConfigRepository';
+import {
+  generalConfigGateway,
+  type GeneralConfigGateway,
+} from '../services/config/generalConfigGateway';
+import {
+  DEFAULT_GENERAL_CONFIG,
+  type GeneralConfigState,
+} from '../types/config';
 
 const GENERAL_CONFIG_UPDATED_EVENT = 'appfactura:general-config-updated';
 
-export interface GeneralConfigState {
-  // Preferences
-  language: 'es' | 'en';
-  // Currency
-  currencyCode: string;
-  currencySymbol: string;
-  enableSecondaryCurrency: boolean;
-  secondaryCurrencyCode: string;
-  secondaryCurrencySymbol: string;
-  exchangeRate: number;
-  // Box Behavior
-  requireExactOpeningAmount: boolean;
-  autoPrintReceipt: boolean;
-  blindCashCount: boolean;
-}
+export type { GeneralConfigState } from '../types/config';
 
-export const useGeneralConfigData = () => {
+export const useGeneralConfigData = (
+  gateway: GeneralConfigGateway = generalConfigGateway,
+) => {
   const { username, role } = useAuth();
-  // Mock inicial
-  const [config, setConfig] = useState<GeneralConfigState>({
-    language: 'es',
-    currencyCode: 'NIO',
-    currencySymbol: 'C$',
-    enableSecondaryCurrency: true,
-    secondaryCurrencyCode: 'USD',
-    secondaryCurrencySymbol: '$',
-    exchangeRate: 36.50,
-    requireExactOpeningAmount: false,
-    autoPrintReceipt: true,
-    blindCashCount: false,
-  });
+  const [config, setConfig] =
+    useState<GeneralConfigState>(DEFAULT_GENERAL_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
 
   const configRef = useRef(config);
@@ -61,7 +45,7 @@ export const useGeneralConfigData = () => {
     let isMounted = true;
     const loadConfig = async () => {
       try {
-        const savedConfig = await configRepository.getGeneralConfig();
+        const savedConfig = await gateway.load();
         if (isMounted && savedConfig) {
           setConfig((prev) => ({ ...prev, ...savedConfig }));
           // Notificar a App.tsx y otras instancias que la configuración ya cargó desde el backend
@@ -75,14 +59,14 @@ export const useGeneralConfigData = () => {
     };
     loadConfig();
     return () => { isMounted = false; };
-  }, []);
+  }, [gateway]);
 
   const updatePreference = useCallback(<K extends keyof GeneralConfigState>(key: K, value: GeneralConfigState[K]) => {
     setConfig(prev => {
       const newConfig = { ...prev, [key]: value };
       
       // Guardar asíncronamente
-      configRepository.saveGeneralConfig(newConfig).catch(err => {
+      gateway.save(newConfig).catch(err => {
         console.error("Error guardando configuración:", err);
       });
 
@@ -106,19 +90,19 @@ export const useGeneralConfigData = () => {
         `Cambio en preferencia del sistema: ${String(key)} a ${String(value)}`
       );
     }
-  }, [username, role]);
+  }, [gateway, username, role]);
 
   const saveConfig = useCallback(async (override?: Partial<GeneralConfigState>) => {
     const configToSave = { ...configRef.current, ...(override ?? {}) };
-    await configRepository.saveGeneralConfig(configToSave);
+    await gateway.save(configToSave);
 
     // Verificación simple: volver a leer lo persistido (si falla, al menos mantenemos el estado local)
-    const persisted = await configRepository.getGeneralConfig();
+    const persisted = await gateway.load();
     const nextConfig = persisted ? { ...configToSave, ...persisted } : configToSave;
     setConfig(nextConfig);
 
     window.dispatchEvent(new CustomEvent(GENERAL_CONFIG_UPDATED_EVENT, { detail: override ?? configToSave }));
-  }, []);
+  }, [gateway]);
 
   return {
     config,

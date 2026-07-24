@@ -34,7 +34,7 @@ export const ForgotPasswordForm = () => {
       } else {
         setError(response.message || "Error al enviar las instrucciones");
       }
-    } catch (err) {
+    } catch {
       setError("Error de conexión. Intenta nuevamente.");
     } finally {
       setLoading(false);

@@ -3,7 +3,10 @@ import { useMemo } from "react";
 import { Order } from "../types/order.types";
 import { CartItemType } from "../types/cart";
 import { useState, useCallback, useEffect } from "react";
-import { apiClient } from "../config/apiClient";
+import {
+  kitchenTicketPreferencesGateway,
+  type KitchenTicketPreferencesGateway,
+} from "../services/order/kitchenTicketPreferencesGateway";
 
 // Helper para dividir una orden en múltiples "Tickets de Cocina" agrupados por sentAt
 const splitIntoKitchenTickets = (order: Order): Order[] => {
@@ -54,7 +57,10 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
   });
 };
 
-export const useOrderManagement = () => {
+export const useOrderManagement = (
+  preferencesGateway: KitchenTicketPreferencesGateway =
+    kitchenTicketPreferencesGateway,
+) => {
   const { orders } = useOrderQueries();
   const { updateOrderStatus, removeOrder } = useOrderCommands();
 
@@ -63,8 +69,9 @@ export const useOrderManagement = () => {
   // Fetch initial hidden tickets from backend
   useEffect(() => {
     let isMounted = true;
-    apiClient('/orders/kitchen/hidden-tickets')
-      .then((data: string[]) => {
+    preferencesGateway
+      .getHiddenTicketIds()
+      .then((data) => {
         if (isMounted && Array.isArray(data)) {
           setHiddenTickets(data);
         }
@@ -72,7 +79,7 @@ export const useOrderManagement = () => {
       .catch(e => console.error("Error fetching hidden kitchen tickets:", e));
     
     return () => { isMounted = false; };
-  }, []);
+  }, [preferencesGateway]);
 
   // Dividir todas las órdenes en tickets virtuales
   const allTickets = useMemo(() => {
@@ -103,11 +110,10 @@ export const useOrderManagement = () => {
       return next;
     });
 
-    apiClient('/orders/kitchen/hidden-tickets', {
-      method: 'POST',
-      body: JSON.stringify({ ticketIds: toHide })
-    }).catch(e => console.error("Error saving hidden kitchen tickets:", e));
-  }, [finishedOrders]);
+    preferencesGateway
+      .hideTicketIds(toHide)
+      .catch(e => console.error("Error saving hidden kitchen tickets:", e));
+  }, [finishedOrders, preferencesGateway]);
 
   return {
     activeOrders,

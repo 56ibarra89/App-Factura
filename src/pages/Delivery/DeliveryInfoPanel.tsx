@@ -72,8 +72,7 @@ export default function DeliveryInfoPanel({
           }}
         >
           <Grid container spacing={2}>
-            {/* @ts-expect-error MUI Grid TS typing issue */}
-            <Grid item xs={8}>
+            <Grid size={{ xs: 8 }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
                 <Typography sx={{ width: 100 }}>No Telefono:</Typography>
                 <Typography fontWeight="bold">{phoneInput || " "}</Typography>
@@ -125,8 +124,7 @@ export default function DeliveryInfoPanel({
                 </Select>
               </Box>
             </Grid>
-            {/* @ts-expect-error MUI Grid TS typing issue */}
-            <Grid item xs={4} sx={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "flex-end" }}>
+            <Grid size={{ xs: 4 }} sx={{ display: "flex", flexDirection: "column", justifyContent: "flex-end", alignItems: "flex-end" }}>
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Typography sx={{ mr: 1, color: "rgba(255,255,255,0.8)" }}>Transporte:</Typography>
                 <TextField

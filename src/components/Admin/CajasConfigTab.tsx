@@ -76,7 +76,10 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
     setName(caja.name);
     setAmount(String(caja.defaultOpeningAmount));
     setType(caja.type || "Principal");
-    setAssignedUserIds(caja.assignedUserIds || ((caja as any).assignedUserId ? [(caja as any).assignedUserId] : []));
+    setAssignedUserIds(
+      caja.assignedUserIds ||
+        (caja.assignedUserId ? [caja.assignedUserId] : []),
+    );
     setErrors({});
     setOpenDialog(true);
   };
@@ -125,6 +128,27 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
       onDelete(deleteTargetId);
       setDeleteTargetId(null);
     }
+  };
+
+  const handleAssignedUsersChange = (
+    event: SelectChangeEvent<string[]>,
+  ) => {
+    const value = event.target.value;
+    setAssignedUserIds(
+      typeof value === "string" ? value.split(",") : value,
+    );
+  };
+
+  const renderAssignedUsers = (selected: string[]) => {
+    if (selected.length === 0) {
+      return <em>Sin asignar (Cualquiera puede usarla)</em>;
+    }
+    return selected
+      .map((id) => {
+        const user = users.find((item) => item.id === id);
+        return user ? user.firstName : id;
+      })
+      .join(", ");
   };
 
   return (
@@ -200,11 +224,11 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
                       </Box>
                     )}
                     {/* Fallback for old data without assignedUserNames but with assignedUserName */}
-                    {!caja.assignedUserNames && (caja as any).assignedUserName && (
+                    {!caja.assignedUserNames && caja.assignedUserName && (
                       <Box display="flex" alignItems="center" gap={0.5} mt={0.5}>
                         <PersonIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
                         <Typography variant="caption" color="text.secondary">
-                          {(caja as any).assignedUserName}
+                          {caja.assignedUserName}
                         </Typography>
                       </Box>
                     )}
@@ -269,23 +293,12 @@ export const CajasConfigTab: React.FC<Props> = ({ cajas, onAdd, onUpdate, onDele
               </FormControl>
               <FormControl fullWidth>
                 <InputLabel>Usuarios Asignados (Opcional)</InputLabel>
-                <Select
+                <Select<string[]>
                   multiple
                   value={assignedUserIds}
                   label="Usuarios Asignados (Opcional)"
-                  onChange={(e: any) => {
-                    const value = e.target.value;
-                    setAssignedUserIds(typeof value === 'string' ? value.split(',') : value);
-                  }}
-                  renderValue={(selected: any) => {
-                    if (!selected || selected.length === 0) {
-                      return <em>Sin asignar (Cualquiera puede usarla)</em>;
-                    }
-                    return selected.map((id: string) => {
-                      const user = users.find(u => u.id === id);
-                      return user ? user.firstName : id;
-                    }).join(', ');
-                  }}
+                  onChange={handleAssignedUsersChange}
+                  renderValue={renderAssignedUsers}
                   sx={{ borderRadius: 2 }}
                 >
                   {cajeroUsers.map((user) => (

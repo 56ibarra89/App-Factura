@@ -1,7 +1,8 @@
 import { useCallback, useEffect } from "react";
 import { logService } from "../services/logService";
 import { UserRole } from "../types/user";
-import { sessionStore } from "../services/storage/storage";
+import type { AuthSessionGateway } from "../services/auth/authSessionGateway";
+import { authSessionGateway } from "../services/auth/authSessionGateway";
 
 const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutos
 const CHECK_INTERVAL_MS = 30_000; // Revisar cada 30s
@@ -29,17 +30,18 @@ export function useInactivityTimer({
   username,
   role,
   onExpire,
-}: UseInactivityTimerOptions): void {
+}: UseInactivityTimerOptions,
+gateway: AuthSessionGateway = authSessionGateway): void {
   const resetTimer = useCallback(() => {
     if (!isLoggedIn) return;
-    sessionStore.setItem("lastActivity", Date.now().toString());
-  }, [isLoggedIn]);
+    gateway.touch();
+  }, [gateway, isLoggedIn]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
     const checkInactivity = () => {
-      const last = Number(sessionStore.getItem("lastActivity") || Date.now());
+      const last = gateway.getLastActivity() ?? Date.now();
       if (Date.now() - last > INACTIVITY_LIMIT_MS) {
         logService.log(
           username,
@@ -64,5 +66,12 @@ export function useInactivityTimer({
       );
       clearInterval(interval);
     };
-  }, [isLoggedIn, username, role, onExpire, resetTimer]);
+  }, [
+    gateway,
+    isLoggedIn,
+    username,
+    role,
+    onExpire,
+    resetTimer,
+  ]);
 }

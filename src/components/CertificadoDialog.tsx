@@ -10,19 +10,24 @@ import {
   Box,
 } from "@mui/material";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
-import { CertificadoRule } from "../types/promociones";
-import { apiClient } from "../config/apiClient";
+import type { RedeemableCertificate } from "../types/checkout";
+import {
+  checkoutGateway,
+  type CheckoutGateway,
+} from "../services/checkout/checkoutGateway";
 
 interface CertificadoDialogProps {
   open: boolean;
   onClose: () => void;
-  onApply: (certificado: CertificadoRule) => void;
+  onApply: (certificate: RedeemableCertificate) => void;
+  gateway?: CheckoutGateway;
 }
 
 export default function CertificadoDialog({
   open,
   onClose,
   onApply,
+  gateway = checkoutGateway,
 }: CertificadoDialogProps) {
   const [serial, setSerial] = useState("");
   const [error, setError] = useState("");
@@ -41,20 +46,21 @@ export default function CertificadoDialog({
     setLoading(true);
 
     try {
-      const data = await apiClient(`/promotions/certificates/${serial.trim().toUpperCase()}`);
+      const data = await gateway.findCertificate(serial);
       
       if (data.status !== "Disponible") {
         setError(`Este certificado no puede usarse (Estado: ${data.status}).`);
         return;
       }
 
-      onApply(data as CertificadoRule);
+      onApply(data);
       onClose();
-    } catch (e: any) {
-      if (e.status === 404) {
+    } catch (error: unknown) {
+      const requestError = error as { status?: number; message?: string };
+      if (requestError.status === 404) {
         setError("No se encontró ningún certificado con este número.");
-      } else if (e.message) {
-        setError(e.message);
+      } else if (requestError.message) {
+        setError(requestError.message);
       } else {
         setError("Error al validar el certificado.");
       }

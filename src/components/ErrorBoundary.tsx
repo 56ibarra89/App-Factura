@@ -3,7 +3,7 @@ import { Box, Typography, Button, Paper } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { logService } from "../services/logService";
-import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../theme/loginTheme";
+import { LOGIN_COLORS } from "../theme/loginTheme";
 
 interface Props {
   children: ReactNode;

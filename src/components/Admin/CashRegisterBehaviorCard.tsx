@@ -5,7 +5,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import { LOGIN_COLORS } from "../../theme/loginTheme";
-import { GeneralConfigState } from "../../hooks/useGeneralConfigData";
+import type { GeneralConfigState } from "../../types/config";
 
 interface Props {
   config: GeneralConfigState;

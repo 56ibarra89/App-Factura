@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Box, Paper, Snackbar, Alert } from "@mui/material";
-import { LOGIN_GRADIENTS, LOGIN_SHADOWS } from "../../theme/loginTheme";
+import { LOGIN_SHADOWS } from "../../theme/loginTheme";
 
 interface AuthLayoutProps {
   children: ReactNode;

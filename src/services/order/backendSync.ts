@@ -8,6 +8,7 @@ interface BackendExtra {
 
 interface BackendItem {
   id?: string | number;
+  productId?: string;
   name: string;
   price: number | string;
   size: string;
@@ -49,6 +50,7 @@ function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
     id: backendOrder.id,
     items: backendOrder.items.map((i: BackendItem) => ({
       id: i.id ? Number(i.id) : undefined,
+      productId: i.productId,
       name: i.name,
       price: Number(i.price),
       size: i.size.toLowerCase(),
@@ -98,6 +100,7 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
   const payload = {
     id: order.id,
     items: order.items.map(i => ({
+      productId: i.productId,
       name: i.name,
       price: i.price,
       size: i.size.toLowerCase() === 'unico' ? 'único' : i.size.toLowerCase(),
@@ -122,6 +125,8 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     driverId: order.driverId,
     customerTendered: order.customerTendered,
     deliveryChange: order.deliveryChange,
+    promotionCode: order.promotionCode,
+    certificateSerials: order.certificateSerials,
     cashierSnapshotName: order.cashierName,
     isSentToKitchen: order.isSentToKitchen,
     linkedTables: order.linkedTables && order.linkedTables.length > 0 ? order.linkedTables : (order.tableId ? [order.tableId] : undefined),
@@ -161,6 +166,7 @@ export async function syncUpdateOrderItems(order: Order) {
     method: 'PATCH',
     body: JSON.stringify({
       items: order.items.map(i => ({
+        productId: i.productId,
         name: i.name,
         price: i.price,
         size: i.size.toLowerCase() === 'unico' ? 'único' : i.size.toLowerCase(),
@@ -203,7 +209,8 @@ export async function syncFinalizeOrder(order: Order): Promise<Order> {
       taxAmount: order.taxAmount,
       discountAmount: order.discountAmount,
       finalTotal: order.total,
-      status: order.status
+      promotionCode: order.promotionCode,
+      certificateSerials: order.certificateSerials,
     }),
   });
   return mapBackendOrderToFrontend(response);

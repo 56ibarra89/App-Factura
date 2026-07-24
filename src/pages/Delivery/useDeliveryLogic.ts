@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useCustomerSearch } from "../../hooks/useCustomerSearch";
 import { useCustomers } from "../../hooks/useCustomers";
 import { Customer } from "../../types/customer.types";
-import { UserAccount } from "../../types/user";
-import { apiClient } from "../../config/apiClient";
+import type { UserAccount } from "../../types/user";
+import {
+  deliveryGateway,
+  type DeliveryGateway,
+} from "../../services/delivery/deliveryGateway";
 
-export function useDeliveryLogic() {
+export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
   const navigate = useNavigate();
   const { suggestions, search, clearSuggestions } = useCustomerSearch();
   const { addAddress, removeAddress, updateCustomer } = useCustomers();
@@ -46,32 +49,19 @@ export function useDeliveryLogic() {
   useEffect(() => {
     const fetchDriversAndStats = async () => {
       try {
-        const users = await apiClient("/users");
         const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-        const todayNameStr = days[new Date().getDay()];
-
-        const motorizados = users.filter((u: UserAccount) => {
-          if (u.role !== "motorizado") return false;
-          
-          const isScheduled = u.workDays && u.workDays.includes(todayNameStr);
-          const hasExtraDay = u.extraDays && u.extraDays.some(d => d.date.startsWith(todayStr));
-          
-          return isScheduled || hasExtraDay;
-        });
-        
+        const [motorizados, statsData] = await Promise.all([
+          gateway.listAvailableDrivers(now),
+          gateway.getStats(now),
+        ]);
         setDrivers(motorizados);
-
-        // Fetch stats
-        const statsData = await apiClient(`/users/motorizados/delivery-stats?date=${todayStr}`);
         setStats(statsData);
       } catch (err) {
         console.error("Error fetching motorizados or stats:", err);
       }
     };
-    fetchDriversAndStats();
-  }, []);
+    void fetchDriversAndStats();
+  }, [gateway]);
 
   const handleConfirm = useCallback(() => {
     navigate("/facturacion", {

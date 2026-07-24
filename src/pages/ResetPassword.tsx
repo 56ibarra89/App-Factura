@@ -69,7 +69,7 @@ export const ResetPassword = () => {
       } else {
         setError(response.message || "Error al restablecer la contraseña");
       }
-    } catch (err) {
+    } catch {
       setError("Error de conexión. Intenta nuevamente.");
     } finally {
       setLoading(false);

@@ -28,14 +28,13 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
-import { CuponRule, CuponStatus } from "../../../types/promociones";
+import {
+  CuponRule,
+  CuponStatus,
+  type CuponFormOutput,
+} from "../../../types/promociones";
 
 // ── Tipo de salida del formulario ────────────────────────────────────────────
-
-export type CuponFormOutput = Omit<
-  CuponRule,
-  "discount" | "usage" | "expires" | "status"
-> & { manualStatus: CuponStatus };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,6 @@
 import { Box, Grid } from "@mui/material";
 import PageHeader from "../components/PageHeader";
 import AccountMenu from "../components/AccountMenu";
-import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import { BackButton } from "../components/BackButton";
 import { useAccountSettings } from "../hooks/useAccountSettings";
 import { ProfileCard } from "../components/cuenta/ProfileCard";

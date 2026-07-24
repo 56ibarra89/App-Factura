@@ -13,7 +13,6 @@ import {
   Tooltip,
   CircularProgress
 } from "@mui/material";
-import { LOGIN_GRADIENTS } from "../theme/loginTheme";
 import PageHeader from "../components/PageHeader";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { BackButton } from "../components/BackButton";

@@ -3,7 +3,9 @@ import { Correlativo } from "../types/correlativo.types";
 import type { ICorrelativoRepository } from "../types/repositories";
 
 const toBackend = (correlativo: Partial<Correlativo>) => {
-  const { id, createdAt, ...rest } = correlativo;
+  const rest = { ...correlativo };
+  delete rest.id;
+  delete rest.createdAt;
   return {
     ...rest,
     ...(rest.documentType && { documentType: rest.documentType.toUpperCase() }),
@@ -11,12 +13,34 @@ const toBackend = (correlativo: Partial<Correlativo>) => {
   };
 };
 
-const toFrontend = (backendObj: any): Correlativo => {
+interface BackendCorrelativo {
+  id: string;
+  documentType: string;
+  resolutionNumber: string;
+  prefix: string;
+  startNumber: number;
+  endNumber: number;
+  currentNumber: number;
+  issueDate?: string;
+  expirationDate?: string;
+  status: string;
+  createdAt?: string;
+}
+
+const toFrontend = (backendObj: BackendCorrelativo): Correlativo => {
   const capitalize = (s: string) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
+  const documentType = capitalize(backendObj.documentType);
+  const status = capitalize(backendObj.status);
+  if (documentType !== "Factura") {
+    throw new Error(`Tipo de documento no soportado: ${documentType}`);
+  }
+  if (status !== "Activo" && status !== "Agotado" && status !== "Vencido") {
+    throw new Error(`Estado de correlativo no soportado: ${status}`);
+  }
   return {
     ...backendObj,
-    documentType: capitalize(backendObj.documentType),
-    status: capitalize(backendObj.status),
+    documentType,
+    status,
     issueDate: backendObj.issueDate ? new Date(backendObj.issueDate) : new Date(),
     expirationDate: backendObj.expirationDate ? new Date(backendObj.expirationDate) : new Date(),
     createdAt: backendObj.createdAt ? new Date(backendObj.createdAt) : new Date()
@@ -39,15 +63,15 @@ export const correlativoRepository: ICorrelativoRepository = {
   },
 
   async getAll(): Promise<Correlativo[]> {
-    const data = await apiClient("/correlativos");
+    const data: BackendCorrelativo[] = await apiClient("/correlativos");
     return data.map(toFrontend);
   },
 
   async getActiveByDocumentType(documentType: string): Promise<Correlativo | null> {
     try {
-      const active = await apiClient(`/correlativos/active?documentType=${documentType.toUpperCase()}`);
+      const active: BackendCorrelativo | null = await apiClient(`/correlativos/active?documentType=${documentType.toUpperCase()}`);
       return active ? toFrontend(active) : null;
-    } catch (error) {
+    } catch {
       return null;
     }
   },

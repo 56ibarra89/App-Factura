@@ -146,6 +146,15 @@ export const TurnosConfigTab: React.FC<Props> = ({ turnos, onAdd, onUpdate, onDe
     }
   };
 
+  const handleAssignedUsersChange = (
+    event: SelectChangeEvent<string[]>,
+  ) => {
+    const value = event.target.value;
+    setAssignedUserIds(
+      typeof value === "string" ? value.split(",") : value,
+    );
+  };
+
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -364,15 +373,12 @@ export const TurnosConfigTab: React.FC<Props> = ({ turnos, onAdd, onUpdate, onDe
               {assignedRole && (
                 <FormControl fullWidth>
                   <InputLabel>Usuarios Asignados (Opcional)</InputLabel>
-                  <Select
+                  <Select<string[]>
                     multiple
                     value={assignedUserIds}
                     label="Usuarios Asignados (Opcional)"
-                    onChange={(e: any) => {
-                      const value = e.target.value;
-                      setAssignedUserIds(typeof value === 'string' ? value.split(',') : value);
-                    }}
-                    renderValue={(selected: any) => {
+                    onChange={handleAssignedUsersChange}
+                    renderValue={(selected: string[]) => {
                       if (!selected || selected.length === 0) {
                         return <em>Sin asignar a nadie en específico</em>;
                       }

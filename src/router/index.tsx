@@ -1,43 +1,75 @@
+import { lazy, Suspense } from "react";
+import { Box, CircularProgress } from "@mui/material";
 import { Route, Routes } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
-import Home from "../pages/Home";
-import Facturacion from "../pages/Facturacion";
-import DeliveryPage from "../pages/DeliveryPage";
-import Producto from "../pages/Producto";
 import Login from "../pages/Login";
-import ForgotPassword from "../pages/ForgotPassword";
-import { ResetPassword } from "../pages/ResetPassword";
-import LoginPin from "../pages/LoginPin";
-import AbrirCajaPage from "../pages/AbrirCajaPage";
-import Mesa from "../pages/Mesa";
-import Ordenes from "../pages/Ordenes";
-import AnularFactura from "../pages/AnularFactura";
-import ConsultarFacturas from "../pages/ConsultarFacturas";
-import Reportes from "../pages/Reportes";
-import Administracion from "../pages/Administracion";
-import CerrarCajaPage from "../pages/CerrarCajaPage";
-import ConsultarTurnos from "../pages/ConsultarTurnos";
-import MiCuenta from "../pages/MiCuenta";
-import Cuentas from "../pages/Cuentas";
-import ConfigurarMesas from "../pages/admin/ConfigurarMesas";
-import AdminCajas from "../pages/admin/AdminCajas";
-import AdminImpuestos from "../pages/admin/AdminImpuestos";
-import AdminConfiguracion from "../pages/admin/AdminConfiguracion";
-import AdminEmpresa from "../pages/admin/AdminEmpresa";
-import Bitacora from "../pages/admin/Bitacora";
-import { CajaProvider } from "../context/CajaContext";
-import Perifericos from "../pages/admin/AdminPerifericos";
-import AdminPromociones from "../pages/admin/AdminPromociones";
-import AdminCorrelativos from "../pages/admin/AdminCorrelativos";
-import AdminRespaldos from "../pages/admin/AdminRespaldos";
-import AdminClientes from "../pages/admin/AdminClientes";
-import AdminHorarios from "../pages/admin/AdminHorarios";
-import AdminZonasMeseros from "../pages/admin/AdminZonasMeseros";
-import AdminCocinas from "../pages/admin/AdminCocinas";
+import { CajaProvider } from "../context/CajaProvider";
+
+const Home = lazy(() => import("../pages/Home"));
+const Facturacion = lazy(() => import("../pages/Facturacion"));
+const DeliveryPage = lazy(() => import("../pages/DeliveryPage"));
+const Producto = lazy(() => import("../pages/Producto"));
+const ForgotPassword = lazy(() => import("../pages/ForgotPassword"));
+const ResetPassword = lazy(() =>
+  import("../pages/ResetPassword").then((module) => ({
+    default: module.ResetPassword,
+  })),
+);
+const LoginPin = lazy(() => import("../pages/LoginPin"));
+const AbrirCajaPage = lazy(() => import("../pages/AbrirCajaPage"));
+const Mesa = lazy(() => import("../pages/Mesa"));
+const Ordenes = lazy(() => import("../pages/Ordenes"));
+const AnularFactura = lazy(() => import("../pages/AnularFactura"));
+const ConsultarFacturas = lazy(() => import("../pages/ConsultarFacturas"));
+const Reportes = lazy(() => import("../pages/Reportes"));
+const Administracion = lazy(() => import("../pages/Administracion"));
+const CerrarCajaPage = lazy(() => import("../pages/CerrarCajaPage"));
+const ConsultarTurnos = lazy(() => import("../pages/ConsultarTurnos"));
+const MiCuenta = lazy(() => import("../pages/MiCuenta"));
+const Cuentas = lazy(() => import("../pages/Cuentas"));
+const ConfigurarMesas = lazy(
+  () => import("../pages/admin/ConfigurarMesas"),
+);
+const AdminCajas = lazy(() => import("../pages/admin/AdminCajas"));
+const AdminImpuestos = lazy(() => import("../pages/admin/AdminImpuestos"));
+const AdminConfiguracion = lazy(
+  () => import("../pages/admin/AdminConfiguracion"),
+);
+const AdminEmpresa = lazy(() => import("../pages/admin/AdminEmpresa"));
+const Bitacora = lazy(() => import("../pages/admin/Bitacora"));
+const Perifericos = lazy(() => import("../pages/admin/AdminPerifericos"));
+const AdminPromociones = lazy(
+  () => import("../pages/admin/AdminPromociones"),
+);
+const AdminCorrelativos = lazy(
+  () => import("../pages/admin/AdminCorrelativos"),
+);
+const AdminRespaldos = lazy(() => import("../pages/admin/AdminRespaldos"));
+const AdminClientes = lazy(() => import("../pages/admin/AdminClientes"));
+const AdminHorarios = lazy(() => import("../pages/admin/AdminHorarios"));
+const AdminZonasMeseros = lazy(
+  () => import("../pages/admin/AdminZonasMeseros"),
+);
+const AdminCocinas = lazy(() => import("../pages/admin/AdminCocinas"));
+
+const RouteFallback = () => (
+  <Box
+    role="status"
+    aria-label="Cargando pantalla"
+    display="flex"
+    alignItems="center"
+    justifyContent="center"
+    minHeight="100vh"
+  >
+    <CircularProgress color="error" />
+  </Box>
+);
+
 const AppRoutes = () => (
   <CajaProvider>
-    <Routes>
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
       {/* ── Rutas Públicas ── */}
       <Route path="/" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -128,16 +160,12 @@ const AppRoutes = () => (
         path="/admin/bitacora"
         element={<AdminRoute element={<Bitacora />} />}
       />
-        <Route
-          path="/admin/cocinas"
-          element={
-            <AdminRoute
-              element={<AdminCocinas />}
-            />
-          }
-        />
-        <Route
-          path="/admin/perifericos"
+      <Route
+        path="/admin/cocinas"
+        element={<AdminRoute element={<AdminCocinas />} />}
+      />
+      <Route
+        path="/admin/perifericos"
         element={<AdminRoute element={<Perifericos />} />}
       />
       <Route
@@ -156,7 +184,8 @@ const AppRoutes = () => (
         path="/admin/clientes"
         element={<AdminRoute element={<AdminClientes />} />}
       />
-    </Routes>
+      </Routes>
+    </Suspense>
   </CajaProvider>
 );
 

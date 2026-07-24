@@ -3,7 +3,7 @@ import { ExtraIngredientDef } from "../types/extras";
 
 export const productMapper = {
   /** Map a domain Product to Form state */
-  toFormState: (product: Product | null, category: string, dynamicSizes: string[]): ProductFormState => {
+  toFormState: (product: Product | null, category: string): ProductFormState => {
     const defaults: { size: string; price: string }[] = [];
     if (!product) {
       return {

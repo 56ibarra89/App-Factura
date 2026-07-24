@@ -1,7 +1,7 @@
 import { Box, Container, Typography, Grid } from "@mui/material";
 import { BackButton } from "../../components/BackButton";
 import PageHeader from "../../components/PageHeader";
-import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
+import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { useImpuestosConfig } from "../../hooks/useImpuestosConfig";
 import { TaxConfigCard } from "../../components/Admin/TaxConfigCard";
 import { TaxExemptionToggle } from "../../components/Admin/TaxExemptionToggle";

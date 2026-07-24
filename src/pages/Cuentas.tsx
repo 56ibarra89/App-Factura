@@ -1,103 +1,20 @@
-import { useState, useMemo, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  Tabs,
-  Tab,
-  Grid,
-  alpha,
-  TextField,
-  InputAdornment,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Snackbar,
-  Alert,
-} from "@mui/material";
-import { BackButton } from "../components/BackButton";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import SearchIcon from "@mui/icons-material/Search";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import PageHeader from "../components/PageHeader";
+import { Box, Grid } from "@mui/material";
 import AccountMenu from "../components/AccountMenu";
-import {
-  LOGIN_COLORS,
-  LOGIN_GRADIENTS,
-  LOGIN_SHADOWS,
-} from "../theme/loginTheme";
-import { useAccountManager } from "../hooks/useAccountManager";
-import { UserList } from "../components/cuentas/UserList";
-import { UserForm } from "../components/cuentas/UserForm";
-import { UserActivity } from "../components/cuentas/UserActivity";
+import { BackButton } from "../components/BackButton";
+import PageHeader from "../components/PageHeader";
+import { AccountManagementDialogs } from "../components/cuentas/AccountManagementDialogs";
+import { AccountsSidebar } from "../components/cuentas/AccountsSidebar";
+import { AccountsWorkspace } from "../components/cuentas/AccountsWorkspace";
+import { useAccountsWorkspace } from "../hooks/cuentas/useAccountsWorkspace";
 
 export default function Cuentas() {
-  const { users, loading, error, saveUser, toggleUserStatus, deleteUser, unlockUser } = useAccountManager();
-  const [snackbarError, setSnackbarError] = useState<string | null>(null);
-  const [snackbarSuccess, setSnackbarSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (error) setSnackbarError(error);
-  }, [error]);
-
-  // Scroll to top upon mounting to prevent inheriting scroll position from previous page
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [tabIndex, setTabIndex] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-
-  const selectedUser = users.find((u) => u.id === selectedUserId) || null;
-  const userToDelete = users.find((u) => u.id === pendingDeleteId);
-
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      const q = searchQuery.toLowerCase();
-      return (
-        u.firstName.toLowerCase().includes(q) ||
-        u.lastName.toLowerCase().includes(q) ||
-        u.role.toLowerCase().includes(q)
-      );
-    });
-  }, [users, searchQuery]);
-
-  const handleCreateNew = () => {
-    setSelectedUserId(null);
-    setTabIndex(0);
-  };
-
-  const handleRequestDelete = (id: string) => {
-    setPendingDeleteId(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (pendingDeleteId) {
-      deleteUser(pendingDeleteId);
-      setSelectedUserId(null);
-      setTabIndex(0);
-    }
-    setDeleteDialogOpen(false);
-    setPendingDeleteId(null);
-  };
-
-  const handleCancelDelete = () => {
-    setDeleteDialogOpen(false);
-    setPendingDeleteId(null);
-  };
+  const accounts = useAccountsWorkspace();
 
   return (
     <Box
       minHeight="100vh"
       sx={{
-        bgcolor: 'background.default',
+        bgcolor: "background.default",
         pt: 2,
         pb: 2,
         px: { xs: 2, md: 6 },
@@ -112,238 +29,41 @@ export default function Cuentas() {
       />
 
       <Grid container spacing={2} sx={{ mt: 1, flex: 1 }}>
-        {/* Columna Izquierda: Lista de Usuarios */}
         <Grid
           size={{ xs: 12, md: 4, lg: 3 }}
-          sx={{ position: "relative", minHeight: { xs: 400, md: "auto" } }}
+          sx={{
+            position: "relative",
+            minHeight: { xs: 400, md: "auto" },
+          }}
         >
-          <Box
-            sx={{
-              position: { md: "absolute" },
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
-            >
-              <Typography variant="h6" fontWeight="900" sx={{ opacity: 0.8 }}>
-                Usuarios ({users.length})
-              </Typography>
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<PersonAddIcon />}
-                onClick={handleCreateNew}
-                sx={{
-                  borderRadius: 4,
-                  bgcolor: LOGIN_COLORS.primary,
-                  fontWeight: "bold",
-                  boxShadow: LOGIN_SHADOWS.title,
-                }}
-              >
-                Nuevo
-              </Button>
-            </Box>
-            <TextField
-              fullWidth
-              placeholder="Buscar por nombre o rol..."
-              variant="outlined"
-              size="small"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{ mb: 2, bgcolor: "background.paper", borderRadius: 2 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Box
-              sx={{
-                borderRadius: 4,
-                flex: 1,
-                minHeight: 0,
-                overflowY: "auto",
-                pr: 1,
-              }}
-            >
-              <UserList
-                users={filteredUsers}
-                selectedUserId={selectedUserId}
-                onSelectUser={(id) => {
-                  setSelectedUserId(id);
-                  if (tabIndex !== 0 && tabIndex !== 1) setTabIndex(0);
-                }}
-              />
-            </Box>
-          </Box>
+          <AccountsSidebar
+            users={accounts.users}
+            filteredUsers={accounts.filteredUsers}
+            selectedUserId={accounts.selectedUserId}
+            searchQuery={accounts.searchQuery}
+            onSearchChange={accounts.setSearchQuery}
+            onCreate={accounts.createUser}
+            onSelect={accounts.selectUser}
+          />
         </Grid>
 
-        {/* Columna Derecha: Panel Dinámico */}
         <Grid size={{ xs: 12, md: 8, lg: 9 }}>
-          <Paper
-            elevation={0}
-            sx={{
-              bgcolor: "background.paper",
-              borderRadius: 6,
-              boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
-              display: "flex",
-              flexDirection: "column",
-              minHeight: { xs: "auto", md: "660px" },
-            }}
-          >
-            <Box
-              sx={{
-                borderBottom: 1,
-                borderColor: "divider",
-                px: 4,
-                pt: 2,
-                background: "action.hover",
-              }}
-            >
-              <Tabs
-                value={tabIndex}
-                onChange={(_, newValue) => setTabIndex(newValue)}
-                textColor="primary"
-                indicatorColor="primary"
-                sx={{
-                  "& .MuiTab-root": {
-                    fontWeight: "bold",
-                    textTransform: "none",
-                    fontSize: "1rem",
-                    transition: "0.2s",
-                  },
-                }}
-              >
-                <Tab
-                  label={
-                    selectedUser ? "Información de Cuenta" : "Ficha de Registro"
-                  }
-                />
-                <Tab label="Actividad Reciente" disabled={!selectedUser} />
-              </Tabs>
-            </Box>
-
-            <Box sx={{ p: { xs: 1.5, md: 2 }, flex: 1 }}>
-              {tabIndex === 0 && (
-                <UserForm
-                  user={selectedUser}
-                  onSave={async (user) => {
-                    const saved = await saveUser(user);
-                    if (saved) {
-                      setSnackbarSuccess(`Usuario ${user.id ? 'actualizado' : 'creado'} con éxito`);
-                      setSelectedUserId(saved.id);
-                    }
-                  }}
-                  onToggleStatus={toggleUserStatus}
-                  onDelete={handleRequestDelete}
-                  onUnlock={async (id) => {
-                    try {
-                      await unlockUser(id);
-                      setSnackbarSuccess("Usuario desbloqueado exitosamente");
-                    } catch (e) {
-                      setSnackbarError("Error al desbloquear el usuario");
-                    }
-                  }}
-                />
-              )}
-              {tabIndex === 1 && selectedUser && (
-                <UserActivity user={selectedUser} />
-              )}
-            </Box>
-          </Paper>
+          <AccountsWorkspace
+            selectedUser={accounts.selectedUser}
+            tabIndex={accounts.tabIndex}
+            onTabChange={accounts.setTabIndex}
+            onSave={accounts.saveUser}
+            onToggleStatus={accounts.toggleUserStatus}
+            onDelete={accounts.requestDelete}
+            onUnlock={accounts.unlockUser}
+          />
         </Grid>
       </Grid>
 
-      {/* Dialog de confirmación de eliminación */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCancelDelete}
-        PaperProps={{
-          sx: {
-            borderRadius: 4,
-            p: 1,
-            maxWidth: 440,
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            fontWeight: "900",
-            display: "flex",
-            alignItems: "center",
-            gap: 1.5,
-          }}
-        >
-          <DeleteForeverIcon color="error" sx={{ fontSize: 28 }} />
-          Eliminar Usuario
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Estás a punto de eliminar permanentemente la cuenta de{" "}
-            <strong>
-              {userToDelete?.firstName} {userToDelete?.lastName}
-            </strong>{" "}
-            (@{userToDelete?.username}).
-            <br />
-            <br />
-            Esta acción <strong>no se puede deshacer</strong>. Considera
-            suspender la cuenta si deseas conservar el historial.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
-          <Button
-            onClick={handleCancelDelete}
-            variant="outlined"
-            sx={{ borderRadius: 3, textTransform: "none", fontWeight: "bold" }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            variant="contained"
-            color="error"
-            startIcon={<DeleteForeverIcon />}
-            sx={{ borderRadius: 3, textTransform: "none", fontWeight: "bold" }}
-          >
-            Eliminar Permanentemente
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      <Snackbar
-        open={!!snackbarError}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarError(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={() => setSnackbarError(null)} severity="error" sx={{ width: "100%" }}>
-          {snackbarError}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar
-        open={!!snackbarSuccess}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarSuccess(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={() => setSnackbarSuccess(null)} severity="success" sx={{ width: "100%" }}>
-          {snackbarSuccess}
-        </Alert>
-      </Snackbar>
+      <AccountManagementDialogs
+        deletion={accounts.deletion}
+        feedback={accounts.feedback}
+      />
     </Box>
   );
 }

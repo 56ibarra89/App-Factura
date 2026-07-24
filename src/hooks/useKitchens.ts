@@ -1,54 +1,44 @@
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '../config/apiClient';
+import {
+  kitchensGateway,
+  type Kitchen,
+  type KitchensGateway,
+} from '../services/kitchens/kitchensGateway';
 
-export interface Kitchen {
-  id: string;
-  name: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { Kitchen } from '../services/kitchens/kitchensGateway';
 
-export function useKitchens() {
+export function useKitchens(gateway: KitchensGateway = kitchensGateway) {
   const [kitchens, setKitchens] = useState<Kitchen[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchKitchens = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await apiClient('/kitchens');
+      const data = await gateway.list();
       setKitchens(data);
     } catch (error) {
       console.error('Error fetching kitchens:', error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [gateway]);
 
   useEffect(() => {
     fetchKitchens();
   }, [fetchKitchens]);
 
   const addKitchen = async (name: string, isActive: boolean = true) => {
-    await apiClient('/kitchens', {
-      method: 'POST',
-      body: JSON.stringify({ name, isActive }),
-    });
+    await gateway.create(name, isActive);
     await fetchKitchens();
   };
 
   const updateKitchen = async (id: string, name: string, isActive?: boolean) => {
-    await apiClient(`/kitchens/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ name, isActive }),
-    });
+    await gateway.update(id, name, isActive);
     await fetchKitchens();
   };
 
   const deleteKitchen = async (id: string) => {
-    await apiClient(`/kitchens/${id}`, {
-      method: 'DELETE',
-    });
+    await gateway.delete(id);
     await fetchKitchens();
   };
 

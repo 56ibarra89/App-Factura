@@ -1,4 +1,4 @@
-import { Shift } from "./shift.types";
+import type { CloseShiftData, OpenShiftData, Shift } from "./shift.types";
 import type { SystemLog, LogLevel } from "./log.types";
 import type { Customer } from "./customer.types";
 import type { Correlativo } from "./correlativo.types";
@@ -7,8 +7,8 @@ import type { Correlativo } from "./correlativo.types";
  * DIP: Abstracción para la persistencia de turnos (cajas).
  */
 export interface IShiftRepository {
-  openShift(data: any): Promise<Shift>;
-  closeShift(id: string, data: any): Promise<Shift>;
+  openShift(data: OpenShiftData): Promise<Shift>;
+  closeShift(id: string, data: CloseShiftData): Promise<Shift>;
   getAll(): Promise<Shift[]>;
   getActiveShiftForUser(username: string): Promise<Shift | null>;
 }

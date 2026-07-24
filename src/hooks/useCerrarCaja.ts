@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useCaja } from "../context/CajaContext";
 import { useGeneralConfigData } from "./useGeneralConfigData";
 import { Shift } from "../types/shift.types";
+import type { ReceiptPrinter } from "../services/printing/receiptPrinter";
+import { receiptPrinter } from "../services/printing/runtimeReceiptPrinter";
 
-export function useCerrarCaja() {
+export function useCerrarCaja(
+  printer: ReceiptPrinter = receiptPrinter,
+) {
   const navigate = useNavigate();
   const { currentShift, cerrarCaja, calculateCurrentShiftSales } = useCaja();
   const { config } = useGeneralConfigData();
@@ -34,18 +38,12 @@ export function useCerrarCaja() {
 
       if (config.autoPrintReceipt) {
         setPrintShift(finalShift);
-        // Wait for state to update and render the ticket component before printing
-        setTimeout(() => {
-          if (window.ipcRenderer) {
-            window.ipcRenderer.send('print-silent');
-          }
-          
-          // Wait a bit more for the print spooler to capture the DOM before unmounting
-          setTimeout(async () => {
-            await cerrarCaja(Number(amount));
-            navigate("/home");
-          }, 1000);
-        }, 500);
+        await printer.print({
+          renderDelayMs: 500,
+          settleDelayMs: 1000,
+        });
+        await cerrarCaja(Number(amount));
+        navigate("/home");
       } else {
         await cerrarCaja(Number(amount));
         navigate("/home");

@@ -19,7 +19,7 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { HappyHourRule } from "../../../types/promociones";
-import { useProductContext } from "../../../context/ProductContext";
+import { useProductContext } from "../../../hooks/useProductContext";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 

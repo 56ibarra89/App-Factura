@@ -1,17 +1,31 @@
 import { useState, useMemo, useCallback } from "react";
-import { useOrderContext } from "../../context/OrderContext";
+import { useOrderCommands } from "../../context/OrderContext";
 import { useImpuestosConfig } from "../../hooks/useImpuestosConfig";
-import { calculateCartTotals } from "../../utils/cartTotals";
+import {
+  calculateCartTotals,
+  type AppliedPromotion,
+} from "../../utils/cartTotals";
 import { CartItemType } from "../../types/cart";
-import { PaymentMethod, OrderType } from "../../types/order.types";
 import { Order } from "../../types/order.types";
-export function useMesaCheckout(restoreFocus: () => void) {
-  const { finalizeOrder, updateOrderItems } = useOrderContext();
+import type { CheckoutFormValues } from "../../types/checkout";
+import {
+  buildSupplementalCartItems,
+  extractCertificateSerials,
+} from "../../services/checkout/checkoutDomain";
+import type { ReceiptPrinter } from "../../services/printing/receiptPrinter";
+import { receiptPrinter } from "../../services/printing/runtimeReceiptPrinter";
+
+export function useMesaCheckout(
+  restoreFocus: () => void,
+  printer: ReceiptPrinter = receiptPrinter,
+) {
+  const { finalizeOrder, updateOrderItems } =
+    useOrderCommands();
   const { taxes, isExonerated } = useImpuestosConfig();
 
   const [checkoutOrder, setCheckoutOrder] = useState<Order | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [checkoutPromotion, setCheckoutPromotion] = useState<any>(null);
+  const [checkoutPromotion, setCheckoutPromotion] =
+    useState<AppliedPromotion | null>(null);
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<string | undefined>(undefined);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -45,90 +59,63 @@ export function useMesaCheckout(restoreFocus: () => void) {
   }, [restoreFocus]);
 
   const handleFinalConfirm = useCallback(
-    async (
-      paymentMethod: PaymentMethod,
-      splitAmounts?: { efectivo: number; tarjeta: number },
-      customerName?: string,
-      orderType?: OrderType,
-      customerAddress?: string,
-      packagingItems?: { name: string; price: number; quantity: number }[]
-    ) => {
+    async (form: CheckoutFormValues) => {
       if (!checkoutOrder) return;
 
-      let finalCheckoutTotal = checkoutTotal;
-      let finalCheckoutSubTotal = checkoutSubTotal;
-      let finalCheckoutTaxAmount = checkoutTaxAmount;
-      let finalCheckoutDiscountAmount = checkoutDiscountAmount;
+      const supplementalItems = buildSupplementalCartItems(
+        form.packagingItems,
+        form.orderType === "delivery" ? form.deliveryCost : undefined,
+      );
+      const items = [...checkoutCart, ...supplementalItems];
+      const totals = calculateCartTotals(
+        items,
+        taxes,
+        isExonerated,
+        checkoutPromotion,
+      );
 
-      // Si hay empaques (llevar o delivery), debemos agregarlos a la orden antes de facturar
-      if (packagingItems && packagingItems.length > 0) {
-        const extraCartItems: CartItemType[] = packagingItems.map((pkg) => ({
-          id: crypto.randomUUID(),
-          name: `Empaque ${pkg.name}`,
-          price: pkg.price,
-          size: "único",
-          quantity: pkg.quantity,
-          extras: [],
-        }));
-        const fullCart = [...checkoutCart, ...extraCartItems];
-        const newTotals = calculateCartTotals(fullCart, taxes, isExonerated, checkoutPromotion);
-        finalCheckoutTotal = newTotals.total;
-        finalCheckoutSubTotal = newTotals.subTotal;
-        finalCheckoutTaxAmount = newTotals.taxAmount;
-        finalCheckoutDiscountAmount = newTotals.discountAmount;
-
+      if (supplementalItems.length > 0) {
         await updateOrderItems(
           checkoutOrder.id,
-          fullCart,
-          finalCheckoutTotal,
-          finalCheckoutSubTotal,
-          finalCheckoutTaxAmount
+          items,
+          totals.total,
+          totals.subTotal,
+          totals.taxAmount,
         );
       }
 
-      const invoiceNumber = await finalizeOrder(
-        checkoutOrder.id,
-        paymentMethod,
-        splitAmounts,
-        customerName,
-        orderType,
-        customerAddress,
-        finalCheckoutTotal,
-        finalCheckoutSubTotal,
-        finalCheckoutTaxAmount,
-        finalCheckoutDiscountAmount,
-        checkoutPromotion?.code
-      );
+      const invoiceNumber = await finalizeOrder(checkoutOrder.id, {
+        ...totals,
+        paymentMethod: form.paymentMethod,
+        splitAmounts: form.splitAmounts,
+        customerName: form.customerName,
+        orderType: form.orderType,
+        customerAddress: form.customerAddress,
+        promotionCode: checkoutPromotion?.code,
+        certificateSerials: extractCertificateSerials(items),
+      });
 
-      setCreatedInvoiceNumber(invoiceNumber || "000001");
+      if (!invoiceNumber) {
+        throw new Error("El backend no devolvió un número de factura.");
+      }
+      setCreatedInvoiceNumber(invoiceNumber);
 
-      setTimeout(() => {
-        if (window.ipcRenderer) {
-          window.ipcRenderer.send("print-silent");
-          setTimeout(() => {
-            setIsPreviewOpen(false);
-            setCheckoutOrder(null);
-            restoreFocus();
-          }, 500);
-        } else {
-          window.print();
-          setIsPreviewOpen(false);
-          setCheckoutOrder(null);
-          restoreFocus();
-        }
-      }, 500);
+      await printer.print({
+        renderDelayMs: 500,
+        settleDelayMs: 500,
+      });
+      setIsPreviewOpen(false);
+      setCheckoutOrder(null);
+      restoreFocus();
     },
     [
       checkoutOrder,
       finalizeOrder,
-      checkoutTotal,
       restoreFocus,
       checkoutCart,
-      checkoutDiscountAmount,
       checkoutPromotion,
-      checkoutSubTotal,
-      checkoutTaxAmount,
       isExonerated,
+      printer,
       taxes,
       updateOrderItems,
     ]

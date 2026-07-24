@@ -39,7 +39,8 @@ function useCart() {
     cancelExtras,
   } = useProductSelection(handleConfirmProduct);
  
-  const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } = useCheckout(cart, promotion, discountAmount);
+  const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } =
+    useCheckout(cart, promotion);
  
   return {
     // State

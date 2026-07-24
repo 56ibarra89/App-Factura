@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { apiClient } from "../config/apiClient";
+import {
+  backupGateway,
+  type BackupGateway,
+  type BackupOptions,
+} from "../services/backups/backupGateway";
 
-export const useRespaldos = () => {
+export const useRespaldos = (
+  gateway: BackupGateway = backupGateway,
+) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error" | "info">("success");
   
-  const [options, setOptions] = useState({
+  const [options, setOptions] = useState<BackupOptions>({
     config: true,
     menu: true,
     history: true,
@@ -25,13 +31,10 @@ export const useRespaldos = () => {
     setSnackbarOpen(true);
 
     try {
-      await apiClient("/backups/export", {
-        method: "POST",
-        body: JSON.stringify(options),
-      });
+      await gateway.export(options);
       setSnackbarSeverity("success");
       setSnackbarMessage("¡Respaldo exportado exitosamente!");
-    } catch (error) {
+    } catch {
       setSnackbarSeverity("error");
       setSnackbarMessage("Error al generar respaldo de la base de datos");
     }
@@ -41,8 +44,10 @@ export const useRespaldos = () => {
     const input = document.createElement("input");
     input.type = "file";
     // Removed specific file extension requirement here as requested
-    input.onchange = async (e: any) => {
-      const file = e.target.files?.[0];
+    input.onchange = async (event) => {
+      const target = event.target;
+      const file =
+        target instanceof HTMLInputElement ? target.files?.[0] : undefined;
       if (!file) return;
 
       setSnackbarSeverity("info");
@@ -50,21 +55,11 @@ export const useRespaldos = () => {
       setSnackbarOpen(true);
 
       try {
-        const formData = new FormData();
-        formData.append("backup", file);
-
-        // Removemos el Content-Type por defecto para que fetch asigne multipart/form-data con boundary
-        await apiClient("/backups/import", {
-          method: "POST",
-          body: formData,
-          headers: {
-            "Content-Type": undefined as any
-          }
-        });
+        await gateway.import(file);
 
         setSnackbarSeverity("success");
         setSnackbarMessage("¡Sistema restaurado correctamente!");
-      } catch (error) {
+      } catch {
         setSnackbarSeverity("error");
         setSnackbarMessage("Error al restaurar archivo");
       }

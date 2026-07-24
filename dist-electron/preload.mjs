@@ -1,1 +1,26 @@
-"use strict";const r=require("electron");r.contextBridge.exposeInMainWorld("ipcRenderer",{on(...e){const[n,o]=e;return r.ipcRenderer.on(n,(t,...c)=>o(t,...c))},off(...e){const[n,...o]=e;return r.ipcRenderer.off(n,...o)},send(...e){const[n,...o]=e;return r.ipcRenderer.send(n,...o)},invoke(...e){const[n,...o]=e;return r.ipcRenderer.invoke(n,...o)}});r.contextBridge.exposeInMainWorld("authAPI",{setToken:(e,n)=>r.ipcRenderer.send("set-secure-token",e,n),clearToken:()=>r.ipcRenderer.send("clear-secure-token")});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("ipcRenderer", {
+  on(...args) {
+    const [channel, listener] = args;
+    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
+  },
+  off(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.off(channel, ...omit);
+  },
+  send(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.send(channel, ...omit);
+  },
+  invoke(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.invoke(channel, ...omit);
+  }
+  // You can expose other APTs you need here.
+  // ...
+});
+electron.contextBridge.exposeInMainWorld("authAPI", {
+  setToken: (token, apiUrl) => electron.ipcRenderer.send("set-secure-token", token, apiUrl),
+  clearToken: () => electron.ipcRenderer.send("clear-secure-token")
+});

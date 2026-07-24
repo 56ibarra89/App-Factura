@@ -5,6 +5,7 @@ import { KitchenStatus } from "./order.types";
 
 export interface CartItemType {
   id?: number | string;
+  productId?: string;
   name: string;
   price: number;
   size: ProductSize;
@@ -16,6 +17,17 @@ export interface CartItemType {
   sentAt?: number;
   kitchenStatus?: KitchenStatus;
   kitchenId?: string;
+  certificateSerial?: string;
 }
 
+export type CartItemInput = Pick<
+  CartItemType,
+  "name" | "price" | "size" | "extras"
+> &
+  Partial<
+    Pick<
+      CartItemType,
+      "productId" | "note" | "giftQuantity" | "kitchenId" | "certificateSerial"
+    >
+  >;
 

@@ -3,7 +3,7 @@ import { BackButton } from "../components/BackButton";
 import CategoryIcon from "@mui/icons-material/Category";
 import AddIcon from "@mui/icons-material/Add";
 import { useState, useRef } from "react";
-import { useProductContext } from "../context/ProductContext";
+import { useProductContext } from "../hooks/useProductContext";
 import { Product } from "../types/product";
 import ProductsTable from "../components/ProductsTable";
 import ProductFormDialog from "../components/ProductFormDialog";

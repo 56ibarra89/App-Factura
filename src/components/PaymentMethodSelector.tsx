@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
-import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import { PaymentMethod } from "../types/order.types";
 import { blockInvalidChar } from "../utils/inputUtils";

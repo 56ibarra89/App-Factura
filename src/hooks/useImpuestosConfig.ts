@@ -1,7 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { logService } from '../services/logService';
-import { apiClient } from '../config/apiClient';
+import {
+  runtimeConfigGateway,
+  type RuntimeConfigGateway,
+} from '../services/config/runtimeConfigGateway';
 
 export interface Tax {
   id: string;
@@ -26,7 +29,9 @@ const defaultConfig: TaxConfig = { taxes: defaultTaxes, isExonerated: false };
 let globalConfigCache: TaxConfig | null = null;
 const listeners = new Set<(config: TaxConfig) => void>();
 
-export const useImpuestosConfig = () => {
+export const useImpuestosConfig = (
+  gateway: RuntimeConfigGateway = runtimeConfigGateway,
+) => {
   const { username, role } = useAuth();
   const [config, setConfigState] = useState<TaxConfig>(globalConfigCache || defaultConfig);
 
@@ -37,11 +42,10 @@ export const useImpuestosConfig = () => {
     globalConfigCache = nextConfig;
     listeners.forEach(listener => listener(nextConfig));
     
-    apiClient(`/config/${TAX_STORAGE_KEY}`, {
-      method: "PUT",
-      body: JSON.stringify({ data: nextConfig }),
-    }).catch(err => console.error("Error saving tax config:", err));
-  }, [config]);
+    gateway
+      .save(TAX_STORAGE_KEY, nextConfig)
+      .catch(err => console.error("Error saving tax config:", err));
+  }, [config, gateway]);
 
   // Cargar del backend en la primera instancia
   useEffect(() => {
@@ -49,11 +53,11 @@ export const useImpuestosConfig = () => {
     listeners.add(listener);
 
     if (!globalConfigCache) {
-      apiClient(`/config/${TAX_STORAGE_KEY}`)
+      gateway.get<TaxConfig>(TAX_STORAGE_KEY)
         .then(res => {
-          if (res && res.data && Array.isArray(res.data.taxes)) {
-            globalConfigCache = res.data;
-            listeners.forEach(l => l(res.data));
+          if (res && Array.isArray(res.taxes)) {
+            globalConfigCache = res;
+            listeners.forEach(l => l(res));
           } else {
             // Guardar default inicial en DB si no existe data formateada
             globalConfigCache = defaultConfig;
@@ -66,7 +70,7 @@ export const useImpuestosConfig = () => {
     return () => {
       listeners.delete(listener);
     };
-  }, []);
+  }, [gateway]);
 
   const taxes: Tax[] = config.taxes;
   const isExonerated: boolean = config.isExonerated;

@@ -1,7 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
 import {
-  createContext,
-  useContext,
   useState,
   useEffect,
   ReactNode,
@@ -13,21 +10,7 @@ import { shiftRepository as defaultShiftRepository } from "../repositories/Shift
 import { useOrderQueries } from "./OrderContext";
 import { useAuth } from "./AuthContext";
 import { calculateShiftSales } from "../utils/shiftUtils";
-
-interface CajaContextType {
-  currentShift: Shift | null;
-  abrirCaja: (amount: number, registerName?: string) => Promise<void>;
-  cerrarCaja: (finalAmount: number, notes?: string) => Promise<void>;
-  calculateCurrentShiftSales: () => ShiftSales;
-}
-
-const CajaContext = createContext<CajaContextType | undefined>(undefined);
-
-export const useCaja = () => {
-  const context = useContext(CajaContext);
-  if (!context) throw new Error("useCaja debe usarse dentro de <CajaProvider>");
-  return context;
-};
+import { CajaContext } from "./CajaContext";
 
 interface CajaProviderProps {
   children: ReactNode;
@@ -111,8 +94,6 @@ export const CajaProvider = ({
       if (!currentShift) return;
 
       try {
-        const sales = calculateCurrentShiftSales();
-        
         await repository.closeShift(currentShift.id, {
           closingAmount: finalAmount,
           notes
@@ -124,7 +105,7 @@ export const CajaProvider = ({
         throw error;
       }
     },
-    [currentShift, calculateCurrentShiftSales, repository]
+    [currentShift, repository]
   );
 
   return (

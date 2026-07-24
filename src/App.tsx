@@ -3,9 +3,11 @@ import { HashRouter } from "react-router-dom";
 import AppRoutes from "./router/index.tsx";
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
-import { useGeneralConfigData } from "./hooks/useGeneralConfigData";
 import getAppTheme from "./theme/appTheme";
-import { getThemePreference } from "./services/themePreference";
+import {
+  getThemePreference,
+  type ThemePreference,
+} from "./services/themePreference";
 
 function App() {
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(
@@ -14,7 +16,9 @@ function App() {
 
   useEffect(() => {
     const onUpdated = (event: Event) => {
-      const customEvent = event as CustomEvent<any>;
+      const customEvent = event as CustomEvent<{
+        theme?: ThemePreference;
+      }>;
       if (customEvent.detail?.theme) {
         setThemeMode(customEvent.detail.theme);
       }

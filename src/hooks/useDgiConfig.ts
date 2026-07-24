@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiClient } from "../config/apiClient";
+import {
+  runtimeConfigGateway,
+  type RuntimeConfigGateway,
+} from "../services/config/runtimeConfigGateway";
 
 export interface DgiConfig {
   resolutionNumber: string;
@@ -8,30 +11,31 @@ export interface DgiConfig {
   authorizationDate: string;
 }
 
-export const useDgiConfig = () => {
+const DGI_CONFIG_KEY = "dgi_resolution";
+
+export const useDgiConfig = (
+  gateway: RuntimeConfigGateway = runtimeConfigGateway,
+) => {
   const [dgiConfig, setDgiConfig] = useState<DgiConfig | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fetchConfig = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await apiClient("/config/dgi_resolution");
-      if (response && response.data) {
-        setDgiConfig(response.data as DgiConfig);
+      const response = await gateway.get<DgiConfig>(DGI_CONFIG_KEY);
+      if (response) {
+        setDgiConfig(response);
       }
     } catch (error) {
       console.error("Error fetching DGI config:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [gateway]);
 
   const saveConfig = async (data: DgiConfig) => {
     try {
-      await apiClient("/config/dgi_resolution", {
-        method: "PUT",
-        body: JSON.stringify({ data }),
-      });
+      await gateway.save(DGI_CONFIG_KEY, data);
       setDgiConfig(data);
     } catch (error) {
       console.error("Error saving DGI config:", error);

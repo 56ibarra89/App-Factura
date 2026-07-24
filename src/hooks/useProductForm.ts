@@ -11,7 +11,9 @@ interface UseProductFormArgs {
 
 export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) {
   const [dynamicSizes, setDynamicSizes] = useState<string[]>(["familiar", "mediana", "personal"]);
-  const [form, setForm] = useState<ProductFormState>(productMapper.toFormState(null, "", ["familiar", "mediana", "personal"]));
+  const [form, setForm] = useState<ProductFormState>(
+    productMapper.toFormState(null, ""),
+  );
 
   const {
     extras,
@@ -28,10 +30,12 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
       const sizes = ["familiar", "mediana", "personal"];
       setDynamicSizes(sizes);
       if (editing) {
-        setForm(productMapper.toFormState(editing.product, editing.category, sizes));
+        setForm(
+          productMapper.toFormState(editing.product, editing.category),
+        );
         setExtras(productMapper.toFormExtras(editing.product.extras, editing.product.hasMultipleSizes ?? false, sizes));
       } else {
-        setForm(productMapper.toFormState(null, "", sizes));
+        setForm(productMapper.toFormState(null, ""));
         setExtras([]);
       }
     }

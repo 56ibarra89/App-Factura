@@ -10,7 +10,7 @@ import {
   Box,
   MenuItem,
 } from "@mui/material";
-import { Correlativo, DocumentType, CorrelativoStatus } from "../../../types/correlativo.types";
+import { Correlativo } from "../../../types/correlativo.types";
 
 interface CorrelativoFormModalProps {
   open: boolean;

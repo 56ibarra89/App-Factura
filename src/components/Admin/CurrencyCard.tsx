@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Paper, TextField, alpha, Grid, Switch, Button } from "@mui/material";
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 
-import { GeneralConfigState } from "../../hooks/useGeneralConfigData";
+import type { GeneralConfigState } from "../../types/config";
 
 interface Props {
   config: GeneralConfigState;
@@ -14,12 +14,12 @@ export const CurrencyCard: React.FC<Props> = ({ config, onUpdate, onSave }) => {
   const [localRate, setLocalRate] = React.useState(config.exchangeRate.toString());
 
   React.useEffect(() => {
-    // Solo sincronizar si el valor numérico es diferente (para evitar sobreescribir mientras se escribe)
-    const parsedLocal = parseFloat(localRate);
-    if (isNaN(parsedLocal) || parsedLocal !== config.exchangeRate) {
-      setLocalRate(config.exchangeRate.toString());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setLocalRate((currentRate) => {
+      const parsedLocal = parseFloat(currentRate);
+      return isNaN(parsedLocal) || parsedLocal !== config.exchangeRate
+        ? config.exchangeRate.toString()
+        : currentRate;
+    });
   }, [config.exchangeRate]);
 
   const handleSave = async () => {

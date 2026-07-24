@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import { useProductContext } from "../context/ProductContext";
+import { useProductContext } from "../hooks/useProductContext";
 import { AVAILABLE_ICONS } from "../config/icons";
 import { useKitchens } from "../hooks/useKitchens";
 

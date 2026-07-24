@@ -2,9 +2,25 @@ import { useState, useEffect, useCallback } from "react";
 import { UserAccount } from "../types/user";
 import { logService } from "../services/logService";
 import { useAuth } from "../context/AuthContext";
-import { apiClient } from "../config/apiClient";
+import {
+  usersGateway,
+  type UserAdministrationGateway,
+  type UserDeliveryStatsGateway,
+  type UserMutationPayload,
+  type UserScheduleGateway,
+} from "../services/users/usersGateway";
 
-export function useAccountManager() {
+export interface AccountManagerGateways {
+  administration: UserAdministrationGateway;
+  deliveryStats: UserDeliveryStatsGateway;
+  schedule: UserScheduleGateway;
+}
+
+export function useAccountManager({
+  administration = usersGateway,
+  deliveryStats = usersGateway,
+  schedule = usersGateway,
+}: Partial<AccountManagerGateways> = {}) {
   const { username: adminUser, role: adminRole } = useAuth();
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +31,7 @@ export function useAccountManager() {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiClient("/users");
+      const data = await administration.list();
       setUsers(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al cargar los usuarios");
@@ -23,7 +39,7 @@ export function useAccountManager() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [administration]);
 
   useEffect(() => {
     fetchUsers();
@@ -37,7 +53,7 @@ export function useAccountManager() {
       let savedUser: UserAccount;
 
       // Limpiar campos antes de enviar al backend
-      const payload: Partial<UserAccount> & { password?: string } = {
+      const payload: UserMutationPayload = {
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -54,10 +70,7 @@ export function useAccountManager() {
 
       if (!isNew) {
         // Actualizar existente
-        savedUser = await apiClient(`/users/${user.id}`, {
-          method: "PATCH",
-          body: JSON.stringify(payload),
-        });
+        savedUser = await administration.update(user.id, payload);
         
         setUsers(users.map((u) => (u.id === savedUser.id ? savedUser : u)));
         logService.log(
@@ -68,10 +81,7 @@ export function useAccountManager() {
         );
       } else {
         // Crear nuevo
-        savedUser = await apiClient("/users", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
+        savedUser = await administration.create(payload);
         
         setUsers([...users, savedUser]);
         logService.log(
@@ -100,10 +110,7 @@ export function useAccountManager() {
     setUsers(users.map((u) => (u.id === userId ? { ...u, isActive: !u.isActive } : u)));
 
     try {
-      await apiClient(`/users/${userId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ isActive: !user.isActive }),
-      });
+      await administration.update(userId, { isActive: !user.isActive });
       logService.log(
         adminUser,
         adminRole,
@@ -119,9 +126,7 @@ export function useAccountManager() {
 
   const unlockUser = async (userId: string) => {
     try {
-      await apiClient(`/users/${userId}/unlock`, {
-        method: "POST",
-      });
+      await administration.unlock(userId);
       logService.log(
         adminUser,
         adminRole,
@@ -151,9 +156,7 @@ export function useAccountManager() {
     setUsers(users.filter((u) => u.id !== userId));
 
     try {
-      await apiClient(`/users/${userId}`, {
-        method: "DELETE",
-      });
+      await administration.delete(userId);
       logService.log(
         adminUser,
         adminRole,
@@ -170,23 +173,16 @@ export function useAccountManager() {
 
   const fetchDeliveryStats = useCallback(async (dateStr?: string) => {
     try {
-      let url = "/users/motorizados/delivery-stats";
-      if (dateStr) {
-        url += `?date=${dateStr}`;
-      }
-      return await apiClient(url);
+      return await deliveryStats.getDeliveryStats(dateStr);
     } catch (err) {
       console.error("Error fetching delivery stats", err);
       return [];
     }
-  }, []);
+  }, [deliveryStats]);
 
   const addExtraDay = useCallback(async (userId: string, date: string, notes?: string) => {
     try {
-      await apiClient(`/users/${userId}/extra-days`, {
-        method: "POST",
-        body: JSON.stringify({ date, notes }),
-      });
+      await schedule.addExtraDay(userId, date, notes);
       // Refetch to get updated extraDays
       await fetchUsers();
       return true;
@@ -194,13 +190,11 @@ export function useAccountManager() {
       console.error("Error adding extra day", err);
       throw err;
     }
-  }, [fetchUsers]);
+  }, [fetchUsers, schedule]);
 
   const removeExtraDay = useCallback(async (userId: string, date: string) => {
     try {
-      await apiClient(`/users/${userId}/extra-days/${date}`, {
-        method: "DELETE",
-      });
+      await schedule.removeExtraDay(userId, date);
       // Refetch to get updated extraDays
       await fetchUsers();
       return true;
@@ -208,7 +202,7 @@ export function useAccountManager() {
       console.error("Error removing extra day", err);
       throw err;
     }
-  }, [fetchUsers]);
+  }, [fetchUsers, schedule]);
 
   return {
     users,

@@ -2,8 +2,12 @@
  * useCupones — Hook CRUD para la gestión de cupones manuales conectado al backend.
  */
 import { useState, useCallback, useEffect } from "react";
-import { apiClient } from "../config/apiClient";
 import { CuponRule, CuponStatus } from "../types/promociones";
+import {
+  promotionsGateway,
+  type CouponRecord,
+  type PromotionsGateway,
+} from "../services/promotions/promotionsGateway";
 
 // ── Función pura de dominio ──────────────────────────────────────────────────
 
@@ -37,7 +41,7 @@ function buildExpires(dateISO: string | null | undefined): string {
   return !dateISO ? "Sin límite" : dateISO.split("T")[0];
 }
 
-export function hydrateCuponBackend(raw: any): CuponRule {
+export function hydrateCuponBackend(raw: CouponRecord): CuponRule {
   const manualStatusStr = raw.manualStatus || "ACTIVO";
   const status = computeCuponStatus(
     raw.maxUses,
@@ -72,21 +76,23 @@ interface UseCuponesReturn {
   refresh: () => Promise<void>;
 }
 
-export function useCupones(): UseCuponesReturn {
+export function useCupones(
+  gateway: PromotionsGateway = promotionsGateway,
+): UseCuponesReturn {
   const [cupones, setCupones] = useState<CuponRule[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCupones = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiClient("/promotions/coupons");
-      setCupones(data.map((c: any) => hydrateCuponBackend(c)));
+      const data = await gateway.listCoupons();
+      setCupones(data.map(hydrateCuponBackend));
     } catch (e) {
       console.error("Error fetching coupons:", e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [gateway]);
 
   useEffect(() => {
     fetchCupones();
@@ -94,46 +100,40 @@ export function useCupones(): UseCuponesReturn {
 
   const addCupon = useCallback(
     async (data: Omit<CuponRule, "id" | "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => {
-      await apiClient("/promotions/coupons", {
-        method: "POST",
-        body: JSON.stringify({
-          code: data.code,
-          discountType: data.discountType === "porcentaje" ? "porcentaje" : "monto_fijo",
-          discountValue: parseFloat(data.discountValue),
-          maxUses: data.maxUses,
-          expiresDate: data.expiresDate || undefined,
-          manualStatus: data.manualStatus === "Inactivo" ? "Inactivo" : "Activo",
-        }),
+      await gateway.createCoupon({
+        code: data.code,
+        discountType: data.discountType === "porcentaje" ? "porcentaje" : "monto_fijo",
+        discountValue: parseFloat(data.discountValue),
+        maxUses: data.maxUses,
+        expiresDate: data.expiresDate || undefined,
+        manualStatus: data.manualStatus === "Inactivo" ? "Inactivo" : "Activo",
       });
       await fetchCupones();
     },
-    [fetchCupones]
+    [fetchCupones, gateway]
   );
 
   const editCupon = useCallback(
     async (data: Omit<CuponRule, "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => {
-      await apiClient(`/promotions/coupons/${data.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          code: data.code,
-          discountType: data.discountType === "porcentaje" ? "porcentaje" : "monto_fijo",
-          discountValue: parseFloat(data.discountValue),
-          maxUses: data.maxUses,
-          expiresDate: data.expiresDate || undefined,
-          manualStatus: data.manualStatus === "Inactivo" ? "Inactivo" : "Activo",
-        }),
+      await gateway.updateCoupon(data.id, {
+        code: data.code,
+        discountType: data.discountType === "porcentaje" ? "porcentaje" : "monto_fijo",
+        discountValue: parseFloat(data.discountValue),
+        maxUses: data.maxUses,
+        expiresDate: data.expiresDate || undefined,
+        manualStatus: data.manualStatus === "Inactivo" ? "Inactivo" : "Activo",
       });
       await fetchCupones();
     },
-    [fetchCupones]
+    [fetchCupones, gateway]
   );
 
   const deleteCupon = useCallback(
     async (id: number) => {
-      await apiClient(`/promotions/coupons/${id}`, { method: "DELETE" });
+      await gateway.deleteCoupon(id);
       await fetchCupones();
     },
-    [fetchCupones]
+    [fetchCupones, gateway]
   );
 
   return { cupones, loading, addCupon, editCupon, deleteCupon, refresh: fetchCupones };

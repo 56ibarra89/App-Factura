@@ -26,7 +26,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { useProductContext } from "../../../context/ProductContext";
+import { useProductContext } from "../../../hooks/useProductContext";
 import type { CertificadoInput } from "../../../hooks/useCertificados";
 
 // ── Estado interno del formulario ────────────────────────────────────────────

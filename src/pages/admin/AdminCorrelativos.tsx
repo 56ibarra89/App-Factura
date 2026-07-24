@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Typography, Button, Card, CardContent } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { BackButton } from "../../components/BackButton";
 import { useCorrelativos } from "../../hooks/useCorrelativos";

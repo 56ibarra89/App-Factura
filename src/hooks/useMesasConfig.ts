@@ -1,25 +1,26 @@
-import { useState, useEffect } from "react";
-import { apiClient } from "../config/apiClient";
+import { useState, useEffect, useCallback } from "react";
+import {
+  tablesGateway,
+  type FloorConfigurationGateway,
+} from "../services/tables/tablesGateway";
+import type { FloorConfig } from "../types/mesa.types";
 
-export interface FloorConfig {
-  id: number;
-  name: string;
-  tableCount: number;
-}
+export type { FloorConfig } from "../types/mesa.types";
 
-
-export function useMesasConfig() {
+export function useMesasConfig(
+  gateway: FloorConfigurationGateway = tablesGateway,
+) {
   const [floors, setFloors] = useState<FloorConfig[]>([]);
   const [initialFloors, setInitialFloors] = useState<FloorConfig[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchFloors = async () => {
+  const fetchFloors = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await apiClient('/mesas/config');
+      const data = await gateway.getFloorConfig();
       setFloors(data);
       setInitialFloors(data);
     } catch (e: unknown) {
@@ -28,11 +29,11 @@ export function useMesasConfig() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [gateway]);
 
   useEffect(() => {
     fetchFloors();
-  }, []);
+  }, [fetchFloors]);
 
   const updateFloorTables = (floorId: number, count: number) => {
     setFloors(prev => prev.map(floor => 
@@ -58,10 +59,7 @@ export function useMesasConfig() {
   const saveAllChanges = async () => {
     setIsSaving(true);
     try {
-      await apiClient('/mesas/config', {
-        method: 'POST',
-        body: JSON.stringify(floors),
-      });
+      await gateway.saveFloorConfig(floors);
       setInitialFloors(floors); // Reset unsaved changes tracking
       return true;
     } catch (e: unknown) {

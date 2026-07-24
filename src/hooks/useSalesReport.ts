@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getOrdersByDateRange } from "../services/db";
 import { differenceInDays, format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -26,7 +26,7 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchReportData = async () => {
+  const fetchReportData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -126,11 +126,11 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [endDate, startDate]);
 
   useEffect(() => {
-    fetchReportData();
-  }, [startDate, endDate]); // Refetch cuando cambian las fechas
+    void fetchReportData();
+  }, [fetchReportData]); // Refetch cuando cambian las fechas
 
   return { data, isLoading, error, refetch: fetchReportData };
 };

@@ -20,6 +20,7 @@ export interface Order {
   customerAddress?: string;
   driverId?: string;
   promotionCode?: string;
+  certificateSerials?: string[];
   tableId?: string;
   customerTendered?: number;
   deliveryChange?: number;

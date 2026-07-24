@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, Typography, Box } from "@mui/material";
-import { LOGIN_SHADOWS, LOGIN_GRADIENTS } from "../../theme/loginTheme";
+import { LOGIN_SHADOWS } from "../../theme/loginTheme";
 
 interface StatCardProps {
   title: string;

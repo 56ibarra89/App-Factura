@@ -1,9 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import { configRepository } from "../repositories/ConfigRepository";
 import { useAuth } from "../context/AuthContext";
+import {
+  deliveryPricingGateway,
+  type DeliveryPricingGateway,
+} from "../services/config/deliveryPricingGateway";
 import { logService } from "../services/logService";
 
-export function useDeliveryPricesConfig(open: boolean, onClose: () => void) {
+export function useDeliveryPricesConfig(
+  open: boolean,
+  onClose: () => void,
+  gateway: DeliveryPricingGateway = deliveryPricingGateway,
+) {
   const { username, role } = useAuth();
   
   const [prices, setPrices] = useState<string[]>(["", "", "", "", "", ""]);
@@ -26,7 +33,7 @@ export function useDeliveryPricesConfig(open: boolean, onClose: () => void) {
   const loadPrices = useCallback(async () => {
     setLoading(true);
     try {
-      const savedPrices = await configRepository.getDeliveryPricesConfig();
+      const savedPrices = await gateway.load();
       if (savedPrices && Array.isArray(savedPrices)) {
         // Asegurar que siempre hay 6 espacios
         const newPrices = [...savedPrices];
@@ -41,7 +48,7 @@ export function useDeliveryPricesConfig(open: boolean, onClose: () => void) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [gateway]);
 
   useEffect(() => {
     if (open) {
@@ -52,7 +59,7 @@ export function useDeliveryPricesConfig(open: boolean, onClose: () => void) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await configRepository.saveDeliveryPricesConfig(prices);
+      await gateway.save(prices);
       logService.log(username, role, "CONFIG_CHANGE", `Actualizó los precios de delivery rápidos.`);
       showSnackbar("Precios actualizados correctamente", "success");
       onClose();

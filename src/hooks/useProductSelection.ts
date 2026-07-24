@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { Product, ProductPrice, ProductSize } from "../types/product";
 import { SelectedExtra } from "../types/extras";
+import type { CartItemInput } from "../types/cart";
 
 export interface PendingItem {
   product: Product;
@@ -8,7 +9,7 @@ export interface PendingItem {
   price: number;
 }
 
-export function useProductSelection(onConfirm: (item: { name: string; price: number; size: ProductSize; extras: SelectedExtra[]; note?: string; kitchenId?: string }) => void) {
+export function useProductSelection(onConfirm: (item: CartItemInput) => void) {
   const [selectedProduct, setSelectedProduct] = useState<null | { name: string; prices: ProductPrice[]; product: Product; kitchenId?: string }>(null);
   const [pendingItem, setPendingItem] = useState<PendingItem & { kitchenId?: string } | null>(null);
 
@@ -25,6 +26,7 @@ export function useProductSelection(onConfirm: (item: { name: string; price: num
           });
         } else {
           onConfirm({
+            productId: item.id,
             name: item.name,
             price: item.prices[0].price,
             size: "único",
@@ -50,7 +52,12 @@ export function useProductSelection(onConfirm: (item: { name: string; price: num
         kitchenId: selectedProduct?.kitchenId,
       });
     } else {
-      onConfirm({ ...selected, extras: [], kitchenId: selectedProduct?.kitchenId });
+      onConfirm({
+        ...selected,
+        productId: product?.id,
+        extras: [],
+        kitchenId: selectedProduct?.kitchenId,
+      });
     }
   }, [selectedProduct, onConfirm]);
 
@@ -58,6 +65,7 @@ export function useProductSelection(onConfirm: (item: { name: string; price: num
     if (!pendingItem) return;
 
     onConfirm({
+      productId: pendingItem.product.id,
       name: pendingItem.product.name,
       price: pendingItem.price,
       size: pendingItem.size,

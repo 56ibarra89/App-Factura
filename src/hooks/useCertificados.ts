@@ -2,9 +2,12 @@
  * useCertificados — Hook CRUD para la gestión de certificados/vales de producto conectado al backend.
  */
 import { useState, useCallback, useEffect } from "react";
-import { apiClient } from "../config/apiClient";
 import { CertificadoRule } from "../types/promociones";
-import { useProductContext } from "../context/ProductContext";
+import { useProductContext } from "./useProductContext";
+import {
+  promotionsGateway,
+  type PromotionsGateway,
+} from "../services/promotions/promotionsGateway";
 
 export type CertificadoInput = {
   origin: string;
@@ -25,7 +28,9 @@ interface UseCertificadosReturn {
   refresh: () => Promise<void>;
 }
 
-export function useCertificados(): UseCertificadosReturn {
+export function useCertificados(
+  gateway: PromotionsGateway = promotionsGateway,
+): UseCertificadosReturn {
   const [certificados, setCertificados] = useState<CertificadoRule[]>([]);
   const [loading, setLoading] = useState(true);
   const { categories } = useProductContext();
@@ -33,8 +38,8 @@ export function useCertificados(): UseCertificadosReturn {
   const fetchCertificados = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiClient("/promotions/certificates");
-      setCertificados(data.map((c: any) => {
+      const data = await gateway.listCertificates();
+      setCertificados(data.map((c) => {
         let productName = "Producto Desconocido";
         if (c.items && c.items.length > 0) {
            const pId = c.items[0].productId;
@@ -62,38 +67,35 @@ export function useCertificados(): UseCertificadosReturn {
     } finally {
       setLoading(false);
     }
-  }, [categories]);
+  }, [categories, gateway]);
 
   useEffect(() => {
     fetchCertificados();
   }, [fetchCertificados]);
 
   const addCertificado = useCallback(async (data: CertificadoInput) => {
-    await apiClient("/promotions/certificates", {
-      method: "POST",
-      body: JSON.stringify({
-        origin: data.origin,
-        items: [{ productId: data.product, quantity: 1 }],
-        description: data.notes,
-      }),
+    await gateway.createCertificate({
+      origin: data.origin,
+      items: [{ productId: data.product, quantity: 1 }],
+      description: data.notes,
     });
     await fetchCertificados();
-  }, [fetchCertificados]);
+  }, [fetchCertificados, gateway]);
 
   const markDelivered = useCallback(async (id: number) => {
-    await apiClient(`/promotions/certificates/${id}/deliver`, { method: "POST" });
+    await gateway.deliverCertificate(id);
     await fetchCertificados();
-  }, [fetchCertificados]);
+  }, [fetchCertificados, gateway]);
 
   const cancelCertificado = useCallback(async (id: number) => {
-    await apiClient(`/promotions/certificates/${id}/cancel`, { method: "POST" });
+    await gateway.cancelCertificate(id);
     await fetchCertificados();
-  }, [fetchCertificados]);
+  }, [fetchCertificados, gateway]);
 
   const deleteCertificado = useCallback(async (id: number) => {
-    await apiClient(`/promotions/certificates/${id}`, { method: "DELETE" });
+    await gateway.deleteCertificate(id);
     await fetchCertificados();
-  }, [fetchCertificados]);
+  }, [fetchCertificados, gateway]);
 
   return {
     certificados,

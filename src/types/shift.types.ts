@@ -27,6 +27,20 @@ export interface CashRegisterConfig {
   type?: CashRegisterType;
   assignedUserIds?: string[];
   assignedUserNames?: string[];
+  /** Compatibilidad con configuraciones guardadas antes de admitir múltiples usuarios. */
+  assignedUserId?: string;
+  assignedUserName?: string;
+}
+
+export interface OpenShiftData {
+  cashierName: string;
+  openingAmount: number;
+  cashRegisterName?: string;
+}
+
+export interface CloseShiftData {
+  closingAmount: number;
+  notes?: string;
 }
 
 export interface ShiftProfileConfig {

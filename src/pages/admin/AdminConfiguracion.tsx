@@ -2,7 +2,7 @@ import { Box, Container, Typography, Grid } from "@mui/material";
 import { BackButton } from "../../components/BackButton";
 
 import PageHeader from "../../components/PageHeader";
-import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../../theme/loginTheme";
+import { LOGIN_COLORS } from "../../theme/loginTheme";
 import { useGeneralConfigData } from "../../hooks/useGeneralConfigData";
 import { CurrencyCard } from "../../components/Admin/CurrencyCard";
 import { CashRegisterBehaviorCard } from "../../components/Admin/CashRegisterBehaviorCard";

@@ -1,9 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
-import { AuthProvider } from './context/AuthContext.tsx'
+import { AuthProvider } from './context/AuthProvider.tsx'
 import { ProductProvider } from './context/ProductContext.tsx'
-import { OrderProvider } from './context/OrderContext.tsx'
+import { OrderProvider } from './context/OrderProvider.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

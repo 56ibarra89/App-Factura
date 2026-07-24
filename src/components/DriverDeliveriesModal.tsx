@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -25,19 +25,24 @@ import {
 } from "@mui/material";
 import { UserAccount } from "../types/user";
 import { Order } from "../types/order.types";
-import { apiClient } from "../config/apiClient";
 import { statusLabels, statusColors } from "../config/orderStatusConfig";
 import Chip from "@mui/material/Chip";
 import { useAuth } from "../context/AuthContext";
+import {
+  deliveryGateway,
+  type DeliveryGateway,
+} from "../services/delivery/deliveryGateway";
 
 interface DriverDeliveriesModalProps {
   open: boolean;
   onClose: () => void;
+  gateway?: DeliveryGateway;
 }
 
 export default function DriverDeliveriesModal({
   open,
   onClose,
+  gateway = deliveryGateway,
 }: DriverDeliveriesModalProps) {
   const { role } = useAuth();
   const [drivers, setDrivers] = useState<UserAccount[]>([]);
@@ -47,40 +52,10 @@ export default function DriverDeliveriesModal({
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      fetchDrivers();
-    } else {
-      setSelectedDriverId(null);
-      setOrders([]);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (selectedDriverId) {
-      fetchOrders(selectedDriverId);
-    } else {
-      setOrders([]);
-    }
-  }, [selectedDriverId]);
-
-  const fetchDrivers = async () => {
+  const fetchDrivers = useCallback(async () => {
     setLoadingDrivers(true);
     try {
-      const users = await apiClient("/users");
-      const now = new Date(); const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-      const todayNameStr = days[new Date().getDay()];
-
-      const motorizados = users.filter((u: UserAccount) => {
-        if (u.role !== "motorizado") return false;
-        
-        const isScheduled = u.workDays && u.workDays.includes(todayNameStr);
-        const hasExtraDay = u.extraDays && u.extraDays.some(d => d.date.startsWith(todayStr));
-        
-        return isScheduled || hasExtraDay;
-      });
-      
+      const motorizados = await gateway.listAvailableDrivers();
       setDrivers(motorizados);
       if (motorizados.length > 0) {
         setSelectedDriverId(motorizados[0].id);
@@ -92,19 +67,36 @@ export default function DriverDeliveriesModal({
     } finally {
       setLoadingDrivers(false);
     }
-  };
+  }, [gateway]);
 
-  const fetchOrders = async (driverId: string) => {
+  const fetchOrders = useCallback(async (driverId: string) => {
     setLoadingOrders(true);
     try {
-      const data = await apiClient(`/orders/driver/${driverId}/today`);
+      const data = await gateway.getDriverOrdersToday(driverId);
       setOrders(data);
     } catch (e) {
       console.error(e);
     } finally {
       setLoadingOrders(false);
     }
-  };
+  }, [gateway]);
+
+  useEffect(() => {
+    if (open) {
+      void fetchDrivers();
+    } else {
+      setSelectedDriverId(null);
+      setOrders([]);
+    }
+  }, [fetchDrivers, open]);
+
+  useEffect(() => {
+    if (selectedDriverId) {
+      void fetchOrders(selectedDriverId);
+    } else {
+      setOrders([]);
+    }
+  }, [fetchOrders, selectedDriverId]);
 
   const handleMarkAsPaid = async (orderId: string) => {
     try {
@@ -112,18 +104,14 @@ export default function DriverDeliveriesModal({
       if (!orderToPay) return;
       
       const paymentMethod = (orderToPay.paymentMethod || 'EFECTIVO').toUpperCase();
-      const payments = [{ method: paymentMethod, amount: orderToPay.total }];
-
-      await apiClient(`/orders/${orderId}/finalize`, {
-        method: "PATCH",
-        body: JSON.stringify({ status: "paid", payments }),
-      });
+      await gateway.finalizeOrder(orderId, paymentMethod, orderToPay.total);
       if (selectedDriverId) {
-        fetchOrders(selectedDriverId);
+        await fetchOrders(selectedDriverId);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Error al marcar como pagado:", e);
-      setErrorMessage(`No se pudo actualizar la orden a pagado: ${e.message}`);
+      const message = e instanceof Error ? e.message : "Error desconocido";
+      setErrorMessage(`No se pudo actualizar la orden a pagado: ${message}`);
     }
   };
 

@@ -3,11 +3,11 @@ import {
   KitchenStatus,
   Order,
   OrderStatus,
-  OrderType,
-  PaymentMethod,
 } from "../../types/order.types";
-
-
+import type {
+  CreateOrderCommand,
+  FinalizeOrderCommand,
+} from "../../types/checkout";
 
 export const orderSelectors = {
   getActiveOrderByTable(orders: Order[], tableId: string): Order | undefined {
@@ -38,23 +38,11 @@ function updateOne(
   return { orders: next, modified };
 }
 
-export function createOrder(params: {
-  items: CartItemType[];
-  total: number;
-  username?: string | null;
-  customerName?: string;
-  orderType?: OrderType;
-  customerAddress?: string;
-  driverId?: string;
-  tableId?: string;
-  paymentMethod?: string;
-  splitAmounts?: { efectivo: number; tarjeta: number };
-  subTotal?: number;
-  taxAmount?: number;
-  discountAmount?: number;
-  promotionCode?: string;
-  customerTendered?: number;
-}): Order {
+export function createOrder(
+  params: CreateOrderCommand & {
+    username?: string | null;
+  },
+): Order {
   const {
     items,
     total,
@@ -70,6 +58,7 @@ export function createOrder(params: {
     taxAmount,
     discountAmount,
     promotionCode,
+    certificateSerials,
     customerTendered,
   } = params;
 
@@ -86,7 +75,7 @@ export function createOrder(params: {
     discountAmount,
     taxAmount,
     total,
-    status: (paymentMethod && orderType !== "delivery") ? "paid" : "pending",
+    status: paymentMethod ? "paid" : "pending",
     timestamp: new Date(nowMs),
     customerName,
     orderType,
@@ -95,8 +84,9 @@ export function createOrder(params: {
     customerTendered,
     deliveryChange,
     promotionCode,
+    certificateSerials,
     tableId,
-    paymentMethod: paymentMethod as PaymentMethod,
+    paymentMethod,
     splitAmounts,
     cashierName: username || "Sistema",
     isSentToKitchen: !tableId,
@@ -116,29 +106,6 @@ export function createOrder(params: {
 }
 
 export const orderMutations = {
-  addOrder(
-    prev: Order[],
-    params: {
-      items: CartItemType[];
-      total: number;
-      username?: string | null;
-      customerName?: string;
-      orderType?: OrderType;
-      customerAddress?: string;
-      tableId?: string;
-      paymentMethod?: string;
-      splitAmounts?: { efectivo: number; tarjeta: number };
-      discountAmount?: number;
-      promotionCode?: string;
-      customerTendered?: number;
-      nowMs: number;
-    },
-  ): UpdateResult {
-    const newOrder = createOrder(params);
-
-    return { orders: [newOrder, ...prev], modified: newOrder };
-  },
-
   updateOrderStatus(
     prev: Order[],
     orderId: string,
@@ -237,18 +204,7 @@ export const orderMutations = {
   finalizeOrder(
     prev: Order[],
     orderId: string,
-    params: {
-      paymentMethod: PaymentMethod;
-      splitAmounts?: { efectivo: number; tarjeta: number };
-      customerName?: string;
-      orderType?: OrderType;
-      customerAddress?: string;
-      finalTotal?: number;
-      subTotal?: number;
-      taxAmount?: number;
-      discountAmount?: number;
-      promotionCode?: string;
-    },
+    params: FinalizeOrderCommand,
   ): UpdateResult {
     const {
       paymentMethod,
@@ -256,11 +212,12 @@ export const orderMutations = {
       customerName,
       orderType,
       customerAddress,
-      finalTotal,
+      total,
       subTotal,
       taxAmount,
       discountAmount,
       promotionCode,
+      certificateSerials,
     } = params;
 
     return updateOne(
@@ -289,7 +246,9 @@ export const orderMutations = {
           orderType: orderType || order.orderType,
           customerAddress: customerAddress || order.customerAddress,
           promotionCode: promotionCode || order.promotionCode,
-          total: typeof finalTotal === "number" ? finalTotal : order.total,
+          certificateSerials:
+            certificateSerials ?? order.certificateSerials,
+          total,
           subTotal: typeof subTotal === "number" ? subTotal : order.subTotal,
           discountAmount: typeof discountAmount === "number" ? discountAmount : order.discountAmount,
           taxAmount: typeof taxAmount === "number" ? taxAmount : order.taxAmount,

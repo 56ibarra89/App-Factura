@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import { BackButton } from "../components/BackButton";
 import { AdminModuleCard } from "../components/Admin/AdminModuleCard";
-import { LOGIN_GRADIENTS, LOGIN_COLORS } from "../theme/loginTheme";
+import { LOGIN_COLORS } from "../theme/loginTheme";
 import { adminModules, AdminCategory } from "../data/adminModules";
 
 const Administracion = () => {

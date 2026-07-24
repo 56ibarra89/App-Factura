@@ -27,7 +27,8 @@ export function useAbrirCaja() {
     if (role === 'admin') return true; // Admins ven todas
     
     // Si la caja no tiene array de asignados, revisamos el fallback (assignedUserId)
-    const assignedIds = c.assignedUserIds || ((c as any).assignedUserId ? [(c as any).assignedUserId] : []);
+    const assignedIds =
+      c.assignedUserIds || (c.assignedUserId ? [c.assignedUserId] : []);
     
     if (assignedIds.length === 0) return true; // Las sin asignar son públicas
     return currentUserId ? assignedIds.includes(currentUserId) : false; // Las asignadas son exclusivas

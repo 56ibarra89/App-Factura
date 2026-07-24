@@ -8,10 +8,6 @@ interface RoleGuardProps {
   fallback?: React.ReactNode;
 }
 
-/**
- * Componente que protege elementos de la UI según el rol del usuario.
- * Sigue el principio ISO 27001 de Mínimo Privilegio (A.9.2.3)
- */
 const RoleGuard: React.FC<RoleGuardProps> = ({ 
   children, 
   allowedRoles, 

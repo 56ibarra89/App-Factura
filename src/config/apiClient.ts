@@ -4,9 +4,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  const hasMultipartBody = options.body instanceof FormData;
   
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(hasMultipartBody ? {} : { "Content-Type": "application/json" }),
     ...(options.headers as Record<string, string>),
   };
 

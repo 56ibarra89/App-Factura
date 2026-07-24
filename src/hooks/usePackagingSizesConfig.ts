@@ -1,95 +1,120 @@
-import { useState, useEffect } from "react";
-import { configRepository } from "../repositories/ConfigRepository";
-import { PackagingSizeConfig } from "../types/product";
+import { useCallback, useEffect, useState } from "react";
+import {
+  packagingConfigGateway,
+  type PackagingConfigGateway,
+} from "../services/config/packagingConfigGateway";
+import { DEFAULT_PACKAGING_SIZES } from "../types/config";
+import type { PackagingSizeConfig } from "../types/product";
 
-export function usePackagingSizesConfig(open: boolean, onClose: () => void) {
-  const [sizes, setSizes] = useState<PackagingSizeConfig[]>([
-    { name: "familiar", price: 0 },
-    { name: "mediana", price: 0 },
-    { name: "personal", price: 0 },
-    { name: "único", price: 0 }
-  ]);
+interface PackagingNotification {
+  open: boolean;
+  msg: string;
+  severity: "success" | "error";
+}
+
+const createDefaultSizes = () =>
+  DEFAULT_PACKAGING_SIZES.map((size) => ({ ...size }));
+
+export function usePackagingSizesConfig(
+  open: boolean,
+  onClose: () => void,
+  gateway: PackagingConfigGateway = packagingConfigGateway,
+) {
+  const [sizes, setSizes] =
+    useState<PackagingSizeConfig[]>(createDefaultSizes);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; msg: string; severity: "success" | "error" }>({
+  const [snackbar, setSnackbar] = useState<PackagingNotification>({
     open: false,
     msg: "",
-    severity: "success"
+    severity: "success",
   });
 
-  useEffect(() => {
-    if (open) {
-      loadSizes();
-    }
-  }, [open]);
-
-  const loadSizes = async () => {
+  const loadSizes = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await configRepository.getPackagingSizesConfig();
-      if (data && data.length > 0) {
-        setSizes(data);
-      } else {
-        setSizes([
-          { name: "familiar", price: 0 },
-          { name: "mediana", price: 0 },
-          { name: "personal", price: 0 },
-          { name: "único", price: 0 }
-        ]);
-      }
+      const data = await gateway.load();
+      setSizes(data?.length ? data : createDefaultSizes());
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [gateway]);
+
+  useEffect(() => {
+    if (open) void loadSizes();
+  }, [loadSizes, open]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Filtrar vacíos
       const finalSizes = sizes
-        .map(s => ({ name: s.name.trim(), price: Number(s.price) || 0 }))
-        .filter(s => s.name !== "");
+        .map((size) => ({
+          name: size.name.trim(),
+          price: Number(size.price) || 0,
+        }))
+        .filter((size) => size.name !== "");
+
       if (finalSizes.length === 0) {
-        setSnackbar({ open: true, msg: "Debe haber al menos un empaque.", severity: "error" });
-        setSaving(false);
+        setSnackbar({
+          open: true,
+          msg: "Debe haber al menos un empaque.",
+          severity: "error",
+        });
         return;
       }
-      await configRepository.savePackagingSizesConfig(finalSizes);
-      setSnackbar({ open: true, msg: "Empaques guardados correctamente.", severity: "success" });
+
+      await gateway.save(finalSizes);
+      setSnackbar({
+        open: true,
+        msg: "Empaques guardados correctamente.",
+        severity: "success",
+      });
       setTimeout(() => {
         onClose();
-        window.location.reload(); // Recargar para aplicar cambios en todos los formularios
+        window.location.reload();
       }, 1000);
-    } catch (error) {
-      setSnackbar({ open: true, msg: "Error al guardar los empaques.", severity: "error" });
+    } catch {
+      setSnackbar({
+        open: true,
+        msg: "Error al guardar los empaques.",
+        severity: "error",
+      });
+    } finally {
       setSaving(false);
     }
   };
 
-  const closeSnackbar = () => setSnackbar(prev => ({ ...prev, open: false }));
+  const closeSnackbar = () =>
+    setSnackbar((current) => ({ ...current, open: false }));
 
-  const handleChangeName = (index: number, val: string) => {
-    const newSizes = [...sizes];
-    newSizes[index].name = val;
-    setSizes(newSizes);
+  const handleChangeName = (index: number, name: string) => {
+    setSizes((current) =>
+      current.map((size, currentIndex) =>
+        currentIndex === index ? { ...size, name } : size,
+      ),
+    );
   };
 
-  const handleChangePrice = (index: number, val: string | number) => {
-    const newSizes = [...sizes];
-    newSizes[index] = { ...newSizes[index], price: val as number };
-    setSizes(newSizes);
+  const handleChangePrice = (index: number, price: string | number) => {
+    setSizes((current) =>
+      current.map((size, currentIndex) =>
+        currentIndex === index
+          ? { ...size, price: price as number }
+          : size,
+      ),
+    );
   };
 
   const handleAdd = () => {
-    setSizes([...sizes, { name: "", price: 0 }]);
+    setSizes((current) => [...current, { name: "", price: 0 }]);
   };
 
   const handleRemove = (index: number) => {
-    const newSizes = [...sizes];
-    newSizes.splice(index, 1);
-    setSizes(newSizes);
+    setSizes((current) =>
+      current.filter((_, currentIndex) => currentIndex !== index),
+    );
   };
 
   return {
@@ -102,6 +127,6 @@ export function usePackagingSizesConfig(open: boolean, onClose: () => void) {
     handleChangeName,
     handleChangePrice,
     handleAdd,
-    handleRemove
+    handleRemove,
   };
 }

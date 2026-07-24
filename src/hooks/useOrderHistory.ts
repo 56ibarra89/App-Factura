@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Order } from "../types/order.types";
 import { getOrdersByDateRange } from "../services/db";
 
@@ -24,7 +24,7 @@ export const useOrderHistory = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
     const startObj = new Date(startDate + "T00:00:00");
@@ -48,15 +48,16 @@ export const useOrderHistory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [endDate, startDate]);
+
+  const initialFetchRef = useRef(fetchOrders);
 
   useEffect(() => {
-    fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void initialFetchRef.current();
   }, []);
 
   const handleSearchClick = () => {
-    fetchOrders();
+    void fetchOrders();
   };
 
   const filteredOrders = useMemo(() => {

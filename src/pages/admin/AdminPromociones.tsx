@@ -1,193 +1,22 @@
-import { useState, SyntheticEvent } from "react";
 import {
   Box,
   Container,
   Typography,
-  Tabs,
-  Tab,
-  Paper,
 } from "@mui/material";
 import { BackButton } from "../../components/BackButton";
+import PromotionDialogs from "../../components/Admin/Promociones/PromotionDialogs";
+import PromotionsWorkspace from "../../components/Admin/Promociones/PromotionsWorkspace";
+import { useAdminPromotions } from "../../hooks/useAdminPromotions";
 import { LOGIN_COLORS } from "../../theme/loginTheme";
-import DescuentosTab from "../../components/Admin/Promociones/DescuentosTab";
-import HappyHourTab from "../../components/Admin/Promociones/HappyHourTab";
-import CuponesTab from "../../components/Admin/Promociones/CuponesTab";
-import CertificacionesTab from "../../components/Admin/Promociones/CertificacionesTab";
-import {
-  DescuentoRule,
-  HappyHourRule,
-  CuponRule,
-  CertificadoRule,
-} from "../../types/promociones";
-import DescuentoDialog from "../../components/Admin/Promociones/DescuentoDialog";
-import HappyHourDialog from "../../components/Admin/Promociones/HappyHourDialog";
-import CuponDialog from "../../components/Admin/Promociones/CuponDialog";
-import type { CuponFormOutput } from "../../components/Admin/Promociones/CuponDialog";
-import CertificadoDialog from "../../components/Admin/Promociones/CertificadoDialog";
-import CertificadoDetailDialog from "../../components/Admin/Promociones/CertificadoDetailDialog";
-import { useCupones } from "../../hooks/useCupones";
-import { useCertificados } from "../../hooks/useCertificados";
-import { useHappyHours } from "../../hooks/useHappyHours";
-import { useDescuentos } from "../../hooks/useDescuentos";
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function CustomTabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`promociones-tabpanel-${index}`}
-      aria-labelledby={`promociones-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-    </div>
-  );
-}
-
-function a11yProps(index: number) {
-  return {
-    id: `promociones-tab-${index}`,
-    "aria-controls": `promociones-tabpanel-${index}`,
-  };
-}
 
 const AdminPromociones = () => {
-  const [tabValue, setTabValue] = useState(0);
-
-  // ── Descuentos ─────────────────────────────────────────────────────────────
-  const { descuentos, addDescuento, editDescuento, deleteDescuento } = useDescuentos();
-  const [isDescuentoDialogOpen, setIsDescuentoDialogOpen] = useState(false);
-  const [editingDescuento, setEditingDescuento] = useState<DescuentoRule | null>(null);
-
-  const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  const handleAddDescuento = () => {
-    setEditingDescuento(null);
-    setIsDescuentoDialogOpen(true);
-  };
-
-  const handleEditDescuento = (item: DescuentoRule) => {
-    setEditingDescuento(item);
-    setIsDescuentoDialogOpen(true);
-  };
-
-  const handleDeleteDescuento = (id: number) => {
-    deleteDescuento(id);
-  };
-
-  const handleSaveDescuento = (rule: DescuentoRule) => {
-    if (editingDescuento) {
-      editDescuento(rule);
-    } else {
-      addDescuento(rule);
-    }
-  };
-
-  // ── Happy Hour ──────────────────────────────────────────────────────────────
-  const { happyHours, addHappyHour, editHappyHour, deleteHappyHour, toggleHappyHourStatus } = useHappyHours();
-  const [isHHDialogOpen, setIsHHDialogOpen] = useState(false);
-  const [editingHH, setEditingHH] = useState<HappyHourRule | null>(null);
-
-  const handleAddHH = () => {
-    setEditingHH(null);
-    setIsHHDialogOpen(true);
-  };
-
-  const handleEditHH = (rule: HappyHourRule) => {
-    setEditingHH(rule);
-    setIsHHDialogOpen(true);
-  };
-
-  const handleDeleteHH = (id: number) => {
-    deleteHappyHour(id);
-  };
-
-  const handleSaveHH = (rule: HappyHourRule) => {
-    if (editingHH) {
-      editHappyHour(rule);
-    } else {
-      addHappyHour(rule);
-    }
-  };
-
-  const handleToggleHHStatus = (id: number) => {
-    toggleHappyHourStatus(id);
-  };
-
-  // ── Cupones Manuales ────────────────────────────────────────────────────────
-  const { cupones, addCupon, editCupon, deleteCupon } = useCupones();
-  const [isCuponDialogOpen, setIsCuponDialogOpen] = useState(false);
-  const [editingCupon, setEditingCupon] = useState<CuponRule | null>(null);
-
-  const handleAddCupon = () => {
-    setEditingCupon(null);
-    setIsCuponDialogOpen(true);
-  };
-
-  const handleEditCupon = (cupon: CuponRule) => {
-    setEditingCupon(cupon);
-    setIsCuponDialogOpen(true);
-  };
-
-  const handleSaveCupon = (data: CuponFormOutput) => {
-    if (editingCupon) {
-      editCupon(data);
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id: _id, ...rest } = data;
-      addCupon(rest);
-    }
-  };
-
-  const handleCopyCupon = (code: string) =>
-    navigator.clipboard?.writeText(code);
-
-  // ── Certificaciones (Vales) ──────────────────────────────────────────────────
-  const {
-    certificados,
-    addCertificado,
-    markDelivered,
-    cancelCertificado,
-    deleteCertificado,
-  } = useCertificados();
-  const [isCertDialogOpen, setIsCertDialogOpen] = useState(false);
-  const [isCertDetailOpen, setIsCertDetailOpen] = useState(false);
-  const [viewingCert, setViewingCert] = useState<CertificadoRule | null>(null);
-
-  const handleEmitCert = () => setIsCertDialogOpen(true);
-
-  const handleViewCert = (cert: CertificadoRule) => {
-    setViewingCert(cert);
-    setIsCertDetailOpen(true);
-  };
-
-  const handleMarkDelivered = (id: number) => {
-    markDelivered(id);
-    setIsCertDetailOpen(false);
-    setViewingCert(null);
-  };
-
-  const handleCancelCert = (id: number) => {
-    cancelCertificado(id);
-    setIsCertDetailOpen(false);
-    setViewingCert(null);
-  };
+  const promotions = useAdminPromotions();
 
   return (
     <Box
       minHeight="100vh"
       sx={{
-        bgcolor: 'background.default',
+        bgcolor: "background.default",
         pt: 4,
         pb: 8,
         px: { xs: 2, md: 6 },
@@ -195,7 +24,6 @@ const AdminPromociones = () => {
         overflowX: "hidden",
       }}
     >
-      {/* Elemento de Fondo Decorativo */}
       <Box
         sx={{
           position: "absolute",
@@ -223,127 +51,22 @@ const AdminPromociones = () => {
           </Typography>
         </Box>
 
-        <Box sx={{ mb: 5, pl: 1 }}>
-          <Typography variant="body1" color="text.secondary">
-            Desde esta sección centralizada, tienes el control total para gestionar{" "}
-            <b>descuentos inteligentes</b> aplicables a tus productos, programar horarios de{" "}
-            <b>Happy Hour</b> dinámicos, lanzar campañas de <b>cupones personalizados</b> para
-            atraer nuevos clientes y emitir <b>certificados de producto</b> exclusivos como
-            parte de tus programas de regalías y beneficios corporativos.
-          </Typography>
-        </Box>
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ mb: 5, pl: 1 }}
+        >
+          Gestiona descuentos inteligentes, horarios de <b>Happy Hour</b>,
+          campañas de <b>cupones personalizados</b> y{" "}
+          <b>certificados de producto</b> desde una sola sección.
+        </Typography>
 
         <Container maxWidth="xl" disableGutters>
-          <Paper
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              bgcolor: "background.paper",
-              overflow: "hidden",
-              boxShadow: "0px 10px 30px rgba(0,0,0,0.05)",
-            }}
-          >
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-              <Tabs
-                value={tabValue}
-                onChange={handleTabChange}
-                variant="scrollable"
-                scrollButtons="auto"
-                aria-label="Pestañas de promociones"
-                sx={{
-                  px: 2,
-                  "& .MuiTab-root": {
-                    textTransform: "none",
-                    fontWeight: 600,
-                    fontSize: "1rem",
-                    minHeight: 64,
-                  },
-                }}
-              >
-                <Tab label="Descuentos Predefinidos" {...a11yProps(0)} />
-                <Tab label="Happy Hour" {...a11yProps(1)} />
-                <Tab label="Cupones Manuales" {...a11yProps(2)} />
-                <Tab label="Certificaciones (Vales)" {...a11yProps(3)} />
-              </Tabs>
-            </Box>
-
-            <Box sx={{ p: { xs: 2, md: 4 } }}>
-              <CustomTabPanel value={tabValue} index={0}>
-                <DescuentosTab
-                  rules={descuentos}
-                  onAdd={handleAddDescuento}
-                  onEdit={handleEditDescuento}
-                  onDelete={handleDeleteDescuento}
-                />
-              </CustomTabPanel>
-              <CustomTabPanel value={tabValue} index={1}>
-                <HappyHourTab
-                  rules={happyHours}
-                  onAdd={handleAddHH}
-                  onEdit={handleEditHH}
-                  onDelete={handleDeleteHH}
-                  onToggleStatus={handleToggleHHStatus}
-                />
-              </CustomTabPanel>
-              <CustomTabPanel value={tabValue} index={2}>
-                <CuponesTab
-                  cupones={cupones}
-                  onAdd={handleAddCupon}
-                  onEdit={handleEditCupon}
-                  onCopy={handleCopyCupon}
-                  onDelete={deleteCupon}
-                />
-              </CustomTabPanel>
-              <CustomTabPanel value={tabValue} index={3}>
-                <CertificacionesTab
-                  certificados={certificados}
-                  onEmit={handleEmitCert}
-                  onView={handleViewCert}
-                  onDelete={deleteCertificado}
-                />
-              </CustomTabPanel>
-            </Box>
-          </Paper>
+          <PromotionsWorkspace promotions={promotions} />
         </Container>
       </Box>
 
-      <DescuentoDialog
-        open={isDescuentoDialogOpen}
-        onClose={() => setIsDescuentoDialogOpen(false)}
-        onSave={handleSaveDescuento}
-        editingRule={editingDescuento}
-      />
-
-      <HappyHourDialog
-        open={isHHDialogOpen}
-        onClose={() => setIsHHDialogOpen(false)}
-        onSave={handleSaveHH}
-        editingRule={editingHH}
-      />
-
-      <CuponDialog
-        open={isCuponDialogOpen}
-        onClose={() => setIsCuponDialogOpen(false)}
-        onSave={handleSaveCupon}
-        editingCupon={editingCupon}
-      />
-
-      <CertificadoDialog
-        open={isCertDialogOpen}
-        onClose={() => setIsCertDialogOpen(false)}
-        onEmit={addCertificado}
-      />
-
-      <CertificadoDetailDialog
-        open={isCertDetailOpen}
-        onClose={() => {
-          setIsCertDetailOpen(false);
-          setViewingCert(null);
-        }}
-        certificado={viewingCert}
-        onMarkDelivered={handleMarkDelivered}
-        onCancel={handleCancelCert}
-      />
+      <PromotionDialogs promotions={promotions} />
     </Box>
   );
 };

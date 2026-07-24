@@ -1,9 +1,13 @@
-import { Shift } from "../types/shift.types";
+import type {
+  CloseShiftData,
+  OpenShiftData,
+  Shift,
+} from "../types/shift.types";
 import { IShiftRepository } from "../types/repositories";
 import { apiClient } from "../config/apiClient";
 
 class ShiftRepository implements IShiftRepository {
-  private mapToFrontendShift(backendShift: any): Shift {
+  private mapToFrontendShift(backendShift: BackendShift): Shift {
     return {
       id: backendShift.id,
       cashierName: backendShift.cashierSnapshotName,
@@ -18,9 +22,9 @@ class ShiftRepository implements IShiftRepository {
     };
   }
 
-  async openShift(data: any): Promise<Shift> {
+  async openShift(data: OpenShiftData): Promise<Shift> {
     try {
-      const result = await apiClient("/shifts/open", {
+      const result: BackendShift = await apiClient("/shifts/open", {
         method: "POST",
         body: JSON.stringify(data)
       });
@@ -31,9 +35,9 @@ class ShiftRepository implements IShiftRepository {
     }
   }
 
-  async closeShift(id: string, data: any): Promise<Shift> {
+  async closeShift(id: string, data: CloseShiftData): Promise<Shift> {
     try {
-      const result = await apiClient(`/shifts/${id}/close`, {
+      const result: BackendShift = await apiClient(`/shifts/${id}/close`, {
         method: "POST",
         body: JSON.stringify(data)
       });
@@ -46,8 +50,8 @@ class ShiftRepository implements IShiftRepository {
 
   async getAll(): Promise<Shift[]> {
     try {
-      const response = await apiClient("/shifts?limit=200");
-      return response.map((s: any) => this.mapToFrontendShift(s));
+      const response: BackendShift[] = await apiClient("/shifts?limit=200");
+      return response.map((shift) => this.mapToFrontendShift(shift));
     } catch (error) {
       console.error("Error obteniendo turnos de DB:", error);
       return [];
@@ -56,8 +60,10 @@ class ShiftRepository implements IShiftRepository {
 
   async getActiveShiftForUser(username: string): Promise<Shift | null> {
     try {
-      const response = await apiClient("/shifts?status=OPEN&limit=50");
-      const openShifts: Shift[] = response.map((s: any) => this.mapToFrontendShift(s));
+      const response: BackendShift[] = await apiClient("/shifts?status=OPEN&limit=50");
+      const openShifts = response.map((shift) =>
+        this.mapToFrontendShift(shift),
+      );
       const userShift = openShifts.find((s: Shift) => s.cashierName === username && s.status === 'open');
       return userShift || null;
     } catch (error) {
@@ -65,6 +71,18 @@ class ShiftRepository implements IShiftRepository {
       return null;
     }
   }
+}
+
+interface BackendShift {
+  id: string;
+  cashierSnapshotName: string;
+  startTime: string;
+  endTime?: string | null;
+  openingAmount: number | string;
+  closingAmount?: number | string | null;
+  status: "OPEN" | "CLOSED";
+  notes?: string;
+  cashRegisterSnapshotName?: string;
 }
 
 export const shiftRepository = new ShiftRepository();

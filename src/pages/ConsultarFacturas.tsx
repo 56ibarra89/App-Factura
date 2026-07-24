@@ -9,8 +9,16 @@ import ConsultarFacturasFilters from "../components/consultar-facturas/Consultar
 import ConsultarFacturasTable from "../components/consultar-facturas/ConsultarFacturasTable";
 import PinValidationDialog from "../components/auth/PinValidationDialog";
 import { useAuth } from "../context/AuthContext";
+import type { ReceiptPrinter } from "../services/printing/receiptPrinter";
+import { receiptPrinter } from "../services/printing/runtimeReceiptPrinter";
 
-const ConsultarFacturas = () => {
+interface ConsultarFacturasProps {
+  printer?: ReceiptPrinter;
+}
+
+const ConsultarFacturas = ({
+  printer = receiptPrinter,
+}: ConsultarFacturasProps) => {
 
   const {
     startDate,
@@ -62,6 +70,11 @@ const ConsultarFacturas = () => {
   const handleClosePreview = () => {
     setPreviewOpen(false);
     setSelectedOrder(null);
+  };
+
+  const handleConfirmPrint = async () => {
+    await printer.print({ settleDelayMs: 500 });
+    handleClosePreview();
   };
 
   return (
@@ -118,17 +131,7 @@ const ConsultarFacturas = () => {
           title={`Factura #${selectedOrder.invoiceNumber || "Sin Factura"} - ${selectedOrder.customerName || "Cliente"}`}
           confirmText="Imprimir"
           showConfirmButton={!isViewOnly}
-          onConfirm={() => {
-            if (window.ipcRenderer) {
-              window.ipcRenderer.send('print-silent');
-              setTimeout(() => {
-                handleClosePreview();
-              }, 500);
-            } else {
-              window.print();
-              handleClosePreview();
-            }
-          }}
+          onConfirm={handleConfirmPrint}
         />
       )}
 

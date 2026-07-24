@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiClient } from "../config/apiClient";
 import { CashRegisterConfig, ShiftProfileConfig, CashRegisterType } from "../types/shift.types";
+import {
+  runtimeConfigGateway,
+  type RuntimeConfigGateway,
+} from "../services/config/runtimeConfigGateway";
 
 const CAJAS_KEY = "app_factura_cajas_config";
 const TURNOS_KEY = "app_factura_turnos_config";
@@ -14,7 +17,9 @@ let globalTurnosCache: ShiftProfileConfig[] | null = null;
 const cajasListeners = new Set<(cajas: CashRegisterConfig[]) => void>();
 const turnosListeners = new Set<(turnos: ShiftProfileConfig[]) => void>();
 
-export function useCajasConfig() {
+export function useCajasConfig(
+  gateway: RuntimeConfigGateway = runtimeConfigGateway,
+) {
   const [cajas, setCajasState] = useState<CashRegisterConfig[]>(globalCajasCache || DEFAULT_CAJAS);
   const [turnos, setTurnosState] = useState<ShiftProfileConfig[]>(globalTurnosCache || DEFAULT_TURNOS);
 
@@ -27,16 +32,16 @@ export function useCajasConfig() {
     turnosListeners.add(turnoListener);
 
     if (!globalCajasCache) {
-      apiClient(`/config/${CAJAS_KEY}`).then(res => {
-        const loaded = res?.data && Array.isArray(res.data) && res.data.length > 0 ? res.data : DEFAULT_CAJAS;
+      gateway.get<CashRegisterConfig[]>(CAJAS_KEY).then(res => {
+        const loaded = Array.isArray(res) && res.length > 0 ? res : DEFAULT_CAJAS;
         globalCajasCache = loaded;
         cajasListeners.forEach(l => l(loaded));
       }).catch(err => console.error("Error cargando cajas:", err));
     }
 
     if (!globalTurnosCache) {
-      apiClient(`/config/${TURNOS_KEY}`).then(res => {
-        const loaded = res?.data && Array.isArray(res.data) && res.data.length > 0 ? res.data : DEFAULT_TURNOS;
+      gateway.get<ShiftProfileConfig[]>(TURNOS_KEY).then(res => {
+        const loaded = Array.isArray(res) && res.length > 0 ? res : DEFAULT_TURNOS;
         globalTurnosCache = loaded;
         turnosListeners.forEach(l => l(loaded));
       }).catch(err => console.error("Error cargando turnos:", err));
@@ -46,18 +51,17 @@ export function useCajasConfig() {
       cajasListeners.delete(cajaListener);
       turnosListeners.delete(turnoListener);
     };
-  }, []);
+  }, [gateway]);
 
   // CRUD Cajas
   const saveCajas = useCallback((newCajas: CashRegisterConfig[]) => {
     globalCajasCache = newCajas;
     cajasListeners.forEach(l => l(newCajas));
     
-    apiClient(`/config/${CAJAS_KEY}`, {
-      method: "PUT",
-      body: JSON.stringify({ data: newCajas })
-    }).catch(err => console.error("Error guardando cajas:", err));
-  }, []);
+    gateway
+      .save(CAJAS_KEY, newCajas)
+      .catch(err => console.error("Error guardando cajas:", err));
+  }, [gateway]);
 
   const addCaja = useCallback((name: string, defaultOpeningAmount: number, type?: CashRegisterType, assignedUserIds?: string[], assignedUserNames?: string[]) => {
     const newCaja: CashRegisterConfig = {
@@ -86,11 +90,10 @@ export function useCajasConfig() {
     globalTurnosCache = newTurnos;
     turnosListeners.forEach(l => l(newTurnos));
 
-    apiClient(`/config/${TURNOS_KEY}`, {
-      method: "PUT",
-      body: JSON.stringify({ data: newTurnos })
-    }).catch(err => console.error("Error guardando turnos:", err));
-  }, []);
+    gateway
+      .save(TURNOS_KEY, newTurnos)
+      .catch(err => console.error("Error guardando turnos:", err));
+  }, [gateway]);
 
   const addTurno = useCallback((name: string, startTime: string, endTime: string, description?: string, assignedRole?: string, assignedUserIds?: string[], assignedUserNames?: string[], daysOfWeek?: number[]) => {
     const newTurno: ShiftProfileConfig = {

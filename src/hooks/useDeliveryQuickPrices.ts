@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
-import { configRepository } from "../repositories/ConfigRepository";
+import {
+  deliveryPricingGateway,
+  type DeliveryPricingGateway,
+} from "../services/config/deliveryPricingGateway";
+import { DEFAULT_DELIVERY_PRICES } from "../types/config";
 
-const DEFAULT_QUICK_PRICES = ["30.00", "50.00", "", "", "", ""];
-
-export function useDeliveryQuickPrices() {
-  const [quickPrices, setQuickPrices] = useState<string[]>(DEFAULT_QUICK_PRICES);
+export function useDeliveryQuickPrices(
+  gateway: DeliveryPricingGateway = deliveryPricingGateway,
+) {
+  const [quickPrices, setQuickPrices] = useState<string[]>([
+    ...DEFAULT_DELIVERY_PRICES,
+  ]);
 
   useEffect(() => {
     let mounted = true;
 
-    configRepository.getDeliveryPricesConfig().then((prices) => {
+    void gateway.load().then((prices) => {
       if (!mounted) return;
 
       if (prices && Array.isArray(prices)) {
@@ -19,13 +25,13 @@ export function useDeliveryQuickPrices() {
         return;
       }
 
-      setQuickPrices(DEFAULT_QUICK_PRICES);
+      setQuickPrices([...DEFAULT_DELIVERY_PRICES]);
     });
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [gateway]);
 
   return { quickPrices };
 }
