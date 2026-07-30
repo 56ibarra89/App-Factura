@@ -19,19 +19,6 @@ function createWindow() {
     }
   });
   win.setMenu(null);
-  win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  });
-  ipcMain.on("print-silent", (event) => {
-    const webContents = event.sender;
-    webContents.print({
-      silent: true,
-      printBackground: true,
-      margins: { marginType: "none" }
-    }, (success, failureReason) => {
-      if (!success) console.error("Error al imprimir:", failureReason);
-    });
-  });
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
@@ -50,6 +37,16 @@ app.on("activate", () => {
   }
 });
 app.whenReady().then(() => {
+  ipcMain.removeAllListeners("print-silent");
+  ipcMain.on("print-silent", (event) => {
+    event.sender.print({
+      silent: true,
+      printBackground: true,
+      margins: { marginType: "none" }
+    }, (success, failureReason) => {
+      if (!success) console.error("Error al imprimir:", failureReason);
+    });
+  });
   createWindow();
   let encryptedToken = null;
   let targetApiUrl = null;

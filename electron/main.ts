@@ -37,22 +37,6 @@ function createWindow() {
   // Remover el menú por defecto (File, Edit, View, Window, Help)
   win.setMenu(null)
 
-  // Test active push message to Renderer-process.
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', (new Date).toLocaleString())
-  })
-
-  ipcMain.on('print-silent', (event) => {
-    const webContents = event.sender
-    webContents.print({ 
-      silent: true, 
-      printBackground: true,
-      margins: { marginType: 'none' } 
-    }, (success, failureReason) => {
-      if (!success) console.error('Error al imprimir:', failureReason)
-    })
-  })
-
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
@@ -80,6 +64,17 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(() => {
+  ipcMain.removeAllListeners('print-silent');
+  ipcMain.on('print-silent', (event) => {
+    event.sender.print({
+      silent: true,
+      printBackground: true,
+      margins: { marginType: 'none' },
+    }, (success, failureReason) => {
+      if (!success) console.error('Error al imprimir:', failureReason)
+    })
+  })
+
   createWindow();
 
   let encryptedToken: Buffer | null = null;

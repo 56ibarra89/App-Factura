@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { HashRouter } from "react-router-dom";
-import AppRoutes from "./router/index.tsx";
+import AppRoutes from "./app/router";
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
-import getAppTheme from "./theme/appTheme";
+import getAppTheme from "./shared/theme";
 import {
   getThemePreference,
   type ThemePreference,
-} from "./services/themePreference";
+} from "./shared/preferences";
 
 function App() {
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(
