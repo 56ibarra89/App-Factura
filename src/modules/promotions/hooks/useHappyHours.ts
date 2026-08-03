@@ -97,6 +97,8 @@ export function useHappyHours(
                 ? "Activo"
                 : "Inactivo",
             appliesTo: happyHour.appliesTo,
+            productIds: happyHour.productIds,
+            categoryIds: happyHour.categoryIds,
             days: days.join(", "),
             time: `${happyHour.startTime} - ${happyHour.endTime}`,
             promotion,

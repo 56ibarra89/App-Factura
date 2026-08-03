@@ -1,5 +1,6 @@
 import type {
   OrderItem,
+  OrderPromotionSelection,
   OrderType,
   PaymentMethod,
 } from "./order.types";
@@ -16,7 +17,7 @@ export interface OrderTotals {
   discountAmount?: number;
 }
 
-export interface CreateOrderCommand extends OrderTotals {
+export interface CreateOrderCommand extends OrderTotals, OrderPromotionSelection {
   items: OrderItem[];
   customerName?: string;
   orderType?: OrderType;
@@ -24,18 +25,16 @@ export interface CreateOrderCommand extends OrderTotals {
   tableId?: string;
   paymentMethod?: PaymentMethod;
   splitAmounts?: SplitPaymentAmounts;
-  promotionCode?: string;
   certificateSerials?: string[];
   driverId?: string;
   customerTendered?: number;
 }
 
-export interface FinalizeOrderCommand extends OrderTotals {
+export interface FinalizeOrderCommand extends OrderTotals, OrderPromotionSelection {
   paymentMethod: PaymentMethod;
   splitAmounts?: SplitPaymentAmounts;
   customerName?: string;
   orderType?: OrderType;
   customerAddress?: string;
-  promotionCode?: string;
   certificateSerials?: string[];
 }

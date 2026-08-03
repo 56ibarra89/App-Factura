@@ -57,7 +57,11 @@ export function createOrder(
     subTotal,
     taxAmount,
     discountAmount,
+    promotionSource,
     promotionCode,
+    couponId,
+    discountId,
+    happyHourId,
     certificateSerials,
     customerTendered,
   } = params;
@@ -84,6 +88,10 @@ export function createOrder(
     customerTendered,
     deliveryChange,
     promotionCode,
+    couponId,
+    promotionSource: promotionSource ?? "none",
+    discountId,
+    happyHourId,
     certificateSerials,
     tableId,
     paymentMethod,
@@ -216,7 +224,11 @@ export const orderMutations = {
       subTotal,
       taxAmount,
       discountAmount,
+      promotionSource,
       promotionCode,
+      couponId,
+      discountId,
+      happyHourId,
       certificateSerials,
     } = params;
 
@@ -245,7 +257,31 @@ export const orderMutations = {
           customerName: customerName || order.customerName,
           orderType: orderType || order.orderType,
           customerAddress: customerAddress || order.customerAddress,
-          promotionCode: promotionCode || order.promotionCode,
+          promotionSource: promotionSource ?? order.promotionSource,
+          promotionCode:
+            promotionSource === "coupon"
+              ? promotionCode
+              : promotionSource
+                ? undefined
+                : order.promotionCode,
+          couponId:
+            promotionSource === "coupon"
+              ? couponId
+              : promotionSource
+                ? undefined
+                : order.couponId,
+          discountId:
+            promotionSource === "discount"
+              ? discountId
+              : promotionSource
+                ? undefined
+                : order.discountId,
+          happyHourId:
+            promotionSource === "happy-hour"
+              ? happyHourId
+              : promotionSource
+                ? undefined
+                : order.happyHourId,
           certificateSerials:
             certificateSerials ?? order.certificateSerials,
           total,

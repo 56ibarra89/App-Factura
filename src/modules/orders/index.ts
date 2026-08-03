@@ -19,6 +19,8 @@ export type {
   Order,
   OrderItem,
   OrderItemInput,
+  OrderPromotionSelection,
+  OrderPromotionSource,
   OrderStatus,
   OrderType,
   PaymentMethod,

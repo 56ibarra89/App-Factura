@@ -1,4 +1,4 @@
-import type { OrderItem } from "./order.types";
+import type { OrderItem, OrderPromotionSelection } from "./order.types";
 import type {
   CreateOrderCommand,
   FinalizeOrderCommand,
@@ -29,6 +29,8 @@ export interface OrderCommands {
     total: number,
     subTotal?: number,
     taxAmount?: number,
+    discountAmount?: number,
+    promotion?: OrderPromotionSelection,
   ): Promise<void>;
   finalizeOrder(
     orderId: string,

@@ -22,7 +22,12 @@ export function useDescuentos(
         type: d.type,
         value: String(d.value),
         status: d.status === "Activo" || d.status === "ACTIVO" ? "Activo" : "Inactivo",
-        appliesTo: "Toda la cuenta" // En un futuro se pueden usar productIds y categoryIds
+        appliesTo:
+          d.productIds?.length || d.categoryIds?.length
+            ? "Productos o categorÃ­as seleccionados"
+            : "Toda la cuenta",
+        productIds: d.productIds,
+        categoryIds: d.categoryIds,
       })));
     } catch (e) {
       console.error("Error fetching discounts:", e);

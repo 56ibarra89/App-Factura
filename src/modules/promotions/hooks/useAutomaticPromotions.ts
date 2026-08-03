@@ -15,6 +15,8 @@ interface ActiveTwoForOnePromotion {
   name: string;
   appliesTo?: string;
   promotionType: "2x1";
+  productIds?: string[];
+  categoryIds?: string[];
 }
 
 export function useAutomaticPromotions(
@@ -75,6 +77,8 @@ export function useAutomaticPromotions(
             name: activeRule.name,
             appliesTo: activeRule.appliesTo,
             promotionType: "2x1",
+            productIds: activeRule.productIds,
+            categoryIds: activeRule.categoryIds,
           });
           setActiveHappyHour(null);
         } else {
@@ -87,11 +91,15 @@ export function useAutomaticPromotions(
             MONTO_FIJO: "monto_fijo"
           };
           setActiveHappyHour({
+            source: "happy-hour",
+            id: activeRule.id,
             code: `AUTO-${activeRule.name.toUpperCase().replace(/\s+/g, "")}`,
             discountType: typeMap[activeRule.promotionType] || "porcentaje",
             discountValue: parseFloat(
               String(activeRule.promotionValue ?? "0"),
             ),
+            productIds: activeRule.productIds,
+            categoryIds: activeRule.categoryIds,
           });
         }
       } else {

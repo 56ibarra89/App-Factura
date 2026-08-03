@@ -5,6 +5,7 @@ import {
 } from "../../orders";
 import {
   buildSupplementalCartItems,
+  buildOrderPromotionSelection,
   extractCertificateSerials,
 } from "../model/checkoutDomain";
 import type { CheckoutFormValues } from "../model/checkout.types";
@@ -51,7 +52,7 @@ export function useCheckout(
         customerAddress: form.customerAddress,
         paymentMethod: form.paymentMethod,
         splitAmounts: form.splitAmounts,
-        promotionCode: promotion?.code,
+        ...buildOrderPromotionSelection(promotion),
         certificateSerials: extractCertificateSerials(items),
         driverId: form.driverId,
         customerTendered: form.customerTendered,
@@ -82,6 +83,8 @@ export function useCheckout(
           totals.total,
           totals.subTotal,
           totals.taxAmount,
+          totals.discountAmount,
+          buildOrderPromotionSelection(promotion),
         );
         return orderId;
       }
@@ -91,7 +94,7 @@ export function useCheckout(
         ...totals,
         orderType: "local",
         tableId,
-        promotionCode: promotion?.code,
+        ...buildOrderPromotionSelection(promotion),
         certificateSerials: extractCertificateSerials(cart),
       });
     },
@@ -121,6 +124,8 @@ export function useCheckout(
         totals.total,
         totals.subTotal,
         totals.taxAmount,
+        totals.discountAmount,
+        buildOrderPromotionSelection(promotion),
       );
 
       return finalizeOrder(orderId, {
@@ -130,7 +135,7 @@ export function useCheckout(
         customerName: form.customerName,
         orderType: form.orderType,
         customerAddress: form.customerAddress,
-        promotionCode: promotion?.code,
+        ...buildOrderPromotionSelection(promotion),
         certificateSerials: extractCertificateSerials(items),
       });
     },

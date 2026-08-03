@@ -1,7 +1,36 @@
-import type { OrderItem } from "../../orders";
+import type {
+  OrderItem,
+  OrderPromotionSelection,
+} from "../../orders";
+import type { AppliedPromotion } from "../../promotions";
 import type { PackagingItem } from "./checkout.types";
 
 const LEGACY_CERTIFICATE_NOTE_PREFIX = "Vale: ";
+
+export function buildOrderPromotionSelection(
+  promotion: AppliedPromotion | null,
+): OrderPromotionSelection {
+  if (!promotion) return { promotionSource: "none" };
+
+  switch (promotion.source) {
+    case "coupon":
+      return {
+        promotionSource: "coupon",
+        promotionCode: promotion.code,
+        couponId: promotion.id,
+      };
+    case "discount":
+      return {
+        promotionSource: "discount",
+        discountId: promotion.id,
+      };
+    case "happy-hour":
+      return {
+        promotionSource: "happy-hour",
+        happyHourId: promotion.id,
+      };
+  }
+}
 
 export function buildSupplementalCartItems(
   packagingItems: readonly PackagingItem[],

@@ -1,9 +1,15 @@
 export type CuponStatus = "Activo" | "Inactivo" | "Agotado" | "Vencido";
 
+export type PromotionSource = "coupon" | "discount" | "happy-hour";
+
 export interface AppliedPromotion {
+  source: PromotionSource;
+  id: number;
   code: string;
-  discountType: "porcentaje" | "monto_fijo";
+  discountType: "2x1" | "porcentaje" | "monto_fijo";
   discountValue: number;
+  productIds?: string[];
+  categoryIds?: string[];
 }
 
 export interface HappyHourRule {
@@ -16,6 +22,8 @@ export interface HappyHourRule {
   promotionValue: string;
   status: "Activo" | "Inactivo";
   appliesTo?: string;
+  productIds?: string[];
+  categoryIds?: string[];
   days: string;
   time: string;
   promotion: string;
@@ -28,6 +36,8 @@ export interface DescuentoRule {
   value: string;
   status: "Activo" | "Inactivo";
   appliesTo: string;
+  productIds?: string[];
+  categoryIds?: string[];
 }
 
 export interface CuponRule {

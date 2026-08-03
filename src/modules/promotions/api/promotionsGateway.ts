@@ -7,6 +7,8 @@ export interface DiscountRecord {
   type: string;
   value: string | number;
   status: string;
+  productIds?: string[];
+  categoryIds?: string[];
 }
 
 export interface DiscountPayload {
@@ -28,6 +30,8 @@ export interface HappyHourRecord {
   promotionValue?: string | number;
   status: string;
   appliesTo?: string;
+  productIds?: string[];
+  categoryIds?: string[];
 }
 
 export interface HappyHourPayload {

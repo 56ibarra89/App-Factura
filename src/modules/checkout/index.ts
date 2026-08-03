@@ -11,6 +11,7 @@ export { default as useCart } from "./hooks/useCart";
 export { useProductSelection } from "./hooks/useProductSelection";
 export { calculateCartTotals } from "./model/cartTotals";
 export {
+  buildOrderPromotionSelection,
   buildSupplementalCartItems,
   extractCertificateSerials,
 } from "./model/checkoutDomain";

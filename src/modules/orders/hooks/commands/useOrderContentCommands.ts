@@ -28,6 +28,8 @@ export function useOrderContentCommands({
       total,
       subTotal,
       taxAmount,
+      discountAmount,
+      promotion,
     ) => {
       const originalOrder = ordersRef.current.find(
         (order) => order.id === orderId,
@@ -47,6 +49,16 @@ export function useOrderContentCommands({
           }
           if (typeof taxAmount === "number") {
             result.modified.taxAmount = taxAmount;
+          }
+          if (typeof discountAmount === "number") {
+            result.modified.discountAmount = discountAmount;
+          }
+          if (promotion) {
+            result.modified.promotionSource = promotion.promotionSource;
+            result.modified.promotionCode = promotion.promotionCode;
+            result.modified.couponId = promotion.couponId;
+            result.modified.discountId = promotion.discountId;
+            result.modified.happyHourId = promotion.happyHourId;
           }
           modifiedOrder = result.modified;
         }

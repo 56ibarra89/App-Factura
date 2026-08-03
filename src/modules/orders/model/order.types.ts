@@ -8,10 +8,20 @@ export type KitchenStatus = 'pending' | 'preparing' | 'ready' | 'delivered';
 
 export type PaymentMethod = 'EFECTIVO' | 'TARJETA' | 'APP' | 'MIXTO';
 export type OrderType = 'local' | 'llevar' | 'delivery';
+export type OrderPromotionSource = 'none' | 'coupon' | 'discount' | 'happy-hour';
+
+export interface OrderPromotionSelection {
+  promotionSource?: OrderPromotionSource;
+  promotionCode?: string;
+  couponId?: number;
+  discountId?: number;
+  happyHourId?: number;
+}
 
 export interface OrderItem {
   id?: number | string;
   productId?: string;
+  categoryId?: string;
   name: string;
   price: number;
   size: ProductSize;
@@ -19,6 +29,7 @@ export interface OrderItem {
   extras: SelectedExtra[];
   note?: string;
   giftQuantity?: number;
+  giftReason?: string;
   isSentToKitchen?: boolean;
   sentAt?: number;
   kitchenStatus?: KitchenStatus;
@@ -33,11 +44,12 @@ export type OrderItemInput = Pick<
   Partial<
     Pick<
       OrderItem,
-      "productId" | "note" | "giftQuantity" | "kitchenId" | "certificateSerial"
+      "productId" | "note" | "giftQuantity" | "giftReason" | "kitchenId" | "certificateSerial"
+      | "categoryId"
     >
   >;
 
-export interface Order {
+export interface Order extends OrderPromotionSelection {
   id: string;
   items: OrderItem[];
   subTotal?: number;
@@ -50,7 +62,6 @@ export interface Order {
   orderType?: OrderType;
   customerAddress?: string;
   driverId?: string;
-  promotionCode?: string;
   certificateSerials?: string[];
   tableId?: string;
   customerTendered?: number;

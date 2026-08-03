@@ -23,6 +23,21 @@ function calculateTaxAmount(
   return subTotal * (activeTax / 100);
 }
 
+function isPromotionEligible(
+  item: OrderItem,
+  promotion: AppliedPromotion,
+): boolean {
+  const productIds = promotion.productIds ?? [];
+  const categoryIds = promotion.categoryIds ?? [];
+
+  if (productIds.length === 0 && categoryIds.length === 0) return true;
+
+  return (
+    (item.productId !== undefined && productIds.includes(item.productId)) ||
+    (item.categoryId !== undefined && categoryIds.includes(item.categoryId))
+  );
+}
+
 export function calculateCartTotals(
   items: OrderItem[],
   taxes: TaxLike[] | undefined,
@@ -32,22 +47,30 @@ export function calculateCartTotals(
   const subTotal = calculateSubtotal(items);
   
   let discountAmount = 0;
-  if (promotion) {
+  if (promotion && promotion.discountType !== "2x1") {
+    const discountableSubtotal = items.reduce((sum, item) => {
+      const isPackaging = item.name.toLowerCase().startsWith("empaque");
+      const isDelivery = item.name.toLowerCase() === "delivery";
+      if (
+        isPackaging ||
+        isDelivery ||
+        !isPromotionEligible(item, promotion)
+      ) {
+        return sum;
+      }
+
+      const giftQty = item.giftQuantity || 0;
+      const paidQty = Math.max(0, item.quantity - giftQty);
+      return sum + item.price * paidQty;
+    }, 0);
+
     if (promotion.discountType === "porcentaje") {
-      // Calculate discountable subtotal by excluding packaging and delivery
-      const discountableSubtotal = items.reduce((sum, item) => {
-        const isPackaging = item.name.toLowerCase().startsWith('empaque');
-        const isDelivery = item.name.toLowerCase() === 'delivery';
-        if (isPackaging || isDelivery) return sum;
-        
-        const giftQty = item.giftQuantity || 0;
-        const paidQty = Math.max(0, item.quantity - giftQty);
-        return sum + item.price * paidQty;
-      }, 0);
-      
       discountAmount = discountableSubtotal * (promotion.discountValue / 100);
     } else {
-      discountAmount = promotion.discountValue;
+      discountAmount = Math.min(
+        promotion.discountValue,
+        discountableSubtotal,
+      );
     }
   }
   

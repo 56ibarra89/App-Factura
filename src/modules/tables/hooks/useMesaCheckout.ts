@@ -10,6 +10,7 @@ import type {
 } from "../../promotions";
 import {
   buildSupplementalCartItems,
+  buildOrderPromotionSelection,
   calculateCartTotals,
   extractCertificateSerials,
   type CheckoutFormValues,
@@ -85,6 +86,8 @@ export function useMesaCheckout(
           totals.total,
           totals.subTotal,
           totals.taxAmount,
+          totals.discountAmount,
+          buildOrderPromotionSelection(checkoutPromotion),
         );
       }
 
@@ -95,7 +98,7 @@ export function useMesaCheckout(
         customerName: form.customerName,
         orderType: form.orderType,
         customerAddress: form.customerAddress,
-        promotionCode: checkoutPromotion?.code,
+        ...buildOrderPromotionSelection(checkoutPromotion),
         certificateSerials: extractCertificateSerials(items),
       });
 

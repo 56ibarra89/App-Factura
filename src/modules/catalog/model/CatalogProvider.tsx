@@ -22,7 +22,15 @@ export const CatalogProvider = ({
   const loadCategories = useCallback(async () => {
     try {
       const data = await gateway.listCategories();
-      setCategories(data);
+      setCategories(
+        data.map((category) => ({
+          ...category,
+          items: category.items.map((product) => ({
+            ...product,
+            categoryId: product.categoryId ?? category.id,
+          })),
+        })),
+      );
     } catch (error) {
       console.error("Error al cargar categorías desde el backend:", error);
     }

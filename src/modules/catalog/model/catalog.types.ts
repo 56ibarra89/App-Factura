@@ -28,6 +28,7 @@ export interface ProductPrice {
 
 export interface Product {
   id?: string;
+  categoryId?: string;
   name: string;
   description?: string;
   prices: ProductPrice[];

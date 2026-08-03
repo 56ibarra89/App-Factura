@@ -9,6 +9,7 @@ interface BackendExtra {
 interface BackendItem {
   id?: string | number;
   productId?: string;
+  categoryId?: string;
   name: string;
   price: number | string;
   size: string;
@@ -16,6 +17,7 @@ interface BackendItem {
   extras: BackendExtra[];
   note?: string;
   giftQuantity?: number;
+  giftReason?: string;
   isSentToKitchen?: boolean;
   sentAt?: string | Date;
   kitchenStatus?: string;
@@ -37,6 +39,11 @@ interface BackendOrder {
   orderType?: string;
   customerAddress?: string;
   driverId?: string;
+  promotionSource?: string;
+  promotionCode?: string;
+  cuponId?: number | null;
+  discountId?: number | null;
+  happyHourId?: number | null;
   linkedTables?: string[];
   payments?: { method: string; amount: number | string; cashierId?: string; cashierSnapshotName?: string }[];
   cashierSnapshotName?: string;
@@ -51,6 +58,7 @@ function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
     items: backendOrder.items.map((i: BackendItem) => ({
       id: i.id ? Number(i.id) : undefined,
       productId: i.productId,
+      categoryId: i.categoryId,
       name: i.name,
       price: Number(i.price),
       size: i.size.toLowerCase(),
@@ -58,6 +66,7 @@ function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       extras: i.extras.map((e: BackendExtra) => ({ name: e.name, price: Number(e.price) })),
       note: i.note,
       giftQuantity: i.giftQuantity,
+      giftReason: i.giftReason,
       isSentToKitchen: i.isSentToKitchen,
       sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
       kitchenStatus: i.kitchenStatus ? (i.kitchenStatus.toLowerCase() as KitchenStatus) : undefined,
@@ -75,6 +84,13 @@ function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
     orderType: backendOrder.orderType ? (backendOrder.orderType.toLowerCase() as OrderType) : undefined,
     customerAddress: backendOrder.customerAddress || undefined,
     driverId: backendOrder.driverId || undefined,
+    promotionSource: backendOrder.promotionSource
+      ? (backendOrder.promotionSource as Order["promotionSource"])
+      : undefined,
+    promotionCode: backendOrder.promotionCode || undefined,
+    couponId: backendOrder.cuponId ?? undefined,
+    discountId: backendOrder.discountId ?? undefined,
+    happyHourId: backendOrder.happyHourId ?? undefined,
     tableId: backendOrder.linkedTables && backendOrder.linkedTables.length > 0 ? backendOrder.linkedTables[0] : undefined,
     linkedTables: backendOrder.linkedTables,
     paymentMethod: backendOrder.payments && backendOrder.payments.length > 0 ? (backendOrder.payments[0].method.toLowerCase() as PaymentMethod) : undefined,
@@ -108,6 +124,7 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
       extras: i.extras ? i.extras.map(e => ({ name: e.name, price: e.price })) : [],
       note: i.note,
       giftQuantity: i.giftQuantity || 0,
+      giftReason: i.giftReason,
       isSentToKitchen: !!i.isSentToKitchen,
       sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
       kitchenStatus: i.kitchenStatus,
@@ -126,6 +143,10 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     customerTendered: order.customerTendered,
     deliveryChange: order.deliveryChange,
     promotionCode: order.promotionCode,
+    cuponId: order.couponId,
+    promotionSource: order.promotionSource,
+    discountId: order.discountId,
+    happyHourId: order.happyHourId,
     certificateSerials: order.certificateSerials,
     cashierSnapshotName: order.cashierName,
     isSentToKitchen: order.isSentToKitchen,
@@ -174,6 +195,7 @@ export async function syncUpdateOrderItems(order: Order) {
         extras: i.extras ? i.extras.map(e => ({ name: e.name, price: e.price })) : [],
         note: i.note,
         giftQuantity: i.giftQuantity || 0,
+        giftReason: i.giftReason,
         isSentToKitchen: !!i.isSentToKitchen,
         sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
         kitchenStatus: i.kitchenStatus,
@@ -183,6 +205,11 @@ export async function syncUpdateOrderItems(order: Order) {
       subTotal: order.subTotal,
       taxAmount: order.taxAmount,
       discountAmount: order.discountAmount,
+      promotionSource: order.promotionSource,
+      promotionCode: order.promotionCode,
+      cuponId: order.couponId,
+      discountId: order.discountId,
+      happyHourId: order.happyHourId,
       isSentToKitchen: order.isSentToKitchen,
     }),
   });
@@ -210,6 +237,10 @@ export async function syncFinalizeOrder(order: Order): Promise<Order> {
       discountAmount: order.discountAmount,
       finalTotal: order.total,
       promotionCode: order.promotionCode,
+      cuponId: order.couponId,
+      promotionSource: order.promotionSource,
+      discountId: order.discountId,
+      happyHourId: order.happyHourId,
       certificateSerials: order.certificateSerials,
     }),
   });

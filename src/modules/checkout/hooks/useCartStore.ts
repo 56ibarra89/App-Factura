@@ -26,25 +26,74 @@ export function useCartStore() {
         // Ignoramos los vales (certificados) que son agregados como regalo fijo
         if (item.note?.startsWith("Vale: ")) return item;
 
-        if (active2x1 && (item.name === active2x1.appliesTo || active2x1.appliesTo === "Todos")) {
+        const hasStructuredTargets = Boolean(
+          active2x1?.productIds?.length || active2x1?.categoryIds?.length,
+        );
+        const matchesStructuredTarget = Boolean(
+          (item.productId && active2x1?.productIds?.includes(item.productId)) ||
+          (item.categoryId && active2x1?.categoryIds?.includes(item.categoryId)),
+        );
+        const matchesLegacyTarget = Boolean(
+          active2x1 &&
+            (!active2x1.appliesTo ||
+              active2x1.appliesTo === "Todos" ||
+              item.name === active2x1.appliesTo),
+        );
+        const appliesTwoForOne = Boolean(
+          !manualPromotion &&
+            active2x1 &&
+            (hasStructuredTargets
+              ? matchesStructuredTarget
+              : matchesLegacyTarget),
+        );
+
+        if (appliesTwoForOne) {
           const expectedGift = Math.floor(item.quantity / 2);
-          if (item.giftQuantity !== expectedGift) {
+          if (
+            item.giftQuantity !== expectedGift ||
+            item.giftReason !== "happy-hour-2x1"
+          ) {
             changed = true;
-            return { ...item, giftQuantity: expectedGift, note: item.note || "2x1 Happy Hour" };
+            return {
+              ...item,
+              giftQuantity: expectedGift,
+              giftReason: "happy-hour-2x1",
+              note: item.note || "2x1 Happy Hour",
+            };
           }
-        } else if (item.note === "2x1 Happy Hour") {
+        } else if (
+          item.giftReason === "happy-hour-2x1" ||
+          item.note === "2x1 Happy Hour"
+        ) {
           // Si el Happy Hour terminó, le quitamos el regalo automático
           changed = true;
-          return { ...item, giftQuantity: 0, note: "" };
+          return {
+            ...item,
+            giftQuantity: 0,
+            giftReason: undefined,
+            note: item.note === "2x1 Happy Hour" ? "" : item.note,
+          };
         }
 
         return item;
       });
       return changed ? newCart : prev;
     });
-  }, [active2x1, cart]);
+  }, [active2x1, cart, manualPromotion]);
 
-  const promotion = manualPromotion || activeHappyHour;
+  const automaticPromotion: AppliedPromotion | null = activeHappyHour ??
+    (active2x1
+      ? {
+          source: "happy-hour",
+          id: active2x1.id,
+          code: `AUTO-${active2x1.name.toUpperCase().replace(/\s+/g, "")}`,
+          discountType: "2x1",
+          discountValue: 0,
+          productIds: active2x1.productIds,
+          categoryIds: active2x1.categoryIds,
+        }
+      : null);
+  const promotion = manualPromotion ?? automaticPromotion;
 
   const addItem = useCallback(
     (newItem: OrderItemInput) => {

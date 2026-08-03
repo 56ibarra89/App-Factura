@@ -69,6 +69,8 @@ export default function PromocionesSelector({
     }
 
     onApply({
+      source: "coupon",
+      id: cupon.id,
       code: cupon.code,
       discountType: cupon.discountType,
       discountValue: parseFloat(cupon.discountValue),
@@ -79,6 +81,8 @@ export default function PromocionesSelector({
 
   const handleSelectCupon = (cupon: CuponRule) => {
     onApply({
+      source: "coupon",
+      id: cupon.id,
       code: cupon.code,
       discountType: cupon.discountType,
       discountValue: parseFloat(cupon.discountValue),
@@ -91,9 +95,13 @@ export default function PromocionesSelector({
     const isPercent = desc.type.toLowerCase() === "porcentaje";
     const cleanValue = desc.value.replace(/[^0-9.]/g, "");
     onApply({
+      source: "discount",
+      id: desc.id,
       code: desc.name,
       discountType: isPercent ? "porcentaje" : "monto_fijo",
       discountValue: parseFloat(cleanValue),
+      productIds: desc.productIds,
+      categoryIds: desc.categoryIds,
     });
     setOpen(false);
   };

@@ -31,6 +31,7 @@ export function useProductSelection(onConfirm: (item: OrderItemInput) => void) {
         } else {
           onConfirm({
             productId: item.id,
+            categoryId: item.categoryId,
             name: item.name,
             price: item.prices[0].price,
             size: "único",
@@ -59,6 +60,7 @@ export function useProductSelection(onConfirm: (item: OrderItemInput) => void) {
       onConfirm({
         ...selected,
         productId: product?.id,
+        categoryId: product?.categoryId,
         extras: [],
         kitchenId: selectedProduct?.kitchenId,
       });
@@ -70,6 +72,7 @@ export function useProductSelection(onConfirm: (item: OrderItemInput) => void) {
 
     onConfirm({
       productId: pendingItem.product.id,
+      categoryId: pendingItem.product.categoryId,
       name: pendingItem.product.name,
       price: pendingItem.price,
       size: pendingItem.size,
