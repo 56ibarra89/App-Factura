@@ -3,6 +3,7 @@ import {
   Chip,
   Paper,
   Typography,
+  Box,
 } from "@mui/material";
 import {
   DataGrid,
@@ -13,44 +14,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import type { SystemLog, LogLevel } from "../model/audit.types";
 import { LOGIN_COLORS } from "../../../shared/theme";
-
-const ACTION_LABELS: Record<string, string> = {
-  ORDER_FINALIZED: "Facturar Orden",
-  LOGIN_PASSWORD: "Login (Contraseña)",
-  LOGIN_PIN: "Login (PIN)",
-  LOGOUT: "Cierre de Sesión",
-  CONFIG_CHANGE: "Configuración",
-  CREATE_RESERVATION: "Crear Reserva",
-  CANCEL_RESERVATION: "Cancelar Reserva",
-  PRODUCT_CREATE: "Crear Producto",
-  PRODUCT_UPDATE: "Editar Producto",
-  PRODUCT_DELETE: "Eliminar Producto",
-  CLEAR_HISTORY: "Limpiar Historial",
-  USER_CREATE: "Crear Usuario",
-  USER_UPDATE: "Editar Usuario",
-  USER_UPDATE_STATUS: "Estado Usuario",
-  USER_DELETE: "Eliminar Usuario",
-};
-
-function formatDetails(details?: string) {
-  if (!details) return null;
-
-  try {
-    if (!details.startsWith("{") || !details.endsWith("}")) return details;
-    const parsed = JSON.parse(details) as Record<string, unknown>;
-    if (parsed.invoiceNumber && parsed.orderId) {
-      const internalNumber = parsed.issuedNumber
-        ? ` (Nro interno: ${String(parsed.issuedNumber)})`
-        : "";
-      return `Factura #${String(parsed.invoiceNumber)} generada para la orden ${String(parsed.orderId)}${internalNumber}`;
-    }
-    return Object.entries(parsed)
-      .map(([key, value]) => `${key}: ${String(value)}`)
-      .join(", ");
-  } catch {
-    return details;
-  }
-}
+import { getActionMetadata } from "../utils/logFormatter";
+import { FormattedLogDetails } from "./FormattedLogDetails";
 
 interface AuditLogGridProps {
   logs: SystemLog[];
@@ -66,7 +31,7 @@ export default function AuditLogGrid({
       {
         field: "timestamp",
         headerName: "Fecha y Hora",
-        width: 200,
+        width: 180,
         renderCell: (params: GridRenderCellParams<SystemLog, number>) => (
           <Typography variant="body2" fontWeight={500}>
             {format(params.value ?? 0, "dd MMM yyyy, HH:mm:ss", { locale: es })}
@@ -109,34 +74,35 @@ export default function AuditLogGrid({
       {
         field: "action",
         headerName: "Acción",
-        width: 180,
-        renderCell: (params: GridRenderCellParams<SystemLog, string>) => (
-          <Chip
-            label={ACTION_LABELS[params.value ?? ""] || params.value}
-            size="small"
-            color="primary"
-            sx={{ fontWeight: 700, borderRadius: 1 }}
-          />
-        ),
+        width: 200,
+        renderCell: (params: GridRenderCellParams<SystemLog, string>) => {
+          const meta = getActionMetadata(params.value ?? "");
+          return (
+            <Chip
+              label={meta.label}
+              size="small"
+              color={meta.color}
+              sx={{ fontWeight: 700, borderRadius: 1 }}
+            />
+          );
+        },
       },
       {
         field: "details",
         headerName: "Detalles del Evento",
         flex: 1,
-        minWidth: 300,
+        minWidth: 320,
         renderCell: (params: GridRenderCellParams<SystemLog, string>) => (
-          <Typography
-            variant="body2"
-            color={params.value ? "text.primary" : "text.secondary"}
+          <Box
             sx={{
-              whiteSpace: "normal",
               display: "flex",
               alignItems: "center",
               height: "100%",
+              overflow: "hidden",
             }}
           >
-            {formatDetails(params.value) ?? "Sin detalles"}
-          </Typography>
+            <FormattedLogDetails details={params.value} compact />
+          </Box>
         ),
       },
       {

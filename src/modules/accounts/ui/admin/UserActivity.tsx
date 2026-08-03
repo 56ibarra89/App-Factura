@@ -8,15 +8,70 @@ import {
   StepContent,
   Paper,
   CircularProgress,
+  Chip,
+  Avatar,
 } from "@mui/material";
 import type { UserAccount } from "../../model/account.types";
 import { logService, type SystemLog } from "../../../audit";
+import { getActionMetadata } from "../../../audit/utils/logFormatter";
+import { FormattedLogDetails } from "../../../audit/ui/FormattedLogDetails";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import LoginIcon from "@mui/icons-material/Login";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import LogoutIcon from "@mui/icons-material/Logout";
+import SettingsIcon from "@mui/icons-material/Settings";
+import EventSeatIcon from "@mui/icons-material/EventSeat";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PersonIcon from "@mui/icons-material/Person";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
+import EventNoteIcon from "@mui/icons-material/EventNote";
 
 interface UserActivityProps {
   user: UserAccount;
 }
+
+const renderActionIcon = (iconName: string) => {
+  switch (iconName) {
+    case "ReceiptLong":
+      return <ReceiptLongIcon sx={{ fontSize: 16 }} />;
+    case "Login":
+      return <LoginIcon sx={{ fontSize: 16 }} />;
+    case "LockOpen":
+      return <LockOpenIcon sx={{ fontSize: 16 }} />;
+    case "Logout":
+      return <LogoutIcon sx={{ fontSize: 16 }} />;
+    case "Settings":
+      return <SettingsIcon sx={{ fontSize: 16 }} />;
+    case "EventSeat":
+      return <EventSeatIcon sx={{ fontSize: 16 }} />;
+    case "AddCircle":
+      return <AddCircleIcon sx={{ fontSize: 16 }} />;
+    case "Edit":
+      return <EditIcon sx={{ fontSize: 16 }} />;
+    case "Delete":
+      return <DeleteIcon sx={{ fontSize: 16 }} />;
+    case "CleaningServices":
+      return <CleaningServicesIcon sx={{ fontSize: 16 }} />;
+    case "PersonAdd":
+      return <PersonAddIcon sx={{ fontSize: 16 }} />;
+    case "Person":
+      return <PersonIcon sx={{ fontSize: 16 }} />;
+    case "ManageAccounts":
+      return <ManageAccountsIcon sx={{ fontSize: 16 }} />;
+    case "PersonRemove":
+      return <PersonRemoveIcon sx={{ fontSize: 16 }} />;
+    default:
+      return <EventNoteIcon sx={{ fontSize: 16 }} />;
+  }
+};
 
 export function UserActivity({ user }: UserActivityProps) {
   const [activities, setActivities] = useState<SystemLog[]>([]);
@@ -88,38 +143,61 @@ export function UserActivity({ user }: UserActivityProps) {
           }}
         >
           <Stepper orientation="vertical">
-            {activities.map((step, index) => (
-              <Step key={step.id || index} active={true}>
-                <StepLabel
-                  StepIconProps={{
-                    sx: { color: index === 0 ? "primary.main" : "grey.500" },
-                  }}
-                >
-                  <Typography
-                    component="span"
-                    fontWeight="bold"
-                    color={index === 0 ? "text.primary" : "text.secondary"}
+            {activities.map((step, index) => {
+              const meta = getActionMetadata(step.action);
+
+              return (
+                <Step key={step.id || index} active={true}>
+                  <StepLabel
+                    StepIconComponent={() => (
+                      <Avatar
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          bgcolor: `${meta.color}.main`,
+                          color: `${meta.color}.contrastText`,
+                        }}
+                      >
+                        {renderActionIcon(meta.iconName)}
+                      </Avatar>
+                    )}
                   >
-                    {step.action}
-                  </Typography>
-                  <Typography
-                    component="span"
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: "block" }}
-                  >
-                    {format(step.timestamp, "dd MMM yyyy, hh:mm a", {
-                      locale: es,
-                    })}
-                  </Typography>
-                </StepLabel>
-                <StepContent>
-                  <Typography variant="body2" color="text.secondary">
-                    {step.details || "Sin detalles adicionales."}
-                  </Typography>
-                </StepContent>
-              </Step>
-            ))}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Typography fontWeight="bold" color="text.primary">
+                        {meta.label}
+                      </Typography>
+                      <Chip
+                        label={meta.category}
+                        size="small"
+                        variant="outlined"
+                        sx={{ height: 20, fontSize: "0.65rem", fontWeight: 600 }}
+                      />
+                    </Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: "block", mt: 0.2 }}
+                    >
+                      {format(step.timestamp, "dd MMM yyyy, hh:mm a", {
+                        locale: es,
+                      })}
+                    </Typography>
+                  </StepLabel>
+                  <StepContent>
+                    <Box sx={{ pb: 1, pt: 0.5 }}>
+                      <FormattedLogDetails details={step.details} />
+                    </Box>
+                  </StepContent>
+                </Step>
+              );
+            })}
           </Stepper>
         </Paper>
       )}
