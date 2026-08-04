@@ -11,12 +11,16 @@ import type {
 
 export const orderSelectors = {
   getActiveOrderByTable(orders: Order[], tableId: string): Order | undefined {
-    return orders.find(
+    const tableOrders = orders.filter(
       (order) =>
         (order.tableId === tableId ||
           (order.linkedTables && order.linkedTables.includes(tableId))) &&
         order.status !== "paid" &&
         order.status !== "cancelled",
+    );
+
+    return (
+      tableOrders.find((order) => order.items.length > 0) ?? tableOrders[0]
     );
   },
 };

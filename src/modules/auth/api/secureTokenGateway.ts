@@ -1,3 +1,8 @@
+import {
+  accessTokenStore,
+  type AccessTokenStore,
+} from "../../../shared/api/accessTokenStore";
+
 interface AuthRuntime {
   authAPI?: {
     setToken(token: string, apiUrl: string): void;
@@ -15,13 +20,16 @@ export function createSecureTokenGateway(
   apiUrl: string =
     import.meta.env.VITE_API_BASE_URL ||
     "http://localhost:3000",
+  tokenStore: AccessTokenStore = accessTokenStore,
 ): SecureTokenGateway {
   return {
     store(token) {
+      tokenStore.set(token);
       runtime.authAPI?.setToken(token, apiUrl);
     },
 
     clear() {
+      tokenStore.clear();
       runtime.authAPI?.clearToken();
     },
   };

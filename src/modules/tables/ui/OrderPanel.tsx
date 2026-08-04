@@ -15,7 +15,9 @@ interface Props {
   onCheckout?: () => void;
   onUnirMesas?: () => void;
   onMoverPedido?: () => void;
+  onDividirCuenta?: () => void;
   hasActiveOrder?: boolean;
+  canCheckoutOrder?: boolean;
   canModifyOrder?: boolean;
   onToggleOccupancy?: () => void;
   isOccupied?: boolean;
@@ -32,7 +34,9 @@ export default function OrderPanel({
   onCheckout,
   onUnirMesas,
   onMoverPedido,
+  onDividirCuenta,
   hasActiveOrder = false,
+  canCheckoutOrder = false,
   canModifyOrder = true,
   onToggleOccupancy,
   isOccupied = false,
@@ -72,7 +76,9 @@ export default function OrderPanel({
             onCheckout={onCheckout}
             onUnirMesas={onUnirMesas}
             onMoverPedido={onMoverPedido}
+            onDividirCuenta={onDividirCuenta}
             hasActiveOrder={hasActiveOrder}
+            canCheckoutOrder={canCheckoutOrder}
             canModifyOrder={canModifyOrder}
             onToggleOccupancy={onToggleOccupancy}
             isOccupied={isOccupied}

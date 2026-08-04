@@ -1,4 +1,4 @@
-export type LogLevel = "info" | "warn" | "error";
+export type LogLevel = "info" | "warn" | "error" | "INFO" | "WARN" | "ERROR";
 export type AuditLogLevel = LogLevel;
 
 export interface SystemLog {

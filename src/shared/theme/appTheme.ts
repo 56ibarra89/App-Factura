@@ -1,9 +1,4 @@
 import { createTheme, PaletteMode } from "@mui/material/styles";
-
-/**
- * Tema global de la aplicación.
- * Centraliza la paleta corporativa para eliminar colores hardcodeados.
- */
 export const getAppTheme = (mode: PaletteMode) => createTheme({
   palette: {
     mode,
@@ -30,6 +25,11 @@ export const getAppTheme = (mode: PaletteMode) => createTheme({
         root: {
           textTransform: "none",
         },
+      },
+    },
+    MuiModal: {
+      defaultProps: {
+        disableRestoreFocus: true,
       },
     },
   },

@@ -95,7 +95,7 @@ export function useMesaAvailability({
     [getOrderByTable, selectedMesaId],
   );
   const canModifyOrder = useMemo(() => {
-    if (!activeOrder) return true;
+    if (!activeOrder || activeOrder.items.length === 0) return true;
     if (role === "admin" || role === "cajero") {
       return true;
     }

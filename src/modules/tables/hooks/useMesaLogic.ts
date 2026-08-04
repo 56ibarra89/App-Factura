@@ -34,7 +34,6 @@ export function useMesaLogic({
     moveOrder,
     unirMesas,
     updateOrderStatus,
-    addOrder,
   } = useOrderCommands();
   const selection = useMesaSelection({
     floorsConfig,
@@ -75,7 +74,6 @@ export function useMesaLogic({
     setTableStatus: reservations.setTableStatus,
     releaseTable: reservations.releaseTable,
     updateOrderStatus,
-    addOrder,
   });
   const transferActions = useMesaTransferActions({
     selectedMesaId: selection.selectedMesaId,

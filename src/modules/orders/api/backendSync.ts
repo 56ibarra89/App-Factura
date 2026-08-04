@@ -24,7 +24,7 @@ interface BackendItem {
   kitchenId?: string;
 }
 
-interface BackendOrder {
+export interface BackendOrder {
   id: string;
   items: BackendItem[];
   subTotal?: number | string | null;
@@ -52,7 +52,7 @@ interface BackendOrder {
   invoiceNumber?: string;
 }
 
-function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
+export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
   return {
     id: backendOrder.id,
     items: backendOrder.items.map((i: BackendItem) => ({

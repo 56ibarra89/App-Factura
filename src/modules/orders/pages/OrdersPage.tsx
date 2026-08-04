@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box, Typography, Stack, Button, Tabs, Tab } from "@mui/material";
 import {
   BackButton,
@@ -45,6 +45,17 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
   const [selectedKitchenId, setSelectedKitchen] = useState<string>(() => {
     return getSelectedKitchenId();
   });
+
+  const activeKitchens = useMemo(() => kitchens.filter((k) => k.isActive), [kitchens]);
+  const isValidKitchen = selectedKitchenId === "" || activeKitchens.some((k) => k.id === selectedKitchenId);
+  const currentTabValue = isValidKitchen ? selectedKitchenId : "";
+
+  useEffect(() => {
+    if (!isValidKitchen && kitchens.length > 0) {
+      setSelectedKitchen("");
+      saveSelectedKitchenId("");
+    }
+  }, [isValidKitchen, kitchens.length]);
 
   const handleKitchenChange = (event: React.SyntheticEvent, newValue: string) => {
     setSelectedKitchen(newValue);
@@ -114,9 +125,9 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
       />
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={selectedKitchenId} onChange={handleKitchenChange} variant="scrollable" scrollButtons="auto">
+        <Tabs value={currentTabValue} onChange={handleKitchenChange} variant="scrollable" scrollButtons="auto">
           <Tab label="Todas las áreas" value="" />
-          {kitchens.filter(k => k.isActive).map(k => (
+          {activeKitchens.map((k) => (
             <Tab key={k.id} label={k.name} value={k.id} />
           ))}
         </Tabs>
@@ -180,4 +191,3 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
 };
 
 export default OrdersPage;
-

@@ -42,4 +42,9 @@ export type {
   OrderHistoryGateway,
   OrdersGateway,
 } from "./api/ordersGateway";
+export type {
+  OrderRealtimeEvent,
+  OrderRealtimeHandlers,
+  OrdersRealtimeGateway,
+} from "./api/ordersRealtimeGateway";
 export { default as OrdersPage } from "./pages/OrdersPage";

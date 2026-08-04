@@ -25,6 +25,10 @@ import { useOrderStore } from "../hooks/useOrderStore";
 import { useOrderSynchronization } from "../hooks/useOrderSynchronization";
 import { useOrderCommandHandlers } from "../hooks/useOrderCommandHandlers";
 import {
+  ordersRealtimeGateway as defaultRealtimeGateway,
+  type OrdersRealtimeGateway,
+} from "../api/ordersRealtimeGateway";
+import {
   OrderCommandsContext,
   OrderQueriesContext,
 } from "./OrderContext";
@@ -36,6 +40,7 @@ export interface OrderProviderGateways {
   items: OrderItemsGateway;
   finalization: OrderFinalizationGateway;
   tables: OrderTablesGateway;
+  realtime: OrdersRealtimeGateway;
 }
 
 interface OrderProviderProps {
@@ -60,6 +65,7 @@ export function OrderProvider({
     items = defaultOrdersGateway,
     finalization = defaultOrdersGateway,
     tables = defaultOrdersGateway,
+    realtime = defaultRealtimeGateway,
   } = gateways;
 
   useOrderSynchronization({
@@ -68,6 +74,7 @@ export function OrderProvider({
     updateOrders,
     gateway: currentOrders,
     preferencesGateway,
+    realtimeGateway: realtime,
     pollIntervalMs,
   });
 

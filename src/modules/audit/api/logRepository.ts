@@ -28,7 +28,7 @@ class LogRepository implements ILogRepository {
           role,
           action,
           details,
-          level,
+          level: (level || "info").toUpperCase() as LogLevel,
         }),
       });
     } catch (error) {

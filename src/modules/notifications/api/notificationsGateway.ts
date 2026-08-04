@@ -1,4 +1,5 @@
 import { apiClient } from "../../../shared/api";
+import { accessTokenStore } from "../../../shared/api/accessTokenStore";
 
 export interface NotificationItem {
   id: string;
@@ -30,7 +31,12 @@ export const notificationsGateway: NotificationsGateway = {
   },
 
   subscribe(onNotification) {
-    const eventSource = new EventSource(`${API_BASE_URL}/notifications/stream`);
+    const token = accessTokenStore.get();
+    const streamUrl = token
+      ? `${API_BASE_URL}/notifications/stream?token=${encodeURIComponent(token)}`
+      : `${API_BASE_URL}/notifications/stream`;
+
+    const eventSource = new EventSource(streamUrl);
     eventSource.onmessage = (event) => {
       try {
         onNotification(JSON.parse(event.data) as NotificationItem);

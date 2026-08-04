@@ -1,13 +1,16 @@
 import { sessionStore } from "../storage/storage";
+import { accessTokenStore } from "./accessTokenStore";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   const hasMultipartBody = options.body instanceof FormData;
+  const accessToken = accessTokenStore.get();
   
   const headers: Record<string, string> = {
     ...(hasMultipartBody ? {} : { "Content-Type": "application/json" }),
+    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     ...(options.headers as Record<string, string>),
   };
 
@@ -19,6 +22,7 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
 
   if (!response.ok) {
     if (response.status === 401) {
+      accessTokenStore.clear();
       if (window.authAPI) {
         window.authAPI.clearToken();
       }

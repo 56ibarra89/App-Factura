@@ -4,6 +4,10 @@ import type { Order } from "../model/order.types";
 import type { CurrentOrdersGateway } from "../api/ordersGateway";
 import type { OrderPreferencesGateway } from "../api/orderPreferencesGateway";
 import type { OrderStateUpdater } from "./useOrderStore";
+import type {
+  OrderRealtimeEvent,
+  OrdersRealtimeGateway,
+} from "../api/ordersRealtimeGateway";
 
 const RECENT_LOCAL_ORDER_WINDOW_MS = 15_000;
 
@@ -61,12 +65,48 @@ export function reconcileOrders(
   );
 }
 
+export function reconcileRealtimeOrder(
+  currentOrders: readonly Order[],
+  realtimeOrder: Order,
+  hiddenOrderIds: readonly string[],
+): Order[] {
+  const hiddenIds = new Set(hiddenOrderIds);
+  if (hiddenIds.has(realtimeOrder.id)) {
+    return currentOrders.filter((order) => order.id !== realtimeOrder.id);
+  }
+
+  const sanitizedOrder = sanitizeLinkedTables(realtimeOrder);
+  const localOrder = currentOrders.find(
+    (order) => order.id === sanitizedOrder.id,
+  );
+  const shouldPreserveLinkedTables =
+    localOrder &&
+    (sanitizedOrder.linkedTables?.length ?? 0) === 0 &&
+    (localOrder.linkedTables?.length ?? 0) > 0;
+  const mergedOrder = shouldPreserveLinkedTables
+    ? {
+        ...sanitizedOrder,
+        tableId: localOrder.tableId,
+        linkedTables: localOrder.linkedTables,
+      }
+    : sanitizedOrder;
+
+  if (!localOrder) {
+    return [mergedOrder, ...currentOrders];
+  }
+
+  return currentOrders.map((order) =>
+    order.id === mergedOrder.id ? mergedOrder : order,
+  );
+}
+
 interface UseOrderSynchronizationOptions {
   isLoggedIn: boolean;
   ordersRef: MutableRefObject<Order[]>;
   updateOrders: (updater: OrderStateUpdater) => void;
   gateway: CurrentOrdersGateway;
   preferencesGateway: OrderPreferencesGateway;
+  realtimeGateway: OrdersRealtimeGateway;
   pollIntervalMs?: number;
 }
 
@@ -76,6 +116,7 @@ export function useOrderSynchronization({
   updateOrders,
   gateway,
   preferencesGateway,
+  realtimeGateway,
   pollIntervalMs = 10_000,
 }: UseOrderSynchronizationOptions): void {
   useEffect(() => {
@@ -87,6 +128,9 @@ export function useOrderSynchronization({
     let active = true;
     let loading = false;
     let preferencesWarningShown = false;
+    let realtimeWarningShown = false;
+    let hiddenOrderIds: string[] = [];
+    let fallbackIntervalId: number | undefined;
 
     const loadOrders = async () => {
       if (loading) return;
@@ -104,16 +148,17 @@ export function useOrderSynchronization({
             }
             return [];
           });
-        const [backendOrders, hiddenOrderIds] = await Promise.all([
+        const [backendOrders, loadedHiddenOrderIds] = await Promise.all([
           gateway.listCurrent(),
           hiddenOrderIdsPromise,
         ]);
 
         if (!active) return;
+        hiddenOrderIds = loadedHiddenOrderIds;
         const nextOrders = reconcileOrders(
           ordersRef.current,
           backendOrders,
-          hiddenOrderIds,
+          loadedHiddenOrderIds,
         );
         updateOrders(() => nextOrders);
       } catch (error: unknown) {
@@ -123,15 +168,54 @@ export function useOrderSynchronization({
       }
     };
 
+    const stopFallbackPolling = () => {
+      if (fallbackIntervalId === undefined) return;
+      window.clearInterval(fallbackIntervalId);
+      fallbackIntervalId = undefined;
+    };
+
+    const startFallbackPolling = () => {
+      if (!active || fallbackIntervalId !== undefined) return;
+      void loadOrders();
+      fallbackIntervalId = window.setInterval(
+        () => void loadOrders(),
+        pollIntervalMs,
+      );
+    };
+
+    const handleRealtimeOrder = ({ order }: OrderRealtimeEvent) => {
+      if (!active) return;
+      updateOrders((current) =>
+        reconcileRealtimeOrder(current, order, hiddenOrderIds),
+      );
+    };
+
+    const unsubscribe = realtimeGateway.subscribe({
+      onOrderChanged: handleRealtimeOrder,
+      onConnect: () => {
+        realtimeWarningShown = false;
+        stopFallbackPolling();
+        void loadOrders();
+      },
+      onDisconnect: startFallbackPolling,
+      onError: (error) => {
+        if (!realtimeWarningShown) {
+          console.warn(
+            "Conexion de ordenes en tiempo real no disponible; usando polling temporal.",
+            error.message,
+          );
+          realtimeWarningShown = true;
+        }
+        startFallbackPolling();
+      },
+    });
+
     void loadOrders();
-    const intervalId = window.setInterval(
-      () => void loadOrders(),
-      pollIntervalMs,
-    );
 
     return () => {
       active = false;
-      window.clearInterval(intervalId);
+      stopFallbackPolling();
+      unsubscribe();
     };
   }, [
     gateway,
@@ -139,6 +223,7 @@ export function useOrderSynchronization({
     ordersRef,
     pollIntervalMs,
     preferencesGateway,
+    realtimeGateway,
     updateOrders,
   ]);
 }

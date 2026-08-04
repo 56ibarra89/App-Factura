@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import type {
   OrderCommands,
   OrderQueries,
@@ -19,7 +18,6 @@ interface UseMesaOrderActionsOptions {
   ): Promise<void>;
   releaseTable(tableId: string): Promise<void>;
   updateOrderStatus: OrderCommands["updateOrderStatus"];
-  addOrder: OrderCommands["addOrder"];
 }
 
 export function useMesaOrderActions({
@@ -32,27 +30,34 @@ export function useMesaOrderActions({
   setTableStatus,
   releaseTable,
   updateOrderStatus,
-  addOrder,
 }: UseMesaOrderActionsOptions) {
-  const navigate = useNavigate();
+  const openOrderEditor = useCallback(() => {
+    if (!selectedMesaId) return;
+
+    window.location.hash = `/facturacion?tableId=${encodeURIComponent(selectedMesaId)}`;
+  }, [selectedMesaId]);
 
   const handleEditOrder = useCallback(() => {
     if (!selectedMesaId) return;
 
-    if (isReserved) {
-      void releaseTable(selectedMesaId);
-    }
-    if (
-      !tableStatusMap[selectedMesaId] ||
-      tableStatusMap[selectedMesaId] === "disponible"
-    ) {
-      void setTableStatus(selectedMesaId, "ocupado");
-    }
+    openOrderEditor();
 
-    navigate(`/facturacion?tableId=${selectedMesaId}`);
+    window.setTimeout(() => {
+      if (isReserved) {
+        void releaseTable(selectedMesaId);
+        return;
+      }
+
+      if (
+        !tableStatusMap[selectedMesaId] ||
+        tableStatusMap[selectedMesaId] === "disponible"
+      ) {
+        void setTableStatus(selectedMesaId, "ocupado");
+      }
+    }, 0);
   }, [
     isReserved,
-    navigate,
+    openOrderEditor,
     releaseTable,
     selectedMesaId,
     setTableStatus,
@@ -97,17 +102,14 @@ export function useMesaOrderActions({
       return;
     }
 
-    void setTableStatus(selectedMesaId, "ocupado");
-    void addOrder({
-      items: [],
-      total: 0,
-      orderType: "local",
-      tableId: selectedMesaId,
-    });
+    openOrderEditor();
+    window.setTimeout(() => {
+      void setTableStatus(selectedMesaId, "ocupado");
+    }, 0);
   }, [
-    addOrder,
     getOrderByTable,
     isTableBlocked,
+    openOrderEditor,
     releaseTable,
     selectedMesaId,
     selectedMesaStatus,
