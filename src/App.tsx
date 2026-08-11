@@ -8,6 +8,7 @@ import {
   getThemePreference,
   type ThemePreference,
 } from "./shared/preferences";
+import { BackendHealthGuard } from "./modules/health";
 
 function App() {
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(
@@ -32,9 +33,11 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <HashRouter>
-        <AppRoutes />
-      </HashRouter>
+      <BackendHealthGuard>
+        <HashRouter>
+          <AppRoutes />
+        </HashRouter>
+      </BackendHealthGuard>
     </ThemeProvider>
   );
 }
