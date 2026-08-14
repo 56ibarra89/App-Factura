@@ -13,14 +13,14 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
   if (!order.isSentToKitchen) return [];
 
   // Solo considerar items enviados a la cocina
-  const sentItems = order.items.filter(i => i.isSentToKitchen);
+  const sentItems = order.items.filter((i) => i.isSentToKitchen);
   if (sentItems.length === 0) return [];
 
   // Agrupar items por sentAt (sin dividir por cocina para que salgan en una misma tarjeta)
   const defaultSentAt = new Date(order.timestamp).getTime();
   const groups: Record<string, OrderItem[]> = {};
 
-  sentItems.forEach(item => {
+  sentItems.forEach((item) => {
     const timeKey = item.sentAt || defaultSentAt;
     const key = `${timeKey}`;
     if (!groups[key]) groups[key] = [];
@@ -29,22 +29,28 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
 
   // Convertir los grupos en órdenes virtuales
   return Object.entries(groups).map(([groupKey, items]) => {
-    const sentAt = Number(groupKey.split('-')[0]);
-    
-    // El estado del ticket se determina por el kitchenStatus de sus ítems
-    const allDelivered = items.every(i => i.kitchenStatus === 'delivered');
-    const anyPending = items.some(i => i.kitchenStatus === 'pending' || !i.kitchenStatus);
-    const anyPreparing = items.some(i => i.kitchenStatus === 'preparing');
-    const anyReady = items.some(i => i.kitchenStatus === 'ready');
-    
-    let ticketStatus = order.status;
-    if (order.status === 'cancelled') ticketStatus = 'cancelled';
-    else if (allDelivered) ticketStatus = 'delivered';
-    else if (anyPending) ticketStatus = 'pending';
-    else if (anyPreparing) ticketStatus = 'preparing';
-    else if (anyReady) ticketStatus = 'ready';
+    const sentAt = Number(groupKey.split("-")[0]);
 
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // El estado del ticket se determina por el kitchenStatus de sus ítems
+    const allDelivered = items.every((i) => i.kitchenStatus === "delivered");
+    const allReadyOrDelivered = items.every(
+      (i) => i.kitchenStatus === "ready" || i.kitchenStatus === "delivered"
+    );
+    const anyPreparingOrReady = items.some(
+      (i) => i.kitchenStatus === "preparing" || i.kitchenStatus === "ready"
+    );
+
+    let ticketStatus = order.status;
+    if (order.status === "cancelled") ticketStatus = "cancelled";
+    else if (allDelivered) ticketStatus = "delivered";
+    else if (allReadyOrDelivered) ticketStatus = "ready";
+    else if (anyPreparingOrReady) ticketStatus = "preparing";
+    else ticketStatus = "pending";
+
+    const subtotal = items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
 
     return {
       ...order,
@@ -58,8 +64,7 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
 };
 
 export const useOrderManagement = (
-  preferencesGateway: KitchenTicketPreferencesGateway =
-    kitchenTicketPreferencesGateway,
+  preferencesGateway: KitchenTicketPreferencesGateway = kitchenTicketPreferencesGateway
 ) => {
   const { orders } = useOrderQueries();
   const { updateOrderStatus, removeOrder } = useOrderCommands();
@@ -76,9 +81,11 @@ export const useOrderManagement = (
           setHiddenTickets(data);
         }
       })
-      .catch(e => console.error("Error fetching hidden kitchen tickets:", e));
-    
-    return () => { isMounted = false; };
+      .catch((e) => console.error("Error fetching hidden kitchen tickets:", e));
+
+    return () => {
+      isMounted = false;
+    };
   }, [preferencesGateway]);
 
   // Dividir todas las órdenes en tickets virtuales
@@ -86,33 +93,45 @@ export const useOrderManagement = (
     return orders.flatMap(splitIntoKitchenTickets);
   }, [orders]);
 
-  const activeOrders = useMemo(() => 
-    allTickets.filter(t => t.status === 'pending' || t.status === 'preparing' || t.status === 'ready'),
+  const activeOrders = useMemo(
+    () =>
+      allTickets.filter(
+        (t) =>
+          t.status === "pending" ||
+          t.status === "preparing" ||
+          t.status === "ready"
+      ),
     [allTickets]
   );
 
-  const finishedOrders = useMemo(() => 
-    allTickets.filter(t => {
-      const isFinished = t.status === 'delivered' || t.status === 'paid' || t.status === 'cancelled';
-      if (!isFinished) return false;
-      const ticketId = `${t.id}-${t.timestamp.getTime()}`;
-      return !hiddenTickets.includes(ticketId);
-    }),
+  const finishedOrders = useMemo(
+    () =>
+      allTickets.filter((t) => {
+        const isFinished =
+          t.status === "delivered" ||
+          t.status === "paid" ||
+          t.status === "cancelled";
+        if (!isFinished) return false;
+        const ticketId = `${t.id}-${t.timestamp.getTime()}`;
+        return !hiddenTickets.includes(ticketId);
+      }),
     [allTickets, hiddenTickets]
   );
 
   const clearKitchenHistory = useCallback(() => {
-    const toHide = finishedOrders.map(t => `${t.id}-${t.timestamp.getTime()}`);
+    const toHide = finishedOrders.map(
+      (t) => `${t.id}-${t.timestamp.getTime()}`
+    );
     if (toHide.length === 0) return;
 
-    setHiddenTickets(prev => {
+    setHiddenTickets((prev) => {
       const next = Array.from(new Set([...prev, ...toHide]));
       return next;
     });
 
     preferencesGateway
       .hideTicketIds(toHide)
-      .catch(e => console.error("Error saving hidden kitchen tickets:", e));
+      .catch((e) => console.error("Error saving hidden kitchen tickets:", e));
   }, [finishedOrders, preferencesGateway]);
 
   return {
@@ -120,6 +139,6 @@ export const useOrderManagement = (
     finishedOrders,
     updateOrderStatus,
     removeOrder,
-    clearHistory: clearKitchenHistory
+    clearHistory: clearKitchenHistory,
   };
 };

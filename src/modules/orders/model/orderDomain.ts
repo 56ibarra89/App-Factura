@@ -133,35 +133,26 @@ export const orderMutations = {
         if (sentAt) {
           const kitchenStatus = status as KitchenStatus;
           const updatedItems = order.items.map((item) => {
-            const matchSentAt = true; // El backend actualiza sin considerar sentAt preciso ya
             const matchKitchenId = kitchenId ? item.kitchenId === kitchenId : true;
             const matchItemId = itemId !== undefined ? item.id === itemId : true;
-            
-            if (matchSentAt && matchKitchenId && matchItemId) {
+
+            if (matchKitchenId && matchItemId) {
               return { ...item, kitchenStatus };
             }
             return item;
           });
 
-          const allDelivered = updatedItems.every(
-            (item) => item.kitchenStatus === "delivered" || !item.isSentToKitchen,
-          );
-          const anyPending = updatedItems.some(
-            (item) => item.kitchenStatus === "pending" && item.isSentToKitchen,
-          );
-          const anyPreparing = updatedItems.some(
-            (item) => item.kitchenStatus === "preparing" && item.isSentToKitchen,
-          );
-          const anyReady = updatedItems.some(
-            (item) => item.kitchenStatus === "ready" && item.isSentToKitchen,
-          );
+          const sentItems = updatedItems.filter((item) => item.isSentToKitchen);
+          const allDelivered = sentItems.length > 0 && sentItems.every((item) => item.kitchenStatus === "delivered");
+          const allReadyOrDelivered = sentItems.length > 0 && sentItems.every((item) => item.kitchenStatus === "ready" || item.kitchenStatus === "delivered");
+          const anyPreparingOrReady = sentItems.some((item) => item.kitchenStatus === "preparing" || item.kitchenStatus === "ready");
 
           let globalStatus = order.status;
           if (globalStatus !== "paid" && globalStatus !== "cancelled") {
-            if (allDelivered && updatedItems.length > 0) globalStatus = "delivered";
-            else if (anyPending) globalStatus = "pending";
-            else if (anyPreparing) globalStatus = "preparing";
-            else if (anyReady) globalStatus = "ready";
+            if (allDelivered) globalStatus = "delivered";
+            else if (allReadyOrDelivered) globalStatus = "ready";
+            else if (anyPreparingOrReady) globalStatus = "preparing";
+            else globalStatus = "pending";
           }
 
           return { ...order, status: globalStatus, items: updatedItems };

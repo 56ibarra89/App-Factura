@@ -48,3 +48,9 @@ export type {
   OrdersRealtimeGateway,
 } from "./api/ordersRealtimeGateway";
 export { default as OrdersPage } from "./pages/OrdersPage";
+export { default as KdsPage } from "./pages/KdsPage";
+export { KdsCard } from "./ui/kds/KdsCard";
+export { KdsKanbanBoard } from "./ui/kds/KdsKanbanBoard";
+export { useKdsAudioAlert } from "./hooks/useKdsAudioAlert";
+export { getTicketUrgency } from "./utils/timeUrgency";
+
