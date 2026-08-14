@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import { AccountMenu } from "../../modules/accounts";
@@ -10,21 +11,25 @@ import { useCaja } from "../../modules/cash-register";
 import { Fab, Tooltip } from "@mui/material";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { DriverDeliveriesModal } from "../../modules/delivery";
-import React, { useState } from "react";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { username, role } = useAuth();
   const { currentShift } = useCaja();
   const allMenuItems = getMenuItems();
-  
+
   // Filtrar items según el rol
   const menuItems = React.useMemo(() => {
-    if (role === 'despachador') {
-      return allMenuItems.filter(item => item.label === 'Delivery');
+    if (role === "despachador") {
+      return allMenuItems.filter((item) => item.label === "Delivery");
     }
-    if (role === 'mesero') {
-      return allMenuItems.filter(item => item.label === 'Mesas');
+    if (role === "mesero") {
+      return allMenuItems.filter((item) => item.label === "Mesas");
+    }
+    if (role === "cocinero") {
+      return allMenuItems.filter(
+        (item) => item.label === "Pantalla de Cocina" || item.label === "Órdenes"
+      );
     }
     return allMenuItems;
   }, [role, allMenuItems]);
@@ -36,7 +41,7 @@ const HomePage = () => {
       minHeight="100vh"
       boxSizing="border-box"
       sx={{
-        bgcolor: 'background.default',
+        bgcolor: "background.default",
         pt: 4,
         pb: 4,
         px: { xs: 2, md: 6 },
@@ -65,13 +70,17 @@ const HomePage = () => {
       {/* Cuadrícula de menú */}
       <Box
         display="grid"
-        gridTemplateColumns={{ xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", lg: "repeat(4, 1fr)" }}
+        gridTemplateColumns={{
+          xs: "repeat(2, 1fr)",
+          sm: "repeat(3, 1fr)",
+          lg: "repeat(4, 1fr)",
+        }}
         gap={3}
         px={2}
       >
         {menuItems.map((item) => {
-          const isDisabled = 
-            (item.label === "Abrir Caja" && !!currentShift) || 
+          const isDisabled =
+            (item.label === "Abrir Caja" && !!currentShift) ||
             (item.label === "Cerrar Caja" && !currentShift);
 
           return (
@@ -91,7 +100,7 @@ const HomePage = () => {
       </Box>
 
       {/* FAB Control Motorizados */}
-      {role !== 'mesero' && (
+      {role !== "mesero" && role !== "cocinero" && (
         <Tooltip title="Control Motorizados" placement="left">
           <Fab
             color="secondary"
@@ -111,9 +120,9 @@ const HomePage = () => {
       )}
 
       {/* Modal */}
-      <DriverDeliveriesModal 
-        open={modalOpen} 
-        onClose={() => setModalOpen(false)} 
+      <DriverDeliveriesModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
       />
     </Box>
   );

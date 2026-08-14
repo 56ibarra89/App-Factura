@@ -11,6 +11,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import { InventorySharp } from "@mui/icons-material";
 import DeliveryDiningIcon from "@mui/icons-material/DeliveryDining";
 import SettingsIcon from "@mui/icons-material/Settings";
+import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
 
 export interface MenuItem {
   label: string;
@@ -35,6 +36,11 @@ export const getMenuItems = (): MenuItem[] => [
     label: "Delivery",
     icon: <DeliveryDiningIcon fontSize="large" color="error" />,
     route: "/delivery",
+  },
+  {
+    label: "Pantalla de Cocina",
+    icon: <SoupKitchenIcon fontSize="large" color="error" />,
+    route: "/kds",
   },
   {
     label: "Órdenes",
