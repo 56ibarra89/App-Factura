@@ -22,6 +22,7 @@ interface LoginFormProps {
   setRemember: (value: boolean) => void;
   togglePasswordVisibility: (value: void) => void;
   lockoutTime: number;
+  pinLockoutTime: number;
 }
 
 const inputSx = {
@@ -38,6 +39,7 @@ export const LoginForm = ({
   setRemember,
   togglePasswordVisibility,
   lockoutTime,
+  pinLockoutTime,
 }: LoginFormProps) => {
   const navigate = useNavigate();
 
@@ -168,9 +170,16 @@ export const LoginForm = ({
             bgcolor: "rgba(211, 47, 47, 0.04)",
           },
         }}
-        onClick={() => navigate("/login-pin")}
+        onClick={() => {
+          if (pinLockoutTime === 0) {
+            navigate("/login-pin");
+          }
+        }}
+        disabled={pinLockoutTime > 0}
       >
-        Ingresar con PIN táctil
+        {pinLockoutTime > 0
+          ? `PIN bloqueado (${pinLockoutTime}s)`
+          : "Ingresar con PIN táctil"}
       </Button>
     </Box>
   );

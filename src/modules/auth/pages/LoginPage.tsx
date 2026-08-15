@@ -15,6 +15,7 @@ const Login = () => {
     setRemember,
     togglePasswordVisibility,
     clearError,
+    pinLockoutTime,
     loginLockoutTime,
   } = useLogin();
 
@@ -41,6 +42,7 @@ const Login = () => {
         setRemember={setRemember}
         togglePasswordVisibility={togglePasswordVisibility}
         lockoutTime={loginLockoutTime}
+        pinLockoutTime={pinLockoutTime}
       />
     </AuthLayout>
   );

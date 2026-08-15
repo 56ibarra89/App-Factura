@@ -5,7 +5,15 @@ import { localStore } from "../../../shared/storage";
 
 export const useLogin = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, loading, error, login, clearError, loginLockoutTime } = useAuth();
+  const {
+    isLoggedIn,
+    loading,
+    error,
+    login,
+    clearError,
+    lockoutTime: pinLockoutTime,
+    loginLockoutTime,
+  } = useAuth();
 
   const [credentials, setCredentials] = useState({
     username: "",
@@ -56,6 +64,7 @@ export const useLogin = () => {
     setRemember,
     togglePasswordVisibility,
     clearError,
+    pinLockoutTime,
     loginLockoutTime,
   };
 };
