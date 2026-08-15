@@ -30,15 +30,32 @@ const numpadButtonSx = {
 
 const LoginPin = () => {
   const navigate = useNavigate();
-  const { pin, loading, error, appendDigit, deleteDigit, clearError, MAX_PIN_LENGTH, lockoutTime } = useLoginPin();
+  const {
+    pin,
+    loading,
+    error,
+    appendDigit,
+    deleteDigit,
+    clearError,
+    MAX_PIN_LENGTH,
+    lockoutTime,
+    pinEntryDisabled,
+  } = useLoginPin();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (loading || lockoutTime > 0) return;
+      if (pinEntryDisabled) {
+        if (/^[0-9]$/.test(e.key) || e.key === "Backspace") {
+          e.preventDefault();
+        }
+        return;
+      }
 
       if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
         appendDigit(e.key);
       } else if (e.key === "Backspace") {
+        e.preventDefault();
         if (pin.length > 0) {
           deleteDigit();
         }
@@ -47,7 +64,12 @@ const LoginPin = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [loading, lockoutTime, pin.length, appendDigit, deleteDigit]);
+  }, [
+    appendDigit,
+    deleteDigit,
+    pin.length,
+    pinEntryDisabled,
+  ]);
 
   return (
     <AuthLayout error={error} onClearError={clearError}>
@@ -111,7 +133,7 @@ const LoginPin = () => {
               key={num}
               variant="outlined"
               onClick={() => appendDigit(num.toString())}
-              disabled={loading || lockoutTime > 0}
+              disabled={pinEntryDisabled}
               sx={{
                 ...numpadButtonSx,
                 ...(lockoutTime > 0 && {
@@ -129,7 +151,7 @@ const LoginPin = () => {
           <Button
             variant="outlined"
             onClick={() => appendDigit("0")}
-            disabled={loading || lockoutTime > 0}
+            disabled={pinEntryDisabled}
             sx={{
               ...numpadButtonSx,
               ...(lockoutTime > 0 && {
@@ -145,7 +167,7 @@ const LoginPin = () => {
           <Button
             variant="text"
             onClick={deleteDigit}
-            disabled={loading || pin.length === 0 || lockoutTime > 0}
+            disabled={pinEntryDisabled || pin.length === 0}
             sx={{
               height: 90,
               borderRadius: 4,
