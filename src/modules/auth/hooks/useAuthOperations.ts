@@ -187,13 +187,11 @@ export function useAuthOperations({
           return true;
         }
 
-        const locked = pinLockout.registerFailedAttempt();
+        const failure = registerFailedPinAttempt();
         setError(
-          locked
-            ? "Demasiados intentos fallidos. Bloqueado por 30 segundos."
-            : `PIN incorrecto. Intentos restantes: ${
-                3 - pinLockout.attempts - 1
-              }`,
+          failure.locked
+            ? `Demasiados intentos fallidos. Bloqueado por ${failure.lockoutSeconds} segundos.`
+            : `PIN incorrecto. Intentos restantes: ${failure.remainingAttempts}`,
         );
         return false;
       } catch {
@@ -246,9 +244,7 @@ export function useAuthOperations({
           success: false,
           error: result
             ? "Este usuario no tiene permisos de administrador."
-            : `PIN incorrecto. Intentos restantes: ${
-                3 - pinLockout.attempts - 1
-              }`,
+            : `PIN incorrecto. Intentos restantes: ${failure.remainingAttempts}`,
         };
       } catch {
         return {
