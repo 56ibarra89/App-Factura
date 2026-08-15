@@ -1,13 +1,21 @@
-import { useState, useEffect, useCallback } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../model/AuthContext";
+
+const MAX_PIN_LENGTH = 4;
 
 export const useLoginPin = () => {
   const navigate = useNavigate();
   const { isLoggedIn, loading, error, loginWithPin, clearError, lockoutTime } = useAuth();
 
   const [pin, setPin] = useState<string>("");
-  const MAX_PIN_LENGTH = 4;
+  const submittedPinRef = useRef<string | null>(null);
+  const pinEntryDisabled = loading || lockoutTime > 0;
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -22,24 +30,41 @@ export const useLoginPin = () => {
         setPin("");
       }
     },
-    [loginWithPin]
+    [loginWithPin],
   );
 
   useEffect(() => {
-    if (pin.length === MAX_PIN_LENGTH) {
-      handlePinSubmit(pin);
-    }
-  }, [pin, handlePinSubmit]);
-
-  const appendDigit = (digit: string) => {
     if (pin.length < MAX_PIN_LENGTH) {
-      setPin((prev) => prev + digit);
+      submittedPinRef.current = null;
+      return;
     }
-  };
+    if (
+      pinEntryDisabled ||
+      submittedPinRef.current === pin
+    ) {
+      return;
+    }
 
-  const deleteDigit = () => {
-    setPin((prev) => prev.slice(0, -1));
-  };
+    submittedPinRef.current = pin;
+    void handlePinSubmit(pin);
+  }, [handlePinSubmit, pin, pinEntryDisabled]);
+
+  const appendDigit = useCallback(
+    (digit: string) => {
+      if (pinEntryDisabled || !/^\d$/.test(digit)) return;
+      setPin((current) =>
+        current.length < MAX_PIN_LENGTH
+          ? current + digit
+          : current,
+      );
+    },
+    [pinEntryDisabled],
+  );
+
+  const deleteDigit = useCallback(() => {
+    if (pinEntryDisabled) return;
+    setPin((current) => current.slice(0, -1));
+  }, [pinEntryDisabled]);
 
   return {
     pin,
@@ -50,5 +75,6 @@ export const useLoginPin = () => {
     clearError,
     MAX_PIN_LENGTH,
     lockoutTime,
+    pinEntryDisabled,
   };
 };
