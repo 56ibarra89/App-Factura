@@ -36,6 +36,11 @@ export function useAuthOperations({
     signIn,
     signOut,
   } = session;
+  const {
+    isLocked: isPinLocked,
+    registerFailedAttempt: registerFailedPinAttempt,
+    resetAttempts: resetPinAttempts,
+  } = pinLockout;
 
   const clearError = useCallback(() => {
     setError("");
@@ -144,7 +149,7 @@ export function useAuthOperations({
 
   const loginWithPin = useCallback(
     async (pin: string): Promise<boolean> => {
-      if (pinLockout.isLocked) {
+      if (isPinLocked) {
         setError("Sistema bloqueado por seguridad.");
         return false;
       }
@@ -164,7 +169,7 @@ export function useAuthOperations({
               ? "dark"
               : "light",
           );
-          pinLockout.resetAttempts();
+          resetPinAttempts();
           signIn({
             username: result.username,
             role: result.role,
@@ -199,8 +204,10 @@ export function useAuthOperations({
       }
     },
     [
-      pinLockout,
+      isPinLocked,
       preferencesGateway,
+      registerFailedPinAttempt,
+      resetPinAttempts,
       service,
       signIn,
       tokenGateway,
@@ -209,7 +216,7 @@ export function useAuthOperations({
 
   const validatePinForAction = useCallback(
     async (pin: string): Promise<PinValidationResult> => {
-      if (pinLockout.isLocked) {
+      if (isPinLocked) {
         return {
           success: false,
           error: "Sistema bloqueado por seguridad",
@@ -223,16 +230,15 @@ export function useAuthOperations({
           (result.role === "admin" ||
             result.username === "admin")
         ) {
-          pinLockout.resetAttempts();
+          resetPinAttempts();
           return { success: true };
         }
 
-        const locked = pinLockout.registerFailedAttempt();
-        if (locked) {
+        const failure = registerFailedPinAttempt();
+        if (failure.locked) {
           return {
             success: false,
-            error:
-              "Demasiados intentos fallidos. Bloqueado por 30 segundos.",
+            error: `Demasiados intentos fallidos. Bloqueado por ${failure.lockoutSeconds} segundos.`,
           };
         }
 
@@ -251,7 +257,12 @@ export function useAuthOperations({
         };
       }
     },
-    [pinLockout, service],
+    [
+      isPinLocked,
+      registerFailedPinAttempt,
+      resetPinAttempts,
+      service,
+    ],
   );
 
   return {
