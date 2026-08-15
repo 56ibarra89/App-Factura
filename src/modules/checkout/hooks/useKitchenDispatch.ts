@@ -1,5 +1,8 @@
 import { useCallback, useState } from "react";
-import type { OrderItem } from "../../orders";
+import {
+  requiresKitchenPreparation,
+  type OrderItem,
+} from "../../orders";
 import { logService } from "../../audit";
 import type { RunExclusiveAction } from "./useExclusiveAction";
 
@@ -52,14 +55,25 @@ export function useKitchenDispatch({
 
       const sentAt = Date.now();
       setCart(
-        cart.map((item) => ({
-          ...item,
-          isSentToKitchen: true,
-          sentAt: item.isSentToKitchen ? item.sentAt : sentAt,
-          kitchenStatus: item.isSentToKitchen
-            ? item.kitchenStatus
-            : "pending",
-        })),
+        cart.map((item) => {
+          if (!requiresKitchenPreparation(item)) {
+            return {
+              ...item,
+              isSentToKitchen: false,
+              sentAt: undefined,
+              kitchenStatus: undefined,
+            };
+          }
+
+          return {
+            ...item,
+            isSentToKitchen: true,
+            sentAt: item.isSentToKitchen ? item.sentAt : sentAt,
+            kitchenStatus: item.isSentToKitchen
+              ? item.kitchenStatus
+              : "pending",
+          };
+        }),
       );
 
       logService.log(

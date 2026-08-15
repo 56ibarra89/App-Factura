@@ -4,6 +4,7 @@ import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import type { Order, OrderStatus } from "../../model/order.types";
+import { requiresKitchenPreparation } from "../../model/orderItemDomain";
 import type { Kitchen } from "../../../kitchens";
 import { KdsCard } from "./KdsCard";
 
@@ -37,11 +38,9 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
         ? order.items.filter(
             (i) =>
               i.kitchenId === selectedKitchenId &&
-              !i.name.toLowerCase().includes("empaque")
+              requiresKitchenPreparation(i)
           )
-        : order.items.filter(
-            (i) => !i.name.toLowerCase().includes("empaque")
-          );
+        : order.items.filter(requiresKitchenPreparation);
 
       if (relevantItems.length === 0) return order.status;
 
@@ -69,7 +68,11 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
   const filteredOrders = React.useMemo(() => {
     if (!selectedKitchenId) return orders;
     return orders.filter((order) =>
-      order.items.some((item) => item.kitchenId === selectedKitchenId)
+      order.items.some(
+        (item) =>
+          requiresKitchenPreparation(item) &&
+          item.kitchenId === selectedKitchenId,
+      )
     );
   }, [orders, selectedKitchenId]);
 

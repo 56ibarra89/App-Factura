@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Box, Typography, Stack, Button, Tabs, Tab } from "@mui/material";
+import { Alert, Box, Typography, Stack, Button, Tabs, Tab } from "@mui/material";
 import {
   BackButton,
   ConfirmDialog,
@@ -19,7 +19,7 @@ import {
 
 // Hooks & Theme
 import { useOrderManagement } from "../hooks/useOrderManagement";
-import { useKitchens } from "../../kitchens";
+import { useAccessibleKitchens } from "../../kitchens";
 import { logService } from "../../audit";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import { getSelectedKitchenId, setSelectedKitchenId as saveSelectedKitchenId } from "../api/selectedKitchenPreference";
@@ -41,26 +41,64 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
-  const { kitchens } = useKitchens();
-  const [selectedKitchenId, setSelectedKitchen] = useState<string>(() => {
+  const {
+    kitchens,
+    isLoading: isKitchenAccessLoading,
+    assignedKitchenId,
+    hasTodayAssignment,
+    assignmentError,
+  } = useAccessibleKitchens();
+  const [savedKitchenId, setSelectedKitchen] = useState<string>(() => {
     return getSelectedKitchenId();
   });
 
   const activeKitchens = useMemo(() => kitchens.filter((k) => k.isActive), [kitchens]);
-  const isValidKitchen = selectedKitchenId === "" || activeKitchens.some((k) => k.id === selectedKitchenId);
-  const currentTabValue = isValidKitchen ? selectedKitchenId : "";
+  const isCook = userRole === "cocinero";
+  const isValidKitchen = savedKitchenId === "" || activeKitchens.some((k) => k.id === savedKitchenId);
+  const selectedKitchenId = isCook
+    ? activeKitchens.find((kitchen) => kitchen.id === assignedKitchenId)?.id ?? ""
+    : isValidKitchen
+      ? savedKitchenId
+      : "";
 
   useEffect(() => {
-    if (!isValidKitchen && kitchens.length > 0) {
+    if (!isCook && !isValidKitchen && !isKitchenAccessLoading) {
       setSelectedKitchen("");
       saveSelectedKitchenId("");
     }
-  }, [isValidKitchen, kitchens.length]);
+  }, [isCook, isKitchenAccessLoading, isValidKitchen]);
 
   const handleKitchenChange = (event: React.SyntheticEvent, newValue: string) => {
+    if (isCook) return;
     setSelectedKitchen(newValue);
     saveSelectedKitchenId(newValue);
   };
+
+  const visibleActiveOrders = useMemo(() => {
+    if (isCook && !selectedKitchenId) return [];
+    if (!selectedKitchenId) return activeOrders;
+    return activeOrders.filter((order) =>
+      order.items.some((item) => item.kitchenId === selectedKitchenId),
+    );
+  }, [activeOrders, isCook, selectedKitchenId]);
+
+  const visibleFinishedOrders = useMemo(() => {
+    if (isCook && !selectedKitchenId) return [];
+    if (!selectedKitchenId) return finishedOrders;
+    return finishedOrders.filter((order) =>
+      order.items.some((item) => item.kitchenId === selectedKitchenId),
+    );
+  }, [finishedOrders, isCook, selectedKitchenId]);
+
+  const accessMessage = assignmentError
+    ? assignmentError
+    : isKitchenAccessLoading
+      ? "Consultando tu cocina asignada..."
+      : !hasTodayAssignment
+        ? "No tienes una cocina asignada para hoy. Solicita al administrador que revise tu horario."
+        : isCook && !selectedKitchenId
+          ? "La cocina asignada para hoy no está activa. Solicita al administrador que revise la configuración."
+          : null;
 
   const handleClearHistory = () => {
     clearHistory();
@@ -99,7 +137,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
             <Stack direction="row" spacing={1} alignItems="center" sx={{ bgcolor: 'rgba(0,0,0,0.03)', px: 1.5, py: 0.5, borderRadius: 2 }}>
               <TimerIcon color="action" fontSize="small" />
               <Typography variant="body2" fontWeight="600" color="text.secondary">
-                {activeOrders.length} activas
+                {visibleActiveOrders.length} activas
               </Typography>
             </Stack>
             <RoleGuard allowedRoles={["admin"]}>
@@ -124,44 +162,50 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
         }
       />
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={currentTabValue} onChange={handleKitchenChange} variant="scrollable" scrollButtons="auto">
-          <Tab label="Todas las áreas" value="" />
-          {activeKitchens.map((k) => (
-            <Tab key={k.id} label={k.name} value={k.id} />
-          ))}
-        </Tabs>
-      </Box>
+      {(!isCook || activeKitchens.length > 0) && (
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+          <Tabs value={selectedKitchenId} onChange={handleKitchenChange} variant="scrollable" scrollButtons="auto">
+            {!isCook && <Tab label="Todas las áreas" value="" />}
+            {activeKitchens.map((k) => (
+              <Tab key={k.id} label={k.name} value={k.id} />
+            ))}
+          </Tabs>
+        </Box>
+      )}
 
       <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, mt: 2 }}>
         Órdenes Activas
       </Typography>
 
-      {activeOrders.length === 0 ? (
+      {accessMessage ? (
+        <Alert severity={assignmentError ? "error" : "info"}>
+          {accessMessage}
+        </Alert>
+      ) : visibleActiveOrders.length === 0 ? (
         <OrderEmptyState />
       ) : (
         <OrderGrid 
-          orders={activeOrders} 
+          orders={visibleActiveOrders} 
           selectedKitchenId={selectedKitchenId}
           kitchens={kitchens}
           resolveTableName={resolveTableName}
           onUpdateStatus={updateOrderStatus} 
-          onDelete={handleDeleteOrder} 
+          onDelete={isCook ? undefined : handleDeleteOrder} 
         />
       )}
 
-      {finishedOrders.length > 0 && (
+      {visibleFinishedOrders.length > 0 && (
         <>
           <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, mt: 6 }}>
             Historial Reciente
           </Typography>
           <OrderGrid 
-            orders={finishedOrders.slice(0, 50)} 
+            orders={visibleFinishedOrders.slice(0, 50)} 
             selectedKitchenId={selectedKitchenId}
             kitchens={kitchens}
             resolveTableName={resolveTableName}
             onUpdateStatus={updateOrderStatus} 
-            onDelete={handleDeleteOrder} 
+            onDelete={isCook ? undefined : handleDeleteOrder} 
           />
         </>
       )}
@@ -177,15 +221,17 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
       />
 
       {/* Security Dialog */}
-      <PinValidationDialog
-        open={pinDialogOpen}
-        onClose={() => {
-          setPinDialogOpen(false);
-          setOrderToDelete(null);
-        }}
-        onSuccess={handleCancelSuccess}
-        title="Anular Factura"
-      />
+      {!isCook && (
+        <PinValidationDialog
+          open={pinDialogOpen}
+          onClose={() => {
+            setPinDialogOpen(false);
+            setOrderToDelete(null);
+          }}
+          onSuccess={handleCancelSuccess}
+          title="Anular Factura"
+        />
+      )}
     </Box>
   );
 };

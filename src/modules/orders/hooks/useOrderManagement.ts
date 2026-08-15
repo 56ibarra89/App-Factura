@@ -2,6 +2,10 @@ import { useOrderCommands, useOrderQueries } from "../model/OrderContext";
 import { useMemo } from "react";
 import { Order } from "../model/order.types";
 import type { OrderItem } from "../model/order.types";
+import {
+  isSupplementalOrderItem,
+  requiresKitchenPreparation,
+} from "../model/orderItemDomain";
 import { useState, useCallback, useEffect } from "react";
 import {
   kitchenTicketPreferencesGateway,
@@ -13,7 +17,10 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
   if (!order.isSentToKitchen) return [];
 
   // Solo considerar items enviados a la cocina
-  const sentItems = order.items.filter((i) => i.isSentToKitchen);
+  const supplementalItems = order.items.filter(isSupplementalOrderItem);
+  const sentItems = order.items.filter(
+    (item) => item.isSentToKitchen && requiresKitchenPreparation(item),
+  );
   if (sentItems.length === 0) return [];
 
   // Agrupar items por sentAt (sin dividir por cocina para que salgan en una misma tarjeta)
@@ -56,7 +63,7 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
       ...order,
       // Sobrescribimos el status, items y timestamp para la vista de cocina
       status: ticketStatus,
-      items: items,
+      items: [...items, ...supplementalItems],
       total: subtotal,
       timestamp: new Date(sentAt), // Para que muestre la hora de envío real
     };

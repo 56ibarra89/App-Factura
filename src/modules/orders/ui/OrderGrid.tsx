@@ -10,7 +10,7 @@ interface OrderGridProps {
   kitchens: Kitchen[];
   resolveTableName?: (tableId: string) => string;
   onUpdateStatus: (id: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number, kitchenId?: string, itemId?: number | string) => void;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 const OrderGrid: React.FC<OrderGridProps> = ({ orders, selectedKitchenId, kitchens, resolveTableName, onUpdateStatus, onDelete }) => {

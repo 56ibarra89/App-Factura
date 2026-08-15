@@ -43,6 +43,7 @@ export function buildSupplementalCartItems(
     size: "único",
     quantity: packaging.quantity,
     extras: [],
+    isSentToKitchen: false,
   }));
 
   if (deliveryCost && deliveryCost > 0) {
@@ -54,6 +55,7 @@ export function buildSupplementalCartItems(
       quantity: 1,
       extras: [],
       note: "Cargo por transporte",
+      isSentToKitchen: false,
     });
   }
 

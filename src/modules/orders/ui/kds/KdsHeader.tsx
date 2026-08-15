@@ -25,6 +25,7 @@ interface KdsHeaderProps {
   kitchens: Kitchen[];
   selectedKitchenId: string;
   onKitchenChange: (kitchenId: string) => void;
+  showAllKitchensTab?: boolean;
   activeCount: number;
   criticalCount: number;
   viewMode: "kanban" | "grid";
@@ -37,6 +38,7 @@ export const KdsHeader: React.FC<KdsHeaderProps> = ({
   kitchens,
   selectedKitchenId,
   onKitchenChange,
+  showAllKitchensTab = true,
   activeCount,
   criticalCount,
   viewMode,
@@ -197,33 +199,37 @@ export const KdsHeader: React.FC<KdsHeaderProps> = ({
       </Box>
 
       {/* Tabs de Filtro de Cocinas */}
-      <Box sx={{ borderBottom: 1, borderColor: "divider", mt: 2 }}>
-        <Tabs
-          value={selectedKitchenId}
-          onChange={(_, val) => onKitchenChange(val)}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            "& .MuiTab-root": {
-              color: "text.secondary",
-              fontWeight: 700,
-              fontSize: "0.95rem",
-              "&.Mui-selected": {
-                color: "primary.main",
+      {(showAllKitchensTab || activeKitchens.length > 0) && (
+        <Box sx={{ borderBottom: 1, borderColor: "divider", mt: 2 }}>
+          <Tabs
+            value={selectedKitchenId}
+            onChange={(_, val) => onKitchenChange(val)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              "& .MuiTab-root": {
+                color: "text.secondary",
+                fontWeight: 700,
+                fontSize: "0.95rem",
+                "&.Mui-selected": {
+                  color: "primary.main",
+                },
               },
-            },
-            "& .MuiTabs-indicator": {
-              bgcolor: "primary.main",
-              height: 3,
-            },
-          }}
-        >
-          <Tab label="Todas las áreas de cocina" value="" />
-          {activeKitchens.map((k) => (
-            <Tab key={k.id} label={k.name} value={k.id} />
-          ))}
-        </Tabs>
-      </Box>
+              "& .MuiTabs-indicator": {
+                bgcolor: "primary.main",
+                height: 3,
+              },
+            }}
+          >
+            {showAllKitchensTab && (
+              <Tab label="Todas las áreas de cocina" value="" />
+            )}
+            {activeKitchens.map((k) => (
+              <Tab key={k.id} label={k.name} value={k.id} />
+            ))}
+          </Tabs>
+        </Box>
+      )}
     </Box>
   );
 };

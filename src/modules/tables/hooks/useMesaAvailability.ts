@@ -2,7 +2,10 @@ import {
   useCallback,
   useMemo,
 } from "react";
-import type { OrderQueries } from "../../orders";
+import {
+  requiresKitchenPreparation,
+  type OrderQueries,
+} from "../../orders";
 import type {
   Mesa,
   MesaEstado,
@@ -49,6 +52,7 @@ export function useMesaAvailability({
           (order.status !== "paid" ||
             order.items.some(
               (item) =>
+                requiresKitchenPreparation(item) &&
                 item.isSentToKitchen &&
                 item.kitchenStatus !== "delivered",
             ))

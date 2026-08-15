@@ -1,4 +1,5 @@
 import type { OrderItem } from "./order.types";
+import { requiresKitchenPreparation } from "./orderItemDomain";
 import {
   KitchenStatus,
   Order,
@@ -108,12 +109,21 @@ export function createOrder(
 
   return {
     ...baseOrder,
-    items: baseOrder.items.map((item) => ({
-      ...item,
-      isSentToKitchen: true,
-      sentAt: nowMs,
-      kitchenStatus: "pending",
-    })),
+    items: baseOrder.items.map((item) =>
+      requiresKitchenPreparation(item)
+        ? {
+            ...item,
+            isSentToKitchen: true,
+            sentAt: nowMs,
+            kitchenStatus: "pending",
+          }
+        : {
+            ...item,
+            isSentToKitchen: false,
+            sentAt: undefined,
+            kitchenStatus: undefined,
+          },
+    ),
   };
 }
 
@@ -136,13 +146,20 @@ export const orderMutations = {
             const matchKitchenId = kitchenId ? item.kitchenId === kitchenId : true;
             const matchItemId = itemId !== undefined ? item.id === itemId : true;
 
-            if (matchKitchenId && matchItemId) {
+            if (
+              requiresKitchenPreparation(item) &&
+              matchKitchenId &&
+              matchItemId
+            ) {
               return { ...item, kitchenStatus };
             }
             return item;
           });
 
-          const sentItems = updatedItems.filter((item) => item.isSentToKitchen);
+          const sentItems = updatedItems.filter(
+            (item) =>
+              requiresKitchenPreparation(item) && item.isSentToKitchen,
+          );
           const allDelivered = sentItems.length > 0 && sentItems.every((item) => item.kitchenStatus === "delivered");
           const allReadyOrDelivered = sentItems.length > 0 && sentItems.every((item) => item.kitchenStatus === "ready" || item.kitchenStatus === "delivered");
           const anyPreparingOrReady = sentItems.some((item) => item.kitchenStatus === "preparing" || item.kitchenStatus === "ready");
@@ -166,7 +183,11 @@ export const orderMutations = {
         return {
           ...order,
           status: nextStatus,
-          items: order.items.map((item) => ({ ...item, kitchenStatus })),
+          items: order.items.map((item) =>
+            requiresKitchenPreparation(item)
+              ? { ...item, kitchenStatus }
+              : item,
+          ),
         };
       },
     );
@@ -182,9 +203,15 @@ export const orderMutations = {
       prev,
       (order) => order.id === orderId,
       (order) => {
-        const hasNewItems = items.some((item) => !item.isSentToKitchen);
+        const hasNewItems = items.some(
+          (item) =>
+            requiresKitchenPreparation(item) && !item.isSentToKitchen,
+        );
 
-        const sentItems = items.filter((item) => item.isSentToKitchen);
+        const sentItems = items.filter(
+          (item) =>
+            requiresKitchenPreparation(item) && item.isSentToKitchen,
+        );
         const allDelivered =
           sentItems.length > 0 &&
           sentItems.every((item) => item.kitchenStatus === "delivered");
@@ -233,6 +260,15 @@ export const orderMutations = {
       (order) => {
         const nowMs = Date.now();
         const updatedItems = order.items.map((item) => {
+          if (!requiresKitchenPreparation(item)) {
+            return {
+              ...item,
+              isSentToKitchen: false,
+              sentAt: undefined,
+              kitchenStatus: undefined,
+            };
+          }
+
           if (!item.isSentToKitchen) {
             return {
               ...item,
@@ -297,12 +333,23 @@ export const orderMutations = {
       (order) => ({
         ...order,
         isSentToKitchen: true,
-        items: order.items.map((item) => ({
-          ...item,
-          isSentToKitchen: true,
-          sentAt: item.isSentToKitchen ? item.sentAt : nowMs,
-          kitchenStatus: item.isSentToKitchen ? item.kitchenStatus : "pending",
-        })),
+        items: order.items.map((item) =>
+          requiresKitchenPreparation(item)
+            ? {
+                ...item,
+                isSentToKitchen: true,
+                sentAt: item.isSentToKitchen ? item.sentAt : nowMs,
+                kitchenStatus: item.isSentToKitchen
+                  ? item.kitchenStatus
+                  : "pending",
+              }
+            : {
+                ...item,
+                isSentToKitchen: false,
+                sentAt: undefined,
+                kitchenStatus: undefined,
+              },
+        ),
       }),
     );
   },
@@ -321,12 +368,23 @@ export const orderMutations = {
       (order) => ({
         ...order,
         isSentToKitchen: true,
-        items: order.items.map((item) => ({
-          ...item,
-          isSentToKitchen: true,
-          sentAt: item.isSentToKitchen ? item.sentAt : nowMs,
-          kitchenStatus: item.isSentToKitchen ? item.kitchenStatus : "pending",
-        })),
+        items: order.items.map((item) =>
+          requiresKitchenPreparation(item)
+            ? {
+                ...item,
+                isSentToKitchen: true,
+                sentAt: item.isSentToKitchen ? item.sentAt : nowMs,
+                kitchenStatus: item.isSentToKitchen
+                  ? item.kitchenStatus
+                  : "pending",
+              }
+            : {
+                ...item,
+                isSentToKitchen: false,
+                sentAt: undefined,
+                kitchenStatus: undefined,
+              },
+        ),
       }),
     );
   },

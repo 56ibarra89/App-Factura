@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Box, Snackbar, Alert } from "@mui/material";
 import { useOrderManagement } from "../hooks/useOrderManagement";
-import { useKitchens } from "../../kitchens";
+import { useAccessibleKitchens } from "../../kitchens";
+import { useAuth } from "../../auth";
 import { useKdsAudioAlert } from "../hooks/useKdsAudioAlert";
 import {
   getSelectedKitchenId,
@@ -22,35 +23,74 @@ interface KdsPageProps {
 
 const KdsPage = ({ resolveTableName }: KdsPageProps) => {
   const { activeOrders, updateOrderStatus } = useOrderManagement();
-  const { kitchens } = useKitchens();
+  const { role } = useAuth();
+  const {
+    kitchens,
+    isLoading: isKitchenAccessLoading,
+    assignedKitchenId,
+    hasTodayAssignment,
+    assignmentError,
+  } = useAccessibleKitchens();
 
-  const [selectedKitchenId, setSelectedKitchen] = useState<string>(() =>
+  const [savedKitchenId, setSelectedKitchen] = useState<string>(() =>
     getSelectedKitchenId()
   );
   const [viewMode, setViewMode] = useState<"kanban" | "grid">("kanban");
+  const isCook = role === "cocinero";
+  const activeKitchens = useMemo(
+    () => kitchens.filter((kitchen) => kitchen.isActive),
+    [kitchens],
+  );
+  const isSavedKitchenValid =
+    savedKitchenId === "" ||
+    activeKitchens.some((kitchen) => kitchen.id === savedKitchenId);
+  const selectedKitchenId = isCook
+    ? activeKitchens.find((kitchen) => kitchen.id === assignedKitchenId)?.id ?? ""
+    : isSavedKitchenValid
+      ? savedKitchenId
+      : "";
 
-  const { isMuted, toggleMute, newOrderAlert, clearNewOrderAlert } =
-    useKdsAudioAlert(activeOrders);
+  useEffect(() => {
+    if (!isCook && !isSavedKitchenValid && !isKitchenAccessLoading) {
+      setSelectedKitchen("");
+      saveSelectedKitchenId("");
+    }
+  }, [isCook, isKitchenAccessLoading, isSavedKitchenValid]);
 
   const handleKitchenChange = (kitchenId: string) => {
+    if (isCook) return;
     setSelectedKitchen(kitchenId);
     saveSelectedKitchenId(kitchenId);
   };
 
-  // Conteo de órdenes críticas (> 15 min)
-  const criticalCount = useMemo(() => {
-    return activeOrders.filter((order) => {
-      const urgency = getTicketUrgency(order.timestamp);
-      return urgency.level === "critical";
-    }).length;
-  }, [activeOrders]);
-
   const filteredOrders = useMemo(() => {
+    if (isCook && !selectedKitchenId) return [];
     if (!selectedKitchenId) return activeOrders;
     return activeOrders.filter((order) =>
       order.items.some((item) => item.kitchenId === selectedKitchenId)
     );
-  }, [activeOrders, selectedKitchenId]);
+  }, [activeOrders, isCook, selectedKitchenId]);
+
+  const { isMuted, toggleMute, newOrderAlert, clearNewOrderAlert } =
+    useKdsAudioAlert(filteredOrders);
+
+  // Conteo de órdenes críticas (> 15 min)
+  const criticalCount = useMemo(() => {
+    return filteredOrders.filter((order) => {
+      const urgency = getTicketUrgency(order.timestamp);
+      return urgency.level === "critical";
+    }).length;
+  }, [filteredOrders]);
+
+  const accessMessage = assignmentError
+    ? assignmentError
+    : isKitchenAccessLoading
+      ? "Consultando tu cocina asignada..."
+      : !hasTodayAssignment
+        ? "No tienes una cocina asignada para hoy. Solicita al administrador que revise tu horario."
+        : isCook && !selectedKitchenId
+          ? "La cocina asignada para hoy no está activa. Solicita al administrador que revise la configuración."
+          : null;
 
   return (
     <Box
@@ -67,6 +107,7 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
         kitchens={kitchens}
         selectedKitchenId={selectedKitchenId}
         onKitchenChange={handleKitchenChange}
+        showAllKitchensTab={!isCook}
         activeCount={filteredOrders.length}
         criticalCount={criticalCount}
         viewMode={viewMode}
@@ -76,11 +117,15 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
       />
 
       {/* Contenido Principal KDS */}
-      {filteredOrders.length === 0 ? (
+      {accessMessage ? (
+        <Alert severity={assignmentError ? "error" : "info"}>
+          {accessMessage}
+        </Alert>
+      ) : filteredOrders.length === 0 ? (
         <OrderEmptyState />
       ) : viewMode === "kanban" ? (
         <KdsKanbanBoard
-          orders={activeOrders}
+          orders={filteredOrders}
           selectedKitchenId={selectedKitchenId}
           kitchens={kitchens}
           resolveTableName={resolveTableName}

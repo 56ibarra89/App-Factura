@@ -15,6 +15,10 @@ import RestaurantIcon from "@mui/icons-material/Restaurant";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import type { Order, OrderStatus } from "../../model/order.types";
+import {
+  isPackagingOrderItem,
+  requiresKitchenPreparation,
+} from "../../model/orderItemDomain";
 import type { Kitchen } from "../../../kitchens";
 import { getTicketUrgency } from "../../utils/timeUrgency";
 import { formatItemName, formatTableName } from "../../../../shared/format";
@@ -44,12 +48,8 @@ export const KdsCard: React.FC<KdsCardProps> = ({
   onUpdateStatus,
 }) => {
   const itemsToUse = filteredItems || order.items;
-  const hasPackaging = order.items.some((item) =>
-    item.name.toLowerCase().includes("empaque")
-  );
-  const displayItems = itemsToUse.filter(
-    (item) => !item.name.toLowerCase().includes("empaque")
-  );
+  const hasPackaging = order.items.some(isPackagingOrderItem);
+  const displayItems = itemsToUse.filter(requiresKitchenPreparation);
 
   const ticketSentAt = displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
   const sentAtTimestampMs = ticketSentAt ? new Date(ticketSentAt).getTime() : undefined;

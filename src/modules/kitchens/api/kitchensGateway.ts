@@ -33,6 +33,7 @@ export interface KitchensGateway {
   create(name: string, isActive: boolean): Promise<void>;
   update(id: string, name: string, isActive?: boolean): Promise<void>;
   delete(id: string): Promise<void>;
+  listMyAssignments(): Promise<CookKitchenAssignment[]>;
   listCookAssignments(): Promise<CookUser[]>;
   updateCookAssignments(
     userId: string,
@@ -60,6 +61,8 @@ export const kitchensGateway: KitchensGateway = {
   async delete(id) {
     await apiClient(`/kitchens/${id}`, { method: "DELETE" });
   },
+
+  listMyAssignments: () => apiClient("/kitchens/me/assignments"),
 
   listCookAssignments: () => apiClient("/kitchens/cooks/assignments"),
 

@@ -16,6 +16,10 @@ import { LOGIN_COLORS } from "../../../shared/theme";
 import { formatItemName, formatTableName } from "../../../shared/format";
 import type { Kitchen } from "../../kitchens";
 import { getTicketUrgency } from "../utils/timeUrgency";
+import {
+  isPackagingOrderItem,
+  requiresKitchenPreparation,
+} from "../model/orderItemDomain";
 
 interface OrderCardProps {
   order: Order;
@@ -31,7 +35,7 @@ interface OrderCardProps {
     kitchenId?: string,
     itemId?: number | string
   ) => void;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({
@@ -43,12 +47,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
   onDelete,
 }) => {
   const itemsToUse = filteredItems || order.items;
-  const hasPackaging = order.items.some((item) =>
-    item.name.toLowerCase().includes("empaque")
-  );
-  const displayItems = itemsToUse.filter(
-    (item) => !item.name.toLowerCase().includes("empaque")
-  );
+  const hasPackaging = order.items.some(isPackagingOrderItem);
+  const displayItems = itemsToUse.filter(requiresKitchenPreparation);
 
   const ticketSentAt = displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
   const sentAtTimestampMs = ticketSentAt ? new Date(ticketSentAt).getTime() : undefined;
@@ -132,9 +132,16 @@ const OrderCard: React.FC<OrderCardProps> = ({
               </Stack>
             )}
           </Box>
-          <IconButton size="small" color="error" onClick={() => onDelete(order.id)}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+          {onDelete && (
+            <IconButton
+              size="small"
+              color="error"
+              aria-label="Anular orden"
+              onClick={() => onDelete(order.id)}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          )}
         </Box>
 
         <Divider sx={{ mb: 2 }} />

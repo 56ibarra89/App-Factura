@@ -25,6 +25,12 @@ export type {
   OrderType,
   PaymentMethod,
 } from "./model/order.types";
+export {
+  isDeliveryChargeOrderItem,
+  isPackagingOrderItem,
+  isSupplementalOrderItem,
+  requiresKitchenPreparation,
+} from "./model/orderItemDomain";
 export type {
   CreateOrderCommand,
   FinalizeOrderCommand,
