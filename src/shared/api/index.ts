@@ -1,4 +1,5 @@
 export { apiClient } from "./apiClient";
+export { hasAccessToken } from "./accessTokenStore";
 export {
   runtimeConfigGateway,
 } from "./runtimeConfigGateway";

@@ -1,5 +1,8 @@
 import type { SystemLog, LogLevel } from "../model/audit.types";
-import { apiClient } from "../../../shared/api";
+import {
+  apiClient,
+  hasAccessToken,
+} from "../../../shared/api";
 
 export interface ILogRepository {
   add(
@@ -20,6 +23,10 @@ class LogRepository implements ILogRepository {
     details?: string,
     level: LogLevel = "info"
   ): Promise<void> {
+    if (!hasAccessToken()) {
+      return;
+    }
+
     try {
       await apiClient("/system-logs", {
         method: "POST",

@@ -19,3 +19,7 @@ export const accessTokenStore: AccessTokenStore = {
     currentAccessToken = null;
   },
 };
+
+export function hasAccessToken(): boolean {
+  return accessTokenStore.get() !== null;
+}
