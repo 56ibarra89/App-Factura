@@ -21,7 +21,7 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401 && accessToken) {
       accessTokenStore.clear();
       if (window.authAPI) {
         window.authAPI.clearToken();
@@ -43,10 +43,16 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
     throw new Error(errorMessage);
   }
 
-  // Si es un 204 No Content, no intentamos parsear JSON
+  // Las respuestas sin contenido representan operaciones exitosas
+  // que no necesitan devolver datos (por ejemplo, un PIN inválido).
   if (response.status === 204) {
     return null;
   }
 
-  return response.json();
+  const responseBody = await response.text();
+  if (!responseBody.trim()) {
+    return null;
+  }
+
+  return JSON.parse(responseBody);
 };
