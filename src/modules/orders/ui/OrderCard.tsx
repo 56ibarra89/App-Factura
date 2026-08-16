@@ -21,6 +21,34 @@ import {
   requiresKitchenPreparation,
 } from "../model/orderItemDomain";
 
+interface FinalStatusBadge {
+  label: string;
+  color: string;
+  badgeBg: string;
+  badgeBorder: string;
+}
+
+const FINAL_STATUS_BADGES: Partial<Record<OrderStatus, FinalStatusBadge>> = {
+  delivered: {
+    label: "Entregado",
+    color: "#2e7d32",
+    badgeBg: "rgba(46, 125, 50, 0.2)",
+    badgeBorder: "#2e7d32",
+  },
+  paid: {
+    label: "Pagado",
+    color: "#1565c0",
+    badgeBg: "rgba(21, 101, 192, 0.2)",
+    badgeBorder: "#1565c0",
+  },
+  cancelled: {
+    label: "Cancelado",
+    color: "#d32f2f",
+    badgeBg: "rgba(211, 47, 47, 0.2)",
+    badgeBorder: "#d32f2f",
+  },
+};
+
 interface OrderCardProps {
   order: Order;
   filteredItems?: Order["items"];
@@ -53,6 +81,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const ticketSentAt = displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
   const sentAtTimestampMs = ticketSentAt ? new Date(ticketSentAt).getTime() : undefined;
   const urgency = getTicketUrgency(ticketSentAt);
+  const finalStatusBadge = FINAL_STATUS_BADGES[order.status];
+  const statusBadge = finalStatusBadge ?? urgency;
 
   return (
     <Card
@@ -63,7 +93,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         borderRadius: 4,
         boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
         border: `2px solid ${
-          urgency.level === "critical"
+          !finalStatusBadge && urgency.level === "critical"
             ? urgency.color
             : order.status === "ready"
             ? LOGIN_COLORS.primary
@@ -81,13 +111,19 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 {order.invoiceNumber ? `#${order.invoiceNumber}` : "Orden en Curso"}
               </Typography>
               <Chip
-                icon={<TimerIcon style={{ fontSize: "0.85rem", color: urgency.color }} />}
-                label={urgency.label}
+                icon={
+                  finalStatusBadge ? undefined : (
+                    <TimerIcon
+                      style={{ fontSize: "0.85rem", color: urgency.color }}
+                    />
+                  )
+                }
+                label={statusBadge.label}
                 size="small"
                 sx={{
-                  bgcolor: urgency.badgeBg,
-                  color: urgency.color,
-                  borderColor: urgency.badgeBorder,
+                  bgcolor: statusBadge.badgeBg,
+                  color: statusBadge.color,
+                  borderColor: statusBadge.badgeBorder,
                   fontWeight: 700,
                   fontSize: "0.7rem",
                   height: 22,

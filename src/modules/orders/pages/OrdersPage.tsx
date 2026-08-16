@@ -60,6 +60,9 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
     : isValidKitchen
       ? savedKitchenId
       : "";
+  const selectedKitchenName = activeKitchens.find(
+    (kitchen) => kitchen.id === selectedKitchenId,
+  )?.name;
 
   useEffect(() => {
     if (!isCook && !isValidKitchen && !isKitchenAccessLoading) {
@@ -90,15 +93,17 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
     );
   }, [finishedOrders, isCook, selectedKitchenId]);
 
-  const accessMessage = assignmentError
-    ? assignmentError
-    : isKitchenAccessLoading
-      ? "Consultando tu cocina asignada..."
-      : !hasTodayAssignment
-        ? "No tienes una cocina asignada para hoy. Solicita al administrador que revise tu horario."
-        : isCook && !selectedKitchenId
-          ? "La cocina asignada para hoy no está activa. Solicita al administrador que revise la configuración."
-          : null;
+  const accessMessage = !isCook
+    ? null
+    : assignmentError
+      ? assignmentError
+      : isKitchenAccessLoading
+        ? "Consultando tu cocina asignada..."
+        : !hasTodayAssignment
+          ? "No tienes una cocina asignada para hoy. Solicita al administrador que revise tu horario."
+          : !selectedKitchenId
+            ? "La cocina asignada para hoy no está activa. Solicita al administrador que revise la configuración."
+            : null;
 
   const handleClearHistory = () => {
     clearHistory();
@@ -130,9 +135,10 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
       }}
     >
       <PageHeader 
-        title="Gestión de Órdenes" 
+        title={isCook ? "Historial de Órdenes" : "Gestión de Órdenes"}
         startContent={<BackButton to="/home" />}
         actions={
+          !isCook ? (
           <Stack direction="row" spacing={2} alignItems="center">
             <Stack direction="row" spacing={1} alignItems="center" sx={{ bgcolor: 'rgba(0,0,0,0.03)', px: 1.5, py: 0.5, borderRadius: 2 }}>
               <TimerIcon color="action" fontSize="small" />
@@ -159,6 +165,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
               </Button>
             </RoleGuard>
           </Stack>
+          ) : undefined
         }
       />
 
@@ -173,40 +180,61 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
         </Box>
       )}
 
-      <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, mt: 2 }}>
-        Órdenes Activas
-      </Typography>
-
       {accessMessage ? (
         <Alert severity={assignmentError ? "error" : "info"}>
           {accessMessage}
         </Alert>
-      ) : visibleActiveOrders.length === 0 ? (
-        <OrderEmptyState />
       ) : (
-        <OrderGrid 
-          orders={visibleActiveOrders} 
-          selectedKitchenId={selectedKitchenId}
-          kitchens={kitchens}
-          resolveTableName={resolveTableName}
-          onUpdateStatus={updateOrderStatus} 
-          onDelete={isCook ? undefined : handleDeleteOrder} 
-        />
-      )}
-
-      {visibleFinishedOrders.length > 0 && (
         <>
-          <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, mt: 6 }}>
-            Historial Reciente
-          </Typography>
-          <OrderGrid 
-            orders={visibleFinishedOrders.slice(0, 50)} 
-            selectedKitchenId={selectedKitchenId}
-            kitchens={kitchens}
-            resolveTableName={resolveTableName}
-            onUpdateStatus={updateOrderStatus} 
-            onDelete={isCook ? undefined : handleDeleteOrder} 
-          />
+          {!isCook && (
+            <>
+              <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, mt: 2 }}>
+                Órdenes Activas
+              </Typography>
+              {visibleActiveOrders.length === 0 ? (
+                <OrderEmptyState />
+              ) : (
+                <OrderGrid
+                  orders={visibleActiveOrders}
+                  selectedKitchenId={selectedKitchenId}
+                  kitchens={kitchens}
+                  resolveTableName={resolveTableName}
+                  onUpdateStatus={updateOrderStatus}
+                  onDelete={handleDeleteOrder}
+                />
+              )}
+            </>
+          )}
+
+          {(isCook || visibleFinishedOrders.length > 0) && (
+            <>
+              <Typography
+                variant="h5"
+                fontWeight="bold"
+                sx={{ mb: 3, mt: isCook ? 2 : 6 }}
+              >
+                Historial Reciente
+                {isCook && selectedKitchenName
+                  ? ` · ${selectedKitchenName}`
+                  : ""}
+              </Typography>
+              {visibleFinishedOrders.length === 0 ? (
+                <Alert severity="info">
+                  No hay órdenes en el historial reciente
+                  {selectedKitchenName ? ` de ${selectedKitchenName}` : ""}.
+                </Alert>
+              ) : (
+                <OrderGrid
+                  orders={visibleFinishedOrders.slice(0, 50)}
+                  selectedKitchenId={selectedKitchenId}
+                  kitchens={kitchens}
+                  resolveTableName={resolveTableName}
+                  onUpdateStatus={updateOrderStatus}
+                  onDelete={isCook ? undefined : handleDeleteOrder}
+                />
+              )}
+            </>
+          )}
         </>
       )}
 
