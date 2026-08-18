@@ -11,6 +11,7 @@ import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import TimerIcon from "@mui/icons-material/Timer";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { Order, OrderStatus } from "../model/order.types";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import { formatItemName, formatTableName } from "../../../shared/format";

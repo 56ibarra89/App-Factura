@@ -13,6 +13,7 @@ import TimerIcon from "@mui/icons-material/Timer";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import type { Order, OrderStatus } from "../../model/order.types";
 import {
