@@ -12,6 +12,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import TimerIcon from "@mui/icons-material/Timer";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import TakeoutDiningIcon from "@mui/icons-material/TakeoutDining";
 import { Order, OrderStatus } from "../model/order.types";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import { formatItemName, formatTableName } from "../../../shared/format";
@@ -82,6 +83,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const ticketSentAt = displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
   const sentAtTimestampMs = ticketSentAt ? new Date(ticketSentAt).getTime() : undefined;
   const urgency = getTicketUrgency(ticketSentAt);
+  const isTakeout = !order.tableId && order.orderType !== "delivery";
   const finalStatusBadge = FINAL_STATUS_BADGES[order.status];
   const statusBadge = finalStatusBadge ?? urgency;
 
@@ -136,7 +138,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               Hora: {new Date(order.timestamp).toLocaleTimeString()}
             </Typography>
 
-            {(order.customerName || order.tableId || hasPackaging || order.orderType === "delivery") && (
+            {(order.customerName || order.tableId || hasPackaging || order.orderType === "delivery" || isTakeout) && (
               <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" useFlexGap sx={{ rowGap: 1 }}>
                 {order.customerName && (
                   <Chip
@@ -156,6 +158,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     color="secondary"
                     variant="outlined"
                     sx={{ height: 20, fontSize: "0.65rem" }}
+                  />
+                )}
+                {isTakeout && (
+                  <Chip
+                    icon={<TakeoutDiningIcon sx={{ fontSize: "0.75rem !important" }} />}
+                    label="Para Llevar"
+                    size="small"
+                    color="info"
+                    sx={{ height: 20, fontSize: "0.65rem", fontWeight: "bold" }}
                   />
                 )}
                 {hasPackaging && (

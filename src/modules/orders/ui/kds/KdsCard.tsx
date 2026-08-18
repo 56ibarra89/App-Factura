@@ -14,6 +14,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import TakeoutDiningIcon from "@mui/icons-material/TakeoutDining";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import type { Order, OrderStatus } from "../../model/order.types";
 import {
@@ -55,6 +56,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
   const ticketSentAt = displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
   const sentAtTimestampMs = ticketSentAt ? new Date(ticketSentAt).getTime() : undefined;
   const urgency = getTicketUrgency(ticketSentAt);
+  const isTakeout = !order.tableId && order.orderType !== "delivery";
 
   return (
     <Card
@@ -141,10 +143,19 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                   sx={{ fontWeight: 700, fontSize: "0.75rem" }}
                 />
               )}
+              {isTakeout && (
+                <Chip
+                  icon={<TakeoutDiningIcon sx={{ fontSize: "0.9rem !important" }} />}
+                  label="Para Llevar"
+                  size="small"
+                  color="info"
+                  sx={{ fontWeight: 800, fontSize: "0.75rem" }}
+                />
+              )}
               {hasPackaging && (
                 <Chip
                   icon={<LocalShippingIcon sx={{ fontSize: "0.9rem !important" }} />}
-                  label={order.tableId ? "Solicitó Empaque" : "Para Llevar / Empaque"}
+                  label={order.tableId ? "Solicitó Empaque" : "Requiere Empaque"}
                   size="small"
                   color="warning"
                   sx={{ fontWeight: 800, fontSize: "0.75rem" }}
