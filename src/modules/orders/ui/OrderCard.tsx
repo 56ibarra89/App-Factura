@@ -136,7 +136,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               Hora: {new Date(order.timestamp).toLocaleTimeString()}
             </Typography>
 
-            {(order.customerName || order.tableId || hasPackaging) && (
+            {(order.customerName || order.tableId || hasPackaging || order.orderType === "delivery") && (
               <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" useFlexGap sx={{ rowGap: 1 }}>
                 {order.customerName && (
                   <Chip
@@ -160,9 +160,18 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 )}
                 {hasPackaging && (
                   <Chip
-                    label="Requiere Empaque"
+                    label={order.tableId ? "Solicitó Empaque" : "Requiere Empaque"}
                     size="small"
                     color="warning"
+                    sx={{ height: 20, fontSize: "0.65rem", fontWeight: "bold" }}
+                  />
+                )}
+                {order.orderType === "delivery" && (
+                  <Chip
+                    icon={<TwoWheelerIcon sx={{ fontSize: "0.75rem !important" }} />}
+                    label="Delivery"
+                    size="small"
+                    color="error"
                     sx={{ height: 20, fontSize: "0.65rem", fontWeight: "bold" }}
                   />
                 )}
