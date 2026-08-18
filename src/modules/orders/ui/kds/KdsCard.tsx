@@ -144,9 +144,18 @@ export const KdsCard: React.FC<KdsCardProps> = ({
               {hasPackaging && (
                 <Chip
                   icon={<LocalShippingIcon sx={{ fontSize: "0.9rem !important" }} />}
-                  label="Para Llevar / Empaque"
+                  label={order.tableId ? "Solicitó Empaque" : "Para Llevar / Empaque"}
                   size="small"
                   color="warning"
+                  sx={{ fontWeight: 800, fontSize: "0.75rem" }}
+                />
+              )}
+              {order.orderType === "delivery" && (
+                <Chip
+                  icon={<TwoWheelerIcon sx={{ fontSize: "0.9rem !important" }} />}
+                  label="Delivery"
+                  size="small"
+                  color="error"
                   sx={{ fontWeight: 800, fontSize: "0.75rem" }}
                 />
               )}
