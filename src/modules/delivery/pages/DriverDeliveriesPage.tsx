@@ -193,11 +193,15 @@ export default function DriverDeliveriesPage() {
     }
   };
 
-  // Marcar pedido como cobrado / pagado
   const handleMarkAsPaid = async (order: Order) => {
     try {
       const method = (order.paymentMethod || "EFECTIVO").toUpperCase();
-      await deliveryGateway.finalizeOrder(order.id, method, order.total);
+      await deliveryGateway.finalizeOrder(
+        order.id,
+        method,
+        order.total,
+        order.splitAmounts,
+      );
       setSnackbar({
         open: true,
         message: `Pedido #${order.invoiceNumber || order.id.slice(-6)} marcado como Pagado / Liquidado.`,
@@ -301,9 +305,11 @@ export default function DriverDeliveriesPage() {
         const addressMatch = (order.customerAddress || "")
           .toLowerCase()
           .includes(query);
-        const phoneMatch = (getCustomerPhone(order.customerName) || "").includes(
-          query
-        );
+        const phoneMatch = (
+          order.customerPhone ||
+          getCustomerPhone(order.customerName) ||
+          ""
+        ).includes(query);
         const itemsMatch = order.items.some((i) =>
           i.name.toLowerCase().includes(query)
         );
@@ -527,7 +533,8 @@ export default function DriverDeliveriesPage() {
           gap={3}
         >
           {filteredOrders.map((order) => {
-            const customerPhone = getCustomerPhone(order.customerName);
+            const customerPhone =
+              order.customerPhone || getCustomerPhone(order.customerName);
             const isCompleted =
               order.status === "delivered" || order.status === "paid";
 

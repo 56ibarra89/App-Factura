@@ -30,6 +30,7 @@ import type { Customer } from "../../customers";
 interface BillingLocationState {
   deliveryCustomer?: Customer | null;
   deliveryPhone?: string;
+  deliveryAddress?: string;
   deliveryCost?: number;
   deliveryDriverId?: string;
   deliveryCustomerTendered?: number;
@@ -48,6 +49,9 @@ const CheckoutPage = () => {
     useState<Customer | null>(state?.deliveryCustomer || null);
   const [deliveryPhone, setDeliveryPhone] = useState(
     state?.deliveryPhone || "",
+  );
+  const [deliveryAddress, setDeliveryAddress] = useState(
+    state?.deliveryAddress || "",
   );
 
   const {
@@ -100,6 +104,7 @@ const CheckoutPage = () => {
   const resetDelivery = useCallback(() => {
     setDeliveryCustomer(null);
     setDeliveryPhone("");
+    setDeliveryAddress("");
   }, []);
 
   const { runExclusive } = useExclusiveAction();
@@ -193,6 +198,9 @@ const CheckoutPage = () => {
           hasActiveOrder: !!activeOrder,
           initialCustomer: deliveryCustomer,
           initialPhone: deliveryPhone,
+          initialAddress:
+            deliveryAddress ||
+            (deliveryCustomer?.addresses?.[0]?.address ?? ""),
           initialDriverId: state?.deliveryDriverId,
           initialDeliveryCost: state?.deliveryCost,
           initialCustomerTendered:

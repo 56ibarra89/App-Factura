@@ -8,7 +8,7 @@ import { getMenuItems } from "../navigation/menuItems";
 import logoImg from "../../assets/images/logo.png";
 import { useAuth } from "../../modules/auth";
 import { useCaja } from "../../modules/cash-register";
-import { Alert, Fab, Tooltip } from "@mui/material";
+import { Fab, Tooltip } from "@mui/material";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { DriverDeliveriesModal } from "../../modules/delivery";
 
@@ -90,12 +90,6 @@ const HomePage = () => {
         }
         actions={<AccountMenu />}
       />
-
-      {role === "motorizado" && (
-        <Alert severity="info" sx={{ mx: 2, mb: 3 }}>
-          Accede a <b>Entregas Motorizado</b> para consultar tus pedidos asignados, direcciones y montos a cobrar.
-        </Alert>
-      )}
 
       {/* Cuadrícula de menú */}
       <Box

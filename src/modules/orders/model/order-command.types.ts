@@ -20,6 +20,7 @@ export interface OrderTotals {
 export interface CreateOrderCommand extends OrderTotals, OrderPromotionSelection {
   items: OrderItem[];
   customerName?: string;
+  customerPhone?: string;
   orderType?: OrderType;
   customerAddress?: string;
   tableId?: string;
@@ -34,6 +35,7 @@ export interface FinalizeOrderCommand extends OrderTotals, OrderPromotionSelecti
   paymentMethod: PaymentMethod;
   splitAmounts?: SplitPaymentAmounts;
   customerName?: string;
+  customerPhone?: string;
   orderType?: OrderType;
   customerAddress?: string;
   certificateSerials?: string[];

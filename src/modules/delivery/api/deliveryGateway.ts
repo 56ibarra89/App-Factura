@@ -41,6 +41,7 @@ export interface DeliveryGateway {
     orderId: string,
     paymentMethod: string,
     total: number,
+    splitAmounts?: { efectivo: number; tarjeta: number },
   ): Promise<void>;
 }
 
@@ -59,12 +60,20 @@ export const deliveryGateway: DeliveryGateway = {
   getDriverOrdersToday: (driverId) =>
     apiClient(`/orders/driver/${driverId}/today`),
 
-  async finalizeOrder(orderId, paymentMethod, total) {
+  async finalizeOrder(orderId, paymentMethod, total, splitAmounts) {
+    const payments =
+      paymentMethod === "MIXTO" && splitAmounts
+        ? [
+            { method: "EFECTIVO", amount: splitAmounts.efectivo },
+            { method: "TARJETA", amount: splitAmounts.tarjeta },
+          ].filter((p) => p.amount > 0)
+        : [{ method: paymentMethod, amount: total }];
+
     await apiClient(`/orders/${orderId}/finalize`, {
       method: "PATCH",
       body: JSON.stringify({
         status: "paid",
-        payments: [{ method: paymentMethod, amount: total }],
+        payments,
       }),
     });
   },

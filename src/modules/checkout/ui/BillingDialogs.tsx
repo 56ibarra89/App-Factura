@@ -57,6 +57,7 @@ interface InvoiceDialog {
   hasActiveOrder: boolean;
   initialCustomer: Customer | null;
   initialPhone: string;
+  initialAddress?: string;
   initialDriverId?: string;
   initialDeliveryCost?: number;
   initialCustomerTendered?: number;
@@ -160,13 +161,14 @@ export default function BillingDialogs({
         disableEnforceFocus
         initialCustomer={invoice.initialCustomer}
         initialPhone={invoice.initialPhone}
+        initialAddress={invoice.initialAddress}
         initialOrderType={
-          invoice.initialCustomer || invoice.initialPhone
+          invoice.initialCustomer || invoice.initialPhone || invoice.initialAddress
             ? "delivery"
             : undefined
         }
         lockOrderType={
-          !!(invoice.initialCustomer || invoice.initialPhone)
+          !!(invoice.initialCustomer || invoice.initialPhone || invoice.initialAddress)
         }
         initialDriverId={invoice.initialDriverId}
         initialDeliveryCost={invoice.initialDeliveryCost}

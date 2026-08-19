@@ -14,6 +14,7 @@ interface UseCustomerDeliveryFormOptions {
   open: boolean;
   initialCustomer: Customer | null;
   initialPhone: string;
+  initialAddress?: string;
   initialOrderType: OrderType;
   initialDriverId: string;
   initialDeliveryCost: number;
@@ -21,7 +22,7 @@ interface UseCustomerDeliveryFormOptions {
 }
 
 function getMostRecentAddress(customer: Customer | null): string {
-  if (!customer?.addresses.length) return "";
+  if (!customer?.addresses?.length) return "";
 
   return [...customer.addresses].sort(
     (a, b) =>
@@ -33,6 +34,7 @@ export function useCustomerDeliveryForm({
   open,
   initialCustomer,
   initialPhone,
+  initialAddress,
   initialOrderType,
   initialDriverId,
   initialDeliveryCost,
@@ -47,9 +49,10 @@ export function useCustomerDeliveryForm({
   const [orderType, setOrderType] =
     useState<OrderType>(initialOrderType);
   const [customerAddress, setCustomerAddress] = useState(
-    initialOrderType === "delivery"
-      ? getMostRecentAddress(initialCustomer)
-      : "",
+    initialAddress ||
+      (initialOrderType === "delivery"
+        ? getMostRecentAddress(initialCustomer)
+        : ""),
   );
   const [selectedCustomer, setSelectedCustomer] =
     useState<Customer | null>(initialCustomer);
@@ -107,13 +110,15 @@ export function useCustomerDeliveryForm({
     setOrderType(initialOrderType);
     setSelectedCustomer(initialCustomer);
     setCustomerAddress(
-      initialOrderType === "delivery"
-        ? getMostRecentAddress(initialCustomer)
-        : "",
+      initialAddress ||
+        (initialOrderType === "delivery"
+          ? getMostRecentAddress(initialCustomer)
+          : ""),
     );
     setDeliveryCost(initialDeliveryCost);
     setSelectedDriverId(initialDriverId);
   }, [
+    initialAddress,
     initialCustomer,
     initialDeliveryCost,
     initialDriverId,
@@ -128,9 +133,11 @@ export function useCustomerDeliveryForm({
       selectedCustomer &&
       !customerAddress
     ) {
-      setCustomerAddress(getMostRecentAddress(selectedCustomer));
+      setCustomerAddress(
+        initialAddress || getMostRecentAddress(selectedCustomer),
+      );
     }
-  }, [customerAddress, orderType, selectedCustomer]);
+  }, [customerAddress, initialAddress, orderType, selectedCustomer]);
 
   const handleCustomerSelect = useCallback(
     (customer: Customer | null) => {
@@ -163,12 +170,16 @@ export function useCustomerDeliveryForm({
   );
 
   const persistCustomer = useCallback(async () => {
-    if (!customerName.trim()) return false;
+    const trimmedName = customerName.trim();
+    const trimmedPhone = customerPhone.trim();
+    if (!trimmedName && !trimmedPhone) return false;
+
+    const nameToSave = trimmedName || `Cliente ${trimmedPhone}`;
 
     return saveCustomer(
-      customerName,
+      nameToSave,
       orderType === "delivery" ? customerAddress : undefined,
-      customerPhone || undefined,
+      trimmedPhone || undefined,
     );
   }, [
     customerAddress,

@@ -14,6 +14,7 @@ export interface CheckoutFormValues {
   paymentMethod: PaymentMethod;
   splitAmounts?: SplitPaymentAmounts;
   customerName?: string;
+  customerPhone?: string;
   orderType: OrderType;
   customerAddress?: string;
   packagingItems: PackagingItem[];

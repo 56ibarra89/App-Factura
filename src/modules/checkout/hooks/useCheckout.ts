@@ -48,6 +48,7 @@ export function useCheckout(
         items,
         ...totals,
         customerName: form.customerName,
+        customerPhone: form.customerPhone,
         orderType: form.orderType,
         customerAddress: form.customerAddress,
         paymentMethod: form.paymentMethod,

@@ -44,6 +44,7 @@ interface FacturaPreviewDialogProps {
   disableEnforceFocus?: boolean;
   initialCustomer?: Customer | null;
   initialPhone?: string;
+  initialAddress?: string;
   initialOrderType?: OrderType;
   initialDriverId?: string;
   initialDeliveryCost?: number;
@@ -72,6 +73,7 @@ export default function FacturaPreviewDialog({
   disableEnforceFocus = false,
   initialCustomer = null,
   initialPhone = "",
+  initialAddress = "",
   initialOrderType = "local",
   initialDriverId = "",
   initialDeliveryCost = 0,
@@ -87,6 +89,7 @@ export default function FacturaPreviewDialog({
     isTableMode,
     initialCustomer,
     initialPhone,
+    initialAddress,
     initialOrderType,
     initialDriverId,
     initialDeliveryCost,

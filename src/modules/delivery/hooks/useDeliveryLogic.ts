@@ -29,10 +29,10 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
 
   useEffect(() => {
     if (phoneInput.length >= 8) {
-       search(phoneInput);
+      search(phoneInput);
     } else {
-       clearSuggestions();
-       setSelectedCustomer(null);
+      clearSuggestions();
+      setSelectedCustomer(null);
     }
   }, [phoneInput, search, clearSuggestions]);
 
@@ -67,26 +67,37 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
 
   const handleConfirm = useCallback(() => {
     navigate("/facturacion", {
-      state: { 
-        deliveryCustomer: selectedCustomer, 
-        deliveryPhone: selectedCustomer?.phone || phoneInput,
+      state: {
+        deliveryCustomer: selectedCustomer,
+        deliveryPhone: selectedCustomer?.phone || phoneInput || undefined,
+        deliveryAddress: selectedAddress || undefined,
         deliveryCost: parseFloat(transporteInput) || 0,
         deliveryDriverId: selectedDriverId || undefined,
       },
     });
-  }, [navigate, selectedCustomer, phoneInput, transporteInput, selectedDriverId]);
+  }, [
+    navigate,
+    selectedCustomer,
+    phoneInput,
+    selectedAddress,
+    transporteInput,
+    selectedDriverId,
+  ]);
 
-  const handleKeypadPress = useCallback((val: string) => {
-    if (val === "BACK") {
-       setPhoneInput((prev) => prev.slice(0, -1));
-    } else if (val === "CLEAR" || val === "C") {
-       setPhoneInput("");
-    } else if (val === "CHECK" || val === "CHECK2") {
-       handleConfirm();
-    } else if (val !== ".") {
-       setPhoneInput((prev) => prev + val);
-    }
-  }, [handleConfirm]);
+  const handleKeypadPress = useCallback(
+    (val: string) => {
+      if (val === "BACK") {
+        setPhoneInput((prev) => prev.slice(0, -1));
+      } else if (val === "CLEAR" || val === "C") {
+        setPhoneInput("");
+      } else if (val === "CHECK" || val === "CHECK2") {
+        handleConfirm();
+      } else if (val !== ".") {
+        setPhoneInput((prev) => prev + val);
+      }
+    },
+    [handleConfirm],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -110,17 +121,26 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
   }, [handleKeypadPress, handleConfirm, selectedCustomer]);
 
   return {
-    phoneInput, setPhoneInput,
-    transporteInput, setTransporteInput,
-    selectedCustomer, setSelectedCustomer,
-    selectedAddress, setSelectedAddress,
-    searchDialogOpen, setSearchDialogOpen,
-    customerFormOpen, setCustomerFormOpen,
+    phoneInput,
+    setPhoneInput,
+    transporteInput,
+    setTransporteInput,
+    selectedCustomer,
+    setSelectedCustomer,
+    selectedAddress,
+    setSelectedAddress,
+    searchDialogOpen,
+    setSearchDialogOpen,
+    customerFormOpen,
+    setCustomerFormOpen,
     drivers,
     stats,
     selectedDriverId,
     setSelectedDriverId,
-    handleKeypadPress, handleConfirm,
-    addAddress, removeAddress, updateCustomer
+    handleKeypadPress,
+    handleConfirm,
+    addAddress,
+    removeAddress,
+    updateCustomer,
   };
 }

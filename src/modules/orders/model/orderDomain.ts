@@ -53,6 +53,7 @@ export function createOrder(
     total,
     username,
     customerName,
+    customerPhone,
     orderType,
     customerAddress,
     driverId,
@@ -77,6 +78,8 @@ export function createOrder(
     deliveryChange = customerTendered - total;
   }
 
+  const isDelivery = orderType === "delivery";
+
   const baseOrder: Order = {
     id: `ORD-${nowMs}`,
     items: [...items],
@@ -84,9 +87,10 @@ export function createOrder(
     discountAmount,
     taxAmount,
     total,
-    status: paymentMethod ? "paid" : "pending",
+    status: isDelivery ? "pending" : paymentMethod ? "paid" : "pending",
     timestamp: new Date(nowMs),
     customerName,
+    customerPhone,
     orderType,
     customerAddress,
     driverId,
@@ -156,6 +160,7 @@ export const orderMutations = {
             return item;
           });
 
+          const isDelivery = order.orderType === "delivery";
           const sentItems = updatedItems.filter(
             (item) =>
               requiresKitchenPreparation(item) && item.isSentToKitchen,
@@ -166,7 +171,7 @@ export const orderMutations = {
 
           let globalStatus = order.status;
           if (globalStatus !== "paid" && globalStatus !== "cancelled") {
-            if (allDelivered) globalStatus = "delivered";
+            if (allDelivered) globalStatus = isDelivery ? "ready" : "delivered";
             else if (allReadyOrDelivered) globalStatus = "ready";
             else if (anyPreparingOrReady) globalStatus = "preparing";
             else globalStatus = "pending";
@@ -220,9 +225,10 @@ export const orderMutations = {
         );
         const anyReady = sentItems.some((item) => item.kitchenStatus === "ready");
 
+        const isDelivery = order.orderType === "delivery";
         let newStatus = order.status;
         if (hasNewItems) newStatus = "pending";
-        else if (allDelivered) newStatus = "delivered";
+        else if (allDelivered) newStatus = isDelivery ? "ready" : "delivered";
         else if (anyReady) newStatus = "ready";
         else if (anyPreparing) newStatus = "preparing";
 

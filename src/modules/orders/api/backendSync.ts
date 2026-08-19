@@ -36,6 +36,9 @@ export interface BackendOrder {
   status: string;
   timestamp: string | Date;
   customerSnapshotName?: string;
+  customerPhone?: string;
+  customerId?: string;
+  customer?: { id?: string; name?: string; phone?: string | null };
   orderType?: string;
   customerAddress?: string;
   driverId?: string;
@@ -77,15 +80,17 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       kitchenStatus: i.kitchenStatus ? (i.kitchenStatus.toLowerCase() as KitchenStatus) : undefined,
       kitchenId: i.kitchenId,
     })),
-    subTotal: backendOrder.subTotal !== null ? Number(backendOrder.subTotal) : undefined,
-    discountAmount: backendOrder.discountAmount !== null ? Number(backendOrder.discountAmount) : undefined,
-    taxAmount: backendOrder.taxAmount !== null ? Number(backendOrder.taxAmount) : undefined,
+    subTotal: backendOrder.subTotal !== null && backendOrder.subTotal !== undefined ? Number(backendOrder.subTotal) : undefined,
+    discountAmount: backendOrder.discountAmount !== null && backendOrder.discountAmount !== undefined ? Number(backendOrder.discountAmount) : undefined,
+    taxAmount: backendOrder.taxAmount !== null && backendOrder.taxAmount !== undefined ? Number(backendOrder.taxAmount) : undefined,
     total: Number(backendOrder.total),
     customerTendered: backendOrder.customerTendered !== null && backendOrder.customerTendered !== undefined ? Number(backendOrder.customerTendered) : undefined,
     deliveryChange: backendOrder.deliveryChange !== null && backendOrder.deliveryChange !== undefined ? Number(backendOrder.deliveryChange) : undefined,
     status: backendOrder.status.toLowerCase() as OrderStatus,
     timestamp: new Date(backendOrder.timestamp),
-    customerName: backendOrder.customerSnapshotName || undefined,
+    customerName: backendOrder.customerSnapshotName || backendOrder.customer?.name || undefined,
+    customerPhone: backendOrder.customerPhone || backendOrder.customer?.phone || undefined,
+    customerId: backendOrder.customerId || backendOrder.customer?.id || undefined,
     orderType: backendOrder.orderType ? (backendOrder.orderType.toLowerCase() as OrderType) : undefined,
     customerAddress: backendOrder.customerAddress || undefined,
     driverId: backendOrder.driverId || undefined,
@@ -154,6 +159,7 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     status: order.status.toLowerCase(),
     timestamp: order.timestamp.toISOString(),
     customerSnapshotName: order.customerName,
+    customerPhone: order.customerPhone,
     orderType: order.orderType ? order.orderType.toLowerCase() : undefined,
     customerAddress: order.customerAddress,
     driverId: order.driverId,
@@ -168,7 +174,7 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     cashierSnapshotName: order.cashierName,
     isSentToKitchen: order.isSentToKitchen,
     linkedTables: order.linkedTables && order.linkedTables.length > 0 ? order.linkedTables : (order.tableId ? [order.tableId] : undefined),
-    payments: order.paymentMethod ? 
+    payments: (order.paymentMethod && (order.orderType !== 'delivery' || order.status === 'paid')) ? 
       (order.paymentMethod === 'MIXTO' && order.splitAmounts ? [
         { method: 'EFECTIVO', amount: order.splitAmounts.efectivo },
         { method: 'TARJETA', amount: order.splitAmounts.tarjeta }

@@ -59,6 +59,8 @@ export interface Order extends OrderPromotionSelection {
   status: OrderStatus;
   timestamp: Date;
   customerName?: string;
+  customerPhone?: string;
+  customerId?: string;
   orderType?: OrderType;
   customerAddress?: string;
   driverId?: string;

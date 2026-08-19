@@ -21,6 +21,7 @@ interface UseCheckoutDialogOptions {
   isTableMode: boolean;
   initialCustomer: Customer | null;
   initialPhone: string;
+  initialAddress?: string;
   initialOrderType: OrderType;
   initialDriverId: string;
   initialDeliveryCost: number;
@@ -35,6 +36,7 @@ export function useCheckoutDialog({
   isTableMode,
   initialCustomer,
   initialPhone,
+  initialAddress,
   initialOrderType,
   initialDriverId,
   initialDeliveryCost,
@@ -53,6 +55,7 @@ export function useCheckoutDialog({
     open,
     initialCustomer,
     initialPhone,
+    initialAddress,
     initialOrderType,
     initialDriverId,
     initialDeliveryCost,
@@ -138,7 +141,12 @@ export function useCheckoutDialog({
           payment.paymentMethod === "MIXTO"
             ? payment.splitAmounts
             : undefined,
-        customerName: customerDelivery.customerName || undefined,
+        customerName:
+          customerDelivery.customerName.trim() ||
+          (customerDelivery.customerPhone.trim()
+            ? `Cliente ${customerDelivery.customerPhone.trim()}`
+            : undefined),
+        customerPhone: customerDelivery.customerPhone.trim() || undefined,
         orderType: customerDelivery.orderType,
         customerAddress:
           customerDelivery.orderType === "delivery"
