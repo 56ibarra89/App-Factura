@@ -39,7 +39,7 @@ export function useCookAssignments(
   ) => {
     try {
       await gateway.updateCookAssignments(userId, assignments);
-      await fetchCooks(); // Refresh to get the latest data
+      await fetchCooks();
     } catch (error) {
       console.error('Error updating assignments:', error);
       throw error;
@@ -48,3 +48,4 @@ export function useCookAssignments(
 
   return { cooks, isLoading, fetchCooks, updateAssignments };
 }
+

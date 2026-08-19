@@ -1,4 +1,4 @@
-// Orquestación del carrito y del flujo de checkout.
+
 import { useCallback } from "react";
 import { useCartStore } from "./useCartStore";
 import { useCheckout } from "./useCheckout";
@@ -38,12 +38,12 @@ function useCart() {
     confirmExtras,
     cancelExtras,
   } = useProductSelection(handleConfirmProduct);
- 
+
   const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } =
     useCheckout(cart, promotion);
- 
+
   return {
-    // State
+
     cart,
     promotion,
     subTotal,
@@ -53,8 +53,7 @@ function useCart() {
     selectedProduct,
     setSelectedProduct,
     pendingItem,
- 
-    // Actions
+
     handleChangeQuantity: changeQuantity,
     handleChangeGiftQuantity: changeGiftQuantity,
     handleAddToCartItem: addItem,
@@ -75,3 +74,4 @@ function useCart() {
 }
 
 export default useCart;
+

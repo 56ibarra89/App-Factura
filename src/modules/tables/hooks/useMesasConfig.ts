@@ -36,7 +36,7 @@ export function useMesasConfig(
   }, [fetchFloors]);
 
   const updateFloorTables = (floorId: number, count: number) => {
-    setFloors(prev => prev.map(floor => 
+    setFloors(prev => prev.map(floor =>
       floor.id === floorId ? { ...floor, tableCount: count } : floor
     ));
   };
@@ -51,7 +51,7 @@ export function useMesasConfig(
   };
 
   const updateFloorName = (floorId: number, name: string) => {
-    setFloors(prev => prev.map(floor => 
+    setFloors(prev => prev.map(floor =>
       floor.id === floorId ? { ...floor, name } : floor
     ));
   };
@@ -60,7 +60,7 @@ export function useMesasConfig(
     setIsSaving(true);
     try {
       await gateway.saveFloorConfig(floors);
-      setInitialFloors(floors); // Reset unsaved changes tracking
+      setInitialFloors(floors);
       return true;
     } catch (e: unknown) {
       console.error('Error updating floors config:', e);
@@ -91,3 +91,4 @@ export function useMesasConfig(
     retryFetch: fetchFloors
   };
 }
+

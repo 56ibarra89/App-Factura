@@ -1,12 +1,4 @@
-/**
- * CertificacionesTab — Renderiza la tabla de certificados/vales de producto.
- *
- * SOLID:
- *  S — Single Responsibility: solo renderiza. Nada de lógica de negocio.
- *  I — Interface Segregation: onEmit, onView son props opcionales independientes.
- *  O — Open/Closed: se renombró onAdd → onEmit (semántico) y se añadió chip
- *      para "Anulado" sin tocar el resto del contrato de props.
- */
+
 import { useState } from "react";
 import {
   Box,
@@ -36,29 +28,23 @@ import type {
   CertificadoRule,
 } from "../../model/promotion.types";
 
-// ── Helper de presentación ───────────────────────────────────────────────────
-
 function statusColor(
   s: CertificadoRule["status"]
 ): "success" | "default" | "error" {
   if (s === "Disponible") return "success";
   if (s === "Anulado") return "error";
-  return "default"; // Entregado
+  return "default";
 }
-
-// ── Props (ISP: cada acción es opcional e independiente) ─────────────────────
 
 interface CertificacionesTabProps {
   certificados: CertificadoRule[];
-  /** Abre el dialog de emisión de un nuevo certificado */
+
   onEmit?: () => void;
-  /** Abre el dialog de detalle del certificado seleccionado */
+
   onView?: (certificado: CertificadoRule) => void;
-  /** Elimina el certificado seleccionado */
+
   onDelete?: (id: number) => void;
 }
-
-// ── Componente ───────────────────────────────────────────────────────────────
 
 const CertificacionesTab = ({
   certificados,
@@ -77,7 +63,7 @@ const CertificacionesTab = ({
 
   return (
     <Box>
-      {/* Cabecera */}
+      {}
       <Box
         sx={{
           display: "flex",
@@ -114,7 +100,7 @@ const CertificacionesTab = ({
         </Button>
       </Box>
 
-      {/* Estado vacío */}
+      {}
       {certificados.length === 0 && (
         <Box
           sx={{
@@ -136,7 +122,7 @@ const CertificacionesTab = ({
         </Box>
       )}
 
-      {/* Tabla */}
+      {}
       {certificados.length > 0 && (
         <TableContainer
           component={Paper}
@@ -163,7 +149,7 @@ const CertificacionesTab = ({
                   hover
                   sx={{ opacity: cert.status === "Anulado" ? 0.55 : 1 }}
                 >
-                  {/* Serial */}
+                  {}
                   <TableCell>
                     <Typography
                       variant="body2"
@@ -183,24 +169,24 @@ const CertificacionesTab = ({
                     </Typography>
                   </TableCell>
 
-                  {/* Origen */}
+                  {}
                   <TableCell>
                     <Typography variant="body2" fontWeight={500}>
                       {cert.origin}
                     </Typography>
                   </TableCell>
 
-                  {/* Producto */}
+                  {}
                   <TableCell>
                     <Typography variant="body2" fontWeight={600}>
                       {cert.product}
                     </Typography>
                   </TableCell>
 
-                  {/* Fecha */}
+                  {}
                   <TableCell>{cert.issueDate}</TableCell>
 
-                  {/* Estado */}
+                  {}
                   <TableCell>
                     <Chip
                       label={cert.status}
@@ -210,7 +196,7 @@ const CertificacionesTab = ({
                     />
                   </TableCell>
 
-                  {/* Acciones */}
+                  {}
                   <TableCell align="right">
                     <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
                       <Tooltip
@@ -246,7 +232,7 @@ const CertificacionesTab = ({
         </TableContainer>
       )}
 
-      {/* Diálogo de Confirmación */}
+      {}
       <Dialog
         open={deleteId !== null}
         onClose={() => setDeleteId(null)}
@@ -256,7 +242,7 @@ const CertificacionesTab = ({
         <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Está seguro de que desea eliminar este certificado de forma permanente? 
+            ¿Está seguro de que desea eliminar este certificado de forma permanente?
             Esta acción no se puede deshacer.
           </DialogContentText>
         </DialogContent>
@@ -279,3 +265,4 @@ const CertificacionesTab = ({
 };
 
 export default CertificacionesTab;
+

@@ -11,7 +11,6 @@ import { useAuth } from "../model/AuthContext";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import { logService } from "../../audit";
 
-
 interface PinValidationDialogProps {
   open: boolean;
   onClose: () => void;
@@ -19,9 +18,9 @@ interface PinValidationDialogProps {
   title?: string;
 }
 
-const PinValidationDialog: React.FC<PinValidationDialogProps> = ({ 
-  open, 
-  onClose, 
+const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
+  open,
+  onClose,
   onSuccess,
   title = "Autorización Requerida"
 }) => {
@@ -35,13 +34,13 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
       setError("Ingresa un PIN");
       return;
     }
-    
+
     setLoading(true);
     setError("");
-    
+
     try {
       const result = await validatePinForAction(pin);
-      
+
       if (result.success) {
         const validPin = pin;
         setPin("");
@@ -49,12 +48,11 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
       } else {
         setPin("");
         setError(result.error || "Error en la validación");
-        
-        // Registrar intento fallido en la bitácora (ISO 27001 A.12.4.3)
+
         logService.log(
-          username || "unknown", 
-          role || "unknown", 
-          "FAILED_PIN_ATTEMPT", 
+          username || "unknown",
+          role || "unknown",
+          "FAILED_PIN_ATTEMPT",
           `Intento fallido de PIN para la acción: "${title}"`,
           "error"
         );
@@ -134,7 +132,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
           </Box>
 
           <Box display="flex" justifyContent="center" height={24}>
-            {/* Show dots depending on pin length */}
+            {}
             {Array.from({ length: 4 }).map((_, i) => (
               <Box
                 key={i}
@@ -167,3 +165,4 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
 };
 
 export default PinValidationDialog;
+

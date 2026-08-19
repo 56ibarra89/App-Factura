@@ -1,14 +1,4 @@
-/**
- * CuponDialog — Formulario de creación / edición de cupones manuales.
- *
- * SOLID:
- *  S — Single Responsibility: solo gestiona la UI del formulario.
- *      No toca el estado global; todo lo delega a onSave.
- *  O — Open/Closed: soporta modo "crear" y "editar" sin bifurcar la lógica
- *      interna — solo cambia el estado inicial del formulario.
- *  I — Interface Segregation: onSave recibe solo lo que el dialog produce;
- *      la reconstrucción de campos derivados ocurre en useCupones.
- */
+
 import {
   Dialog,
   DialogTitle,
@@ -34,26 +24,19 @@ import type {
   CuponStatus,
 } from "../../model/promotion.types";
 
-// ── Tipo de salida del formulario ────────────────────────────────────────────
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-/** Genera un código alfanumérico aleatorio de la longitud indicada. */
 function generateCode(length = 8): string {
   return Array.from({ length }, () =>
     CHARS.charAt(Math.floor(Math.random() * CHARS.length))
   ).join("");
 }
 
-// ── Estado inicial del formulario ────────────────────────────────────────────
-
 type FormState = {
   code: string;
   discountType: CuponRule["discountType"];
   discountValue: string;
-  maxUses: string; // string para el TextField, se convierte a number al guardar
+  maxUses: string;
   expiresDate: string;
   manualStatus: CuponStatus;
 };
@@ -67,12 +50,10 @@ const DEFAULT_FORM: FormState = {
   manualStatus: "Activo",
 };
 
-// ── Componente ───────────────────────────────────────────────────────────────
-
 interface CuponDialogProps {
   open: boolean;
   onClose: () => void;
-  /** Recibe los datos del formulario; useCupones construye el resto. */
+
   onSave: (data: CuponFormOutput) => void;
   editingCupon?: CuponRule | null;
 }
@@ -86,7 +67,6 @@ const CuponDialog = ({
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
 
-  // Pre-llenar al editar
   useEffect(() => {
     if (open) {
       if (editingCupon) {
@@ -96,8 +76,7 @@ const CuponDialog = ({
           discountValue: editingCupon.discountValue,
           maxUses: editingCupon.maxUses === 0 ? "" : String(editingCupon.maxUses),
           expiresDate: editingCupon.expiresDate,
-          // Al editar se muestra el estado actual; si está Agotado/Vencido lo
-          // tratamos como "Activo" para que el usuario pueda corregir los datos
+
           manualStatus:
             editingCupon.status === "Agotado" || editingCupon.status === "Vencido"
               ? "Activo"
@@ -110,7 +89,6 @@ const CuponDialog = ({
     }
   }, [open, editingCupon]);
 
-  // ── Validación ─────────────────────────────────────────────────────────────
   const validate = (): boolean => {
     const next: Partial<Record<keyof FormState, string>> = {};
 
@@ -134,13 +112,12 @@ const CuponDialog = ({
     return Object.keys(next).length === 0;
   };
 
-  // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     onSave({
-      id: editingCupon?.id ?? 0, // 0 = nuevo; useCupones asigna Date.now()
+      id: editingCupon?.id ?? 0,
       code: form.code.trim().toUpperCase(),
       discountType: form.discountType,
       discountValue: form.discountValue,
@@ -163,7 +140,7 @@ const CuponDialog = ({
       <form onSubmit={handleSubmit}>
         <DialogContent dividers>
           <Stack spacing={2.5}>
-            {/* Código */}
+            {}
             <TextField
               fullWidth
               label="Código del cupón"
@@ -192,7 +169,7 @@ const CuponDialog = ({
               }}
             />
 
-            {/* Tipo de descuento */}
+            {}
             <FormControl fullWidth>
               <InputLabel>Tipo de descuento</InputLabel>
               <Select
@@ -211,7 +188,7 @@ const CuponDialog = ({
               </Select>
             </FormControl>
 
-            {/* Valor del descuento */}
+            {}
             <TextField
               fullWidth
               label="Valor del descuento"
@@ -239,7 +216,7 @@ const CuponDialog = ({
               }}
             />
 
-            {/* Límite de usos */}
+            {}
             <TextField
               fullWidth
               label="Límite de usos"
@@ -257,7 +234,7 @@ const CuponDialog = ({
               }
             />
 
-            {/* Fecha de vencimiento */}
+            {}
             <TextField
               fullWidth
               label="Fecha de vencimiento"
@@ -268,7 +245,7 @@ const CuponDialog = ({
               helperText="Déjalo vacío para que no expire. El estado cambia a 'Vencido' automáticamente."
             />
 
-            {/* Estado manual */}
+            {}
             <FormControl fullWidth>
               <InputLabel>Estado</InputLabel>
               <Select
@@ -308,3 +285,4 @@ const CuponDialog = ({
 };
 
 export default CuponDialog;
+

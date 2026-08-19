@@ -51,7 +51,7 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, subtitle
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "rgba(211, 47, 47, 0.1)", // Color subtle rojo
+                background: "rgba(211, 47, 47, 0.1)",
                 color: "#d32f2f",
               }}
             >
@@ -63,3 +63,4 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, subtitle
     </Card>
   );
 };
+

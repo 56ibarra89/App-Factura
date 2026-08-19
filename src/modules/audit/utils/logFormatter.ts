@@ -123,7 +123,6 @@ export function getActionMetadata(action: string): ActionMetadata {
     return ACTION_METADATA_MAP[action];
   }
 
-  // Formato fallback para acciones no mapeadas (ej: SHIFT_OPEN -> Shift Open)
   const formattedLabel = action
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -150,7 +149,6 @@ export function parseLogDetails(details?: string): ParsedLogDetails {
   try {
     const parsed = JSON.parse(trimmed) as Record<string, any>;
 
-    // Caso especial: Orden finalizada / Facturación
     if (parsed.invoiceNumber || parsed.orderId || parsed.finalTotal !== undefined) {
       const payments = Array.isArray(parsed.payments)
         ? parsed.payments.map((p: any) => ({
@@ -200,3 +198,4 @@ export function parseLogDetails(details?: string): ParsedLogDetails {
     return { isJson: false, raw: details, summaryText: details };
   }
 }
+

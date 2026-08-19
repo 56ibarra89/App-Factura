@@ -16,7 +16,7 @@ import { CajaContext } from "./CajaContext";
 
 interface CajaProviderProps {
   children: ReactNode;
-  /** DIP: permite inyectar un repositorio alternativo (e.g. mock para tests) */
+
   repository?: IShiftRepository;
 }
 
@@ -24,14 +24,14 @@ export const CajaProvider = ({
   children,
   repository = defaultShiftRepository,
 }: CajaProviderProps) => {
-  const { username } = useAuth();
+  const { username, role } = useAuth();
   const { orders } = useOrderQueries();
 
   const [currentShift, setCurrentShift] = useState<Shift | null>(null);
-  // Limpiar el turno si el usuario logueado cambia o cierra sesión
+
   useEffect(() => {
     if (currentShift) {
-      // Si no hay usuario logueado (cerró sesión) o si el turno le pertenece a otro usuario
+
       if (!username || currentShift.cashierName !== username) {
         console.log("[CajaContext] Usuario deslogueado o turno de otro usuario. Limpiando estado.");
         setCurrentShift(null);
@@ -39,10 +39,9 @@ export const CajaProvider = ({
     }
   }, [username, currentShift]);
 
-  // Recuperar el turno activo desde el backend cuando el usuario inicia sesión
   useEffect(() => {
     let isMounted = true;
-    if (username) {
+    if (username && role !== "motorizado") {
       repository.getActiveShiftForUser(username).then((shift) => {
         if (isMounted && shift) {
           console.log("[CajaContext] Turno activo recuperado del backend para:", username);
@@ -51,9 +50,7 @@ export const CajaProvider = ({
       }).catch(err => console.error("Error al recuperar turno activo:", err));
     }
     return () => { isMounted = false; };
-  }, [username, repository]);
-
-
+  }, [username, repository, role]);
 
   const calculateCurrentShiftSales = useCallback((): ShiftSales => {
     if (!currentShift) return { cash: 0, card: 0, app: 0, total: 0 };
@@ -118,3 +115,4 @@ export const CajaProvider = ({
     </CajaContext.Provider>
   );
 };
+

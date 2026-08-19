@@ -27,7 +27,7 @@ export interface CashRegisterConfig {
   type?: CashRegisterType;
   assignedUserIds?: string[];
   assignedUserNames?: string[];
-  /** Compatibilidad con configuraciones guardadas antes de admitir múltiples usuarios. */
+
   assignedUserId?: string;
   assignedUserName?: string;
 }
@@ -46,16 +46,17 @@ export interface CloseShiftData {
 export interface ShiftProfileConfig {
   id: string;
   name: string;
-  startTime: string; // "HH:MM"
-  endTime: string;   // "HH:MM"
+  startTime: string;
+  endTime: string;
   description?: string;
   assignedRole?: string;
   assignedUserIds?: string[];
   assignedUserNames?: string[];
-  daysOfWeek?: number[]; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  daysOfWeek?: number[];
 }
 
 export interface CashRegisterConfigState {
   cashRegisters: CashRegisterConfig[];
   shiftProfiles: ShiftProfileConfig[];
 }
+

@@ -1,6 +1,3 @@
-/**
- * useCustomerSearch — SRP: encapsula la lógica de búsqueda y guardado de clientes.
- */
 
 import { useState, useCallback, useRef } from "react";
 import {
@@ -19,7 +16,6 @@ export function useCustomerSearch(options: UseCustomerSearchOptions = {}) {
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** Busca clientes cuyo nombre empiece con `query` (debounce 200ms). */
   const search = useCallback((query: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -42,10 +38,6 @@ export function useCustomerSearch(options: UseCustomerSearchOptions = {}) {
     }, 200);
   }, [repository]);
 
-  /**
-   * Guarda o actualiza un cliente con su dirección.
-   * @returns `true` si el cliente es nuevo (para mostrar toast).
-   */
   const saveCustomer = useCallback(
     async (name: string, address?: string, phone?: string): Promise<boolean> => {
       if (!name.trim()) return false;
@@ -68,3 +60,4 @@ export function useCustomerSearch(options: UseCustomerSearchOptions = {}) {
 
   return { suggestions, loading, search, saveCustomer, clearSuggestions };
 }
+

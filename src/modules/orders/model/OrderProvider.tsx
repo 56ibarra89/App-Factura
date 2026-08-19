@@ -56,7 +56,7 @@ export function OrderProvider({
   preferencesGateway = defaultPreferencesGateway,
   pollIntervalMs,
 }: OrderProviderProps) {
-  const { username, isLoggedIn } = useAuth();
+  const { username, isLoggedIn, role } = useAuth();
   const { orders, ordersRef, updateOrders } = useOrderStore();
   const {
     currentOrders = defaultOrdersGateway,
@@ -69,7 +69,7 @@ export function OrderProvider({
   } = gateways;
 
   useOrderSynchronization({
-    isLoggedIn,
+    isLoggedIn: isLoggedIn && role !== "motorizado",
     ordersRef,
     updateOrders,
     gateway: currentOrders,

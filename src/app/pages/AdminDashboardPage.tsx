@@ -17,7 +17,6 @@ import {
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
 
-  // Helper para renderizar categorías
   const renderCategory = (categoryName: AdminCategory) => {
     const modules = adminModules.filter((m) => m.category === categoryName);
     if (modules.length === 0) return null;
@@ -64,7 +63,7 @@ const AdminDashboardPage = () => {
         overflowX: "hidden",
       }}
     >
-      {/* Fondo decorativo enorme para darle "aire" de Control Center */}
+      {}
       <Box
         sx={{
           position: "absolute",
@@ -115,3 +114,4 @@ const AdminDashboardPage = () => {
 };
 
 export default AdminDashboardPage;
+

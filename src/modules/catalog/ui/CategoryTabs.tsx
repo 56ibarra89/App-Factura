@@ -1,4 +1,4 @@
-// Navegación de categorías del catálogo.
+
 import { Box, Tabs, Tab, IconButton } from "@mui/material";
 import { Home } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -41,10 +41,10 @@ const CategoryTabs = ({
       }}
     >
       <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
-        <IconButton 
+        <IconButton
           onClick={() => navigate("/home")}
-          sx={{ 
-            bgcolor: "background.paper", 
+          sx={{
+            bgcolor: "background.paper",
             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             "&:hover": { bgcolor: "action.selected" }
           }}
@@ -95,3 +95,4 @@ const CategoryTabs = ({
 };
 
 export default CategoryTabs;
+

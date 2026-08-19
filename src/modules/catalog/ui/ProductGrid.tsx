@@ -1,4 +1,4 @@
-// Cuadrícula reutilizable del catálogo.
+
 import Box from "@mui/material/Box";
 import ProductCard from "./ProductCard";
 import type { Product } from "../model/catalog.types";
@@ -27,3 +27,4 @@ const ProductGrid = ({ products, onProductClick }: ProductGridProps) => {
 };
 
 export default ProductGrid;
+

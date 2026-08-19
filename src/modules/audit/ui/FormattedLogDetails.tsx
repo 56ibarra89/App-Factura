@@ -35,7 +35,6 @@ export function FormattedLogDetails({ details, compact = false }: FormattedLogDe
     );
   }
 
-  // Si no es JSON, mostrar como texto plano estilizado
   if (!parsed.isJson) {
     return (
       <Typography
@@ -51,7 +50,6 @@ export function FormattedLogDetails({ details, compact = false }: FormattedLogDe
     );
   }
 
-  // Si es una orden finalizada / datos de factura
   if (parsed.orderInfo) {
     const { orderInfo } = parsed;
 
@@ -183,3 +181,4 @@ export function FormattedLogDetails({ details, compact = false }: FormattedLogDe
     </Box>
   );
 }
+

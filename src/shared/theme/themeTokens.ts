@@ -1,4 +1,3 @@
-// Tokens visuales compartidos por la aplicaciÃ³n.
 
 export const LOGIN_COLORS = {
   primary: "#d32f2f",
@@ -21,3 +20,4 @@ export const LOGIN_SHADOWS = {
   logo: "0 8px 32px rgba(0, 0, 0, 0.3)",
   title: "0 2px 10px rgba(0,0,0,0.3)",
 } as const;
+

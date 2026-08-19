@@ -30,10 +30,9 @@ export default function TablesPage() {
   const { assignedFloorId, loadingZone } = useMyTodayZone();
   const { username, role } = useAuth();
   const { taxes, isExonerated } = useTaxConfig();
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Helper para restaurar el foco y evitar bloqueos de Electron
   const restoreFocus = useCallback(() => {
     setTimeout(() => {
       containerRef.current?.focus();
@@ -43,7 +42,6 @@ export default function TablesPage() {
   const navigate = useNavigate();
   const handleSalir = () => navigate("/home");
 
-  // Estado para modal Dividir Cuenta
   const [isDividirCuentaOpen, setIsDividirCuentaOpen] = useState(false);
 
   useEffect(() => {
@@ -52,9 +50,8 @@ export default function TablesPage() {
     });
   }, []);
 
-  // Custom Hooks para la lógica de la mesa
   const dialogs = useMesaDialogs(restoreFocus);
-  
+
   const logic = useMesaLogic({
     floorsConfig,
     role,
@@ -66,7 +63,6 @@ export default function TablesPage() {
 
   const checkout = useMesaCheckout(restoreFocus);
 
-  // Wrapper para conectar logic y checkout
   const handleCheckoutTable = useCallback(() => {
     if (!logic.selectedMesaId || !logic.activeOrder) return;
     checkout.openCheckoutPreview(logic.activeOrder);
@@ -134,7 +130,7 @@ export default function TablesPage() {
   return (
     <Box
       ref={containerRef}
-      tabIndex={-1} 
+      tabIndex={-1}
       sx={{
         display: "flex",
         height: "100vh",
@@ -142,7 +138,7 @@ export default function TablesPage() {
         p: 2.5,
         gap: 2.5,
         boxSizing: "border-box",
-        outline: "none", 
+        outline: "none",
       }}
     >
       {/* Sidebar with branding style */}
@@ -199,7 +195,7 @@ export default function TablesPage() {
         open={dialogs.isReservationOpen}
         mesaId={logic.selectedMesaId}
         onClose={dialogs.closeReservation}
-        onConfirm={(nombre, monto, resTime, expTime) => 
+        onConfirm={(nombre, monto, resTime, expTime) =>
           logic.handleConfirmReservation(nombre, monto, resTime, expTime, dialogs.closeReservation)
         }
         disableRestoreFocus
@@ -260,3 +256,4 @@ export default function TablesPage() {
     </Box>
   );
 }
+

@@ -25,7 +25,7 @@ import type {
 } from "../../model/promotion.types";
 
 interface HappyHourTabProps {
-  /** OCP: el componente renderiza datos recibidos por props, sin conocer su origen */
+
   rules: HappyHourRule[];
   onAdd?: () => void;
   onEdit?: (rule: HappyHourRule) => void;
@@ -131,7 +131,7 @@ const HappyHourTab = ({
               }}
             >
               <CardContent>
-                {/* Header: icono + nombre + toggle de estado */}
+                {}
                 <Box
                   sx={{
                     display: "flex",
@@ -164,7 +164,7 @@ const HappyHourTab = ({
                     </Typography>
                   </Box>
 
-                  {/* Chip de estado + switch inline */}
+                  {}
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                     <Chip
                       label={hh.status}
@@ -189,7 +189,7 @@ const HappyHourTab = ({
                   </Box>
                 </Box>
 
-                {/* Datos de la regla */}
+                {}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mb: 2 }}>
                   <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                     <Typography variant="body2" color="text.secondary">
@@ -221,7 +221,7 @@ const HappyHourTab = ({
                   </Box>
                 </Box>
 
-                {/* Acciones */}
+                {}
                 <Box
                   sx={{
                     display: "flex",
@@ -257,7 +257,7 @@ const HappyHourTab = ({
         ))}
       </Grid>
 
-      {/* Diálogo de Confirmación */}
+      {}
       <Dialog
         open={deleteId !== null}
         onClose={() => setDeleteId(null)}
@@ -267,7 +267,7 @@ const HappyHourTab = ({
         <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Está seguro de que desea eliminar esta regla de Happy Hour de forma permanente? 
+            ¿Está seguro de que desea eliminar esta regla de Happy Hour de forma permanente?
             Esta acción no se puede deshacer.
           </DialogContentText>
         </DialogContent>
@@ -290,3 +290,4 @@ const HappyHourTab = ({
 };
 
 export default HappyHourTab;
+

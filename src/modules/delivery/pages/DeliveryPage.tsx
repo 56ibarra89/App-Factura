@@ -16,7 +16,7 @@ export default function DeliveryPage() {
     selectedAddress,
     searchDialogOpen,
     customerFormOpen,
-    
+
     setPhoneInput,
     setTransporteInput,
     setSelectedCustomer,
@@ -27,7 +27,7 @@ export default function DeliveryPage() {
     stats,
     selectedDriverId,
     setSelectedDriverId,
-    
+
     handleKeypadPress,
     handleConfirm,
     addAddress,
@@ -52,7 +52,7 @@ export default function DeliveryPage() {
           selectedDriverId={selectedDriverId}
           setSelectedDriverId={setSelectedDriverId}
         />
-        
+
         <DeliveryKeypadPanel
           phoneInput={phoneInput}
           selectedCustomer={selectedCustomer}
@@ -61,7 +61,7 @@ export default function DeliveryPage() {
         />
       </Box>
 
-      {/* Dialogs */}
+      {}
       <DeliveryCustomerDialog
         open={searchDialogOpen}
         onClose={() => setSearchDialogOpen(false)}
@@ -84,7 +84,7 @@ export default function DeliveryPage() {
         removeAddress={removeAddress}
         onSave={async (data: CustomerFormData) => {
            await updateCustomer(data);
-           // Refresh local selected customer state
+
            if (selectedCustomer) {
              setSelectedCustomer({
                 ...selectedCustomer,
@@ -92,8 +92,7 @@ export default function DeliveryPage() {
                 phone: data.phone,
                 addresses: data.addresses
              });
-             
-             // Update selected address if new or modified
+
              if (data.addresses.length > 0 && (!selectedAddress || !data.addresses.some(a => a.address === selectedAddress))) {
                 setSelectedAddress(data.addresses[0].address);
              }
@@ -103,3 +102,4 @@ export default function DeliveryPage() {
     </Box>
   );
 }
+

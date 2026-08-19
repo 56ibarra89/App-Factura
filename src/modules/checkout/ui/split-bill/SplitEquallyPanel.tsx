@@ -61,7 +61,7 @@ export default function SplitEquallyPanel({
         ¿Entre cuántas personas deseas dividir la cuenta?
       </Typography>
 
-      {/* Campo numérico para digitar directamente la cantidad de personas */}
+      {}
       <Box
         sx={{
           display: "flex",
@@ -149,3 +149,4 @@ export default function SplitEquallyPanel({
     </Box>
   );
 }
+

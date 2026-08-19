@@ -7,6 +7,9 @@ import {
   Divider,
   IconButton,
   Tooltip,
+  Alert,
+  Snackbar,
+  CircularProgress,
 } from "@mui/material";
 import Settings from "@mui/icons-material/Settings";
 import Logout from "@mui/icons-material/Logout";
@@ -18,8 +21,10 @@ import { Box } from "@mui/material";
 
 const AccountMenu: React.FC = () => {
   const navigate = useNavigate();
-  const { username, logout } = useAuth();
+  const { username, role, logout } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [logoutMessage, setLogoutMessage] = React.useState("");
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -28,8 +33,19 @@ const AccountMenu: React.FC = () => {
 
   const handleClose = () => setAnchorEl(null);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    const result = await logout();
+    setIsLoggingOut(false);
+
+    if (!result.success) {
+      setLogoutMessage(
+        result.message ||
+          "No puedes cerrar sesión mientras la caja permanezca abierta.",
+      );
+      return;
+    }
+
     navigate("/");
   };
 
@@ -90,20 +106,37 @@ const AccountMenu: React.FC = () => {
 
         <Divider />
 
-        <MenuItem onClick={() => navigate("/perfil")}>
-          <ListItemIcon>
-            <Settings fontSize="small" />
-          </ListItemIcon>
-          Configuración
-        </MenuItem>
+        {role !== "motorizado" && (
+          <MenuItem onClick={() => navigate("/perfil")}>
+            <ListItemIcon>
+              <Settings fontSize="small" />
+            </ListItemIcon>
+            Configuración
+          </MenuItem>
+        )}
 
-        <MenuItem onClick={handleLogout}>
+        <MenuItem onClick={() => void handleLogout()} disabled={isLoggingOut}>
           <ListItemIcon>
-            <Logout fontSize="small" />
+            {isLoggingOut ? <CircularProgress size={20} /> : <Logout fontSize="small" />}
           </ListItemIcon>
           Cerrar sesión
         </MenuItem>
       </Menu>
+      <Snackbar
+        open={Boolean(logoutMessage)}
+        autoHideDuration={6000}
+        onClose={() => setLogoutMessage("")}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          severity="warning"
+          variant="filled"
+          onClose={() => setLogoutMessage("")}
+          sx={{ width: "100%" }}
+        >
+          {logoutMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

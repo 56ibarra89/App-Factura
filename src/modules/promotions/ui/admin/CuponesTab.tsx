@@ -1,13 +1,4 @@
-/**
- * CuponesTab — Renderiza la tabla de cupones manuales.
- *
- * SOLID:
- *  S — Single Responsibility: solo renderiza. Nada de lógica de negocio.
- *  I — Interface Segregation: cada acción es una prop opcional independiente.
- *      El componente no asume que todas existen (usa el operador ?.).
- *  O — Open/Closed: se agregó onEdit sin modificar el contrato de las props
- *      existentes (onAdd, onCopy, onDelete siguen igual).
- */
+
 import { useState } from "react";
 import {
   Box,
@@ -39,9 +30,6 @@ import type {
   CuponStatus,
 } from "../../model/promotion.types";
 
-// ── Helpers de presentación ──────────────────────────────────────────────────
-
-/** Mapea CuponStatus al color del Chip de MUI. */
 function statusColor(
   s: CuponStatus
 ): "success" | "error" | "warning" | "default" {
@@ -51,17 +39,13 @@ function statusColor(
   return "default";
 }
 
-// ── Props (ISP: cada acción es opcional e independiente) ─────────────────────
-
 interface CuponesTabProps {
   cupones: CuponRule[];
   onAdd?: () => void;
-  onEdit?: (cupon: CuponRule) => void;  // ← nueva prop ISP
+  onEdit?: (cupon: CuponRule) => void;
   onCopy?: (code: string) => void;
   onDelete?: (id: number) => void;
 }
-
-// ── Componente ───────────────────────────────────────────────────────────────
 
 const CuponesTab = ({
   cupones,
@@ -81,7 +65,7 @@ const CuponesTab = ({
 
   return (
     <Box>
-      {/* Cabecera */}
+      {}
       <Box
         sx={{
           display: "flex",
@@ -110,7 +94,7 @@ const CuponesTab = ({
         </Button>
       </Box>
 
-      {/* Estado vacío */}
+      {}
       {cupones.length === 0 && (
         <Box
           sx={{
@@ -130,7 +114,7 @@ const CuponesTab = ({
         </Box>
       )}
 
-      {/* Tabla */}
+      {}
       {cupones.length > 0 && (
         <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
           <Table>
@@ -149,7 +133,7 @@ const CuponesTab = ({
             <TableBody>
               {cupones.map((cupon) => (
                 <TableRow key={cupon.id} hover>
-                  {/* Código */}
+                  {}
                   <TableCell>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Typography
@@ -177,16 +161,16 @@ const CuponesTab = ({
                     </Box>
                   </TableCell>
 
-                  {/* Descuento */}
+                  {}
                   <TableCell sx={{ fontWeight: 600 }}>{cupon.discount}</TableCell>
 
-                  {/* Uso */}
+                  {}
                   <TableCell>{cupon.usage}</TableCell>
 
-                  {/* Vencimiento */}
+                  {}
                   <TableCell>{cupon.expires}</TableCell>
 
-                  {/* Estado — color calculado automáticamente */}
+                  {}
                   <TableCell>
                     <Chip
                       label={cupon.status}
@@ -196,7 +180,7 @@ const CuponesTab = ({
                     />
                   </TableCell>
 
-                  {/* Acciones */}
+                  {}
                   <TableCell align="right">
                     <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
                       <Tooltip title="Editar cupón">
@@ -226,7 +210,7 @@ const CuponesTab = ({
         </TableContainer>
       )}
 
-      {/* Diálogo de Confirmación */}
+      {}
       <Dialog
         open={deleteId !== null}
         onClose={() => setDeleteId(null)}
@@ -236,7 +220,7 @@ const CuponesTab = ({
         <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Está seguro de que desea eliminar este cupón de forma permanente? 
+            ¿Está seguro de que desea eliminar este cupón de forma permanente?
             Esta acción no se puede deshacer.
           </DialogContentText>
         </DialogContent>
@@ -259,3 +243,4 @@ const CuponesTab = ({
 };
 
 export default CuponesTab;
+

@@ -78,7 +78,7 @@ export const ResetPassword = () => {
 
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "background.default" }}>
-      {/* Panel Izquierdo */}
+      {}
       <Box
         sx={{
           flex: { xs: "none", md: 1 },
@@ -100,7 +100,7 @@ export const ResetPassword = () => {
         </Typography>
       </Box>
 
-      {/* Formulario Derecho */}
+      {}
       <Box
         component="form"
         onSubmit={handleSubmit}
@@ -212,3 +212,4 @@ export const ResetPassword = () => {
     </Box>
   );
 };
+

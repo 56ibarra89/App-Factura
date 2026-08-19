@@ -21,20 +21,19 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Actualiza el estado para que el siguiente renderizado muestre la interfaz de repuesto
+
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Registrar el error en la bitácora de auditoría (ISO 27001 A.12.4.3)
+
     console.error("Uncaught error:", error, errorInfo);
-    
-    // Intentar registrar en el servicio de logs
+
     logService.log(
-      "system", 
-      "critical_error", 
-      "APP_CRASH", 
-      `Fallo crítico de aplicación: ${error.message}. Stack trace capturado en consola.`, 
+      "system",
+      "critical_error",
+      "APP_CRASH",
+      `Fallo crítico de aplicación: ${error.message}. Stack trace capturado en consola.`,
       "error"
     );
   }
@@ -68,22 +67,22 @@ class ErrorBoundary extends Component<Props, State> {
             }}
           >
             <ErrorOutlineIcon sx={{ fontSize: 80, color: LOGIN_COLORS.primary, mb: 2 }} />
-            
+
             <Typography variant="h4" fontWeight={900} gutterBottom color="text.primary">
               ¡Ups! Algo salió mal
             </Typography>
-            
+
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-              Se ha detectado un error inesperado. Por seguridad y para garantizar la integridad de tus datos, 
+              Se ha detectado un error inesperado. Por seguridad y para garantizar la integridad de tus datos,
               hemos pausado la ejecución y registrado el incidente en la bitácora de auditoría.
             </Typography>
 
-            <Box 
-              sx={{ 
-                bgcolor: "action.hover", 
-                p: 2, 
-                borderRadius: 2, 
-                mb: 4, 
+            <Box
+              sx={{
+                bgcolor: "action.hover",
+                p: 2,
+                borderRadius: 2,
+                mb: 4,
                 textAlign: "left",
                 border: "1px solid",
                 borderColor: "grey.200",
@@ -112,7 +111,7 @@ class ErrorBoundary extends Component<Props, State> {
             >
               Reiniciar Aplicación
             </Button>
-            
+
             <Typography variant="caption" display="block" sx={{ mt: 3, color: "text.disabled" }}>
               Si el problema persiste, contacta al soporte técnico.
             </Typography>
@@ -126,3 +125,4 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
 export default ErrorBoundary;
+

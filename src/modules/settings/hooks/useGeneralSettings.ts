@@ -27,7 +27,6 @@ export const useGeneralSettings = (
     configRef.current = config;
   }, [config]);
 
-  // Mantener varias instancias del hook en sync (p.ej. Admin y Facturación)
   useEffect(() => {
     const onUpdated = (event: Event) => {
       const customEvent = event as CustomEvent<Partial<GeneralConfigState>>;
@@ -40,7 +39,6 @@ export const useGeneralSettings = (
     return () => window.removeEventListener(GENERAL_CONFIG_UPDATED_EVENT, onUpdated);
   }, []);
 
-  // Cargar configuración inicial
   useEffect(() => {
     let isMounted = true;
     const loadConfig = async () => {
@@ -48,7 +46,7 @@ export const useGeneralSettings = (
         const savedConfig = await gateway.load();
         if (isMounted && savedConfig) {
           setConfig((prev) => ({ ...prev, ...savedConfig }));
-          // Notificar a App.tsx y otras instancias que la configuración ya cargó desde el backend
+
           window.dispatchEvent(new CustomEvent(GENERAL_CONFIG_UPDATED_EVENT, { detail: savedConfig }));
         }
       } catch (error) {
@@ -64,29 +62,26 @@ export const useGeneralSettings = (
   const updatePreference = useCallback(<K extends keyof GeneralConfigState>(key: K, value: GeneralConfigState[K]) => {
     setConfig(prev => {
       const newConfig = { ...prev, [key]: value };
-      
-      // Guardar asíncronamente
+
       gateway.save(newConfig).catch(err => {
         console.error("Error guardando configuración:", err);
       });
 
-      // Notificar a otras instancias del hook (misma ventana)
       window.dispatchEvent(new CustomEvent(GENERAL_CONFIG_UPDATED_EVENT, { detail: { [key]: value } as Partial<GeneralConfigState> }));
-      
+
       return newConfig;
     });
-    
-    // Solo loggear cambios críticos para no saturar la bitácora
+
     const criticalKeys: (keyof GeneralConfigState)[] = [
-      'currencyCode', 'exchangeRate', 'enableSecondaryCurrency', 
+      'currencyCode', 'exchangeRate', 'enableSecondaryCurrency',
       'requireExactOpeningAmount', 'blindCashCount'
     ];
 
     if (criticalKeys.includes(key)) {
       logService.log(
-        username, 
-        role, 
-        "CONFIG_CHANGE", 
+        username,
+        role,
+        "CONFIG_CHANGE",
         `Cambio en preferencia del sistema: ${String(key)} a ${String(value)}`
       );
     }
@@ -111,3 +106,4 @@ export const useGeneralSettings = (
     saveConfig,
   };
 };
+

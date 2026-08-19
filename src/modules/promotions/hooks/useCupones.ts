@@ -1,6 +1,4 @@
-/**
- * useCupones — Hook CRUD para la gestión de cupones manuales conectado al backend.
- */
+
 import { useState, useCallback, useEffect } from "react";
 import type {
   CuponRule,
@@ -11,8 +9,6 @@ import {
   type CouponRecord,
   type PromotionsGateway,
 } from "../api/promotionsGateway";
-
-// ── Función pura de dominio ──────────────────────────────────────────────────
 
 export function computeCuponStatus(
   maxUses: number,
@@ -141,3 +137,4 @@ export function useCupones(
 
   return { cupones, loading, addCupon, editCupon, deleteCupon, refresh: fetchCupones };
 }
+

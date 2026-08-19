@@ -23,11 +23,8 @@ import type {
 } from "../../model/promotion.types";
 import { useCatalog } from "../../../catalog";
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
 const DAYS_OF_WEEK = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
-/** Genera los campos derivados `days`, `time` y `promotion` a partir del formulario */
 function buildDerivedFields(
   daysOfWeek: string[],
   startTime: string,
@@ -377,3 +374,4 @@ const HappyHourDialog = ({
 };
 
 export default HappyHourDialog;
+

@@ -1,7 +1,3 @@
-/**
- * CustomerAddressChips — SRP: solo renderiza las direcciones de un cliente como Chips.
- * OCP: acepta callbacks para agregar/eliminar sin conocer el estado padre.
- */
 
 import React, { useState } from "react";
 import {
@@ -22,7 +18,7 @@ interface Props {
   addresses: CustomerAddress[];
   onAdd: (text: string) => void;
   onRemove: (id: string) => void;
-  /** Si true, los chips son solo de lectura (sin botón "x") */
+
   readOnly?: boolean;
 }
 
@@ -58,7 +54,7 @@ const CustomerAddressChips: React.FC<Props> = ({
         Direcciones guardadas
       </Typography>
 
-      {/* Lista de chips */}
+      {}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: readOnly ? 0 : 1.5 }}>
         {addresses.length === 0 && (
           <Typography variant="body2" color="text.disabled" sx={{ fontStyle: "italic" }}>
@@ -79,7 +75,7 @@ const CustomerAddressChips: React.FC<Props> = ({
         ))}
       </Box>
 
-      {/* Campo para agregar nueva dirección */}
+      {}
       {!readOnly && (
         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <TextField
@@ -110,3 +106,4 @@ const CustomerAddressChips: React.FC<Props> = ({
 };
 
 export default CustomerAddressChips;
+

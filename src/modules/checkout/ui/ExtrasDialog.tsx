@@ -1,4 +1,4 @@
-// Selección de extras durante el checkout.
+
 import {
   Dialog,
   DialogTitle,
@@ -51,7 +51,6 @@ export default function ExtrasDialog({
     });
   };
 
-  /** Obtiene el precio del extra para el tamaño seleccionado */
   const getPriceForSize = (extra: ExtraIngredientDef): number => {
     const priceObj = extra.prices.find((p) => p.size === size);
     return priceObj?.price ?? 0;
@@ -167,3 +166,4 @@ export default function ExtrasDialog({
     </Dialog>
   );
 }
+

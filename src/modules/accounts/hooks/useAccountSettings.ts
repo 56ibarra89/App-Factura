@@ -45,8 +45,7 @@ export function useAccountSettings(
           pin: user.pin || "",
           themePreference: (user.themePreference as 'light' | 'dark') || 'light',
         }));
-        
-        // Sincronizar con el localStorage local de una vez
+
           if (user.themePreference) {
             setThemePreference(user.themePreference as ThemePreference);
         }
@@ -65,11 +64,9 @@ export function useAccountSettings(
     setSuccess("");
     setShowLogoutModal(false);
 
-    // Aplicación inmediata del tema visualmente, pero se guarda en backend al darle a Guardar
     if (field === 'themePreference') {
       setThemePreference(value as ThemePreference);
-      
-      // Guardar instantáneamente en el backend sin requerir darle a Guardar
+
       if (data.id) {
         gateway
           .update(data.id, { themePreference: value as ThemePreference })
@@ -199,3 +196,4 @@ export function useAccountSettings(
     handleSave,
   };
 }
+

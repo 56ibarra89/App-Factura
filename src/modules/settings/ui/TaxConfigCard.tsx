@@ -20,7 +20,7 @@ export const TaxConfigCard: React.FC<Props> = ({ tax, onUpdate, disabled = false
       onUpdate(tax.id, num);
       setIsEditing(false);
     } else {
-      // Revert if invalid
+
       setValue(tax.percentage.toString());
       setIsEditing(false);
     }
@@ -82,17 +82,17 @@ export const TaxConfigCard: React.FC<Props> = ({ tax, onUpdate, disabled = false
           sx={{ width: 120 }}
         />
         {isEditing ? (
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={handleSave}
             sx={{ bgcolor: LOGIN_COLORS.primary, "&:hover": { bgcolor: LOGIN_COLORS.primaryDark } }}
           >
             Guardar
           </Button>
         ) : (
-          <Button 
-            variant="outlined" 
+          <Button
+            variant="outlined"
             onClick={() => setIsEditing(true)}
             disabled={disabled}
             sx={{ borderColor: LOGIN_COLORS.primary, color: LOGIN_COLORS.primary }}
@@ -104,3 +104,4 @@ export const TaxConfigCard: React.FC<Props> = ({ tax, onUpdate, disabled = false
     </Paper>
   );
 };
+

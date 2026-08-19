@@ -1,13 +1,4 @@
-/**
- * CertificadoDetailDialog — Muestra el detalle de un certificado/vale y
- * permite canjearlo (Disponible → Entregado) o anularlo (Disponible → Anulado).
- *
- * SOLID:
- *  S — Single Responsibility: solo presenta datos y gestiona las transiciones
- *      de estado. No emite nuevos certificados (eso es responsabilidad de CertificadoDialog).
- *  I — Interface Segregation: onMarkDelivered y onCancel son props opcionales
- *      e independientes. El componente funciona aunque solo reciba una de ellas.
- */
+
 import {
   Dialog,
   DialogTitle,
@@ -28,8 +19,6 @@ import type {
   CertificadoRule,
 } from "../../model/promotion.types";
 
-// ── Helpers de presentación ──────────────────────────────────────────────────
-
 function statusColor(
   s: CertificadoRule["status"]
 ): "success" | "default" | "error" {
@@ -44,8 +33,6 @@ function statusLabel(s: CertificadoRule["status"]): string {
   return "🚫 Anulado";
 }
 
-// ── Fila de detalle ──────────────────────────────────────────────────────────
-
 const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", py: 0.75 }}>
     <Typography variant="body2" color="text.secondary" sx={{ minWidth: 140 }}>
@@ -57,15 +44,13 @@ const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) 
   </Box>
 );
 
-// ── Componente ───────────────────────────────────────────────────────────────
-
 interface CertificadoDetailDialogProps {
   open: boolean;
   onClose: () => void;
   certificado: CertificadoRule | null;
-  /** ISP: prop opcional — solo se muestra el botón si se provee */
+
   onMarkDelivered?: (id: number) => void;
-  /** ISP: prop opcional — solo se muestra el botón si se provee */
+
   onCancel?: (id: number) => void;
 }
 
@@ -99,7 +84,7 @@ const CertificadoDetailDialog = ({
 
       <DialogContent dividers>
         <Stack spacing={2}>
-          {/* Serial destacado */}
+          {}
           <Box
             sx={{
               textAlign: "center",
@@ -129,7 +114,7 @@ const CertificadoDetailDialog = ({
             />
           </Box>
 
-          {/* Datos del certificado */}
+          {}
           <Box>
             <Divider sx={{ mb: 1 }} />
             <DetailRow label="Origen / Empresa" value={certificado.origin} />
@@ -164,7 +149,7 @@ const CertificadoDetailDialog = ({
             )}
           </Box>
 
-          {/* Acciones de transición — solo si el vale está Disponible */}
+          {}
           {isAvailable && (
             <Stack spacing={1.5}>
               {onMarkDelivered && (
@@ -193,7 +178,7 @@ const CertificadoDetailDialog = ({
             </Stack>
           )}
 
-          {/* Aviso si ya fue procesado */}
+          {}
           {!isAvailable && (
             <Alert
               severity={certificado.status === "Entregado" ? "info" : "error"}
@@ -217,3 +202,4 @@ const CertificadoDetailDialog = ({
 };
 
 export default CertificadoDetailDialog;
+

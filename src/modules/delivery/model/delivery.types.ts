@@ -5,6 +5,7 @@ export interface DeliveryStat {
 
 export interface DeliveryDriver {
   id: string;
+  username?: string;
   firstName: string;
   lastName: string;
   role: string;

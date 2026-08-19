@@ -9,11 +9,6 @@ import {
 export type CajaActiveMock = ActiveCashRegister;
 export type WaiterPerformanceMock = WaiterPerformance;
 
-/**
- * MOCK DATA
- * En una aplicación final, esto se obtendría del backend o del estado global fusionando
- * turnos activos remotos. Por ahora proveemos datos demostrativos estructurados (OCP).
- */
 export const useCashRegisterDashboard = (
   gateway: AdminDashboardGateway = adminDashboardGateway,
 ) => {
@@ -47,3 +42,4 @@ export const useCashRegisterDashboard = (
     loading
   };
 };
+

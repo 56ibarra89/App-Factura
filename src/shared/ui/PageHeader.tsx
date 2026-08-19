@@ -3,9 +3,9 @@ import { Box, Typography } from "@mui/material";
 
 interface PageHeaderProps {
   title: string;
-  /** Componente que se renderiza a la derecha (ej: AccountMenu, botones) */
+
   actions?: ReactNode;
-  /** Contenido que se renderiza a la izquierda antes del título (ej: logo) */
+
   startContent?: ReactNode;
 }
 
@@ -33,3 +33,4 @@ const PageHeader = ({ title, actions, startContent }: PageHeaderProps) => (
 );
 
 export default PageHeader;
+

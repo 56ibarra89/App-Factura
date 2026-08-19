@@ -44,12 +44,12 @@ const InvoicesPage = ({
 
   const handlePrint = (order: Invoice) => {
     setIsViewOnly(false);
-    // Si es admin, mostramos el diálogo de previsualización directamente
+
     if (role === "admin") {
       setSelectedOrder(order);
       setPreviewOpen(true);
     } else {
-      // Si no es admin, pedimos autorización por PIN
+
       setOrderToPrint(order);
       setPinDialogOpen(true);
     }
@@ -153,3 +153,4 @@ const InvoicesPage = ({
 };
 
 export default InvoicesPage;
+

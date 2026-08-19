@@ -17,26 +17,24 @@ type FilterType = "today" | "week" | "month" | "custom";
 const SalesReportsPage = () => {
   const [privacyMode, setPrivacyMode] = useState(false);
   const [filterType, setFilterType] = useState<FilterType>("today");
-  
-  // Custom date range state
+
   const [customStart, setCustomStart] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [customEnd, setCustomEnd] = useState<string>(format(new Date(), "yyyy-MM-dd"));
 
-  // Calculate start and end dates based on filter
   const { startDate, endDate } = useMemo(() => {
     const now = new Date();
     switch (filterType) {
       case "today":
         return { startDate: startOfDay(now), endDate: endOfDay(now) };
       case "week":
-        // startOfWeek usa domingo por defecto, podemos poner { weekStartsOn: 1 } si queremos lunes
+
         return { startDate: startOfWeek(now, { weekStartsOn: 1 }), endDate: endOfWeek(now, { weekStartsOn: 1 }) };
       case "month":
         return { startDate: startOfMonth(now), endDate: endOfMonth(now) };
       case "custom":
-        return { 
-          startDate: startOfDay(new Date(customStart + "T00:00:00")), 
-          endDate: endOfDay(new Date(customEnd + "T00:00:00")) 
+        return {
+          startDate: startOfDay(new Date(customStart + "T00:00:00")),
+          endDate: endOfDay(new Date(customEnd + "T00:00:00"))
         };
       default:
         return { startDate: startOfDay(now), endDate: endOfDay(now) };
@@ -45,7 +43,6 @@ const SalesReportsPage = () => {
 
   const { data, isLoading, error } = useSalesReport(startDate, endDate);
 
-  // Determinar si agrupamos por día para pasar al chart
   const daysDiff = differenceInDays(endDate, startDate);
   const groupByDay = daysDiff >= 1;
 
@@ -113,7 +110,7 @@ const SalesReportsPage = () => {
             )}
 
             <Box display="flex" gap={1}>
-              <IconButton 
+              <IconButton
                 onClick={() => setPrivacyMode(!privacyMode)}
                 sx={{ bgcolor: "background.paper", boxShadow: 1 }}
                 title={privacyMode ? "Mostrar montos" : "Ocultar montos (Privacidad)"}
@@ -138,7 +135,7 @@ const SalesReportsPage = () => {
         </Box>
       ) : data ? (
         <Grid container spacing={3} sx={{ mt: 1 }}>
-          {/* Tarjetas de Estadísticas Top */}
+          {}
           <Grid size={{ xs: 12, md: 6 }}>
             <StatCard
               title="Ventas Totales (Entregadas)"
@@ -174,3 +171,4 @@ const SalesReportsPage = () => {
 };
 
 export default SalesReportsPage;
+

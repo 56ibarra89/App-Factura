@@ -21,7 +21,7 @@ export function useMyTodayZone() {
 
   useEffect(() => {
     async function fetchMyZone() {
-      // Solo nos importa si es mesero
+
       if (role !== "mesero" || !username) {
         setLoading(false);
         return;
@@ -29,7 +29,7 @@ export function useMyTodayZone() {
 
       const currentUser = users.find((u) => u.username === username);
       if (!currentUser) {
-        // Aún no cargan los usuarios
+
         return;
       }
 
@@ -38,7 +38,7 @@ export function useMyTodayZone() {
         const todayStr = DAYS_MAP[todayIndex];
 
         const zones = await waiterZonesGateway.getZonesByUserId(currentUser.id);
-        
+
         if (zones && zones[todayStr]) {
           setAssignedFloorId(zones[todayStr]);
         } else {
@@ -60,3 +60,4 @@ export function useMyTodayZone() {
     loadingZone: loading,
   };
 }
+

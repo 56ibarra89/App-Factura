@@ -22,14 +22,14 @@ export function useCloseCashRegister(
   const sales = useMemo(() => calculateCurrentShiftSales(), [calculateCurrentShiftSales]);
 
   const canSubmit = Number(amount) >= 0 && amount !== "" && !loading;
-  
+
   const expectedCash = currentShift ? currentShift.openingAmount + sales.cash : 0;
 
   const handleSubmit = async () => {
     setLoading(true);
     setError("");
     try {
-      // Calculate sales exactly as they will be saved
+
       const finalSales = calculateCurrentShiftSales();
       const finalShift = {
         ...currentShift!,
@@ -78,3 +78,4 @@ export function useCloseCashRegister(
     handleCancel,
   };
 }
+

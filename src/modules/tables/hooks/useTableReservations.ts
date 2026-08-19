@@ -26,16 +26,15 @@ export function useTableReservations({
   const [tableStatusMap, setTableStatusMap] = useState<Record<string, TableStatus>>({});
   const [reservationDetails, setReservationDetails] = useState<Record<string, ReservationInfo>>({});
 
-  // Cargar datos iniciales del servidor
   const fetchMesas = useCallback(async () => {
     try {
       const mesas = await state.list();
-      
+
       const newStatusMap: Record<string, TableStatus> = {};
       const newReservationDetails: Record<string, ReservationInfo> = {};
 
       mesas.forEach(mesa => {
-        // Map backend enum to frontend type
+
         const status = mesa.estado.toLowerCase() as TableStatus;
         newStatusMap[mesa.id] = status;
 
@@ -59,7 +58,7 @@ export function useTableReservations({
   }, [fetchMesas]);
 
   const setTableStatus = async (tableId: string, status: TableStatus) => {
-    // Optimistic UI update
+
     const prevMap = { ...tableStatusMap };
     setTableStatusMap(prev => ({ ...prev, [tableId]: status }));
 
@@ -68,16 +67,16 @@ export function useTableReservations({
       await state.updateStatus(tableId, backendStatus);
     } catch (err) {
       console.error("Error updating table status:", err);
-      // Revert if failed
+
       setTableStatusMap(prevMap);
     }
   };
 
   const releaseTable = async (tableId: string) => {
-    // Optimistic UI update
+
     const prevStatusMap = { ...tableStatusMap };
     const prevDetails = { ...reservationDetails };
-    
+
     setTableStatusMap(prev => ({ ...prev, [tableId]: "disponible" }));
     setReservationDetails(prev => {
       const next = { ...prev };
@@ -89,14 +88,14 @@ export function useTableReservations({
       await reservation.release(tableId);
     } catch (err) {
       console.error("Error releasing table:", err);
-      // Revert if failed
+
       setTableStatusMap(prevStatusMap);
       setReservationDetails(prevDetails);
     }
   };
 
   const reserveTable = async (tableId: string, info: ReservationInfo) => {
-    // Optimistic UI update
+
     const prevStatusMap = { ...tableStatusMap };
     const prevDetails = { ...reservationDetails };
 
@@ -112,7 +111,7 @@ export function useTableReservations({
       });
     } catch (err) {
       console.error("Error reserving table:", err);
-      // Revert if failed
+
       setTableStatusMap(prevStatusMap);
       setReservationDetails(prevDetails);
     }
@@ -127,3 +126,4 @@ export function useTableReservations({
     refreshMesas: fetchMesas,
   };
 }
+

@@ -20,7 +20,7 @@ const TaxSettingsPage = () => {
         overflowX: 'hidden'
       }}
     >
-      {/* Decorative Background Element */}
+      {}
       <Box
         sx={{
           position: "absolute",
@@ -43,7 +43,7 @@ const TaxSettingsPage = () => {
 
         <Box sx={{ mt: 2, mb: 5, pl: 1 }}>
           <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 650 }}>
-            Administra las tasas de impuestos aplicadas a tu sistema de facturación. 
+            Administra las tasas de impuestos aplicadas a tu sistema de facturación.
             Puedes realizar ajustes y activar planes de exoneración temporales en cumplimiento con la normativa.
           </Typography>
         </Box>
@@ -58,10 +58,10 @@ const TaxSettingsPage = () => {
               <Grid container spacing={3}>
                 {taxes.map((tax) => (
                   <Grid size={{ xs: 12 }} key={tax.id}>
-                    <TaxConfigCard 
-                      tax={tax} 
-                      onUpdate={updateTaxRate} 
-                      disabled={isExonerated} 
+                    <TaxConfigCard
+                      tax={tax}
+                      onUpdate={updateTaxRate}
+                      disabled={isExonerated}
                     />
                   </Grid>
                 ))}
@@ -73,9 +73,9 @@ const TaxSettingsPage = () => {
               <Typography variant="h5" fontWeight={800} color="transparent" sx={{ mb: 3, userSelect: 'none' }}>
                 -
               </Typography>
-              <TaxExemptionToggle 
-                isExonerated={isExonerated} 
-                onToggle={toggleExoneration} 
+              <TaxExemptionToggle
+                isExonerated={isExonerated}
+                onToggle={toggleExoneration}
               />
             </Grid>
           </Grid>
@@ -86,3 +86,4 @@ const TaxSettingsPage = () => {
 };
 
 export default TaxSettingsPage;
+

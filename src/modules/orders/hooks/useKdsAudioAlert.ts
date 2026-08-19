@@ -30,7 +30,7 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
       try {
         localStorage.setItem(STORAGE_KEY, String(next));
       } catch {
-        // Ignorar error de storage
+
       }
       return next;
     });
@@ -52,10 +52,8 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
         void ctx.resume();
       }
 
-      // Sintetizar dos tonos agradables tipo chime de cocina (880Hz A5 -> 1046.5Hz C6)
       const now = ctx.currentTime;
 
-      // Primer tono
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = "sine";
@@ -67,7 +65,6 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
       osc1.start(now);
       osc1.stop(now + 0.3);
 
-      // Segundo tono (más alto)
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = "sine";
@@ -110,3 +107,4 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
     clearNewOrderAlert,
   };
 }
+

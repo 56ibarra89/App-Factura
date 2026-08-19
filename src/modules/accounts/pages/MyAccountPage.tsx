@@ -28,12 +28,12 @@ export default function MyAccountPage() {
       />
 
       <Grid container spacing={4} sx={{ mt: 1, flex: 1 }}>
-        {/* Columna Izquierda: Tarjeta de Perfil Oscura */}
+        {}
         <Grid size={{ xs: 12, md: 4, lg: 3 }}>
           <ProfileCard username={data.nombreUsuario} fullName={data.nombreCompleto} />
         </Grid>
 
-        {/* Columna Derecha: Formularios Blancos */}
+        {}
         <Grid size={{ xs: 12, md: 8, lg: 9 }}>
           <AccountSettingsForm
             data={data}
@@ -46,10 +46,11 @@ export default function MyAccountPage() {
         </Grid>
       </Grid>
 
-      <LogoutAllDevicesModal 
-        open={showLogoutModal} 
-        onClose={() => setShowLogoutModal(false)} 
+      <LogoutAllDevicesModal
+        open={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
       />
     </Box>
   );
 }
+

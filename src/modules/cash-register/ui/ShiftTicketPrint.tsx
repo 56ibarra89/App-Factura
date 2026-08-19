@@ -17,8 +17,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
   };
 
   const expectedCash = shift.openingAmount + shift.totalSales.cash;
-  // This calculates the difference between what the user counted and what the system expected
-  // A negative difference means cash is missing. A positive difference means extra cash.
+
   const difference = (shift.closingAmount || 0) - expectedCash;
 
   return (
@@ -36,9 +35,9 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
               position: "absolute",
               left: 0,
               top: 0,
-              width: "76mm", // TM-U220 paper width
+              width: "76mm",
               margin: 0,
-              padding: "0 5mm", // slight padding
+              padding: "0 5mm",
               fontFamily: '"Courier New", Courier, monospace',
               fontSize: "12px",
               lineHeight: "1.2",
@@ -148,12 +147,12 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">TOTAL ESPERADO:</Typography>
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">{general.currencySymbol}{expectedCash.toFixed(2)}</Typography>
           </Box>
-          
+
           <Box display="flex" justifyContent="space-between" mt={1}>
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">EFECTIVO CONTADO:</Typography>
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">{general.currencySymbol}{(shift.closingAmount || 0).toFixed(2)}</Typography>
           </Box>
-          
+
           <Box display="flex" justifyContent="space-between" mt={1}>
             <Typography variant="body2" fontFamily="inherit">Diferencia:</Typography>
             <Typography variant="body2" fontFamily="inherit">
@@ -180,3 +179,4 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
 };
 
 export default ShiftTicketPrint;
+

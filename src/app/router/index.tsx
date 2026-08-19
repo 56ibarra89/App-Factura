@@ -13,6 +13,9 @@ const Facturacion = lazy(
 const DeliveryPage = lazy(
   () => import("../../modules/delivery/pages/DeliveryPage")
 );
+const MisEntregas = lazy(
+  () => import("../../modules/delivery/pages/DriverDeliveriesPage")
+);
 const Producto = lazy(
   () => import("../../modules/catalog/pages/ProductsPage")
 );
@@ -119,56 +122,135 @@ const AppRoutes = () => (
   <CajaProvider>
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        {/* ── Rutas Públicas ── */}
+        {}
         <Route path="/" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/login-pin" element={<LoginPin />} />
 
-        {/* ── Rutas Privadas (cualquier usuario autenticado) ── */}
-        <Route path="/home" element={<PrivateRoute element={<Home />} />} />
+        {}
+        <Route
+          path="/home"
+          element={<PrivateRoute element={<Home />} allowMotorizado />}
+        />
         <Route
           path="/producto"
-          element={<PrivateRoute element={<Producto />} />}
+          element={
+            <PrivateRoute element={<Producto />} allowedRoles={["admin"]} />
+          }
         />
         <Route
           path="/facturacion"
-          element={<PrivateRoute element={<Facturacion />} />}
+          element={
+            <PrivateRoute
+              element={<Facturacion />}
+              allowedRoles={["admin", "cajero", "cajero_principal"]}
+            />
+          }
         />
         <Route
           path="/delivery"
-          element={<PrivateRoute element={<DeliveryPage />} />}
+          element={
+            <PrivateRoute
+              element={<DeliveryPage />}
+              allowedRoles={["admin", "despachador"]}
+            />
+          }
+        />
+        <Route
+          path="/mis-entregas"
+          element={
+            <PrivateRoute
+              element={<MisEntregas />}
+              allowMotorizado
+              allowedRoles={["admin", "despachador", "motorizado"]}
+            />
+          }
         />
         <Route
           path="/abrircaja"
-          element={<PrivateRoute element={<AbrirCajaPage />} />}
+          element={
+            <PrivateRoute
+              element={<AbrirCajaPage />}
+              allowedRoles={["admin", "cajero_principal"]}
+            />
+          }
         />
         <Route
           path="/cerrarcaja"
-          element={<PrivateRoute element={<CerrarCajaPage />} />}
+          element={
+            <PrivateRoute
+              element={<CerrarCajaPage />}
+              allowedRoles={["admin", "cajero_principal"]}
+            />
+          }
         />
         <Route
           path="/consultar-turnos"
-          element={<PrivateRoute element={<ConsultarTurnos />} />}
+          element={
+            <PrivateRoute
+              element={<ConsultarTurnos />}
+              allowedRoles={["admin", "cajero_principal"]}
+            />
+          }
         />
-        <Route path="/mesas" element={<PrivateRoute element={<Mesa />} />} />
-        <Route path="/ordenes" element={<PrivateRoute element={<Ordenes />} />} />
-        <Route path="/kds" element={<PrivateRoute element={<KdsPage />} />} />
+        <Route
+          path="/mesas"
+          element={
+            <PrivateRoute
+              element={<Mesa />}
+              allowedRoles={["admin", "mesero"]}
+            />
+          }
+        />
+        <Route
+          path="/ordenes"
+          element={
+            <PrivateRoute
+              element={<Ordenes />}
+              allowedRoles={["admin", "cocinero"]}
+            />
+          }
+        />
+        <Route
+          path="/kds"
+          element={
+            <PrivateRoute
+              element={<KdsPage />}
+              allowedRoles={["admin", "cocinero"]}
+            />
+          }
+        />
         <Route
           path="/anular-factura"
-          element={<PrivateRoute element={<AnularFactura />} />}
+          element={
+            <PrivateRoute
+              element={<AnularFactura />}
+              allowedRoles={["admin", "cajero", "cajero_principal"]}
+            />
+          }
         />
         <Route
           path="/consultar-factura"
-          element={<PrivateRoute element={<ConsultarFacturas />} />}
+          element={
+            <PrivateRoute
+              element={<ConsultarFacturas />}
+              allowedRoles={["admin", "cajero", "cajero_principal"]}
+            />
+          }
         />
         <Route
           path="/reporte"
-          element={<PrivateRoute element={<Reportes />} />}
+          element={
+            <PrivateRoute element={<Reportes />} allowedRoles={["admin"]} />
+          }
         />
-        <Route path="/perfil" element={<PrivateRoute element={<MiCuenta />} />} />
+        <Route
+          path="/perfil"
+          element={<PrivateRoute element={<MiCuenta />} allowMotorizado />}
+        />
 
-        {/* ── Rutas de Administración (solo rol 'admin') ── */}
+        {}
         <Route
           path="/admin"
           element={<AdminRoute element={<Administracion />} />}
@@ -239,3 +321,4 @@ const AppRoutes = () => (
 );
 
 export default AppRoutes;
+

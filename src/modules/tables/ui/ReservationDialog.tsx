@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { 
-  Dialog, DialogTitle, DialogContent, DialogActions, 
-  Button, TextField, Typography, Box, InputAdornment 
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Button, TextField, Typography, Box, InputAdornment
 } from "@mui/material";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import { LOGIN_COLORS } from "../../../shared/theme";
@@ -15,10 +15,10 @@ interface Props {
   disableEnforceFocus?: boolean;
 }
 
-export default function ReservationDialog({ 
-  open, 
-  mesaId, 
-  onClose, 
+export default function ReservationDialog({
+  open,
+  mesaId,
+  onClose,
   onConfirm,
   disableRestoreFocus,
   disableEnforceFocus
@@ -29,54 +29,49 @@ export default function ReservationDialog({
   const [expirationTime, setExpirationTime] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  // Set default times when opened
   useEffect(() => {
     if (open) {
       const now = new Date();
-      // Round to next 5 minutes for neatness (optional, but good UX)
+
       const coeff = 1000 * 60 * 5;
       const roundedNow = new Date(Math.ceil(now.getTime() / coeff) * coeff);
-      
-      const exp = new Date(roundedNow.getTime() + 30 * 60000); // +30 minutes
-      
+
+      const exp = new Date(roundedNow.getTime() + 30 * 60000);
+
       const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
-      
+
       setReservationTime(formatTime(roundedNow));
       setExpirationTime(formatTime(exp));
     }
   }, [open]);
 
-  // Handle auto-expiration offset when reservation time changes
   const handleReservationTimeChange = (newTime: string) => {
     setReservationTime(newTime);
     if (!newTime) return;
-    
-    // Calculate new expiration time (+30 mins)
+
     const [hours, minutes] = newTime.split(':').map(Number);
     const date = new Date();
     date.setHours(hours, minutes, 0, 0);
     date.setMinutes(date.getMinutes() + 30);
-    
+
     const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
     setExpirationTime(formatTime(date));
   };
 
-  // Efecto para forzar el foco en el campo de nombre al abrir el diálogo en Electron
   useEffect(() => {
     if (open) {
       const timer = setTimeout(() => {
         nameInputRef.current?.focus();
-      }, 150); // Un pequeño retraso para permitir que la animación de MUI termine
+      }, 150);
       return () => clearTimeout(timer);
     }
   }, [open]);
 
   const handleConfirm = () => {
-    if (!nombre.trim()) return; 
-    
+    if (!nombre.trim()) return;
+
     const parsedMonto = parseFloat(monto) || 0;
 
-    // Convert times to full ISO strings for today
     const createIsoDate = (timeStr: string) => {
       if (!timeStr) return "";
       const [hours, minutes] = timeStr.split(':').map(Number);
@@ -86,12 +81,12 @@ export default function ReservationDialog({
     };
 
     onConfirm(
-      nombre, 
-      parsedMonto, 
-      createIsoDate(reservationTime), 
+      nombre,
+      parsedMonto,
+      createIsoDate(reservationTime),
       createIsoDate(expirationTime)
     );
-    
+
     setNombre("");
     setMonto("");
     setReservationTime("");
@@ -105,8 +100,8 @@ export default function ReservationDialog({
   };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={handleCancel}
       disableRestoreFocus={disableRestoreFocus}
       disableEnforceFocus={disableEnforceFocus}
@@ -118,7 +113,7 @@ export default function ReservationDialog({
         <EventSeatIcon sx={{ color: LOGIN_COLORS.primary, fontSize: 28 }} />
         Reservar Mesa
       </DialogTitle>
-      
+
       <DialogContent sx={{ pb: 3 }}>
         <Typography variant="body2" color="text.secondary" mb={3}>
           Estás registrando una reserva para la {mesaId ? mesaId.replace("F", "Planta ").replace("-M", ", Mesa ") : "Mesa seleccionada"}.
@@ -158,7 +153,7 @@ export default function ReservationDialog({
               onChange={(e) => handleReservationTimeChange(e.target.value)}
               InputLabelProps={{ shrink: true }}
             />
-            
+
             <TextField
               fullWidth
               label="Límite de Tolerancia (Auto-vence)"
@@ -172,26 +167,25 @@ export default function ReservationDialog({
         </Box>
       </DialogContent>
 
-
       <DialogActions sx={{ px: 3, pb: 3 }}>
-        <Button 
-          onClick={handleCancel} 
-          variant="text" 
+        <Button
+          onClick={handleCancel}
+          variant="text"
           sx={{ fontWeight: "bold", textTransform: "none", color: "text.secondary" }}
         >
           Cancelar
         </Button>
-        <Button 
-          onClick={handleConfirm} 
-          variant="contained" 
+        <Button
+          onClick={handleConfirm}
+          variant="contained"
           disabled={!nombre.trim()}
-          sx={{ 
-            bgcolor: LOGIN_COLORS.primary, 
-            fontWeight: "bold", 
+          sx={{
+            bgcolor: LOGIN_COLORS.primary,
+            fontWeight: "bold",
             textTransform: "none",
             borderRadius: 2,
             px: 3,
-            "&:hover": { bgcolor: LOGIN_COLORS.primaryDark } 
+            "&:hover": { bgcolor: LOGIN_COLORS.primaryDark }
           }}
         >
           Confirmar Reserva
@@ -200,3 +194,4 @@ export default function ReservationDialog({
     </Dialog>
   );
 }
+

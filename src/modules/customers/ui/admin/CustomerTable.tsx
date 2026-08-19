@@ -1,7 +1,3 @@
-/**
- * CustomerTable — SRP: solo renderiza la tabla de clientes con acciones editar/eliminar.
- * Recibe datos y callbacks del hook via la página padre.
- */
 
 import React, { useState } from "react";
 import {
@@ -116,7 +112,7 @@ const CustomerTable: React.FC<Props> = ({
                 hover
                 sx={{ "&:last-child td": { borderBottom: 0 } }}
               >
-                {/* Nombre */}
+                {}
                 <TableCell>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <PersonIcon fontSize="small" color="primary" />
@@ -124,7 +120,7 @@ const CustomerTable: React.FC<Props> = ({
                   </Box>
                 </TableCell>
 
-                {/* Teléfono */}
+                {}
                 <TableCell>
                   {customer.phone ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -138,7 +134,7 @@ const CustomerTable: React.FC<Props> = ({
                   )}
                 </TableCell>
 
-                {/* Nº Direcciones */}
+                {}
                 <TableCell align="center">
                   <Chip
                     label={customer.addresses.length}
@@ -148,14 +144,14 @@ const CustomerTable: React.FC<Props> = ({
                   />
                 </TableCell>
 
-                {/* Registrado */}
+                {}
                 <TableCell>
                   <Typography variant="body2" color="text.secondary">
                     {formatDate(customer.createdAt)}
                   </Typography>
                 </TableCell>
 
-                {/* Acciones */}
+                {}
                 <TableCell align="center">
                   <Box sx={{ display: "flex", justifyContent: "center", gap: 0.5 }}>
                     <Tooltip title="Editar cliente">
@@ -207,3 +203,4 @@ const CustomerTable: React.FC<Props> = ({
 };
 
 export default CustomerTable;
+

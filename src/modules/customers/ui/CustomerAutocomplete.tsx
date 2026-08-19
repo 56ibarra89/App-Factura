@@ -1,7 +1,3 @@
-/**
- * CustomerAutocomplete — Campo de búsqueda de clientes con autocompletado.
- * Muestra sugerencias al escribir y expone el cliente seleccionado al padre.
- */
 
 import {
   Autocomplete,
@@ -36,7 +32,7 @@ export default function CustomerAutocomplete({
       options={suggestions}
       getOptionLabel={(opt) => (typeof opt === "string" ? opt : opt.name)}
       inputValue={value}
-      filterOptions={(x) => x} // La búsqueda real se hace por backend o persistencia externa
+      filterOptions={(x) => x}
       onInputChange={(_e, newValue) => {
         onChange(newValue);
         search(newValue);
@@ -123,3 +119,4 @@ export default function CustomerAutocomplete({
     />
   );
 }
+

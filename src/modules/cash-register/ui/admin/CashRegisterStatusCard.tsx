@@ -21,7 +21,7 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
 
   const chartData = [
     { name: 'Efectivo', value: caja.revenueCash, color: LOGIN_COLORS.primary },
-    { name: 'Tarjeta', value: caja.revenueCard, color: '#4caf50' }, // Green for card to contrast
+    { name: 'Tarjeta', value: caja.revenueCard, color: '#4caf50' },
   ];
 
   return (
@@ -43,7 +43,7 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
         }
       }}
     >
-      {/* Decorative top bar */}
+      {}
       <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, bgcolor: LOGIN_COLORS.primary }} />
 
       <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
@@ -116,7 +116,7 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
           </Box>
         </Grid>
       </Grid>
-      
+
       <Box display="flex" alignItems="center" mt={3} pt={2} borderTop="1px dashed" borderColor="grey.200">
         <ReceiptIcon sx={{ color: "grey.400", mr: 1, fontSize: 20 }} />
         <Typography variant="body2" color="text.secondary" fontWeight="500">
@@ -126,3 +126,4 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
     </Paper>
   );
 };
+

@@ -12,18 +12,15 @@ import {
   type KitchenTicketPreferencesGateway,
 } from "../api/kitchenTicketPreferencesGateway";
 
-// Helper para dividir una orden en múltiples "Tickets de Cocina" agrupados por sentAt
 const splitIntoKitchenTickets = (order: Order): Order[] => {
   if (!order.isSentToKitchen) return [];
 
-  // Solo considerar items enviados a la cocina
   const supplementalItems = order.items.filter(isSupplementalOrderItem);
   const sentItems = order.items.filter(
     (item) => item.isSentToKitchen && requiresKitchenPreparation(item),
   );
   if (sentItems.length === 0) return [];
 
-  // Agrupar items por sentAt (sin dividir por cocina para que salgan en una misma tarjeta)
   const defaultSentAt = new Date(order.timestamp).getTime();
   const groups: Record<string, OrderItem[]> = {};
 
@@ -149,3 +146,4 @@ export const useOrderManagement = (
     clearHistory: clearKitchenHistory,
   };
 };
+

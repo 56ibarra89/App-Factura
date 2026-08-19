@@ -19,7 +19,6 @@ import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { logService } from "../../audit";
 import { LOGIN_COLORS } from "../../../shared/theme";
 
-
 const ProductsPage = () => {
   const { categories, addProduct, updateProduct, deleteProduct } = useCatalog();
   const { username, role } = useAuth();
@@ -39,7 +38,6 @@ const ProductsPage = () => {
     category: string;
   }>(null);
 
-  // Estados para el diálogo de confirmación de eliminación
   const [deleteConfirm, setDeleteConfirm] = useState<{
     open: boolean;
     name: string;
@@ -104,65 +102,65 @@ const ProductsPage = () => {
         actions={
           <RoleGuard allowedRoles={["admin"]}>
             <Stack direction="row" spacing={2}>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 size="small"
                 onClick={() => {
                   blurActiveElement();
                   setShowCategoryManager(true);
                 }}
                 startIcon={<CategoryIcon />}
-                sx={{ 
-                  borderRadius: 2, 
-                  borderColor: LOGIN_COLORS.primary, 
+                sx={{
+                  borderRadius: 2,
+                  borderColor: LOGIN_COLORS.primary,
                   color: LOGIN_COLORS.primary,
                   '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
                 }}
               >
                 Gestionar Categorías
               </Button>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 size="small"
                 onClick={() => {
                   blurActiveElement();
                   setShowDeliveryPrices(true);
                 }}
                 startIcon={<TwoWheelerIcon />}
-                sx={{ 
-                  borderRadius: 2, 
-                  borderColor: LOGIN_COLORS.primary, 
+                sx={{
+                  borderRadius: 2,
+                  borderColor: LOGIN_COLORS.primary,
                   color: LOGIN_COLORS.primary,
                   '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
                 }}
               >
                 Precios Delivery
               </Button>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 size="small"
                 onClick={() => {
                   blurActiveElement();
                   setShowPackagingSizes(true);
                 }}
                 startIcon={<span role="img" aria-label="box">📦</span>}
-                sx={{ 
-                  borderRadius: 2, 
-                  borderColor: LOGIN_COLORS.primary, 
+                sx={{
+                  borderRadius: 2,
+                  borderColor: LOGIN_COLORS.primary,
                   color: LOGIN_COLORS.primary,
                   '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
                 }}
               >
                 Gestionar Empaques
               </Button>
-              <Button 
+              <Button
                 ref={addButtonRef}
-                variant="contained" 
+                variant="contained"
                 size="small"
                 onClick={handleAdd}
                 startIcon={<AddIcon />}
-                sx={{ 
-                  borderRadius: 2, 
+                sx={{
+                  borderRadius: 2,
                   bgcolor: LOGIN_COLORS.primary,
                   '&:hover': { bgcolor: LOGIN_COLORS.primaryDark }
                 }}
@@ -204,16 +202,17 @@ const ProductsPage = () => {
         onClose={() => setShowCategoryManager(false)}
       />
 
-      <DeliveryPricesDialog 
-        open={showDeliveryPrices} 
-        onClose={() => setShowDeliveryPrices(false)} 
+      <DeliveryPricesDialog
+        open={showDeliveryPrices}
+        onClose={() => setShowDeliveryPrices(false)}
       />
-      <PackagingSizesDialog 
-        open={showPackagingSizes} 
-        onClose={() => setShowPackagingSizes(false)} 
+      <PackagingSizesDialog
+        open={showPackagingSizes}
+        onClose={() => setShowPackagingSizes(false)}
       />
     </Box>
   );
 };
 
 export default ProductsPage;
+

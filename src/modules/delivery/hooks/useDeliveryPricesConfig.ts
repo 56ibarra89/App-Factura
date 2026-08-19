@@ -12,7 +12,7 @@ export function useDeliveryPricesConfig(
   gateway: DeliveryPricingGateway = deliveryPricingGateway,
 ) {
   const { username, role } = useAuth();
-  
+
   const [prices, setPrices] = useState<string[]>(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -35,12 +35,12 @@ export function useDeliveryPricesConfig(
     try {
       const savedPrices = await gateway.load();
       if (savedPrices && Array.isArray(savedPrices)) {
-        // Asegurar que siempre hay 6 espacios
+
         const newPrices = [...savedPrices];
         while (newPrices.length < 6) newPrices.push("");
         setPrices(newPrices.slice(0, 6));
       } else {
-        setPrices(["30.00", "50.00", "", "", "", ""]); // Valores por defecto
+        setPrices(["30.00", "50.00", "", "", "", ""]);
       }
     } catch (error) {
       console.error(error);
@@ -87,3 +87,4 @@ export function useDeliveryPricesConfig(
     handleChange
   };
 }
+

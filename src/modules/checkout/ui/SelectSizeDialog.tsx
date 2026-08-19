@@ -1,4 +1,4 @@
-// Selección de tamaño durante el checkout.
+
 import {
   Dialog,
   DialogTitle,
@@ -89,3 +89,4 @@ export default function SelectSizeDialog({
     </Dialog>
   );
 }
+

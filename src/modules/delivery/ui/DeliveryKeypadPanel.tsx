@@ -31,19 +31,19 @@ export default function DeliveryKeypadPanel({
   return (
     <Box sx={{ flex: 1, minWidth: 350, maxWidth: 450 }}>
       <Paper sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: "background.paper", p: 1 }}>
-        
-        {/* Top Area (Listo / Profile) */}
-        <Box sx={{ 
-            height: 180, 
+
+        {}
+        <Box sx={{
+            height: 180,
             bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50',
-            mb: 1, 
-            display: "flex", 
-            flexDirection: "column", 
-            alignItems: "center", 
+            mb: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
             justifyContent: "center",
             borderRadius: 3,
             border: `1px solid ${theme.palette.divider}`,
-            ...(selectedCustomer && { 
+            ...(selectedCustomer && {
               bgcolor: theme.palette.mode === 'dark' ? 'success.dark' : "success.light",
               color: theme.palette.mode === 'dark' ? 'white' : 'success.contrastText',
               border: 'none',
@@ -54,10 +54,10 @@ export default function DeliveryKeypadPanel({
               <>
                  <Avatar sx={{ bgcolor: "success.main", width: 60, height: 60, mb: 1 }}><PersonIcon fontSize="large" /></Avatar>
                  <Typography variant="h6" fontWeight="bold" color="success.main">LISTO!</Typography>
-                 <Button 
-                    variant="contained" 
-                    color="success" 
-                    fullWidth 
+                 <Button
+                    variant="contained"
+                    color="success"
+                    fullWidth
                     sx={{ mt: 1, borderRadius: 0 }}
                     onClick={handleConfirm}
                  >
@@ -68,10 +68,10 @@ export default function DeliveryKeypadPanel({
               <>
                  <Avatar sx={{ bgcolor: "warning.main", width: 60, height: 60, mb: 1 }}><PersonIcon fontSize="large" /></Avatar>
                  <Typography variant="h6" fontWeight="bold" color="warning.main">NUEVO CLIENTE</Typography>
-                 <Button 
-                    variant="contained" 
-                    color="warning" 
-                    fullWidth 
+                 <Button
+                    variant="contained"
+                    color="warning"
+                    fullWidth
                     sx={{ mt: 1, borderRadius: 0 }}
                     onClick={handleConfirm}
                  >
@@ -90,9 +90,9 @@ export default function DeliveryKeypadPanel({
         </Box>
 
         {/* Keypad */}
-        <Box sx={{ 
-           display: "grid", 
-           gridTemplateColumns: "repeat(4, 1fr)", 
+        <Box sx={{
+           display: "grid",
+           gridTemplateColumns: "repeat(4, 1fr)",
            gridAutoRows: "60px",
            gap: 0.5,
            mb: 2
@@ -109,7 +109,7 @@ export default function DeliveryKeypadPanel({
              let bgcolor = theme.palette.mode === 'dark' ? 'grey.800' : "background.paper";
              let color = theme.palette.mode === 'dark' ? "white" : "text.primary";
              let gridRowSpan = 1;
-             
+
              if (btn === "BACK") {
                 content = <BackspaceIcon color="action" />;
                 bgcolor = theme.palette.mode === 'dark' ? 'grey.900' : "grey.200";
@@ -144,9 +144,9 @@ export default function DeliveryKeypadPanel({
                     fontWeight: "bold",
                     borderRadius: 3,
                     border: theme.palette.mode === 'light' && btn !== "CHECK" && btn !== "CLEAR" ? `1px solid ${theme.palette.divider}` : 'none',
-                    "&:hover": { 
-                      filter: "brightness(0.9)", 
-                      bgcolor: btn === "CHECK" ? "success.dark" : undefined 
+                    "&:hover": {
+                      filter: "brightness(0.9)",
+                      bgcolor: btn === "CHECK" ? "success.dark" : undefined
                     }
                  }}
                >
@@ -164,3 +164,4 @@ export default function DeliveryKeypadPanel({
     </Box>
   );
 }
+

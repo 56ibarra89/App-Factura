@@ -1,4 +1,4 @@
-// Tipos relacionados con productos, categorías y extras del catálogo.
+
 export type ProductSize = string;
 
 export interface ExtraPrice {
@@ -57,5 +57,4 @@ export interface ProductFormState {
   prices: { size: string; price: string }[];
   singlePrice: string;
 }
-
 

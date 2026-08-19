@@ -51,7 +51,7 @@ export const ForgotPasswordForm = () => {
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        bgcolor: "background.paper", // adapt for dark mode
+        bgcolor: "background.paper",
       }}
     >
       <Typography variant="h4" fontWeight="800" color="text.primary" mb={1}>
@@ -96,7 +96,7 @@ export const ForgotPasswordForm = () => {
         {loading ? <CircularProgress size={24} color="inherit" /> : "Enviar Instrucciones"}
       </Button>
 
-      {/* Botón Volver al Login */}
+      {}
       <Button
         variant="text"
         fullWidth
@@ -119,3 +119,4 @@ export const ForgotPasswordForm = () => {
     </Box>
   );
 };
+

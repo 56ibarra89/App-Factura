@@ -6,9 +6,7 @@ export interface WaiterZone {
 }
 
 export const waiterZonesGateway = {
-  /**
-   * Obtiene las zonas asignadas a un mesero específico
-   */
+
   async getZonesByUserId(userId: string): Promise<Record<string, number>> {
     const data = await apiClient(`/users/${userId}/zones`);
     const zonesMap: Record<string, number> = {};
@@ -29,3 +27,4 @@ export const waiterZonesGateway = {
     });
   }
 };
+

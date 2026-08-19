@@ -1,14 +1,4 @@
-/**
- * CertificadoDialog — Formulario para emitir un nuevo certificado/vale de producto.
- *
- * SOLID:
- *  S — Single Responsibility: solo gestiona la UI de emisión.
- *      No toca el estado global; delega a onEmit.
- *  O — Open/Closed: el selector de productos se alimenta de CatalogContext
- *      sin hardcodear ningún producto — abierto a extensión, cerrado a modificación.
- *  D — Dependency Inversion: depende de la abstracción CatalogContext,
- *      no de una lista de productos concreta.
- */
+
 import {
   Dialog,
   DialogTitle,
@@ -31,8 +21,6 @@ import type {
   CertificadoInput,
 } from "../../model/promotion.types";
 
-// ── Estado interno del formulario ────────────────────────────────────────────
-
 type FormState = {
   origin: string;
   productId: string;
@@ -45,12 +33,10 @@ const DEFAULT_FORM: FormState = {
   notes: "",
 };
 
-// ── Componente ───────────────────────────────────────────────────────────────
-
 interface CertificadoDialogProps {
   open: boolean;
   onClose: () => void;
-  /** Recibe solo los datos del formulario; el serial y la fecha los genera useCertificados. */
+
   onEmit: (data: CertificadoInput) => void;
 }
 
@@ -59,7 +45,6 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
 
-  // Resetear al abrir
   useEffect(() => {
     if (open) {
       setForm(DEFAULT_FORM);
@@ -67,12 +52,10 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
     }
   }, [open]);
 
-  // Aplanar todos los productos
   const allProducts = categories.flatMap((cat) =>
     cat.items.map((item) => ({ id: item.id, name: item.name }))
   );
 
-  // ── Validación ─────────────────────────────────────────────────────────────
   const validate = (): boolean => {
     const next: Partial<Record<keyof FormState, string>> = {};
     if (!form.origin.trim()) next.origin = "El origen / empresa es obligatorio.";
@@ -81,11 +64,10 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
     return Object.keys(next).length === 0;
   };
 
-  // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    
+
     const product = allProducts.find(p => p.id === form.productId);
     const productName = product ? product.name : "";
 
@@ -105,7 +87,7 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
       <form onSubmit={handleSubmit}>
         <DialogContent dividers>
           <Stack spacing={2.5}>
-            {/* Origen / Empresa */}
+            {}
             <TextField
               autoFocus
               fullWidth
@@ -121,7 +103,7 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
               placeholder="Ej. Agencia de Viajes Sol, Cliente VIP, Premio"
             />
 
-            {/* Producto a Canjear — Select agrupado por categoría */}
+            {}
             <FormControl fullWidth error={!!errors.productId} required>
               <InputLabel>Producto a Canjear</InputLabel>
               <Select
@@ -192,3 +174,4 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
 };
 
 export default CertificadoDialog;
+

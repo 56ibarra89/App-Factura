@@ -35,7 +35,6 @@ export default function DeliveryCustomerDialog({
   const [phoneInput, setPhoneInput] = useState("");
   const { suggestions, search, clearSuggestions } = useCustomerSearch();
 
-  // Reset y buscar automáticamente cuando se abre
   useEffect(() => {
     if (open) {
       setPhoneInput("");
@@ -43,13 +42,12 @@ export default function DeliveryCustomerDialog({
     }
   }, [open, clearSuggestions]);
 
-  // Ejecutar búsqueda cada vez que cambia el input
   useEffect(() => {
     search(phoneInput);
   }, [phoneInput, search]);
 
   const handleSelectExisting = (customer: Customer) => {
-    // Si el cliente tiene un teléfono guardado, enviamos ese. Si no, enviamos lo que escribió el usuario.
+
     onConfirm(customer, customer.phone || phoneInput);
     onClose();
   };
@@ -165,3 +163,4 @@ export default function DeliveryCustomerDialog({
     </Dialog>
   );
 }
+

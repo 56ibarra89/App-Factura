@@ -67,9 +67,9 @@ export default function OrderActions({
 
   return (
     <Grid container spacing={1}>
-      {/* ── ACCIONES PRINCIPALES (DESTACADAS) ── */}
+      {}
 
-      {/* 1. Pedir / Agregar Ítems (Acción Principal) */}
+      {}
       <Grid size={12}>
         <Button
           fullWidth
@@ -97,7 +97,7 @@ export default function OrderActions({
         </Button>
       </Grid>
 
-      {/* 2. Cobrar / Cerrar Mesa */}
+      {}
       <Grid size={12}>
         <Button
           fullWidth
@@ -298,3 +298,4 @@ export default function OrderActions({
     </Grid>
   );
 }
+

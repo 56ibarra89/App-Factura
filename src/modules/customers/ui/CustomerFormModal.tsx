@@ -1,7 +1,3 @@
-/**
- * CustomerFormModal — SRP: gestiona el formulario de creación/edición de un cliente.
- * OCP: funciona en modo "crear" (sin initialData) y "editar" (con initialData).
- */
 
 import React, { useState, useEffect } from "react";
 import {
@@ -30,7 +26,7 @@ import CustomerAddressChips from "./CustomerAddressChips";
 
 interface Props {
   open: boolean;
-  /** Si se pasa un cliente, el modal trabaja en modo edición */
+
   customer?: Customer | null;
   onClose: () => void;
   onSave: (data: CustomerFormData) => Promise<void>;
@@ -60,7 +56,6 @@ const CustomerFormModal: React.FC<Props> = ({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Sincronizar el formulario cuando se abre/cambia el cliente
   useEffect(() => {
     if (open) {
       if (customer) {
@@ -123,7 +118,7 @@ const CustomerFormModal: React.FC<Props> = ({
       fullWidth
       PaperProps={{ sx: { borderRadius: 3 } }}
     >
-      {/* Encabezado */}
+      {}
       <DialogTitle
         sx={{
           display: "flex",
@@ -154,7 +149,7 @@ const CustomerFormModal: React.FC<Props> = ({
       <Divider />
 
       <DialogContent sx={{ pt: 3, pb: 2 }}>
-        {/* Alerta de error */}
+        {}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -162,7 +157,7 @@ const CustomerFormModal: React.FC<Props> = ({
         )}
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-          {/* Nombre */}
+          {}
           <TextField
             id="customer-form-name"
             label="Nombre completo *"
@@ -174,7 +169,7 @@ const CustomerFormModal: React.FC<Props> = ({
             autoFocus={!isEditing}
           />
 
-          {/* Teléfono */}
+          {}
           <TextField
             id="customer-form-phone"
             label="Teléfono"
@@ -187,7 +182,7 @@ const CustomerFormModal: React.FC<Props> = ({
 
           <Divider sx={{ my: 0.5 }} />
 
-          {/* Sección de direcciones */}
+          {}
           <CustomerAddressChips
             addresses={form.addresses}
             onAdd={handleAddAddress}
@@ -229,3 +224,4 @@ const CustomerFormModal: React.FC<Props> = ({
 };
 
 export default CustomerFormModal;
+

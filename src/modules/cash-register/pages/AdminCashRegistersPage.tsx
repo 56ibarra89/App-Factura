@@ -41,7 +41,7 @@ const AdminCashRegistersPage = () => {
         overflowX: 'hidden'
       }}
     >
-      {/* Decorative Background Element */}
+      {}
       <Box
         sx={{
           position: "absolute",
@@ -141,3 +141,4 @@ const AdminCashRegistersPage = () => {
 };
 
 export default AdminCashRegistersPage;
+

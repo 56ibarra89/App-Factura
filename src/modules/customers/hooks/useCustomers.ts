@@ -22,7 +22,6 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ── Carga inicial ────────────────────────────────────────────────────────────
   const loadCustomers = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -41,7 +40,6 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     loadCustomers();
   }, [loadCustomers]);
 
-  // ── Crear ────────────────────────────────────────────────────────────────────
   const createCustomer = useCallback(
     async (data: CustomerFormData): Promise<void> => {
       const name = data.name.trim();
@@ -60,7 +58,6 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     [repository, loadCustomers],
   );
 
-  // ── Actualizar ───────────────────────────────────────────────────────────────
   const updateCustomer = useCallback(
     async (data: CustomerFormData): Promise<void> => {
       if (!data.id) throw new Error("ID requerido para editar");
@@ -89,7 +86,6 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     [customers, repository, loadCustomers],
   );
 
-  // ── Eliminar ─────────────────────────────────────────────────────────────────
   const deleteCustomer = useCallback(
     async (id: string): Promise<void> => {
       await repository.delete(id);
@@ -98,7 +94,6 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     [repository, loadCustomers],
   );
 
-  // ── Helpers de dirección ─────────────────────────────────────────────────────
   const addAddress = (
     addresses: CustomerAddress[],
     text: string,
@@ -133,3 +128,4 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     reload: loadCustomers,
   };
 };
+

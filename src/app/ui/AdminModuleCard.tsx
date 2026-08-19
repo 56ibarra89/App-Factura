@@ -11,12 +11,12 @@ interface AdminModuleCardProps {
   disabled?: boolean;
 }
 
-export const AdminModuleCard: React.FC<AdminModuleCardProps> = ({ 
-  title, 
-  description, 
-  icon, 
-  onClick, 
-  disabled = false 
+export const AdminModuleCard: React.FC<AdminModuleCardProps> = ({
+  title,
+  description,
+  icon,
+  onClick,
+  disabled = false
 }) => {
   return (
     <Card
@@ -32,17 +32,17 @@ export const AdminModuleCard: React.FC<AdminModuleCardProps> = ({
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.6 : 1,
         transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-        // Glassmorphism Base
-        background: (theme) => theme.palette.mode === 'dark' 
+
+        background: (theme) => theme.palette.mode === 'dark'
           ? (disabled ? "rgba(255,255,255,0.05)" : "rgba(255, 255, 255, 0.1)")
           : (disabled ? "rgba(255,255,255,0.4)" : "rgba(255, 255, 255, 0.75)"),
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        border: (theme) => theme.palette.mode === 'dark' 
-          ? "1px solid rgba(255, 255, 255, 0.1)" 
+        border: (theme) => theme.palette.mode === 'dark'
+          ? "1px solid rgba(255, 255, 255, 0.1)"
           : "1px solid rgba(255, 255, 255, 0.6)",
         boxShadow: "0 8px 32px rgba(0, 0, 0, 0.05)",
-        
+
         "&:hover": {
           transform: disabled ? "none" : "translateY(-8px) scale(1.02)",
           boxShadow: disabled ? "0 8px 32px rgba(0, 0, 0, 0.05)" : `0 20px 40px rgba(0,0,0,0.12), 0 0 0 1px ${LOGIN_COLORS.primarySubtle}`,
@@ -59,7 +59,7 @@ export const AdminModuleCard: React.FC<AdminModuleCardProps> = ({
       }}
     >
       <CardContent sx={{ p: 3, display: "flex", flexDirection: "column", flexGrow: 1, height: '100%' }}>
-        
+
         {/* Ícono superior flotante */}
         <Box
           className="widget-icon-box"
@@ -89,14 +89,14 @@ export const AdminModuleCard: React.FC<AdminModuleCardProps> = ({
             {description}
           </Typography>
         </Box>
-        
+
         {/* Footer actions */}
         <Box display="flex" justifyContent="flex-end" alignItems="flex-end" mt={2}>
-          <IconButton 
+          <IconButton
             className="widget-arrow"
             disabled={disabled}
             size="small"
-            sx={{ 
+            sx={{
               transition: "all 0.3s ease",
               color: "text.secondary"
             }}
@@ -126,3 +126,4 @@ export const AdminModuleCard: React.FC<AdminModuleCardProps> = ({
     </Card>
   );
 };
+

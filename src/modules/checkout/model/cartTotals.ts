@@ -45,7 +45,7 @@ export function calculateCartTotals(
   promotion?: AppliedPromotion | null
 ): { subTotal: number; discountAmount: number; taxAmount: number; total: number } {
   const subTotal = calculateSubtotal(items);
-  
+
   let discountAmount = 0;
   if (promotion && promotion.discountType !== "2x1") {
     const discountableSubtotal = items.reduce((sum, item) => {
@@ -73,12 +73,12 @@ export function calculateCartTotals(
       );
     }
   }
-  
-  // Ensure discount doesn't exceed subtotal
+
   discountAmount = Math.min(discountAmount, subTotal);
-  
+
   const subTotalAfterDiscount = subTotal - discountAmount;
   const taxAmount = calculateTaxAmount(subTotalAfterDiscount, taxes, isExonerated);
-  
+
   return { subTotal, discountAmount, taxAmount, total: subTotalAfterDiscount + taxAmount };
 }
+

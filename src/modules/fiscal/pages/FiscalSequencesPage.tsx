@@ -38,7 +38,7 @@ const FiscalSequencesPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 4, maxWidth: "1200px", margin: "0 auto" }}>
-      {/* HEADER */}
+      {}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <BackButton to="/admin" />
@@ -62,28 +62,28 @@ const FiscalSequencesPage: React.FC = () => {
         </Button>
       </Box>
 
-      {/* HISTORIAL TABLE */}
+      {}
       <Box sx={{ mt: 5 }}>
         <Typography variant="h6" fontWeight={600} gutterBottom>
           Historial de Talonarios
         </Typography>
-        <CorrelativoTable 
-          correlativos={correlativos} 
-          loading={loading} 
-          onDelete={(id) => setDeleteId(id)} 
+        <CorrelativoTable
+          correlativos={correlativos}
+          loading={loading}
+          onDelete={(id) => setDeleteId(id)}
           onUpdate={(correlativo) => handleOpenModal(correlativo)}
         />
       </Box>
 
-      {/* MODAL CONFIGURACION CORRELATIVO */}
-      <CorrelativoFormModal 
-        open={openModal} 
+      {}
+      <CorrelativoFormModal
+        open={openModal}
         initialData={editingCorrelativo}
-        onClose={handleCloseModal} 
-        onSave={handleSaveCorrelativo} 
+        onClose={handleCloseModal}
+        onSave={handleSaveCorrelativo}
       />
 
-      {/* CONFIRMACION ELIMINAR */}
+      {}
       <ConfirmDialog
         open={!!deleteId}
         title="Eliminar Talonario"
@@ -99,3 +99,4 @@ const FiscalSequencesPage: React.FC = () => {
 };
 
 export default FiscalSequencesPage;
+

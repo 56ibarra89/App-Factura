@@ -8,7 +8,7 @@ import { getMenuItems } from "../navigation/menuItems";
 import logoImg from "../../assets/images/logo.png";
 import { useAuth } from "../../modules/auth";
 import { useCaja } from "../../modules/cash-register";
-import { Fab, Tooltip } from "@mui/material";
+import { Alert, Fab, Tooltip } from "@mui/material";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { DriverDeliveriesModal } from "../../modules/delivery";
 
@@ -18,10 +18,30 @@ const HomePage = () => {
   const { currentShift } = useCaja();
   const allMenuItems = getMenuItems();
 
-  // Filtrar items según el rol
   const menuItems = React.useMemo(() => {
+    if (role === "cajero") {
+      return allMenuItems.filter(
+        (item) =>
+          item.label === "Facturar" ||
+          item.label === "Consultar Facturas" ||
+          item.label === "Anular Factura"
+      );
+    }
+    if (role === "cajero_principal") {
+      return allMenuItems.filter(
+        (item) =>
+          item.label === "Facturar" ||
+          item.label === "Consultar Facturas" ||
+          item.label === "Anular Factura" ||
+          item.label === "Abrir Caja" ||
+          item.label === "Cerrar Caja" ||
+          item.label === "Consultar Turnos"
+      );
+    }
     if (role === "despachador") {
-      return allMenuItems.filter((item) => item.label === "Delivery");
+      return allMenuItems.filter(
+        (item) => item.label === "Delivery" || item.label === "Entregas Motorizado"
+      );
     }
     if (role === "mesero") {
       return allMenuItems.filter((item) => item.label === "Mesas");
@@ -31,10 +51,14 @@ const HomePage = () => {
         (item) => item.label === "Pantalla de Cocina" || item.label === "Órdenes"
       );
     }
+    if (role === "motorizado") {
+      return allMenuItems.filter((item) => item.label === "Entregas Motorizado");
+    }
     return allMenuItems;
   }, [role, allMenuItems]);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const canManageDrivers = role === "admin" || role === "despachador";
 
   return (
     <Box
@@ -66,6 +90,12 @@ const HomePage = () => {
         }
         actions={<AccountMenu />}
       />
+
+      {role === "motorizado" && (
+        <Alert severity="info" sx={{ mx: 2, mb: 3 }}>
+          Accede a <b>Entregas Motorizado</b> para consultar tus pedidos asignados, direcciones y montos a cobrar.
+        </Alert>
+      )}
 
       {/* Cuadrícula de menú */}
       <Box
@@ -100,7 +130,7 @@ const HomePage = () => {
       </Box>
 
       {/* FAB Control Motorizados */}
-      {role !== "mesero" && role !== "cocinero" && (
+      {canManageDrivers && (
         <Tooltip title="Control Motorizados" placement="left">
           <Fab
             color="secondary"
@@ -120,12 +150,15 @@ const HomePage = () => {
       )}
 
       {/* Modal */}
-      <DriverDeliveriesModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-      />
+      {canManageDrivers && (
+        <DriverDeliveriesModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </Box>
   );
 };
 
 export default HomePage;
+

@@ -24,7 +24,7 @@ const BackupsPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 4, maxWidth: "1200px", margin: "0 auto", minHeight: "100vh" }}>
-      {/* HEADER */}
+      {}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 5 }}>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <BackButton to="/admin" />
@@ -39,19 +39,19 @@ const BackupsPage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* CONTENIDO PRINCIPAL */}
+      {}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 4 }}>
-        <ExportCard 
-          options={options} 
-          onOptionChange={handleOptionChange} 
-          onExport={handleExport} 
+        <ExportCard
+          options={options}
+          onOptionChange={handleOptionChange}
+          onExport={handleExport}
         />
-        <ImportCard 
-          onImportClick={handleImportClick} 
+        <ImportCard
+          onImportClick={handleImportClick}
         />
       </Box>
 
-      {/* SNACKBAR PARA SIMULACIONES */}
+      {}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
@@ -67,3 +67,4 @@ const BackupsPage: React.FC = () => {
 };
 
 export default BackupsPage;
+

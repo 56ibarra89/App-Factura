@@ -3,7 +3,7 @@ import { logService } from "../../audit";
 import { sessionStore } from "../../../shared/storage";
 
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 60_000; // 60 segundos
+const LOCKOUT_DURATION_MS = 60_000;
 const STORAGE_ATTEMPTS = "login_attempts";
 const STORAGE_LOCKOUT_UNTIL = "login_lockout_until";
 
@@ -11,21 +11,16 @@ export interface LoginLockoutState {
   loginAttempts: number;
   loginLockoutTime: number;
   isLoginLocked: boolean;
-  registerFailedLogin: (username?: string) => boolean; // retorna true si se activó el lockout
+  registerFailedLogin: (username?: string) => boolean;
   resetLoginAttempts: () => void;
 }
 
-/**
- * Hook de responsabilidad única (SRP):
- * Gestiona exclusivamente la política de bloqueo por intentos fallidos de login clásico.
- */
 export function useLoginLockout(): LoginLockoutState {
   const [loginAttempts, setLoginAttempts] = useState<number>(
     () => Number(sessionStore.getItem(STORAGE_ATTEMPTS) || 0)
   );
   const [loginLockoutTime, setLoginLockoutTime] = useState(0);
 
-  // Sincroniza el countdown del lockout cada segundo
   useEffect(() => {
     const tick = () => {
       const until = Number(sessionStore.getItem(STORAGE_LOCKOUT_UNTIL) || 0);
@@ -91,3 +86,4 @@ export function useLoginLockout(): LoginLockoutState {
     resetLoginAttempts,
   };
 }
+

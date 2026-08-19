@@ -52,7 +52,7 @@ export default function TableSelectDialog({
           return prev.filter((t) => t !== id);
         }
         if (maxSelection && prev.length >= maxSelection) {
-          return prev; // No permitir seleccionar más del máximo
+          return prev;
         }
         return [...prev, id];
       });
@@ -78,10 +78,10 @@ export default function TableSelectDialog({
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose} 
-      maxWidth="sm" 
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
       fullWidth
       disableRestoreFocus={disableRestoreFocus}
       disableEnforceFocus={disableEnforceFocus}
@@ -92,13 +92,13 @@ export default function TableSelectDialog({
         }
       }}
     >
-      <DialogTitle sx={{ 
-        m: 0, 
-        p: 3, 
+      <DialogTitle sx={{
+        m: 0,
+        p: 3,
         pb: 2,
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
         <Typography component="div" variant="h6" fontWeight="bold" color="text.primary">
           {title}
@@ -137,7 +137,7 @@ export default function TableSelectDialog({
             )}
             {options.map((opt) => {
               const isSelected = selectedTables.includes(opt.id);
-              
+
               // Simplificamos el texto si viene con mucho detalle
               const parts = opt.label.split('-');
               const subTitle = parts[0]?.trim() || '';
@@ -189,9 +189,9 @@ export default function TableSelectDialog({
       </DialogContent>
 
       <DialogActions sx={{ p: 3, pt: 2, pb: 3, bgcolor: "action.hover" }}>
-        <Button 
-          onClick={handleClose} 
-          variant="text" 
+        <Button
+          onClick={handleClose}
+          variant="text"
           color="inherit"
           sx={{ fontWeight: "bold", borderRadius: 2, px: 3 }}
         >
@@ -202,9 +202,9 @@ export default function TableSelectDialog({
           variant="contained"
           disabled={selectedTables.length === 0}
           disableElevation
-          sx={{ 
-            fontWeight: "bold", 
-            borderRadius: 2, 
+          sx={{
+            fontWeight: "bold",
+            borderRadius: 2,
             px: 4,
             bgcolor: LOGIN_COLORS.primary,
             "&:hover": {
@@ -218,3 +218,4 @@ export default function TableSelectDialog({
     </Dialog>
   );
 }
+

@@ -18,6 +18,8 @@ export default function OpenCashRegisterPage() {
     canSubmit,
     expectedAmount,
     requireExactOpening,
+    isSubmitting,
+    error,
     handleSubmit,
     handleCancel,
     cajas,
@@ -78,6 +80,8 @@ export default function OpenCashRegisterPage() {
           canSubmit={canSubmit}
           expectedAmount={expectedAmount}
           requireExactOpening={requireExactOpening}
+          isSubmitting={isSubmitting}
+          error={error}
         />
       </Box>
     </AuthLayout>

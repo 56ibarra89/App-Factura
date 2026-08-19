@@ -24,7 +24,6 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     changeExtraPrice,
   } = useProductExtras();
 
-  // Handle initial form load for editing
   useEffect(() => {
     if (open) {
       const sizes = ["familiar", "mediana", "personal"];
@@ -72,10 +71,9 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     e.preventDefault();
     if (!isFormValid) return;
 
-    // Sanitización proactiva (ISO 27001 A.12.2.1)
     const sanitize = (text: string, limit: number) => {
       return text
-        .replace(/<[^>]*>?/gm, "") // Remover etiquetas HTML
+        .replace(/<[^>]*>?/gm, "")
         .substring(0, limit)
         .trim();
     };
@@ -99,7 +97,6 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     setForm,
     extras,
 
-    // Category and extra actions
     handleCategoryChange,
     handleMultipleSizesToggle,
     handleAddExtra: () => addExtra(form.hasMultipleSizes, dynamicSizes),
@@ -110,3 +107,4 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     isFormValid,
   };
 }
+

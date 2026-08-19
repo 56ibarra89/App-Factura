@@ -56,7 +56,7 @@ class ShiftRepository implements IShiftRepository {
 
   async getAll(): Promise<Shift[]> {
     try {
-      const response: BackendShift[] = await apiClient("/shifts?limit=200");
+      const response: BackendShift[] = await apiClient("/shifts?limit=500");
       return response.map((shift) => this.mapToFrontendShift(shift));
     } catch (error) {
       console.error("Error obteniendo turnos de DB:", error);

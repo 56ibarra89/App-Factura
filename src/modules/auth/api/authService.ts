@@ -98,6 +98,20 @@ export const authService: IAuthService = {
     }
   },
 
+  logout: async () => {
+    try {
+      const result: MessageResponse = await apiClient("/auth/logout", {
+        method: "POST",
+      });
+      return { success: true, message: result?.message };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        message: getErrorMessage(error, "No fue posible cerrar la sesión."),
+      };
+    }
+  },
+
   logoutAllDevices: async () => {
     try {
       const result: MessageResponse = await apiClient("/auth/logout-all", {

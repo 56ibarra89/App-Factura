@@ -69,10 +69,6 @@ function getRemainingLockoutSeconds(): number {
   );
 }
 
-/**
- * Hook de responsabilidad única (SRP):
- * Gestiona exclusivamente la política de bloqueo por intentos fallidos de PIN.
- */
 export function usePinLockout(): PinLockoutState {
   const [attempts, setAttempts] = useState<number>(
     getStoredAttempts,
@@ -81,7 +77,6 @@ export function usePinLockout(): PinLockoutState {
     getRemainingLockoutSeconds,
   );
 
-  // Sincroniza el countdown del lockout cada segundo
   useEffect(() => {
     const tick = () => {
       const until = getLockoutUntil();
@@ -165,3 +160,4 @@ export function usePinLockout(): PinLockoutState {
     resetAttempts,
   };
 }
+

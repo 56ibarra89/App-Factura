@@ -17,7 +17,7 @@ export const CatalogProvider = ({
   gateway = productGateway,
 }: CatalogProviderProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, role } = useAuth();
 
   const loadCategories = useCallback(async () => {
     try {
@@ -37,12 +37,12 @@ export const CatalogProvider = ({
   }, [gateway]);
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && role !== "motorizado") {
       loadCategories();
     } else {
       setCategories([]);
     }
-  }, [isLoggedIn, loadCategories]);
+  }, [isLoggedIn, loadCategories, role]);
 
   const addProduct = async (categoryName: string, product: Product) => {
     try {

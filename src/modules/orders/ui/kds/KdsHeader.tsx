@@ -90,7 +90,7 @@ export const KdsHeader: React.FC<KdsHeaderProps> = ({
         alignItems={{ xs: "flex-start", md: "center" }}
         gap={2}
       >
-        {/* Título & Botón volver */}
+        {}
         <Stack direction="row" spacing={2} alignItems="center">
           <BackButton to="/home" />
           <SoupKitchenIcon color="primary" sx={{ fontSize: "2.2rem" }} />
@@ -233,3 +233,4 @@ export const KdsHeader: React.FC<KdsHeaderProps> = ({
     </Box>
   );
 };
+

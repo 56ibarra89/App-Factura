@@ -7,6 +7,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -23,6 +25,8 @@ interface Props {
   canSubmit: boolean;
   expectedAmount: number | null;
   requireExactOpening: boolean;
+  isSubmitting: boolean;
+  error: string;
 }
 
 export function OpenCashRegisterForm({
@@ -36,6 +40,8 @@ export function OpenCashRegisterForm({
   canSubmit,
   expectedAmount,
   requireExactOpening,
+  isSubmitting,
+  error,
 }: Props) {
   const isExactRequired = requireExactOpening && expectedAmount !== null;
   const numAmount = Number(amount);
@@ -97,11 +103,14 @@ export function OpenCashRegisterForm({
         }}
       />
 
+      {error && <Alert severity="error">{error}</Alert>}
+
       <Box display="flex" gap={2} mt={1}>
         <Button
           variant="outlined"
           fullWidth
           onClick={onCancel}
+          disabled={isSubmitting}
           startIcon={<ArrowBackIcon />}
           sx={{ 
             borderRadius: 2, 
@@ -119,6 +128,7 @@ export function OpenCashRegisterForm({
           fullWidth
           onClick={onSubmit}
           disabled={!canSubmit}
+          startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : undefined}
           sx={{ 
             borderRadius: 2, 
             py: 1.5,
@@ -128,7 +138,7 @@ export function OpenCashRegisterForm({
             fontWeight: 'bold'
           }}
         >
-          Abrir caja
+          {isSubmitting ? "Registrando..." : "Abrir caja"}
         </Button>
       </Box>
     </Box>

@@ -30,6 +30,7 @@ export function useMesaDialogs(restoreFocus: () => void) {
     tableSelectMode,
     openTableSelect,
     closeTableSelect,
-    setIsReservationOpen, // For cases where we just want to set it without restoreFocus
+    setIsReservationOpen,
   };
 }
+

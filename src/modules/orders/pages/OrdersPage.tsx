@@ -8,7 +8,6 @@ import {
 import TimerIcon from "@mui/icons-material/Timer";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-// Components
 import OrderGrid from "../ui/OrderGrid";
 import OrderEmptyState from "../ui/OrderEmptyState";
 import {
@@ -17,7 +16,6 @@ import {
   useAuth,
 } from "../../auth";
 
-// Hooks & Theme
 import { useOrderManagement } from "../hooks/useOrderManagement";
 import { useAccessibleKitchens } from "../../kitchens";
 import { logService } from "../../audit";
@@ -29,13 +27,13 @@ interface OrdersPageProps {
 }
 
 const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
-  const { 
-    activeOrders, 
-    finishedOrders, 
+  const {
+    activeOrders,
+    finishedOrders,
     updateOrderStatus,
     clearHistory
   } = useOrderManagement();
-  
+
   const { username, role: userRole } = useAuth();
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
@@ -134,7 +132,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
         px: { xs: 2, md: 6 },
       }}
     >
-      <PageHeader 
+      <PageHeader
         title={isCook ? "Historial de Órdenes" : "Gestión de Órdenes"}
         startContent={<BackButton to="/home" />}
         actions={
@@ -147,13 +145,13 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
               </Typography>
             </Stack>
             <RoleGuard allowedRoles={["admin"]}>
-              <Button 
-                variant="outlined" 
+              <Button
+                variant="outlined"
                 size="small"
                 onClick={() => setIsClearConfirmOpen(true)}
                 startIcon={<DeleteIcon />}
-                sx={{ 
-                  color: LOGIN_COLORS.primary, 
+                sx={{
+                  color: LOGIN_COLORS.primary,
                   borderColor: LOGIN_COLORS.primary,
                   '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' },
                   borderRadius: 2,
@@ -265,3 +263,4 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
 };
 
 export default OrdersPage;
+

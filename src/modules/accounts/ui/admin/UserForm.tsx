@@ -44,7 +44,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.username || !formData.firstName || !formData.pin) return;
-    if (hasPasswordInput && !isPasswordValid) return; // Prevent submission if invalid
+    if (hasPasswordInput && !isPasswordValid) return;
     const userToSave: UserAccount = {
       ...formData,
       id: formData.id || "",
@@ -63,17 +63,16 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
     const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     const nums = "23456789";
     const specs = "@$!%*?&";
-    
+
     let pwd = "";
     pwd += chars.charAt(Math.floor(Math.random() * chars.length));
     pwd += upper.charAt(Math.floor(Math.random() * upper.length));
     pwd += nums.charAt(Math.floor(Math.random() * nums.length));
     pwd += specs.charAt(Math.floor(Math.random() * specs.length));
-    
+
     const all = chars + upper + nums + specs;
     for(let i=0; i<4; i++) pwd += all.charAt(Math.floor(Math.random() * all.length));
-    
-    // Shuffle the string
+
     pwd = pwd.split('').sort(() => 0.5 - Math.random()).join('');
     handleChange("password", pwd);
   };
@@ -91,15 +90,15 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, pb: 1 }}>
-      
-      {/* Banner Superior Estilizado */}
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 2, 
-        mb: 1.5, 
-        background: `linear-gradient(135deg, ${alpha(LOGIN_COLORS.primary, 0.1)} 0%, ${alpha(LOGIN_COLORS.primaryDark, 0.05)} 100%)`, 
-        p: 1.5, 
+
+      {}
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        mb: 1.5,
+        background: `linear-gradient(135deg, ${alpha(LOGIN_COLORS.primary, 0.1)} 0%, ${alpha(LOGIN_COLORS.primaryDark, 0.05)} 100%)`,
+        p: 1.5,
         borderRadius: 4,
         border: '1px solid',
         borderColor: alpha(LOGIN_COLORS.primary, 0.2)
@@ -158,17 +157,17 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
         <Divider sx={{ mb: 1.5 }} />
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField 
+            <TextField
               id="user-pin"
-              fullWidth 
+              fullWidth
               size="small"
-              label="PIN Numérico" 
-              type="text" 
-              value={formData.pin || ""} 
-              onChange={e => handleChange("pin", e.target.value.replace(/\D/g, '').substring(0,4))} 
-              inputProps={{ maxLength: 4 }} 
-              required 
-              variant="filled" 
+              label="PIN Numérico"
+              type="text"
+              value={formData.pin || ""}
+              onChange={e => handleChange("pin", e.target.value.replace(/\D/g, '').substring(0,4))}
+              inputProps={{ maxLength: 4 }}
+              required
+              variant="filled"
               helperText="4 dígitos para acciones rápidas."
               InputProps={{
                 endAdornment: (
@@ -180,20 +179,20 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
                     </Tooltip>
                   </InputAdornment>
                 )
-              }} 
+              }}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField 
+            <TextField
               id="user-password"
-              fullWidth 
+              fullWidth
               size="small"
-              label="Contraseña Principal" 
-              type="text" 
-              value={formData.password || ""} 
-              onChange={e => handleChange("password", e.target.value)} 
-              required={!isEditing} 
-              variant="filled" 
+              label="Contraseña Principal"
+              type="text"
+              value={formData.password || ""}
+              onChange={e => handleChange("password", e.target.value)}
+              required={!isEditing}
+              variant="filled"
               error={hasPasswordInput && !isPasswordValid}
               helperText={isEditing ? "Dejar en blanco para mantener la actual." : ""}
               InputProps={{
@@ -263,7 +262,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
               </Button>
             </>
           ) : (
-            <Box /> 
+            <Box />
           )}
         </Box>
 
@@ -299,3 +298,4 @@ function PersonAddAlt1Icon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+

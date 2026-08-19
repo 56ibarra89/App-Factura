@@ -1,6 +1,4 @@
-/**
- * useCertificados — Hook CRUD para la gestión de certificados/vales de producto conectado al backend.
- */
+
 import { useState, useCallback, useEffect } from "react";
 import type {
   CertificadoInput,
@@ -11,8 +9,6 @@ import {
   promotionsGateway,
   type PromotionsGateway,
 } from "../api/promotionsGateway";
-
-// ── Hook ─────────────────────────────────────────────────────────────────────
 
 interface UseCertificadosReturn {
   certificados: CertificadoRule[];
@@ -47,7 +43,7 @@ export function useCertificados(
              }
            }
         }
-        
+
         return {
           id: c.id,
           serial: c.serial,
@@ -103,3 +99,4 @@ export function useCertificados(
     refresh: fetchCertificados
   };
 }
+

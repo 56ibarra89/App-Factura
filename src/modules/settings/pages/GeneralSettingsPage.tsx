@@ -21,7 +21,7 @@ const GeneralSettingsPage = () => {
         overflowX: 'hidden'
       }}
     >
-      {/* Decorative Background Element */}
+      {}
       <Box
         sx={{
           position: "absolute",
@@ -52,18 +52,18 @@ const GeneralSettingsPage = () => {
           <Grid container spacing={4}>
             {/* Currency Block */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <CurrencyCard 
-                config={config} 
-                onUpdate={updatePreference} 
+              <CurrencyCard
+                config={config}
+                onUpdate={updatePreference}
                 onSave={saveConfig}
               />
             </Grid>
 
             {/* Behavior Block */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <CashRegisterBehaviorCard 
-                config={config} 
-                onUpdate={updatePreference} 
+              <CashRegisterBehaviorCard
+                config={config}
+                onUpdate={updatePreference}
               />
             </Grid>
           </Grid>
@@ -74,3 +74,4 @@ const GeneralSettingsPage = () => {
 };
 
 export default GeneralSettingsPage;
+

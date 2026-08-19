@@ -78,7 +78,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
         overflow: "hidden",
       }}
     >
-      {/* Barra superior de urgencia de tiempo (Semáforo) */}
+      {}
       <Box
         sx={{
           bgcolor: urgency.badgeBg,
@@ -337,3 +337,4 @@ export const KdsCard: React.FC<KdsCardProps> = ({
     </Card>
   );
 };
+

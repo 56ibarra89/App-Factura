@@ -60,6 +60,7 @@ export const AuthProvider = ({
         login: authentication.login,
         loginWithPin: authentication.loginWithPin,
         logout: authentication.logout,
+        logoutAllDevices: authentication.logoutAllDevices,
         clearError: authentication.clearError,
         validatePinForAction:
           authentication.validatePinForAction,

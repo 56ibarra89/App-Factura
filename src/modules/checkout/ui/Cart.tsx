@@ -1,4 +1,4 @@
-// Resumen interactivo del carrito durante el checkout.
+
 import { Box, Typography, Divider, Button } from "@mui/material";
 import CartItem from "./CartItem";
 import type { OrderItem } from "../../orders";
@@ -47,7 +47,7 @@ const Cart = ({
       <Typography variant="h6" fontWeight="bold" mb={1}>
         Tu pedido
       </Typography>
-      
+
       <Divider />
 
       <Box flex={1} overflow="auto" pr={1} my={1}>
@@ -129,3 +129,4 @@ const Cart = ({
 };
 
 export default Cart;
+

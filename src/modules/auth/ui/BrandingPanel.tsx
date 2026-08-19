@@ -9,9 +9,9 @@ import {
 interface BrandingPanelProps {
   title: ReactNode;
   subtitle: string;
-  /** Contenido opcional al pie del panel (ej: botón "Volver al login clásico") */
+
   footerAction?: ReactNode;
-  /** Si es true, el panel se muestra compacto en móvil (logo+título en fila) */
+
   compactMobile?: boolean;
 }
 
@@ -40,7 +40,7 @@ export const BrandingPanel = ({
     }}
   >
     <Box mt={footerAction ? 2 : 0}>
-      {/* Logo */}
+      {}
       <Box
         component="img"
         src={logoImg}
@@ -61,7 +61,7 @@ export const BrandingPanel = ({
         }}
       />
 
-      {/* Título compacto (solo móvil cuando compactMobile=true) */}
+      {}
       {compactMobile && (
         <Typography
           variant="h5"
@@ -72,7 +72,7 @@ export const BrandingPanel = ({
         </Typography>
       )}
 
-      {/* Textos grandes (ocultos en móvil si compactMobile) */}
+      {}
       <Box sx={compactMobile ? { display: { xs: "none", md: "block" } } : {}}>
         <Typography
           variant="h3"
@@ -98,3 +98,4 @@ export const BrandingPanel = ({
     {footerAction}
   </Box>
 );
+

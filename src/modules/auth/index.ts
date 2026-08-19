@@ -11,6 +11,7 @@ export type {
 export type {
   AuthLoginResult,
   IAuthService,
+  LogoutResult,
 } from "./model/auth-service.types";
 export type {
   UserRole,

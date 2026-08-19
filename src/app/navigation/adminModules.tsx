@@ -24,12 +24,12 @@ export interface AdminModuleItem {
   icon: JSX.Element;
   path?: string;
   action?: () => void;
-  /** Si true, la tarjeta se muestra deshabilitada (módulo pendiente de implementar) */
+
   disabled?: boolean;
 }
 
 export const adminModules: AdminModuleItem[] = [
-  // --- GENERAL ---
+
   {
     id: "empresa",
     category: "General",
@@ -55,7 +55,6 @@ export const adminModules: AdminModuleItem[] = [
     path: "/admin/impuestos",
   },
 
-  // --- OPERATIVA ---
   {
     id: "horarios",
     category: "Operativa",
@@ -120,8 +119,7 @@ export const adminModules: AdminModuleItem[] = [
     icon: <SoupKitchenIcon fontSize="large" />,
     path: "/admin/cocinas",
   },
-  
-  // --- HARDWARE Y SISTEMA ---
+
   {
     id: "perifericos",
     category: "Hardware y Sistema",
@@ -155,3 +153,4 @@ export const adminModules: AdminModuleItem[] = [
     path: "/admin/respaldos",
   }
 ];
+

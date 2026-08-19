@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type { UserRole } from "./user.types";
+import type { LogoutResult } from "./auth-service.types";
 
 export interface AuthContextValue {
   isLoggedIn: boolean;
@@ -16,7 +17,8 @@ export interface AuthContextValue {
     remember?: boolean,
   ): Promise<boolean>;
   loginWithPin(pin: string): Promise<boolean>;
-  logout(): void;
+  logout(): Promise<LogoutResult>;
+  logoutAllDevices(): Promise<LogoutResult>;
   clearError(): void;
   validatePinForAction(
     pin: string,

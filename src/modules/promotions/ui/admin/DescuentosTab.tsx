@@ -23,7 +23,7 @@ import type {
 } from "../../model/promotion.types";
 
 interface DescuentosTabProps {
-  /** OCP: el componente renderiza datos recibidos por props, sin conocer su origen */
+
   rules: DescuentoRule[];
   onAdd?: () => void;
   onEdit?: (rule: DescuentoRule) => void;
@@ -137,7 +137,7 @@ const DescuentosTab = ({ rules, onAdd, onEdit, onDelete }: DescuentosTabProps) =
         ))}
       </Grid>
 
-      {/* Diálogo de Confirmación */}
+      {}
       <Dialog
         open={deleteId !== null}
         onClose={() => setDeleteId(null)}
@@ -147,7 +147,7 @@ const DescuentosTab = ({ rules, onAdd, onEdit, onDelete }: DescuentosTabProps) =
         <DialogTitle sx={{ fontWeight: 700 }}>Confirmar Eliminación</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Está seguro de que desea eliminar esta regla de descuento de forma permanente? 
+            ¿Está seguro de que desea eliminar esta regla de descuento de forma permanente?
             Esta acción no se puede deshacer.
           </DialogContentText>
         </DialogContent>
@@ -170,3 +170,4 @@ const DescuentosTab = ({ rules, onAdd, onEdit, onDelete }: DescuentosTabProps) =
 };
 
 export default DescuentosTab;
+

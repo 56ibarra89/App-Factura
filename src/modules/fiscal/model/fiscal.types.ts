@@ -1,16 +1,16 @@
-export type DocumentType = "Factura"; // En el futuro se pueden añadir "Nota de Crédito", etc.
+export type DocumentType = "Factura";
 export type CorrelativoStatus = "Activo" | "Agotado" | "Vencido";
 
 export interface Correlativo {
-  id: string; // UUID
+  id: string;
   documentType: DocumentType;
-  resolutionNumber: string; // Número de CAI, Resolución, etc.
-  prefix: string; // Ej. 001-001-01-
-  startNumber: number; // Rango inicial
-  endNumber: number; // Rango final
-  currentNumber: number; // Número actual
-  issueDate: Date; // Fecha de emisión de la resolución
-  expirationDate: Date; // Fecha límite de emisión
+  resolutionNumber: string;
+  prefix: string;
+  startNumber: number;
+  endNumber: number;
+  currentNumber: number;
+  issueDate: Date;
+  expirationDate: Date;
   status: CorrelativoStatus;
   createdAt: Date;
 }
@@ -21,3 +21,4 @@ export interface DgiConfig {
   endNumber: number;
   authorizationDate: string;
 }
+

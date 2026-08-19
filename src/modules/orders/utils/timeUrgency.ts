@@ -11,10 +11,6 @@ export interface UrgencyInfo {
   label: string;
 }
 
-/**
- * Calcula el tiempo transcurrido desde la creación de la orden/ticket
- * y retorna la información visual del semáforo de urgencia.
- */
 export function getTicketUrgency(
   timestamp: string | number | Date,
   warningThresholdMinutes = 10,
@@ -62,3 +58,4 @@ export function getTicketUrgency(
     label: `${minutes} min`,
   };
 }
+

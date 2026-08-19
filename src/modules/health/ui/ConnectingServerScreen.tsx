@@ -67,7 +67,7 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
             border: "1px solid rgba(255, 255, 255, 0.1)",
           }}
         >
-          {/* Logo animado */}
+          {}
           <Box
             sx={{
               position: "relative",
@@ -122,7 +122,7 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
             Sistema de Facturación
           </Typography>
 
-          {/* Indicator Status Badge */}
+          {}
           <Chip
             icon={isDisconnected ? <WifiOffIcon style={{ color: "#ff8a80" }} /> : <CircularProgress size={16} color="inherit" />}
             label={
@@ -216,3 +216,4 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
     </Box>
   );
 };
+

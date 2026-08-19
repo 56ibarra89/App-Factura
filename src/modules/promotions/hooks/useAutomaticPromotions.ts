@@ -6,8 +6,6 @@ import {
   type PromotionsGateway,
 } from "../api/promotionsGateway";
 
-// 0: Domingo, 1: Lunes, etc. en JS date.getDay()
-// En la base de datos se guarda como enum WeekDay: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
 const DAYS_MAP = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
 
 interface ActiveTwoForOnePromotion {
@@ -36,7 +34,6 @@ export function useAutomaticPromotions(
     }
   }, [gateway]);
 
-  // Cargar una vez al montar y luego cada 5 minutos
   useEffect(() => {
     fetchHappyHours();
     const fetchInterval = setInterval(fetchHappyHours, 5 * 60000);
@@ -71,7 +68,7 @@ export function useAutomaticPromotions(
 
       if (activeRule) {
         if (activeRule.promotionType === "2x1" || activeRule.promotionType === "DOSXUNO") {
-          // Adaptamos la regla al formato esperado por la UI (para 2x1)
+
           setActive2x1({
             id: activeRule.id,
             name: activeRule.name,
@@ -83,7 +80,7 @@ export function useAutomaticPromotions(
           setActiveHappyHour(null);
         } else {
           setActive2x1(null);
-          // Si es PORCENTAJE o MONTO_FIJO
+
           const typeMap: Record<string, AppliedPromotion["discountType"]> = {
             porcentaje: "porcentaje",
             monto_fijo: "monto_fijo",
@@ -115,3 +112,4 @@ export function useAutomaticPromotions(
 
   return { activeHappyHour, active2x1 };
 }
+

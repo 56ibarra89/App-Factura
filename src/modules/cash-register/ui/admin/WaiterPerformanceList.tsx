@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const WaiterPerformanceList = ({ waiters }: Props) => {
-  // Sort waiters by revenue for a better visual chart
+
   const sortedWaiters = [...waiters].sort((a, b) => b.revenueTotal - a.revenueTotal);
 
   return (
@@ -32,7 +32,7 @@ export const WaiterPerformanceList = ({ waiters }: Props) => {
         </Typography>
       </Box>
 
-      {/* Gráfico de Barras */}
+      {}
       <Box sx={{ width: '100%', height: 260, mb: 4 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -42,16 +42,16 @@ export const WaiterPerformanceList = ({ waiters }: Props) => {
           >
             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eee" />
             <XAxis type="number" tickFormatter={(val) => `$${val}`} stroke="#888" fontSize={12} />
-            <YAxis 
-              dataKey="name" 
-              type="category" 
-              axisLine={false} 
-              tickLine={false} 
+            <YAxis
+              dataKey="name"
+              type="category"
+              axisLine={false}
+              tickLine={false}
               fontWeight="600"
               fontSize={13}
               width={100}
             />
-            <RechartsTooltip 
+            <RechartsTooltip
               formatter={(value: unknown) => formatCurrency(Number(value))}
               cursor={{ fill: 'rgba(0,0,0,0.04)' }}
               contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
@@ -68,13 +68,13 @@ export const WaiterPerformanceList = ({ waiters }: Props) => {
       {/* Lista Descriptiva */}
       <Box display="flex" flexDirection="column" gap={2}>
         {sortedWaiters.map((waiter, idx) => (
-          <Box 
-            key={waiter.id} 
-            display="flex" 
-            alignItems="center" 
-            p={2} 
-            sx={{ 
-              borderRadius: 3, 
+          <Box
+            key={waiter.id}
+            display="flex"
+            alignItems="center"
+            p={2}
+            sx={{
+              borderRadius: 3,
               bgcolor: idx === 0 ? 'rgba(211, 47, 47, 0.04)' : 'transparent',
               border: '1px solid',
               borderColor: idx === 0 ? 'rgba(211, 47, 47, 0.1)' : 'grey.100',
@@ -84,11 +84,11 @@ export const WaiterPerformanceList = ({ waiters }: Props) => {
               }
             }}
           >
-            <Avatar 
-              sx={{ 
-                bgcolor: waiter.avatarColor, 
-                width: 48, 
-                height: 48, 
+            <Avatar
+              sx={{
+                bgcolor: waiter.avatarColor,
+                width: 48,
+                height: 48,
                 fontWeight: 'bold',
                 boxShadow: `0 4px 10px ${waiter.avatarColor}40`
               }}
@@ -112,3 +112,4 @@ export const WaiterPerformanceList = ({ waiters }: Props) => {
     </Paper>
   );
 };
+

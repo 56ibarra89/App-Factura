@@ -9,7 +9,6 @@ import {
   setSelectedKitchenId as saveSelectedKitchenId,
 } from "../api/selectedKitchenPreference";
 
-// Componentes UI de KDS
 import { KdsHeader } from "../ui/kds/KdsHeader";
 import { KdsKanbanBoard } from "../ui/kds/KdsKanbanBoard";
 import { KdsCard } from "../ui/kds/KdsCard";
@@ -74,7 +73,6 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
   const { isMuted, toggleMute, newOrderAlert, clearNewOrderAlert } =
     useKdsAudioAlert(filteredOrders);
 
-  // Conteo de órdenes críticas (> 15 min)
   const criticalCount = useMemo(() => {
     return filteredOrders.filter((order) => {
       const urgency = getTicketUrgency(order.timestamp);
@@ -102,7 +100,7 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
         boxSizing: "border-box",
       }}
     >
-      {/* Encabezado KDS */}
+      {}
       <KdsHeader
         kitchens={kitchens}
         selectedKitchenId={selectedKitchenId}
@@ -116,7 +114,7 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
         onToggleMute={toggleMute}
       />
 
-      {/* Contenido Principal KDS */}
+      {}
       {accessMessage ? (
         <Alert severity={assignmentError ? "error" : "info"}>
           {accessMessage}
@@ -166,7 +164,7 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
         </Box>
       )}
 
-      {/* Alerta Visual de Nueva Orden Entrante */}
+      {}
       <Snackbar
         open={Boolean(newOrderAlert)}
         autoHideDuration={6000}
@@ -196,3 +194,4 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
 };
 
 export default KdsPage;
+

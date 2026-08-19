@@ -6,6 +6,7 @@ import { logService } from "../../audit";
 import type { LoginLockoutState } from "./useLoginLockout";
 import type { PinLockoutState } from "./usePinLockout";
 import type { AuthSessionController } from "./useAuthSession";
+import type { LogoutResult } from "../model/auth-service.types";
 
 export interface PinValidationResult {
   success: boolean;
@@ -46,7 +47,7 @@ export function useAuthOperations({
     setError("");
   }, []);
 
-  const logout = useCallback(() => {
+  const completeLogout = useCallback(() => {
     const { username, role } = sessionState;
     if (username) {
       logService.log(
@@ -64,6 +65,25 @@ export function useAuthOperations({
     signOut,
     tokenGateway,
   ]);
+
+  const logout = useCallback(async (): Promise<LogoutResult> => {
+    const result =
+      sessionState.role === "cajero_principal"
+        ? await service.logout()
+        : { success: true };
+    if (!result.success) return result;
+
+    completeLogout();
+    return result;
+  }, [completeLogout, service, sessionState.role]);
+
+  const logoutAllDevices = useCallback(async (): Promise<LogoutResult> => {
+    const result = await service.logoutAllDevices();
+    if (!result.success) return result;
+
+    completeLogout();
+    return result;
+  }, [completeLogout, service]);
 
   const login = useCallback(
     async (
@@ -268,6 +288,7 @@ export function useAuthOperations({
     login,
     loginWithPin,
     logout,
+    logoutAllDevices,
     validatePinForAction,
   };
 }

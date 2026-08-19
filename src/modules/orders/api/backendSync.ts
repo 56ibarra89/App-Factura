@@ -53,6 +53,11 @@ export interface BackendOrder {
 }
 
 export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
+  const hasMultiplePayments = backendOrder.payments && backendOrder.payments.length > 1;
+  const rawPaymentMethod = backendOrder.payments && backendOrder.payments.length > 0 
+    ? backendOrder.payments[0].method.toUpperCase() 
+    : undefined;
+
   return {
     id: backendOrder.id,
     items: backendOrder.items.map((i: BackendItem) => ({
@@ -93,7 +98,19 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
     happyHourId: backendOrder.happyHourId ?? undefined,
     tableId: backendOrder.linkedTables && backendOrder.linkedTables.length > 0 ? backendOrder.linkedTables[0] : undefined,
     linkedTables: backendOrder.linkedTables,
-    paymentMethod: backendOrder.payments && backendOrder.payments.length > 0 ? (backendOrder.payments[0].method.toLowerCase() as PaymentMethod) : undefined,
+    splitAmounts: hasMultiplePayments
+      ? {
+          efectivo: Number(
+            backendOrder.payments?.find((p) => p.method.toUpperCase() === "EFECTIVO")?.amount || 0
+          ),
+          tarjeta: Number(
+            backendOrder.payments?.find((p) => p.method.toUpperCase() === "TARJETA")?.amount || 0
+          ),
+        }
+      : undefined,
+    paymentMethod: (hasMultiplePayments
+      ? "MIXTO"
+      : rawPaymentMethod) as PaymentMethod | undefined,
     cashierName: backendOrder.cashierSnapshotName || undefined,
     isSentToKitchen: backendOrder.isSentToKitchen,
     invoiceNumber: backendOrder.invoice?.invoiceNumber || backendOrder.invoiceNumber || undefined,

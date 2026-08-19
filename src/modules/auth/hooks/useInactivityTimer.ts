@@ -3,9 +3,10 @@ import { logService } from "../../audit";
 import { UserRole } from "../model/user.types";
 import type { AuthSessionGateway } from "../api/authSessionGateway";
 import { authSessionGateway } from "../api/authSessionGateway";
+import type { LogoutResult } from "../model/auth-service.types";
 
-const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutos
-const CHECK_INTERVAL_MS = 30_000; // Revisar cada 30s
+const INACTIVITY_LIMIT_MS = 10 * 60 * 1000;
+const CHECK_INTERVAL_MS = 30_000;
 const ACTIVITY_EVENTS = [
   "mousedown",
   "mousemove",
@@ -18,13 +19,9 @@ interface UseInactivityTimerOptions {
   isLoggedIn: boolean;
   username: string;
   role: UserRole | null;
-  onExpire: () => void;
+  onExpire: () => Promise<LogoutResult>;
 }
 
-/**
- * Hook de responsabilidad única (SRP):
- * Gestiona exclusivamente la detección de inactividad de sesión y el cierre automático.
- */
 export function useInactivityTimer({
   isLoggedIn,
   username,
@@ -43,13 +40,18 @@ gateway: AuthSessionGateway = authSessionGateway): void {
     const checkInactivity = () => {
       const last = gateway.getLastActivity() ?? Date.now();
       if (Date.now() - last > INACTIVITY_LIMIT_MS) {
-        logService.log(
-          username,
-          role,
-          "SESSION_EXPIRED",
-          "Cierre de sesión automático por inactividad"
-        );
-        onExpire();
+        void onExpire().then((result) => {
+          if (result.success) {
+            logService.log(
+              username,
+              role,
+              "SESSION_EXPIRED",
+              "Cierre de sesión automático por inactividad"
+            );
+          } else {
+            gateway.touch();
+          }
+        });
       }
     };
 
@@ -75,3 +77,4 @@ gateway: AuthSessionGateway = authSessionGateway): void {
     resetTimer,
   ]);
 }
+

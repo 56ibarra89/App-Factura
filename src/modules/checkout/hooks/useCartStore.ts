@@ -8,7 +8,6 @@ import {
   type AppliedPromotion,
 } from "../../promotions";
 
-/** Compara extras para determinar si dos items del carrito son iguales */
 const extrasKey = (extras: SelectedExtra[]) =>
   extras.map((e) => e.name).sort().join("|");
 
@@ -18,12 +17,11 @@ export function useCartStore() {
   const { taxes, isExonerated } = useTaxConfig();
   const { activeHappyHour, active2x1 } = useAutomaticPromotions();
 
-  // ── Cálculo Automático de 2x1 ──────────────────────────────────────────────
   useEffect(() => {
     setCart((prev) => {
       let changed = false;
       const newCart = prev.map(item => {
-        // Ignoramos los vales (certificados) que son agregados como regalo fijo
+
         if (item.note?.startsWith("Vale: ")) return item;
 
         const hasStructuredTargets = Boolean(
@@ -65,7 +63,7 @@ export function useCartStore() {
           item.giftReason === "happy-hour-2x1" ||
           item.note === "2x1 Happy Hour"
         ) {
-          // Si el Happy Hour terminó, le quitamos el regalo automático
+
           changed = true;
           return {
             ...item,
@@ -206,3 +204,4 @@ export function useCartStore() {
     removePromotion,
   };
 }
+

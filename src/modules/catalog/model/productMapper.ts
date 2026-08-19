@@ -7,7 +7,7 @@ import type {
 } from "./catalog.types";
 
 export const productMapper = {
-  /** Map a domain Product to Form state */
+
   toFormState: (product: Product | null, category: string): ProductFormState => {
     const defaults: { size: string; price: string }[] = [];
     if (!product) {
@@ -37,13 +37,12 @@ export const productMapper = {
     };
   },
 
-  /** Map Domain extras to Form extras */
   toFormExtras: (extras: ExtraIngredientDef[] | undefined, hasMultipleSizes: boolean, dynamicSizes: string[]): ExtraFormItem[] => {
     if (!extras?.length) return [];
 
     return extras.map((ext) => ({
       name: ext.name,
-      prices: hasMultipleSizes 
+      prices: hasMultipleSizes
         ? dynamicSizes.map((s) => {
             const found = ext.prices.find((p) => p.size === s);
             return { size: s, price: found ? found.price.toString() : "" };
@@ -52,7 +51,6 @@ export const productMapper = {
     }));
   },
 
-  /** Map Form state to Domain Product */
   toDomainProduct: (form: ProductFormState, extras: ExtraFormItem[]): Product => {
     const hasMultipleSizes = form.hasMultipleSizes;
 
@@ -90,3 +88,4 @@ export const productMapper = {
     };
   },
 };
+

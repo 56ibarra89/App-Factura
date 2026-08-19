@@ -25,7 +25,7 @@ export function UserDirectoryProvider({
   children,
   gateway = usersGateway,
 }: UserDirectoryProviderProps) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, role } = useAuth();
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,14 +48,14 @@ export function UserDirectoryProvider({
   }, [gateway]);
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn || role === "motorizado") {
       setUsers([]);
       setError(null);
       setLoading(false);
       return;
     }
     void refreshUsers();
-  }, [isLoggedIn, refreshUsers]);
+  }, [isLoggedIn, refreshUsers, role]);
 
   const updateUsers = useCallback(
     (updater: UserDirectoryUpdater) => {

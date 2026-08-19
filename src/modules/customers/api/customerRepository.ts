@@ -15,9 +15,7 @@ export interface ICustomerRepository {
 }
 
 class CustomerRepository implements ICustomerRepository {
-  /**
-   * Búsqueda por subcadena de nombre o teléfono.
-   */
+
   async searchByName(query: string): Promise<Customer[]> {
     return await apiClient(`/customers?query=${encodeURIComponent(query)}`, {
       method: "GET",
@@ -75,3 +73,4 @@ class CustomerRepository implements ICustomerRepository {
 }
 
 export const customerRepository = new CustomerRepository();
+

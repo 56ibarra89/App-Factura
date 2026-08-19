@@ -31,7 +31,7 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
   resolveTableName,
   onUpdateStatus,
 }) => {
-  // Helper para determinar el estado efectivo de la orden en el contexto de la cocina seleccionada
+
   const getOrderEffectiveStatus = React.useCallback(
     (order: Order): OrderStatus => {
       const relevantItems = selectedKitchenId
@@ -64,7 +64,6 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
     [selectedKitchenId]
   );
 
-  // Filtrar órdenes por cocina si hay una seleccionada
   const filteredOrders = React.useMemo(() => {
     if (!selectedKitchenId) return orders;
     return orders.filter((order) =>
@@ -76,7 +75,6 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
     );
   }, [orders, selectedKitchenId]);
 
-  // Clasificar órdenes en las 3 columnas del tablero Kanban según el estado efectivo
   const { pendingOrders, preparingOrders, readyOrders } = React.useMemo(() => {
     const pending: Order[] = [];
     const preparing: Order[] = [];
@@ -222,3 +220,4 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
     </Box>
   );
 };
+

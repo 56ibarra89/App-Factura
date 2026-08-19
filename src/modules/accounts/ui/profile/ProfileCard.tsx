@@ -2,7 +2,7 @@ import { Box, Typography, Avatar, Paper } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import ShieldIcon from "@mui/icons-material/Security";
 import { LOGIN_GRADIENTS, LOGIN_SHADOWS } from "../../../../shared/theme";
-import logo from "../../../../assets/images/logo.png"; // Usamos el logo
+import logo from "../../../../assets/images/logo.png";
 import {
   ROLE_LABELS,
   useAuth,
@@ -15,7 +15,7 @@ interface ProfileCardProps {
 
 export function ProfileCard({ username, fullName }: ProfileCardProps) {
   const { role } = useAuth();
-  
+
   return (
     <Paper
       elevation={0}
@@ -34,8 +34,8 @@ export function ProfileCard({ username, fullName }: ProfileCardProps) {
         overflow: "hidden"
       }}
     >
-      {/* Fondo decorativo radial para dar profundidad */}
-      <Box 
+      {}
+      <Box
         sx={{
           position: "absolute",
           top: "-50%",
@@ -50,20 +50,20 @@ export function ProfileCard({ username, fullName }: ProfileCardProps) {
       />
 
       <Box sx={{ position: "relative", zIndex: 1, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {/* Logo de la empresa */}
-        <Box 
-          component="img" 
-          src={logo} 
-          alt="Logo" 
-          sx={{ width: 120, mb: 4, filter: "drop-shadow(0px 4px 10px rgba(0,0,0,0.5))" }} 
+        {}
+        <Box
+          component="img"
+          src={logo}
+          alt="Logo"
+          sx={{ width: 120, mb: 4, filter: "drop-shadow(0px 4px 10px rgba(0,0,0,0.5))" }}
         />
 
-        {/* Avatar grande */}
-        <Avatar 
-          sx={{ 
-            width: 90, 
-            height: 90, 
-            mb: 2, 
+        {}
+        <Avatar
+          sx={{
+            width: 90,
+            height: 90,
+            mb: 2,
             bgcolor: "rgba(255,255,255,0.1)",
             border: "2px solid rgba(255,255,255,0.2)",
             backdropFilter: "blur(4px)"
@@ -79,14 +79,14 @@ export function ProfileCard({ username, fullName }: ProfileCardProps) {
           @{username}
         </Typography>
 
-        <Box 
-          sx={{ 
-            display: "flex", 
-            alignItems: "center", 
-            gap: 1, 
-            bgcolor: "rgba(255,255,255,0.08)", 
-            px: 2, 
-            py: 0.8, 
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            bgcolor: "rgba(255,255,255,0.08)",
+            px: 2,
+            py: 0.8,
             borderRadius: 8,
             border: "1px solid rgba(255,255,255,0.1)"
           }}
@@ -100,3 +100,4 @@ export function ProfileCard({ username, fullName }: ProfileCardProps) {
     </Paper>
   );
 }
+

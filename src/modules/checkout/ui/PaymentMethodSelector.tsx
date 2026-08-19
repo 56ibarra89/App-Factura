@@ -68,25 +68,22 @@ export default function PaymentMethodSelector({
   const hasReceivedAny = receivedLocal !== "" || receivedSecondary !== "";
   const change = hasReceivedAny && totalReceivedInCordobas >= total ? totalReceivedInCordobas - total : null;
 
-
   const handleCashChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Si el valor ingresado es vacío, asumimos 0
+
     let cash = parseFloat(e.target.value);
     if (isNaN(cash) || cash < 0) cash = 0;
-    if (cash > total) cash = total; // No puede ser mayor al total
-    
-    // Auto rellenar tarjeta con el restante
+    if (cash > total) cash = total;
+
     const card = Number((total - cash).toFixed(2));
     setSplitAmounts({ efectivo: cash, tarjeta: card });
   };
 
   const handleCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Si el valor ingresado es vacío, asumimos 0
+
     let card = parseFloat(e.target.value);
     if (isNaN(card) || card < 0) card = 0;
     if (card > total) card = total;
 
-    // Auto rellenar efectivo con el restante
     const cash = Number((total - card).toFixed(2));
     setSplitAmounts({ efectivo: cash, tarjeta: card });
   };
@@ -119,7 +116,7 @@ export default function PaymentMethodSelector({
         </ToggleButton>
       </ToggleButtonGroup>
 
-      {/* EFECTIVO - Calculadora de Vuelto */}
+      {}
       {paymentMethod === "EFECTIVO" && (
         <Box mt={2} p={2} sx={{ bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
           <Typography variant="subtitle2" mb={2}>Monto Recibido</Typography>
@@ -153,7 +150,7 @@ export default function PaymentMethodSelector({
               />
             )}
           </Box>
-          
+
           {change !== null && (
             <Box mt={2} pt={2} borderTop={1} borderColor="divider" display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="body1" fontWeight="bold">Vuelto a entregar:</Typography>
@@ -170,7 +167,7 @@ export default function PaymentMethodSelector({
         </Box>
       )}
 
-      {/* MIXTO */}
+      {}
       {paymentMethod === "MIXTO" && (
         <Box mt={2} p={2} sx={{ bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
            <Typography variant="subtitle2" mb={2}>Dividir Pago</Typography>
@@ -208,3 +205,4 @@ export default function PaymentMethodSelector({
     </>
   );
 }
+

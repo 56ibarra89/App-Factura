@@ -82,7 +82,7 @@ export function UserActivity({ user }: UserActivityProps) {
 
     const fetchLogs = async () => {
       setLoading(true);
-      // Extraemos más logs para asegurar encontrar los del usuario
+
       const allLogs = await logService.getLogs(500);
       if (isMounted) {
         const userLogs = allLogs
@@ -204,3 +204,4 @@ export function UserActivity({ user }: UserActivityProps) {
     </Box>
   );
 }
+

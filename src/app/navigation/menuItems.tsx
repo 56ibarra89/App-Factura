@@ -12,6 +12,7 @@ import { InventorySharp } from "@mui/icons-material";
 import DeliveryDiningIcon from "@mui/icons-material/DeliveryDining";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 
 export interface MenuItem {
   label: string;
@@ -21,11 +22,6 @@ export interface MenuItem {
   disabled?: boolean;
 }
 
-/**
- * Retorna los items del menú principal.
- * Si el item tiene `route`, la navegación se resuelve en el componente padre.
- * Si tiene `action`, se ejecuta directamente.
- */
 export const getMenuItems = (): MenuItem[] => [
   {
     label: "Facturar",
@@ -36,6 +32,11 @@ export const getMenuItems = (): MenuItem[] => [
     label: "Delivery",
     icon: <DeliveryDiningIcon fontSize="large" color="error" />,
     route: "/delivery",
+  },
+  {
+    label: "Entregas Motorizado",
+    icon: <TwoWheelerIcon fontSize="large" color="error" />,
+    route: "/mis-entregas",
   },
   {
     label: "Pantalla de Cocina",

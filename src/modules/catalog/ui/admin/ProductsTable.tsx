@@ -1,4 +1,4 @@
-// components/ProductsTable.tsx
+
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Paper, IconButton, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
@@ -117,7 +117,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
           filterOperatorIsNotEmpty: "No está vacío",
           filterOperatorIsAnyOf: "Es uno de",
 
-          // Filter operators extra 
+          // Filter operators extra
           filterOperatorAfter: "Después de",
           filterOperatorOnOrAfter: "En o después de",
           filterOperatorBefore: "Antes de",
@@ -154,3 +154,4 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
 };
 
 export default ProductsTable;
+

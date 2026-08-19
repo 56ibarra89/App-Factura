@@ -11,7 +11,7 @@ export const useBackups = (
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error" | "info">("success");
-  
+
   const [options, setOptions] = useState<BackupOptions>({
     config: true,
     menu: true,
@@ -43,7 +43,7 @@ export const useBackups = (
   const handleImportClick = () => {
     const input = document.createElement("input");
     input.type = "file";
-    // Removed specific file extension requirement here as requested
+
     input.onchange = async (event) => {
       const target = event.target;
       const file =
@@ -80,3 +80,4 @@ export const useBackups = (
     closeSnackbar,
   };
 };
+

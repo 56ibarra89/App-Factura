@@ -1,9 +1,6 @@
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress } from "@mui/material";
+import { Alert, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress } from "@mui/material";
 import { useState } from "react";
-import {
-  authService,
-  useAuth,
-} from "../../../auth";
+import { useAuth } from "../../../auth";
 
 interface LogoutAllDevicesModalProps {
   open: boolean;
@@ -12,19 +9,23 @@ interface LogoutAllDevicesModalProps {
 
 export function LogoutAllDevicesModal({ open, onClose }: LogoutAllDevicesModalProps) {
   const [loading, setLoading] = useState(false);
-  const { logout } = useAuth();
+  const [error, setError] = useState("");
+  const { logoutAllDevices } = useAuth();
 
   const handleLogoutAll = async () => {
     setLoading(true);
+    setError("");
     try {
-      await authService.logoutAllDevices();
-      // Luego de invalidar todos los tokens en el servidor, cerramos sesión localmente
-      logout();
+      const result = await logoutAllDevices();
+      if (!result.success) {
+        setError(result.message || "No fue posible cerrar las sesiones.");
+        return;
+      }
+      onClose();
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
-      onClose();
     }
   };
 
@@ -32,6 +33,7 @@ export function LogoutAllDevicesModal({ open, onClose }: LogoutAllDevicesModalPr
     <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Contraseña actualizada</DialogTitle>
       <DialogContent>
+        {error && <Alert severity="warning" sx={{ mb: 2 }}>{error}</Alert>}
         <DialogContentText>
           Tu contraseña ha sido actualizada exitosamente.
           <br /><br />

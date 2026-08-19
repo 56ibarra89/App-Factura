@@ -4,6 +4,7 @@ export { useUserAdministration } from "./hooks/useUserAdministration";
 export { useUserDirectory } from "./hooks/useUserDirectory";
 export { useUserSchedule } from "./hooks/useUserSchedule";
 export { UserDirectoryProvider } from "./model/UserDirectoryProvider";
+export { usersGateway } from "./api/usersGateway";
 export type {
   AccountData,
   UserAccount,

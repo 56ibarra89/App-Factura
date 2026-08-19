@@ -109,19 +109,19 @@ export default function InvoiceDetailsDialog({
           ))}
         </List>
         <Divider sx={{ my: 2 }} />
-        
+
         <Box display="flex" justifyContent="space-between" mb={1}>
           <Typography>Subtotal:</Typography>
           <Typography>C${subTotal.toFixed(2)}</Typography>
         </Box>
-        
+
         {discountAmount > 0 && (
           <Box display="flex" justifyContent="space-between" mb={1}>
             <Typography color="success.main">Descuento aplicado:</Typography>
             <Typography color="success.main">-C${discountAmount.toFixed(2)}</Typography>
           </Box>
         )}
-        
+
         <Box display="flex" justifyContent="space-between" mb={2}>
           <Typography>Impuestos:</Typography>
           <Typography>C${taxAmount.toFixed(2)}</Typography>
@@ -153,7 +153,7 @@ export default function InvoiceDetailsDialog({
         )}
       </DialogActions>
 
-      {/* Hidden printable ticket */}
+      {}
       <TicketPrint
         cart={cart}
         subTotal={subTotal}
@@ -168,3 +168,4 @@ export default function InvoiceDetailsDialog({
     </Dialog>
   );
 }
+

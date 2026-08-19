@@ -1,4 +1,4 @@
-// Línea editable del carrito durante el checkout.
+
 import {
   Box,
   Typography,
@@ -133,3 +133,4 @@ const CartItem = ({
 };
 
 export default CartItem;
+
