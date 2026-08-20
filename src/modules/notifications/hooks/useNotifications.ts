@@ -16,7 +16,15 @@ export function useNotifications(
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchUnread = useCallback(async () => {
-    if (role !== 'admin' && role !== 'cajero' && role !== 'despachador' && role !== 'mesero' && role !== 'motorizado') return;
+    if (
+      role !== 'admin' &&
+      role !== 'cajero' &&
+      role !== 'cajero_principal' &&
+      role !== 'despachador' &&
+      role !== 'mesero' &&
+      role !== 'motorizado'
+    )
+      return;
     try {
       const data = await gateway.list();
       if (Array.isArray(data)) {
@@ -33,14 +41,21 @@ export function useNotifications(
   }, [fetchUnread]);
 
   useEffect(() => {
-    if (role !== 'admin' && role !== 'cajero' && role !== 'despachador' && role !== 'mesero' && role !== 'motorizado') return;
+    if (
+      role !== 'admin' &&
+      role !== 'cajero' &&
+      role !== 'cajero_principal' &&
+      role !== 'despachador' &&
+      role !== 'mesero' &&
+      role !== 'motorizado'
+    )
+      return;
 
     return gateway.subscribe((notification) => {
       setNotifications(prev => [notification, ...prev]);
       setUnreadCount(prev => prev + 1);
     });
   }, [gateway, role]);
-
   const removeNotification = async (id: string) => {
     try {
       await gateway.remove(id);

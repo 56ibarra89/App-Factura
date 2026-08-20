@@ -42,6 +42,7 @@ import {
   statusLabels,
   statusColors,
   ordersGateway,
+  requiresKitchenPreparation,
   type Order,
 } from "../../orders";
 import { customerRepository, type Customer } from "../../customers";
@@ -63,7 +64,7 @@ export default function DriverDeliveriesPage() {
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
-    severity: "success" | "error" | "info";
+    severity: "success" | "error" | "info" | "warning";
   }>({
     open: false,
     message: "",
@@ -71,6 +72,21 @@ export default function DriverDeliveriesPage() {
   });
 
   const isMotorizado = role === "motorizado";
+
+  const isOrderReadyForDelivery = (order: Order) => {
+    const sentItems = order.items.filter(
+      (item) => requiresKitchenPreparation(item) && item.isSentToKitchen
+    );
+    if (sentItems.length === 0) return true;
+    return (
+      order.status === "ready" ||
+      order.status === "delivered" ||
+      order.status === "paid" ||
+      sentItems.every(
+        (i) => i.kitchenStatus === "ready" || i.kitchenStatus === "delivered"
+      )
+    );
+  };
 
   const loadInitialData = useCallback(async () => {
     setLoading(true);
@@ -172,6 +188,14 @@ export default function DriverDeliveriesPage() {
   };
 
   const handleMarkAsDelivered = async (order: Order) => {
+    if (!isOrderReadyForDelivery(order)) {
+      setSnackbar({
+        open: true,
+        message: "El pedido aún no está listo en cocina para ser entregado.",
+        severity: "warning",
+      });
+      return;
+    }
     try {
       await ordersGateway.updateStatus({
         orderId: order.id,
@@ -183,11 +207,15 @@ export default function DriverDeliveriesPage() {
         severity: "success",
       });
       await fetchAllDeliveryOrders();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error al marcar como entregado:", err);
+      const errorMessage =
+        err?.response?.data?.message ||
+        err?.message ||
+        "No se pudo actualizar el estado del pedido.";
       setSnackbar({
         open: true,
-        message: "No se pudo actualizar el estado del pedido.",
+        message: errorMessage,
         severity: "error",
       });
     }
@@ -848,17 +876,45 @@ export default function DriverDeliveriesPage() {
                 {}
                 <CardActions sx={{ p: 2, pt: 0, justifyContent: "space-between" }}>
                   {order.status !== "delivered" && order.status !== "paid" ? (
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      color="error"
-                      size="large"
-                      startIcon={<CheckCircleIcon />}
-                      onClick={() => handleMarkAsDelivered(order)}
-                      sx={{ fontWeight: "bold", py: 1 }}
-                    >
-                      Marcar Como Entregado
-                    </Button>
+                    (() => {
+                      const isReady = isOrderReadyForDelivery(order);
+                      const buttonContent = (
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          color={isReady ? "error" : "inherit"}
+                          size="large"
+                          disabled={!isReady}
+                          startIcon={isReady ? <CheckCircleIcon /> : <AccessTimeIcon />}
+                          onClick={() => handleMarkAsDelivered(order)}
+                          sx={{
+                            fontWeight: "bold",
+                            py: 1,
+                            ...(!isReady && {
+                              bgcolor: "action.disabledBackground",
+                              color: "text.disabled",
+                            }),
+                          }}
+                        >
+                          {isReady ? "Recibido de cocina" : "Pendiente en Cocina"}
+                        </Button>
+                      );
+
+                      return !isReady ? (
+                        <Tooltip
+                          title="El pedido aún está en preparación en cocina. Espera a que cocina lo marque como listo."
+                          arrow
+                          placement="top"
+                          sx={{ width: "100%" }}
+                        >
+                          <span style={{ width: "100%", display: "block" }}>
+                            {buttonContent}
+                          </span>
+                        </Tooltip>
+                      ) : (
+                        buttonContent
+                      );
+                    })()
                   ) : order.status === "delivered" ? (
                     <Button
                       fullWidth
