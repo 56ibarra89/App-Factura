@@ -179,13 +179,16 @@ export default function DriverDeliveriesPage() {
     return () => clearInterval(interval);
   }, [fetchAllDeliveryOrders]);
 
-  const getCustomerPhone = (customerName?: string) => {
-    if (!customerName) return null;
-    const match = customers.find(
-      (c) => c.name.toLowerCase() === customerName.toLowerCase()
-    );
-    return match?.phone || null;
-  };
+  const getCustomerPhone = useCallback(
+    (customerName?: string) => {
+      if (!customerName) return null;
+      const match = customers.find(
+        (c) => c.name.toLowerCase() === customerName.toLowerCase(),
+      );
+      return match?.phone || null;
+    },
+    [customers],
+  );
 
   const handleMarkAsDelivered = async (order: Order) => {
     if (!isOrderReadyForDelivery(order)) {
@@ -207,11 +210,12 @@ export default function DriverDeliveriesPage() {
         severity: "success",
       });
       await fetchAllDeliveryOrders();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error al marcar como entregado:", err);
       const errorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
+        (err as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ||
+        (err instanceof Error ? err.message : undefined) ||
         "No se pudo actualizar el estado del pedido.";
       setSnackbar({
         open: true,
@@ -355,7 +359,7 @@ export default function DriverDeliveriesPage() {
 
       return true;
     });
-  }, [driverOrders, tabFilter, searchTerm, customers]);
+  }, [driverOrders, tabFilter, searchTerm, getCustomerPhone]);
 
   // Cálculos de liquidación del motorizado
   const completedOrders = useMemo(
