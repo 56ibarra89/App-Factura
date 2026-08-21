@@ -1,7 +1,7 @@
 
 import { Box, Tabs, Tab, IconButton } from "@mui/material";
 import { Home } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Category } from "../model/catalog.types";
 import { CATEGORY_ICONS } from "./categoryIcons";
 
@@ -26,6 +26,16 @@ const CategoryTabs = ({
   onTabChange,
 }: CategoryTabsProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tableId = searchParams.get("tableId");
+
+  const handleNavigation = () => {
+    if (tableId) {
+      navigate("/mesas");
+    } else {
+      navigate("/home");
+    }
+  };
 
   return (
     <Box
@@ -42,7 +52,7 @@ const CategoryTabs = ({
     >
       <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
         <IconButton
-          onClick={() => navigate("/home")}
+          onClick={handleNavigation}
           sx={{
             bgcolor: "background.paper",
             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",

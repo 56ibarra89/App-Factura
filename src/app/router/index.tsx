@@ -144,7 +144,7 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<Facturacion />}
-              allowedRoles={["admin", "cajero", "cajero_principal"]}
+              allowedRoles={["admin", "cajero", "cajero_principal", "mesero"]}
             />
           }
         />
