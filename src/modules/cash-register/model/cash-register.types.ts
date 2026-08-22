@@ -1,3 +1,5 @@
+import type { CashExpense } from "./cash-expense.types";
+
 export interface ShiftSales {
   cash: number;
   card: number;
@@ -13,6 +15,16 @@ export interface Shift {
   openingAmount: number;
   closingAmount?: number;
   totalSales: ShiftSales;
+  totalExpenses?: number;
+  totalExpensesSnapshot?: number;
+  expectedCash?: number;
+  cashDifference?: number;
+  discrepancyReason?: string;
+  authorizedById?: string;
+  authorizedByName?: string;
+  authorizedByRole?: string;
+  denominationBreakdown?: CashDenominationCount[];
+  expenses?: CashExpense[];
   status: 'open' | 'closed';
   notes?: string;
   cashRegisterName?: string;
@@ -41,6 +53,41 @@ export interface OpenShiftData {
 export interface CloseShiftData {
   closingAmount: number;
   notes?: string;
+  discrepancyReason?: string;
+  authorizationPin?: string;
+  denominationBreakdown?: CashDenominationCount[];
+}
+
+export interface CashDenominationCount {
+  denomination: number;
+  quantity: number;
+}
+
+export interface ShiftCloseBlockingOrder {
+  id: string;
+  invoiceNumber?: string;
+  status: string;
+  tables: string[];
+}
+
+export interface ShiftCloseBlockingTable {
+  id: string;
+  label: string;
+  orderIds: string[];
+}
+
+export interface ShiftClosePreview {
+  shiftId: string;
+  openingAmount?: number;
+  sales?: ShiftSales;
+  expenses?: CashExpense[];
+  totalExpenses?: number;
+  expectedCash?: number;
+  discrepancyThreshold: number;
+  blockingOrders: ShiftCloseBlockingOrder[];
+  blockingTables: ShiftCloseBlockingTable[];
+  canClose: boolean;
+  financialsRevealed: boolean;
 }
 
 export interface ShiftProfileConfig {
@@ -59,4 +106,3 @@ export interface CashRegisterConfigState {
   cashRegisters: CashRegisterConfig[];
   shiftProfiles: ShiftProfileConfig[];
 }
-

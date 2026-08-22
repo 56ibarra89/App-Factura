@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useCallback, useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -26,6 +26,7 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  Alert,
 } from "@mui/material";
 import { BackButton, PageHeader } from "../../../shared/ui";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -97,7 +98,7 @@ export default function ShiftHistoryPage() {
     }).format(new Date(date));
   };
 
-  const getUserInfo = (cashierName: string) => {
+  const getUserInfo = useCallback((cashierName: string) => {
     const user = users.find(
       (u) =>
         u.username.toLowerCase() === cashierName.toLowerCase() ||
@@ -110,7 +111,7 @@ export default function ShiftHistoryPage() {
     const roleLabel = role ? ROLE_LABELS[role] : undefined;
 
     return { user, fullName, role, roleLabel };
-  };
+  }, [users]);
 
   // Filtrar turnos según búsqueda por texto, rol y estado
   const filteredShifts = useMemo(() => {
@@ -151,7 +152,7 @@ export default function ShiftHistoryPage() {
 
       return true;
     });
-  }, [shifts, users, searchTerm, roleFilter, statusFilter]);
+  }, [shifts, searchTerm, roleFilter, statusFilter, getUserInfo]);
 
   const hasActiveFilters =
     searchTerm.trim() !== "" || roleFilter !== "all" || statusFilter !== "all";
@@ -571,7 +572,7 @@ export default function ShiftHistoryPage() {
               Arqueo de Efectivo
             </Typography>
 
-            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} mb={1.5}>
               <Box>
                 <Typography variant="caption" color="text.secondary">
                   Monto Inicial (Apertura)
@@ -582,15 +583,145 @@ export default function ShiftHistoryPage() {
               </Box>
               <Box>
                 <Typography variant="caption" color="text.secondary">
-                  Efectivo Contado (Cierre)
+                  Ventas en Efectivo
                 </Typography>
                 <Typography variant="body2" fontWeight="600">
+                  + C${selectedShift.totalSales.cash.toFixed(2)}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Gastos / Egresos
+                </Typography>
+                <Typography variant="body2" fontWeight="600" color="error.main">
+                  - C${(selectedShift.totalExpenses || 0).toFixed(2)}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Total Esperado
+                </Typography>
+                <Typography variant="body2" fontWeight="bold" color="primary.main">
+                  C$
+                  {(
+                    selectedShift.expectedCash ??
+                    selectedShift.openingAmount +
+                      selectedShift.totalSales.cash -
+                      (selectedShift.totalExpenses || 0)
+                  ).toFixed(2)}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box
+              sx={{
+                p: 1.5,
+                bgcolor: "background.default",
+                borderRadius: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 1.5,
+              }}
+            >
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Efectivo Contado (Cierre):
+                </Typography>
+                <Typography variant="body1" fontWeight="bold">
                   {selectedShift.closingAmount !== undefined
                     ? `C$${selectedShift.closingAmount.toFixed(2)}`
                     : "---"}
                 </Typography>
               </Box>
+              {selectedShift.closingAmount !== undefined && (
+                <Box textAlign="right">
+                  <Typography variant="caption" color="text.secondary">
+                    Diferencia:
+                  </Typography>
+                  {(() => {
+                    const expected =
+                      selectedShift.expectedCash ??
+                      selectedShift.openingAmount +
+                        selectedShift.totalSales.cash -
+                        (selectedShift.totalExpenses || 0);
+                    const diff =
+                      selectedShift.cashDifference ??
+                      selectedShift.closingAmount - expected;
+                    return (
+                      <Typography
+                        variant="body1"
+                        fontWeight="bold"
+                        color={
+                          Math.abs(diff) < 0.01
+                            ? "success.main"
+                            : diff > 0
+                              ? "info.main"
+                              : "error.main"
+                        }
+                      >
+                        {Math.abs(diff) < 0.01
+                          ? "Exacto (C$0.00)"
+                          : `${diff > 0 ? "+" : ""}C$${diff.toFixed(2)}`}
+                      </Typography>
+                    );
+                  })()}
+                </Box>
+              )}
             </Box>
+
+            {selectedShift.expenses && selectedShift.expenses.length > 0 && (
+              <>
+                <Divider sx={{ my: 2 }} />
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={1.5}
+                >
+                  <Typography variant="subtitle2" fontWeight="bold" color="error">
+                    Desglose de Gastos ({selectedShift.expenses.length})
+                  </Typography>
+                  <Typography variant="body2" fontWeight="bold" color="error.main">
+                    - C${(selectedShift.totalExpenses || 0).toFixed(2)}
+                  </Typography>
+                </Box>
+                <Stack spacing={1}>
+                  {selectedShift.expenses.map((exp) => (
+                    <Box
+                      key={exp.id}
+                      sx={{
+                        p: 1,
+                        bgcolor: "rgba(211, 47, 47, 0.04)",
+                        borderRadius: 1.5,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body2" fontWeight="500">
+                          {exp.reason}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {exp.category}{" "}
+                          {exp.voucherNumber
+                            ? `• Comprobante: ${exp.voucherNumber}`
+                            : ""}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        color="error.main"
+                      >
+                        - C${Number(exp.amount).toFixed(2)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+              </>
+            )}
 
             {selectedShift.notes && (
               <Box sx={{ mt: 2, p: 1.5, bgcolor: "rgba(255, 193, 7, 0.1)", borderRadius: 2, borderLeft: "3px solid #ffc107" }}>
@@ -599,6 +730,20 @@ export default function ShiftHistoryPage() {
                 </Typography>
                 <Typography variant="body2">{selectedShift.notes}</Typography>
               </Box>
+            )}
+
+            {selectedShift.discrepancyReason && (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                <Typography variant="caption" fontWeight="bold" display="block">
+                  Justificación del descuadre
+                </Typography>
+                {selectedShift.discrepancyReason}
+                {selectedShift.authorizedByName && (
+                  <Typography variant="caption" display="block" mt={0.5}>
+                    Autorizado por {selectedShift.authorizedByName} ({selectedShift.authorizedByRole})
+                  </Typography>
+                )}
+              </Alert>
             )}
 
             {/* Componente oculto para impresión física de ticket */}
@@ -622,4 +767,3 @@ export default function ShiftHistoryPage() {
     </Box>
   );
 }
-

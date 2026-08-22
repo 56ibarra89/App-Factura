@@ -24,7 +24,8 @@ const HomePage = () => {
         (item) =>
           item.label === "Facturar" ||
           item.label === "Consultar Facturas" ||
-          item.label === "Anular Factura"
+          item.label === "Anular Factura" ||
+          item.label === "Gastos de Caja"
       );
     }
     if (role === "cajero_principal") {
@@ -35,7 +36,8 @@ const HomePage = () => {
           item.label === "Anular Factura" ||
           item.label === "Abrir Caja" ||
           item.label === "Cerrar Caja" ||
-          item.label === "Consultar Turnos"
+          item.label === "Consultar Turnos" ||
+          item.label === "Gastos de Caja"
       );
     }
     if (role === "despachador") {

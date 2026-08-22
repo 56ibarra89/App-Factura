@@ -12,9 +12,11 @@ export type { CajaContextValue } from "./model/CajaContext";
 export type {
   CashRegisterConfig,
   CashRegisterType,
+  CashDenominationCount,
   CloseShiftData,
   OpenShiftData,
   Shift,
+  ShiftClosePreview,
   ShiftProfileConfig,
   ShiftSales,
 } from "./model/cash-register.types";

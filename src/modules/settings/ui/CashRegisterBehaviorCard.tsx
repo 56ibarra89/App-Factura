@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Paper, Switch, alpha, Divider } from "@mui/material";
+import { Box, Typography, Paper, Switch, alpha, Divider, TextField, InputAdornment } from "@mui/material";
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import PrintIcon from '@mui/icons-material/Print';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -77,6 +77,35 @@ export const CashRegisterBehaviorCard: React.FC<Props> = ({ config, onUpdate }) 
             checked={config.requireExactOpeningAmount}
             onChange={(e) => onUpdate('requireExactOpeningAmount', e.target.checked)}
             sx={switchStyles}
+          />
+        </Box>
+
+        <Divider sx={{ borderStyle: 'dashed' }} />
+
+        <Box display="flex" justifyContent="space-between" alignItems="center" gap={3}>
+          <Box>
+            <Typography variant="body1" fontWeight="600" color="text.primary">
+              Umbral de Descuadre
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              A partir de este monto se exige PIN y justificación.
+            </Typography>
+          </Box>
+          <TextField
+            type="number"
+            size="small"
+            value={config.cashDiscrepancyThreshold}
+            onChange={(event) =>
+              onUpdate(
+                'cashDiscrepancyThreshold',
+                Math.max(0, Number(event.target.value) || 0),
+              )
+            }
+            inputProps={{ min: 0, step: 1 }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start">C$</InputAdornment>,
+            }}
+            sx={{ width: 150 }}
           />
         </Box>
 

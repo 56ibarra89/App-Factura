@@ -60,6 +60,9 @@ const CerrarCajaPage = lazy(
 const ConsultarTurnos = lazy(
   () => import("../../modules/cash-register/pages/ShiftHistoryPage")
 );
+const CashExpensesPage = lazy(
+  () => import("../../modules/cash-register/pages/CashExpensesPage")
+);
 const MiCuenta = lazy(() => import("../../modules/accounts/pages/MyAccountPage"));
 const Cuentas = lazy(() => import("../../modules/accounts/pages/AccountsPage"));
 const ConfigurarMesas = lazy(
@@ -191,6 +194,15 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<ConsultarTurnos />}
               allowedRoles={["admin", "cajero_principal"]}
+            />
+          }
+        />
+        <Route
+          path="/gastos-caja"
+          element={
+            <PrivateRoute
+              element={<CashExpensesPage />}
+              allowedRoles={["admin", "cajero", "cajero_principal"]}
             />
           }
         />

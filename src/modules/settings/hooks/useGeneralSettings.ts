@@ -74,7 +74,8 @@ export const useGeneralSettings = (
 
     const criticalKeys: (keyof GeneralConfigState)[] = [
       'currencyCode', 'exchangeRate', 'enableSecondaryCurrency',
-      'requireExactOpeningAmount', 'blindCashCount'
+      'requireExactOpeningAmount', 'blindCashCount',
+      'cashDiscrepancyThreshold'
     ];
 
     if (criticalKeys.includes(key)) {
@@ -106,4 +107,3 @@ export const useGeneralSettings = (
     saveConfig,
   };
 };
-

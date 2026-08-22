@@ -9,6 +9,7 @@ export interface GeneralConfigState {
   requireExactOpeningAmount: boolean;
   autoPrintReceipt: boolean;
   blindCashCount: boolean;
+  cashDiscrepancyThreshold: number;
 }
 
 export interface EmpresaConfigState {
@@ -41,6 +42,7 @@ export const DEFAULT_GENERAL_CONFIG: GeneralConfigState = {
   requireExactOpeningAmount: false,
   autoPrintReceipt: true,
   blindCashCount: false,
+  cashDiscrepancyThreshold: 100,
 };
 
 export const DEFAULT_TAX_CONFIG: TaxConfig = {

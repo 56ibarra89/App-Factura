@@ -13,6 +13,7 @@ import DeliveryDiningIcon from "@mui/icons-material/DeliveryDining";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 
 export interface MenuItem {
   label: string;
@@ -88,6 +89,11 @@ export const getMenuItems = (): MenuItem[] => [
     label: "Consultar Turnos",
     icon: <HistoryIcon fontSize="large" color="warning" />,
     route: "/consultar-turnos",
+  },
+  {
+    label: "Gastos de Caja",
+    icon: <MoneyOffIcon fontSize="large" color="error" />,
+    route: "/gastos-caja",
   },
   {
     label: "Administración Caja",
