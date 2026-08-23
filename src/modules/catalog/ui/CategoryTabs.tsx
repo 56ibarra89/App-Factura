@@ -1,9 +1,10 @@
 
 import { Box, Tabs, Tab, IconButton } from "@mui/material";
 import { Home } from "@mui/icons-material";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { Category } from "../model/catalog.types";
 import { CATEGORY_ICONS } from "./categoryIcons";
+import { useAuth } from "../../auth";
 
 const defaultIconMap: Record<string, JSX.Element> = {
   Pizzas: CATEGORY_ICONS.LocalPizza,
@@ -26,12 +27,20 @@ const CategoryTabs = ({
   onTabChange,
 }: CategoryTabsProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { role } = useAuth();
   const [searchParams] = useSearchParams();
   const tableId = searchParams.get("tableId");
 
   const handleNavigation = () => {
     if (tableId) {
       navigate("/mesas");
+    } else if (
+      role === "despachador" ||
+      location.state?.deliveryCustomer ||
+      location.state?.deliveryPhone
+    ) {
+      navigate("/delivery");
     } else {
       navigate("/home");
     }

@@ -29,6 +29,8 @@ interface Props {
   onChangeDiscrepancyReason: (value: string) => void;
   authorizationPin: string;
   onChangeAuthorizationPin: (value: string) => void;
+  cardVouchersAmount?: string;
+  onChangeCardVouchersAmount?: (value: string) => void;
   loading?: boolean;
 }
 
@@ -46,6 +48,8 @@ export function CloseCashRegisterForm({
   onChangeDiscrepancyReason,
   authorizationPin,
   onChangeAuthorizationPin,
+  cardVouchersAmount = "",
+  onChangeCardVouchersAmount,
   loading = false,
 }: Props) {
   return (
@@ -93,6 +97,40 @@ export function CloseCashRegisterForm({
         disabled={loading}
         onApply={onApplyBreakdown}
       />
+
+      <Box
+        sx={{
+          bgcolor: "background.default",
+          p: 2,
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+          ℹ️ <strong>Control de Tarjetas / Datáfono:</strong> El conteo principal de arriba solo incluye el efectivo físico del cajón. Los cobros con tarjeta o app ingresan directamente al banco.
+        </Typography>
+        <TextField
+          label="Total Vouchers / Lote Datáfono (Opcional)"
+          type="number"
+          value={cardVouchersAmount}
+          onChange={(event) => onChangeCardVouchersAmount?.(event.target.value)}
+          fullWidth
+          size="small"
+          disabled={loading}
+          inputProps={{ min: 0, step: "0.01" }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Typography variant="caption" fontWeight="bold">
+                  C$
+                </Typography>
+              </InputAdornment>
+            ),
+          }}
+          helperText="Ingresa el monto del reporte de cierre del datáfono para auditar los comprobantes firmados."
+        />
+      </Box>
 
       {requiresAuthorization && (
         <Box display="flex" flexDirection="column" gap={2}>

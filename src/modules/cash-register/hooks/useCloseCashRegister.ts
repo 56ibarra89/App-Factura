@@ -35,6 +35,7 @@ export function useCloseCashRegister(
   const [requiresAuthorization, setRequiresAuthorization] = useState(false);
   const [discrepancyReason, setDiscrepancyReason] = useState("");
   const [authorizationPin, setAuthorizationPin] = useState("");
+  const [cardVouchersAmount, setCardVouchersAmount] = useState("");
   const [denominationBreakdown, setDenominationBreakdown] = useState<
     CashDenominationCount[] | undefined
   >();
@@ -109,8 +110,15 @@ export function useCloseCashRegister(
   };
 
   const completeClose = async (authorizationNeeded: boolean) => {
+    const cardVoucherNum = Number(cardVouchersAmount);
+    const voucherNote =
+      cardVouchersAmount.trim() !== "" && Number.isFinite(cardVoucherNum)
+        ? `Vouchers Datáfono Declarados: C$${cardVoucherNum.toFixed(2)}`
+        : undefined;
+
     const closedShift = await cerrarCaja({
       closingAmount: Number(amount),
+      notes: voucherNote,
       discrepancyReason: authorizationNeeded
         ? discrepancyReason.trim()
         : undefined,
@@ -168,6 +176,8 @@ export function useCloseCashRegister(
   return {
     amount,
     setAmount,
+    cardVouchersAmount,
+    setCardVouchersAmount,
     applyDenominationBreakdown,
     denominationBreakdown,
     loading,

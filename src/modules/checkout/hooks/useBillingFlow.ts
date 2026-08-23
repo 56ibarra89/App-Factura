@@ -99,7 +99,11 @@ export function useBillingFlow({
 
         await completeAndPrint(invoiceNumber);
         resetDelivery();
-        navigate("/home");
+        if (form.orderType === "delivery") {
+          navigate("/delivery");
+        } else {
+          navigate("/home");
+        }
       });
     },
     [

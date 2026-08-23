@@ -129,7 +129,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
             fontWeight="bold"
             textAlign="center"
           >
-            RESUMEN DE VENTAS
+            RESUMEN GENERAL DE VENTAS
           </Typography>
         </Box>
 
@@ -145,7 +145,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
           </Box>
           <Box display="flex" justifyContent="space-between">
             <Typography variant="body2" fontFamily="inherit">
-              Tarjeta:
+              Tarjeta (Datáfono/POS):
             </Typography>
             <Typography variant="body2" fontFamily="inherit">
               {general.currencySymbol}
@@ -154,7 +154,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
           </Box>
           <Box display="flex" justifyContent="space-between">
             <Typography variant="body2" fontFamily="inherit">
-              App/Delivery:
+              App / Delivery:
             </Typography>
             <Typography variant="body2" fontFamily="inherit">
               {general.currencySymbol}
@@ -163,7 +163,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
           </Box>
           <Box display="flex" justifyContent="space-between" mt={1}>
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">
-              TOTAL VENTAS:
+              TOTAL FACTURADO:
             </Typography>
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">
               {general.currencySymbol}
@@ -248,14 +248,14 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
             fontWeight="bold"
             textAlign="center"
           >
-            RESUMEN DE EFECTIVO
+            ARQUEO DE EFECTIVO (CAJÓN FÍSICO)
           </Typography>
         </Box>
 
         <Box mb={2}>
           <Box display="flex" justifyContent="space-between">
             <Typography variant="body2" fontFamily="inherit">
-              Apertura:
+              (+) Monto de Apertura:
             </Typography>
             <Typography variant="body2" fontFamily="inherit">
               {general.currencySymbol}
@@ -264,7 +264,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
           </Box>
           <Box display="flex" justifyContent="space-between">
             <Typography variant="body2" fontFamily="inherit">
-              (+) Ventas Efectivo:
+              (+) Ventas en Efectivo:
             </Typography>
             <Typography variant="body2" fontFamily="inherit">
               {general.currencySymbol}
@@ -274,7 +274,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
           {totalExpenses > 0 && (
             <Box display="flex" justifyContent="space-between">
               <Typography variant="body2" fontFamily="inherit">
-                (-) Gastos / Egresos:
+                (-) Gastos de Caja Chica:
               </Typography>
               <Typography variant="body2" fontFamily="inherit">
                 - {general.currencySymbol}
@@ -285,7 +285,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
 
           <Box display="flex" justifyContent="space-between" mt={1}>
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">
-              TOTAL ESPERADO:
+              EFECTIVO ESPERADO:
             </Typography>
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">
               {general.currencySymbol}
@@ -295,7 +295,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
 
           <Box display="flex" justifyContent="space-between" mt={1}>
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">
-              EFECTIVO CONTADO:
+              EFECTIVO REAL CONTADO:
             </Typography>
             <Typography variant="body1" fontFamily="inherit" fontWeight="bold">
               {general.currencySymbol}
