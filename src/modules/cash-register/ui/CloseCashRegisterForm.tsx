@@ -24,15 +24,11 @@ interface Props {
   onCancel: () => void;
   canSubmit: boolean;
   openingAmount: number;
-  expectedCash: number;
-  showReconciliation: boolean;
   requiresAuthorization: boolean;
-  discrepancyThreshold: number;
   discrepancyReason: string;
   onChangeDiscrepancyReason: (value: string) => void;
   authorizationPin: string;
   onChangeAuthorizationPin: (value: string) => void;
-  primaryLabel: string;
   loading?: boolean;
 }
 
@@ -45,35 +41,27 @@ export function CloseCashRegisterForm({
   onCancel,
   canSubmit,
   openingAmount,
-  expectedCash,
-  showReconciliation,
   requiresAuthorization,
-  discrepancyThreshold,
   discrepancyReason,
   onChangeDiscrepancyReason,
   authorizationPin,
   onChangeAuthorizationPin,
-  primaryLabel,
   loading = false,
 }: Props) {
-  const difference = Number(amount) - expectedCash;
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {showReconciliation ? (
-        <Box sx={{ bgcolor: "action.hover", p: 2, borderRadius: 2, mb: 1 }}>
-          <Typography variant="caption" color="text.secondary" display="block">
-            Monto de apertura:
-          </Typography>
-          <Typography variant="h6" fontWeight="bold">
-            C${openingAmount.toFixed(2)}
-          </Typography>
-        </Box>
-      ) : (
-        <Alert severity="info">
-          Arqueo ciego activo: cuenta el efectivo sin consultar los valores del sistema.
-        </Alert>
-      )}
+      <Alert severity="info">
+        Arqueo ciego obligatorio: las ventas, gastos y el total esperado permanecerán ocultos hasta completar el cierre.
+      </Alert>
+
+      <Box sx={{ bgcolor: "action.hover", p: 2, borderRadius: 2, mb: 1 }}>
+        <Typography variant="caption" color="text.secondary" display="block">
+          Saldo de apertura informado:
+        </Typography>
+        <Typography variant="h6" fontWeight="bold">
+          C${openingAmount.toFixed(2)}
+        </Typography>
+      </Box>
 
       <TextField
         label="Efectivo real en caja (Conteo físico)"
@@ -106,49 +94,19 @@ export function CloseCashRegisterForm({
         onApply={onApplyBreakdown}
       />
 
-      {showReconciliation && amount !== "" && (
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor: "action.hover",
-          }}
-        >
-          <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
-            <Typography variant="body2" color="text.secondary">
-              Diferencia respecto al esperado:
-            </Typography>
-            <Typography
-              variant="body1"
-              fontWeight="bold"
-              color={
-                Math.abs(difference) < 0.01
-                  ? "success.main"
-                  : difference > 0
-                    ? "info.main"
-                    : "error.main"
-              }
-            >
-              {Math.abs(difference) < 0.01
-                ? "Cuadre exacto (C$0.00)"
-                : `${difference > 0 ? "Sobrante: +C$" : "Faltante: -C$"}${Math.abs(difference).toFixed(2)}`}
-            </Typography>
-          </Box>
-        </Box>
-      )}
-
       {requiresAuthorization && (
         <Box display="flex" flexDirection="column" gap={2}>
           <Alert severity="warning">
-            La diferencia supera C${discrepancyThreshold.toFixed(2)}. Se requiere una justificación y el PIN de un administrador o cajero principal.
+            El conteo presenta un descuadre. La tolerancia es C$0.00: debes ingresar una justificación y el PIN de un administrador o cajero principal.
           </Alert>
           <TextField
             label="Justificación del descuadre"
+            helperText="Escribe al menos 5 caracteres."
             value={discrepancyReason}
             onChange={(event) => onChangeDiscrepancyReason(event.target.value)}
             multiline
             minRows={2}
-            inputProps={{ maxLength: 500 }}
+            inputProps={{ minLength: 5, maxLength: 500 }}
             disabled={loading}
             required
           />
@@ -190,7 +148,7 @@ export function CloseCashRegisterForm({
             boxShadow: `0 4px 14px ${LOGIN_COLORS.primaryShadow}`,
           }}
         >
-          {loading ? <CircularProgress size={24} color="inherit" /> : primaryLabel}
+          {loading ? <CircularProgress size={24} color="inherit" /> : "Cerrar caja"}
         </Button>
       </Box>
     </Box>

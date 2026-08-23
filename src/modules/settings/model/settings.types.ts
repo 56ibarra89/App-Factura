@@ -41,8 +41,8 @@ export const DEFAULT_GENERAL_CONFIG: GeneralConfigState = {
   exchangeRate: 36.5,
   requireExactOpeningAmount: false,
   autoPrintReceipt: true,
-  blindCashCount: false,
-  cashDiscrepancyThreshold: 100,
+  blindCashCount: true,
+  cashDiscrepancyThreshold: 0,
 };
 
 export const DEFAULT_TAX_CONFIG: TaxConfig = {

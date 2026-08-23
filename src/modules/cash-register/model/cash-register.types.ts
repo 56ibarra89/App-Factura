@@ -78,16 +78,11 @@ export interface ShiftCloseBlockingTable {
 
 export interface ShiftClosePreview {
   shiftId: string;
-  openingAmount?: number;
-  sales?: ShiftSales;
-  expenses?: CashExpense[];
-  totalExpenses?: number;
-  expectedCash?: number;
   discrepancyThreshold: number;
   blockingOrders: ShiftCloseBlockingOrder[];
   blockingTables: ShiftCloseBlockingTable[];
   canClose: boolean;
-  financialsRevealed: boolean;
+  requiresAuthorization?: boolean;
 }
 
 export interface ShiftProfileConfig {
