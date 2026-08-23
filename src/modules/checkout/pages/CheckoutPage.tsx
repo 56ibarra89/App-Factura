@@ -28,6 +28,7 @@ import useCart from "../hooks/useCart";
 import type { Customer } from "../../customers";
 
 interface BillingLocationState {
+  fromDeliveryPage?: boolean;
   deliveryCustomer?: Customer | null;
   deliveryPhone?: string;
   deliveryAddress?: string;
@@ -113,6 +114,7 @@ const CheckoutPage = () => {
     isCheckoutMode,
     activeOrder,
     deliveryDriverId: state?.deliveryDriverId,
+    fromDeliveryPage: Boolean(state?.fromDeliveryPage || role === "despachador"),
     confirmInvoice: handleConfirmFactura,
     saveTableOrder: handleSaveTableOrder,
     finalizeTableOrder: handleFinalizeTableOrder,

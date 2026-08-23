@@ -68,6 +68,7 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
   const handleConfirm = useCallback(() => {
     navigate("/facturacion", {
       state: {
+        fromDeliveryPage: true,
         deliveryCustomer: selectedCustomer,
         deliveryPhone: selectedCustomer?.phone || phoneInput || undefined,
         deliveryAddress: selectedAddress || undefined,

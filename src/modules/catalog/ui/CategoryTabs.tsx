@@ -37,8 +37,7 @@ const CategoryTabs = ({
       navigate("/mesas");
     } else if (
       role === "despachador" ||
-      location.state?.deliveryCustomer ||
-      location.state?.deliveryPhone
+      Boolean(location.state?.fromDeliveryPage)
     ) {
       navigate("/delivery");
     } else {

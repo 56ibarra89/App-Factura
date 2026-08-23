@@ -13,6 +13,7 @@ interface UseBillingFlowOptions {
   isCheckoutMode: boolean;
   activeOrder?: Order | null;
   deliveryDriverId?: string;
+  fromDeliveryPage?: boolean;
   confirmInvoice(
     form: CheckoutFormValues,
   ): Promise<string | void>;
@@ -33,6 +34,7 @@ export function useBillingFlow({
   isCheckoutMode,
   activeOrder,
   deliveryDriverId,
+  fromDeliveryPage = false,
   confirmInvoice,
   saveTableOrder,
   finalizeTableOrder,
@@ -99,7 +101,7 @@ export function useBillingFlow({
 
         await completeAndPrint(invoiceNumber);
         resetDelivery();
-        if (form.orderType === "delivery") {
+        if (fromDeliveryPage) {
           navigate("/delivery");
         } else {
           navigate("/home");
