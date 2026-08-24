@@ -637,7 +637,7 @@ export default function ShiftHistoryPage() {
               {selectedShift.closingAmount !== undefined && (
                 <Box textAlign="right">
                   <Typography variant="caption" color="text.secondary">
-                    Diferencia:
+                    Diferencia Efectivo:
                   </Typography>
                   {(() => {
                     const expected =
@@ -669,6 +669,120 @@ export default function ShiftHistoryPage() {
                 </Box>
               )}
             </Box>
+
+            {/* SECCIÓN MULTI-MÉTODO */}
+            {selectedShift.status === "closed" && (
+              <Box
+                sx={{
+                  p: 1.5,
+                  bgcolor: "action.hover",
+                  borderRadius: 2,
+                  mb: 1.5,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight="bold" mb={1}>
+                  Conciliación Multi-Método:
+                </Typography>
+                <Box display="grid" gridTemplateColumns="1fr 1fr 1fr" gap={1.5} mb={1}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      💵 Efectivo Real
+                    </Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      C${(selectedShift.closingAmount || 0).toFixed(2)}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color={
+                        Math.abs(selectedShift.cashDifference || 0) < 0.01
+                          ? "success.main"
+                          : "error.main"
+                      }
+                      fontWeight="bold"
+                    >
+                      Dif: {(selectedShift.cashDifference || 0) >= 0 ? "+" : ""}
+                      C${(selectedShift.cashDifference || 0).toFixed(2)}
+                    </Typography>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      💳 Vouchers Tarjeta
+                    </Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      C${(selectedShift.declaredCardAmount || 0).toFixed(2)}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color={
+                        Math.abs(selectedShift.cardDifference || 0) < 0.01
+                          ? "success.main"
+                          : "error.main"
+                      }
+                      fontWeight="bold"
+                    >
+                      Dif: {(selectedShift.cardDifference || 0) >= 0 ? "+" : ""}
+                      C${(selectedShift.cardDifference || 0).toFixed(2)}
+                    </Typography>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      📱 Depósitos App
+                    </Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      C${(selectedShift.declaredAppAmount || 0).toFixed(2)}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color={
+                        Math.abs(selectedShift.appDifference || 0) < 0.01
+                          ? "success.main"
+                          : "error.main"
+                      }
+                      fontWeight="bold"
+                    >
+                      Dif: {(selectedShift.appDifference || 0) >= 0 ? "+" : ""}
+                      C${(selectedShift.appDifference || 0).toFixed(2)}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Divider sx={{ my: 1 }} />
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Typography variant="body2" fontWeight="bold">
+                    Diferencia Neta Total:
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    fontWeight="bold"
+                    color={
+                      Math.abs(
+                        selectedShift.totalDifference ??
+                          selectedShift.cashDifference ??
+                          0,
+                      ) < 0.01
+                        ? "success.main"
+                        : "error.main"
+                    }
+                  >
+                    {(selectedShift.totalDifference ??
+                      selectedShift.cashDifference ??
+                      0) >= 0
+                      ? "+"
+                      : ""}
+                    C$
+                    {(
+                      selectedShift.totalDifference ??
+                      selectedShift.cashDifference ??
+                      0
+                    ).toFixed(2)}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
 
             {selectedShift.expenses && selectedShift.expenses.length > 0 && (
               <>

@@ -41,7 +41,8 @@ export interface DeliveryGateway {
     orderId: string,
     paymentMethod: string,
     total: number,
-    splitAmounts?: { efectivo: number; tarjeta: number },
+    splitAmounts?: { efectivo: number; tarjeta?: number; app?: number },
+    customPayments?: { method: string; amount: number }[],
   ): Promise<void>;
 }
 
@@ -60,14 +61,19 @@ export const deliveryGateway: DeliveryGateway = {
   getDriverOrdersToday: (driverId) =>
     apiClient(`/orders/driver/${driverId}/today`),
 
-  async finalizeOrder(orderId, paymentMethod, total, splitAmounts) {
-    const payments =
-      paymentMethod === "MIXTO" && splitAmounts
-        ? [
-            { method: "EFECTIVO", amount: splitAmounts.efectivo },
-            { method: "TARJETA", amount: splitAmounts.tarjeta },
-          ].filter((p) => p.amount > 0)
-        : [{ method: paymentMethod, amount: total }];
+  async finalizeOrder(orderId, paymentMethod, total, splitAmounts, customPayments) {
+    let payments: { method: string; amount: number }[] = [];
+    if (customPayments && customPayments.length > 0) {
+      payments = customPayments.filter((p) => p.amount > 0);
+    } else if (paymentMethod === "MIXTO" && splitAmounts) {
+      payments = [
+        { method: "EFECTIVO", amount: splitAmounts.efectivo },
+        { method: "TARJETA", amount: splitAmounts.tarjeta || 0 },
+        { method: "APP", amount: splitAmounts.app || 0 },
+      ].filter((p) => p.amount > 0);
+    } else {
+      payments = [{ method: paymentMethod, amount: total }];
+    }
 
     await apiClient(`/orders/${orderId}/finalize`, {
       method: "PATCH",

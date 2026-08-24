@@ -38,6 +38,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import { useAuth } from "../../auth";
 import { deliveryGateway } from "../api/deliveryGateway";
+import { PaymentConfirmationDialog } from "../ui/PaymentConfirmationDialog";
 import {
   statusLabels,
   statusColors,
@@ -70,6 +71,7 @@ export default function DriverDeliveriesPage() {
     message: "",
     severity: "info",
   });
+  const [payingOrder, setPayingOrder] = useState<Order | null>(null);
 
   const isMotorizado = role === "motorizado";
 
@@ -225,20 +227,29 @@ export default function DriverDeliveriesPage() {
     }
   };
 
-  const handleMarkAsPaid = async (order: Order) => {
+  const handleMarkAsPaid = (order: Order) => {
+    setPayingOrder(order);
+  };
+
+  const handleConfirmPayment = async (
+    payments: { method: string; amount: number }[],
+    paymentMethodLabel: string,
+  ) => {
+    if (!payingOrder) return;
     try {
-      const method = (order.paymentMethod || "EFECTIVO").toUpperCase();
       await deliveryGateway.finalizeOrder(
-        order.id,
-        method,
-        order.total,
-        order.splitAmounts,
+        payingOrder.id,
+        paymentMethodLabel,
+        payingOrder.total,
+        undefined,
+        payments,
       );
       setSnackbar({
         open: true,
-        message: `Pedido #${order.invoiceNumber || order.id.slice(-6)} marcado como Pagado / Liquidado.`,
+        message: `Pedido #${payingOrder.invoiceNumber || payingOrder.id.slice(-6)} liquidado con éxito (${paymentMethodLabel}).`,
         severity: "success",
       });
+      setPayingOrder(null);
       await fetchAllDeliveryOrders();
     } catch (err) {
       console.error("Error al finalizar pago:", err);
@@ -247,6 +258,7 @@ export default function DriverDeliveriesPage() {
         message: "No se pudo registrar el pago del pedido.",
         severity: "error",
       });
+      throw err;
     }
   };
 
@@ -1040,6 +1052,13 @@ export default function DriverDeliveriesPage() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <PaymentConfirmationDialog
+        open={Boolean(payingOrder)}
+        order={payingOrder}
+        onClose={() => setPayingOrder(null)}
+        onConfirm={handleConfirmPayment}
+      />
     </Box>
   );
 }

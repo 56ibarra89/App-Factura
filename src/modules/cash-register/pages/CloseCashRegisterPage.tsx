@@ -68,8 +68,10 @@ export default function CloseCashRegisterPage() {
           onChangeDiscrepancyReason={closeCashRegister.setDiscrepancyReason}
           authorizationPin={closeCashRegister.authorizationPin}
           onChangeAuthorizationPin={closeCashRegister.setAuthorizationPin}
-          cardVouchersAmount={closeCashRegister.cardVouchersAmount}
-          onChangeCardVouchersAmount={closeCashRegister.setCardVouchersAmount}
+          declaredCardAmount={closeCashRegister.declaredCardAmount}
+          onChangeDeclaredCardAmount={closeCashRegister.setDeclaredCardAmount}
+          declaredAppAmount={closeCashRegister.declaredAppAmount}
+          onChangeDeclaredAppAmount={closeCashRegister.setDeclaredAppAmount}
           loading={closeCashRegister.loading}
         />
 

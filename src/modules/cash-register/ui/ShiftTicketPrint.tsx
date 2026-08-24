@@ -305,7 +305,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
 
           <Box display="flex" justifyContent="space-between" mt={1}>
             <Typography variant="body2" fontFamily="inherit">
-              Diferencia:
+              Diferencia Efectivo:
             </Typography>
             <Typography
               variant="body2"
@@ -315,6 +315,87 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
               {difference >= 0 ? "+" : ""}
               {general.currencySymbol}
               {difference.toFixed(2)}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* BALANCE Y CUADRE MULTI-MÉTODO */}
+        <Box
+          mb={1}
+          sx={{
+            borderBottom: "1px dashed black",
+            borderTop: "1px dashed black",
+            py: 0.5,
+          }}
+        >
+          <Typography
+            variant="body2"
+            fontFamily="inherit"
+            fontWeight="bold"
+            textAlign="center"
+          >
+            BALANCE MULTI-MÉTODO
+          </Typography>
+        </Box>
+
+        <Box mb={2}>
+          <Box display="flex" justifyContent="space-between">
+            <Typography variant="caption" fontFamily="inherit" fontWeight="bold">
+              • Efectivo:
+            </Typography>
+            <Typography variant="caption" fontFamily="inherit">
+              Esp: {general.currencySymbol}{expectedCash.toFixed(2)} | Real: {general.currencySymbol}{(shift.closingAmount ?? 0).toFixed(2)}
+            </Typography>
+          </Box>
+          <Box display="flex" justifyContent="space-between" pl={1} mb={0.5}>
+            <Typography variant="caption" fontFamily="inherit" color="text.secondary">
+              Dif:
+            </Typography>
+            <Typography variant="caption" fontFamily="inherit" fontWeight="bold">
+              {difference >= 0 ? "+" : ""}{general.currencySymbol}{difference.toFixed(2)}
+            </Typography>
+          </Box>
+
+          <Box display="flex" justifyContent="space-between">
+            <Typography variant="caption" fontFamily="inherit" fontWeight="bold">
+              • Tarjeta (POS):
+            </Typography>
+            <Typography variant="caption" fontFamily="inherit">
+              Esp: {general.currencySymbol}{shift.totalSales.card.toFixed(2)} | Vouch: {general.currencySymbol}{(shift.declaredCardAmount ?? 0).toFixed(2)}
+            </Typography>
+          </Box>
+          <Box display="flex" justifyContent="space-between" pl={1} mb={0.5}>
+            <Typography variant="caption" fontFamily="inherit" color="text.secondary">
+              Dif:
+            </Typography>
+            <Typography variant="caption" fontFamily="inherit" fontWeight="bold">
+              {(shift.cardDifference ?? 0) >= 0 ? "+" : ""}{general.currencySymbol}{(shift.cardDifference ?? 0).toFixed(2)}
+            </Typography>
+          </Box>
+
+          <Box display="flex" justifyContent="space-between">
+            <Typography variant="caption" fontFamily="inherit" fontWeight="bold">
+              • App / Transf:
+            </Typography>
+            <Typography variant="caption" fontFamily="inherit">
+              Esp: {general.currencySymbol}{shift.totalSales.app.toFixed(2)} | Decl: {general.currencySymbol}{(shift.declaredAppAmount ?? 0).toFixed(2)}
+            </Typography>
+          </Box>
+          <Box display="flex" justifyContent="space-between" pl={1} mb={0.5}>
+            <Typography variant="caption" fontFamily="inherit" color="text.secondary">
+              Dif:
+            </Typography>
+            <Typography variant="caption" fontFamily="inherit" fontWeight="bold">
+              {(shift.appDifference ?? 0) >= 0 ? "+" : ""}{general.currencySymbol}{(shift.appDifference ?? 0).toFixed(2)}
+            </Typography>
+          </Box>
+
+          <Box display="flex" justifyContent="space-between" mt={1} pt={0.5} sx={{ borderTop: "1px dashed #666" }}>
+            <Typography variant="body2" fontFamily="inherit" fontWeight="bold">
+              DIFERENCIA TOTAL:
+            </Typography>
+            <Typography variant="body2" fontFamily="inherit" fontWeight="bold">
+              {(shift.totalDifference ?? difference) >= 0 ? "+" : ""}{general.currencySymbol}{(shift.totalDifference ?? difference).toFixed(2)}
             </Typography>
           </Box>
         </Box>

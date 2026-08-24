@@ -10,7 +10,10 @@ import { apiClient } from "../../../shared/api";
 export interface IShiftRepository {
   openShift(data: OpenShiftData): Promise<Shift>;
   closeShift(id: string, data: CloseShiftData): Promise<Shift>;
-  getClosePreview(id: string, countedCash?: number): Promise<ShiftClosePreview>;
+  getClosePreview(
+    id: string,
+    counted?: { cash?: number; card?: number; app?: number } | number,
+  ): Promise<ShiftClosePreview>;
   getAll(): Promise<Shift[]>;
   getActiveShiftForUser(username: string): Promise<Shift | null>;
 }
@@ -54,9 +57,40 @@ class ShiftRepository implements IShiftRepository {
           ? undefined
           : Number(backendShift.expectedCash),
       cashDifference:
-        backendShift.cashDifference === undefined
+        backendShift.cashDifference === undefined ||
+        backendShift.cashDifference === null
           ? undefined
           : Number(backendShift.cashDifference),
+      declaredCardAmount:
+        backendShift.declaredCardAmount === undefined ||
+        backendShift.declaredCardAmount === null
+          ? undefined
+          : Number(backendShift.declaredCardAmount),
+      cardDifference:
+        backendShift.cardDifference === undefined ||
+        backendShift.cardDifference === null
+          ? undefined
+          : Number(backendShift.cardDifference),
+      declaredAppAmount:
+        backendShift.declaredAppAmount === undefined ||
+        backendShift.declaredAppAmount === null
+          ? undefined
+          : Number(backendShift.declaredAppAmount),
+      appDifference:
+        backendShift.appDifference === undefined ||
+        backendShift.appDifference === null
+          ? undefined
+          : Number(backendShift.appDifference),
+      totalDeclaredAmount:
+        backendShift.totalDeclaredAmount === undefined ||
+        backendShift.totalDeclaredAmount === null
+          ? undefined
+          : Number(backendShift.totalDeclaredAmount),
+      totalDifference:
+        backendShift.totalDifference === undefined ||
+        backendShift.totalDifference === null
+          ? undefined
+          : Number(backendShift.totalDifference),
       discrepancyReason: backendShift.discrepancyReason,
       authorizedById: backendShift.authorizedById,
       authorizedByName: backendShift.authorizedBySnapshotName,
@@ -93,12 +127,20 @@ class ShiftRepository implements IShiftRepository {
 
   async getClosePreview(
     id: string,
-    countedCash?: number,
+    counted?: { cash?: number; card?: number; app?: number } | number,
   ): Promise<ShiftClosePreview> {
-    const query =
-      countedCash === undefined
-        ? ""
-        : `?countedCash=${encodeURIComponent(countedCash.toFixed(2))}`;
+    const params = new URLSearchParams();
+    if (typeof counted === "number") {
+      params.set("countedCash", counted.toFixed(2));
+    } else if (counted) {
+      if (counted.cash !== undefined)
+        params.set("countedCash", counted.cash.toFixed(2));
+      if (counted.card !== undefined)
+        params.set("countedCard", counted.card.toFixed(2));
+      if (counted.app !== undefined)
+        params.set("countedApp", counted.app.toFixed(2));
+    }
+    const query = params.toString() ? `?${params.toString()}` : "";
     return apiClient(`/shifts/${id}/close-preview${query}`);
   }
 
@@ -146,6 +188,12 @@ interface BackendShift {
   totalExpensesSnapshot?: number | string;
   expectedCash?: number | string;
   cashDifference?: number | string;
+  declaredCardAmount?: number | string | null;
+  cardDifference?: number | string | null;
+  declaredAppAmount?: number | string | null;
+  appDifference?: number | string | null;
+  totalDeclaredAmount?: number | string | null;
+  totalDifference?: number | string | null;
   discrepancyReason?: string;
   authorizedById?: string;
   authorizedBySnapshotName?: string;

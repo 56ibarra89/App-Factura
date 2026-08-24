@@ -19,6 +19,12 @@ export interface Shift {
   totalExpensesSnapshot?: number;
   expectedCash?: number;
   cashDifference?: number;
+  declaredCardAmount?: number;
+  cardDifference?: number;
+  declaredAppAmount?: number;
+  appDifference?: number;
+  totalDeclaredAmount?: number;
+  totalDifference?: number;
   discrepancyReason?: string;
   authorizedById?: string;
   authorizedByName?: string;
@@ -52,6 +58,8 @@ export interface OpenShiftData {
 
 export interface CloseShiftData {
   closingAmount: number;
+  declaredCardAmount?: number;
+  declaredAppAmount?: number;
   notes?: string;
   discrepancyReason?: string;
   authorizationPin?: string;

@@ -15,6 +15,10 @@ import { CashDenominationDialog } from "./CashDenominationDialog";
 interface Props {
   amount: string;
   onChangeAmount: (value: string) => void;
+  declaredCardAmount: string;
+  onChangeDeclaredCardAmount: (value: string) => void;
+  declaredAppAmount: string;
+  onChangeDeclaredAppAmount: (value: string) => void;
   onApplyBreakdown: (
     entries: CashDenominationCount[],
     total: number,
@@ -29,14 +33,16 @@ interface Props {
   onChangeDiscrepancyReason: (value: string) => void;
   authorizationPin: string;
   onChangeAuthorizationPin: (value: string) => void;
-  cardVouchersAmount?: string;
-  onChangeCardVouchersAmount?: (value: string) => void;
   loading?: boolean;
 }
 
 export function CloseCashRegisterForm({
   amount,
   onChangeAmount,
+  declaredCardAmount,
+  onChangeDeclaredCardAmount,
+  declaredAppAmount,
+  onChangeDeclaredAppAmount,
   onApplyBreakdown,
   denominationBreakdown,
   onSubmit,
@@ -48,17 +54,15 @@ export function CloseCashRegisterForm({
   onChangeDiscrepancyReason,
   authorizationPin,
   onChangeAuthorizationPin,
-  cardVouchersAmount = "",
-  onChangeCardVouchersAmount,
   loading = false,
 }: Props) {
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
       <Alert severity="info">
         Arqueo ciego obligatorio: las ventas, gastos y el total esperado permanecerán ocultos hasta completar el cierre.
       </Alert>
 
-      <Box sx={{ bgcolor: "action.hover", p: 2, borderRadius: 2, mb: 1 }}>
+      <Box sx={{ bgcolor: "action.hover", p: 2, borderRadius: 2 }}>
         <Typography variant="caption" color="text.secondary" display="block">
           Saldo de apertura informado:
         </Typography>
@@ -67,75 +71,128 @@ export function CloseCashRegisterForm({
         </Typography>
       </Box>
 
-      <TextField
-        label="Efectivo real en caja (Conteo físico)"
-        type="number"
-        value={amount}
-        onChange={(event) => onChangeAmount(event.target.value)}
-        fullWidth
-        autoFocus
-        disabled={loading}
-        inputProps={{ min: 0, step: "0.01" }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Typography fontWeight="bold">C$</Typography>
-            </InputAdornment>
-          ),
-        }}
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            "&:hover fieldset": { borderColor: LOGIN_COLORS.primary },
-            "&.Mui-focused fieldset": { borderColor: LOGIN_COLORS.primary },
-          },
-          "& .MuiInputLabel-root.Mui-focused": { color: LOGIN_COLORS.primary },
-        }}
-      />
-
-      <CashDenominationDialog
-        value={denominationBreakdown}
-        disabled={loading}
-        onApply={onApplyBreakdown}
-      />
-
+      {/* 1. SECCIÓN EFECTIVO */}
       <Box
         sx={{
-          bgcolor: "background.default",
           p: 2,
           borderRadius: 2,
           border: "1px solid",
           borderColor: "divider",
+          bgcolor: "background.paper",
         }}
       >
-        <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
-          ℹ️ <strong>Control de Tarjetas / Datáfono:</strong> El conteo principal de arriba solo incluye el efectivo físico del cajón. Los cobros con tarjeta o app ingresan directamente al banco.
+        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+          💵 1. Efectivo Físico en Cajón
         </Typography>
+        <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+          Ingresa el monto total de billetes y monedas físicos en caja.
+        </Typography>
+
         <TextField
-          label="Total Vouchers / Lote Datáfono (Opcional)"
+          label="Efectivo físico contado"
           type="number"
-          value={cardVouchersAmount}
-          onChange={(event) => onChangeCardVouchersAmount?.(event.target.value)}
+          value={amount}
+          onChange={(event) => onChangeAmount(event.target.value)}
           fullWidth
-          size="small"
+          autoFocus
           disabled={loading}
           inputProps={{ min: 0, step: "0.01" }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <Typography variant="caption" fontWeight="bold">
-                  C$
-                </Typography>
+                <Typography fontWeight="bold">C$</Typography>
               </InputAdornment>
             ),
           }}
-          helperText="Ingresa el monto del reporte de cierre del datáfono para auditar los comprobantes firmados."
+          sx={{
+            mb: 1.5,
+            "& .MuiOutlinedInput-root": {
+              "&:hover fieldset": { borderColor: LOGIN_COLORS.primary },
+              "&.Mui-focused fieldset": { borderColor: LOGIN_COLORS.primary },
+            },
+            "& .MuiInputLabel-root.Mui-focused": { color: LOGIN_COLORS.primary },
+          }}
+        />
+
+        <CashDenominationDialog
+          value={denominationBreakdown}
+          disabled={loading}
+          onApply={onApplyBreakdown}
+        />
+      </Box>
+
+      {/* 2. SECCIÓN TARJETA / DATÁFONO */}
+      <Box
+        sx={{
+          p: 2,
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
+        }}
+      >
+        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+          💳 2. Vouchers de Tarjeta (Datáfono / POS)
+        </Typography>
+        <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+          Digita el monto del reporte de cierre de lote o suma de vouchers firmados.
+        </Typography>
+        <TextField
+          label="Total Vouchers de Tarjeta"
+          type="number"
+          value={declaredCardAmount}
+          onChange={(event) => onChangeDeclaredCardAmount(event.target.value)}
+          fullWidth
+          disabled={loading}
+          inputProps={{ min: 0, step: "0.01" }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Typography fontWeight="bold">C$</Typography>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
+      {/* 3. SECCIÓN APP / TRANSFERENCIAS */}
+      <Box
+        sx={{
+          p: 2,
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
+        }}
+      >
+        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+          📱 3. Transferencias / Apps Bancarias
+        </Typography>
+        <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+          Digita el monto total verificado en la banca en línea o depósitos de apps.
+        </Typography>
+        <TextField
+          label="Total Transferencias / App"
+          type="number"
+          value={declaredAppAmount}
+          onChange={(event) => onChangeDeclaredAppAmount(event.target.value)}
+          fullWidth
+          disabled={loading}
+          inputProps={{ min: 0, step: "0.01" }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Typography fontWeight="bold">C$</Typography>
+              </InputAdornment>
+            ),
+          }}
         />
       </Box>
 
       {requiresAuthorization && (
         <Box display="flex" flexDirection="column" gap={2}>
           <Alert severity="warning">
-            El conteo presenta un descuadre. La tolerancia es C$0.00: debes ingresar una justificación y el PIN de un administrador o cajero principal.
+            El arqueo presenta un descuadre en uno o más métodos de pago (Efectivo, Tarjeta o App). La tolerancia es C$0.00: debes ingresar una justificación y el PIN de un administrador o cajero principal.
           </Alert>
           <TextField
             label="Justificación del descuadre"

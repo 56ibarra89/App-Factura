@@ -26,6 +26,8 @@ export function useCloseCashRegister(
   const { currentShift, cerrarCaja } = useCaja();
   const { config } = useGeneralSettings();
   const [amount, setAmountState] = useState("");
+  const [declaredCardAmount, setDeclaredCardAmount] = useState("");
+  const [declaredAppAmount, setDeclaredAppAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [preflightLoading, setPreflightLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,23 +37,22 @@ export function useCloseCashRegister(
   const [requiresAuthorization, setRequiresAuthorization] = useState(false);
   const [discrepancyReason, setDiscrepancyReason] = useState("");
   const [authorizationPin, setAuthorizationPin] = useState("");
-  const [cardVouchersAmount, setCardVouchersAmount] = useState("");
   const [denominationBreakdown, setDenominationBreakdown] = useState<
     CashDenominationCount[] | undefined
   >();
 
   const refreshPreview = useCallback(
-    async (countedCash?: number) => {
+    async (counted?: { cash?: number; card?: number; app?: number } | number) => {
       if (!currentShift?.id) return null;
       setPreflightLoading(true);
       try {
         const result = await repository.getClosePreview(
           currentShift.id,
-          countedCash,
+          counted,
         );
         setPreview(result);
         setBlockersOpen(!result.canClose);
-        if (countedCash !== undefined) {
+        if (counted !== undefined) {
           setRequiresAuthorization(result.requiresAuthorization === true);
         }
         return result;
@@ -76,7 +77,14 @@ export function useCloseCashRegister(
   const validAmount =
     amount.trim() !== "" &&
     Number.isFinite(Number(amount)) &&
-    Number(amount) >= 0;
+    Number(amount) >= 0 &&
+    (declaredCardAmount.trim() === "" ||
+      (Number.isFinite(Number(declaredCardAmount)) &&
+        Number(declaredCardAmount) >= 0)) &&
+    (declaredAppAmount.trim() === "" ||
+      (Number.isFinite(Number(declaredAppAmount)) &&
+        Number(declaredAppAmount) >= 0));
+
   const validAuthorization =
     !requiresAuthorization ||
     (discrepancyReason.trim().length >= 5 &&
@@ -110,15 +118,13 @@ export function useCloseCashRegister(
   };
 
   const completeClose = async (authorizationNeeded: boolean) => {
-    const cardVoucherNum = Number(cardVouchersAmount);
-    const voucherNote =
-      cardVouchersAmount.trim() !== "" && Number.isFinite(cardVoucherNum)
-        ? `Vouchers Datáfono Declarados: C$${cardVoucherNum.toFixed(2)}`
-        : undefined;
+    const cardNum = Number(declaredCardAmount) || 0;
+    const appNum = Number(declaredAppAmount) || 0;
 
     const closedShift = await cerrarCaja({
-      closingAmount: Number(amount),
-      notes: voucherNote,
+      closingAmount: Number(amount) || 0,
+      declaredCardAmount: cardNum,
+      declaredAppAmount: appNum,
       discrepancyReason: authorizationNeeded
         ? discrepancyReason.trim()
         : undefined,
@@ -146,7 +152,11 @@ export function useCloseCashRegister(
     setLoading(true);
     setError("");
     try {
-      const latestPreview = await refreshPreview(Number(amount));
+      const latestPreview = await refreshPreview({
+        cash: Number(amount) || 0,
+        card: Number(declaredCardAmount) || 0,
+        app: Number(declaredAppAmount) || 0,
+      });
       if (!latestPreview?.canClose) return;
 
       const authorizationNeeded =
@@ -167,7 +177,11 @@ export function useCloseCashRegister(
           ? caught.message
           : "Error al cerrar la caja. Por favor, intenta de nuevo.",
       );
-      await refreshPreview(Number(amount));
+      await refreshPreview({
+        cash: Number(amount) || 0,
+        card: Number(declaredCardAmount) || 0,
+        app: Number(declaredAppAmount) || 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -176,8 +190,10 @@ export function useCloseCashRegister(
   return {
     amount,
     setAmount,
-    cardVouchersAmount,
-    setCardVouchersAmount,
+    declaredCardAmount,
+    setDeclaredCardAmount,
+    declaredAppAmount,
+    setDeclaredAppAmount,
     applyDenominationBreakdown,
     denominationBreakdown,
     loading,
