@@ -16,6 +16,9 @@ export interface SalesByTime {
 
 export interface SalesReportData {
   totalSales: number;
+  cashSales: number;
+  cardSales: number;
+  appSales: number;
   totalOrders: number;
   topProducts: TopProduct[];
   salesByTime: SalesByTime[];
@@ -33,9 +36,14 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
 
       const orders = await ordersGateway.listByDateRange(startDate, endDate);
 
-      const deliveredOrders = orders.filter((o) => o.status === "paid");
+      const deliveredOrders = orders.filter(
+        (o) => o.status === "paid" || (o.status === "delivered" && !o.tableId),
+      );
 
       let totalSales = 0;
+      let cashSales = 0;
+      let cardSales = 0;
+      let appSales = 0;
       const productMap = new Map<string, TopProduct>();
       const timeMap = new Map<string, number>();
 
@@ -44,15 +52,26 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
 
       deliveredOrders.forEach((order) => {
         totalSales += order.total;
+        const method = (order.paymentMethod || "EFECTIVO").toUpperCase();
+
+        if (method === "MIXTO" && order.splitAmounts) {
+          cashSales += order.splitAmounts.efectivo || 0;
+          cardSales += order.splitAmounts.tarjeta || 0;
+          appSales += order.splitAmounts.app || 0;
+        } else if (method === "TARJETA") {
+          cardSales += order.total;
+        } else if (method === "APP") {
+          appSales += order.total;
+        } else {
+          cashSales += order.total;
+        }
 
         const orderDate = new Date(order.timestamp);
         let timeKey = "";
 
         if (groupByDay) {
-
           timeKey = format(orderDate, "dd MMM", { locale: es });
         } else {
-
           const orderHour = orderDate.getHours();
           timeKey = `${orderHour.toString().padStart(2, '0')}:00`;
         }
@@ -80,14 +99,9 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
         (a, b) => b.quantity - a.quantity
       );
 
-      // Preparar ventas por tiempo y ordenar cronológicamente
-      // Si es por día, necesitamos un orden real, pero el timeKey es un string como "01 May".
-      // Lo más seguro es crear un arreglo desde el map, o confiar en que si iteramos desde inicio a fin rellenamos los vacíos.
-      // Para simplificar, ordenamos alfabéticamente si es hora, o por fecha real si es día.
       let salesByTime: SalesByTime[] = [];
 
       if (groupByDay) {
-        // Para ordenar por día correctamente, iteramos sobre los días del rango para incluir días sin ventas también
         const current = new Date(startDate);
         current.setHours(0,0,0,0);
         const end = new Date(endDate);
@@ -102,7 +116,6 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
           current.setDate(current.getDate() + 1);
         }
       } else {
-        // Por hora
         salesByTime = Array.from(timeMap.entries())
           .map(([time, sales]) => ({ time, sales }))
           .sort((a, b) => a.time.localeCompare(b.time));
@@ -110,6 +123,9 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
 
       setData({
         totalSales,
+        cashSales,
+        cardSales,
+        appSales,
         totalOrders: deliveredOrders.length,
         topProducts,
         salesByTime,

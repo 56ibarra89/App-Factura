@@ -49,6 +49,13 @@ export type OrderItemInput = Pick<
     >
   >;
 
+export interface OrderPaymentDetail {
+  method: 'EFECTIVO' | 'TARJETA' | 'APP';
+  amount: number;
+  reference?: string;
+  cashierSnapshotName?: string;
+}
+
 export interface Order extends OrderPromotionSelection {
   id: string;
   items: OrderItem[];
@@ -69,7 +76,12 @@ export interface Order extends OrderPromotionSelection {
   customerTendered?: number;
   deliveryChange?: number;
   paymentMethod?: PaymentMethod;
-  splitAmounts?: { efectivo: number; tarjeta: number };
+  splitAmounts?: {
+    efectivo?: number;
+    tarjeta?: number;
+    app?: number;
+  };
+  payments?: OrderPaymentDetail[];
   cashierName?: string;
   isSentToKitchen?: boolean;
   linkedTables?: string[];

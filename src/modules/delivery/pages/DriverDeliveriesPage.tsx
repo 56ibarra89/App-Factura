@@ -837,11 +837,16 @@ export default function DriverDeliveriesPage() {
                         }}
                       >
                         <Typography variant="caption" fontWeight="bold" color="info.main">
-                          Efectivo: C${order.splitAmounts.efectivo.toFixed(2)}
+                          Efectivo: C${(order.splitAmounts.efectivo || 0).toFixed(2)}
                         </Typography>
                         <Typography variant="caption" fontWeight="bold" color="info.main">
-                          Tarjeta: C${order.splitAmounts.tarjeta.toFixed(2)}
+                          Tarjeta: C${(order.splitAmounts.tarjeta || 0).toFixed(2)}
                         </Typography>
+                        {order.splitAmounts.app !== undefined && order.splitAmounts.app > 0 && (
+                          <Typography variant="caption" fontWeight="bold" color="info.main">
+                            App: C${order.splitAmounts.app.toFixed(2)}
+                          </Typography>
+                        )}
                       </Box>
                     )}
 

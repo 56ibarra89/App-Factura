@@ -13,8 +13,9 @@ const PAYMENT_ACCUMULATORS: Record<string, (acc: ShiftSales, order: Order) => vo
   },
   MIXTO: (acc, order) => {
     if (order.splitAmounts) {
-      acc.cash += order.splitAmounts.efectivo;
-      acc.card += order.splitAmounts.tarjeta;
+      acc.cash += order.splitAmounts.efectivo || 0;
+      acc.card += order.splitAmounts.tarjeta || 0;
+      acc.app += order.splitAmounts.app || 0;
     }
   },
 };

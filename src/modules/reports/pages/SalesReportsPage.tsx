@@ -1,8 +1,10 @@
 import { useState, useMemo } from "react";
 import { Box, Grid, CircularProgress, Typography, IconButton, Select, MenuItem, TextField } from "@mui/material";
 import { BackButton, PageHeader } from "../../../shared/ui";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import ReceiptIcon from "@mui/icons-material/Receipt";
+import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import LocalPrintshopIcon from "@mui/icons-material/LocalPrintshop";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -27,7 +29,6 @@ const SalesReportsPage = () => {
       case "today":
         return { startDate: startOfDay(now), endDate: endOfDay(now) };
       case "week":
-
         return { startDate: startOfWeek(now, { weekStartsOn: 1 }), endDate: endOfWeek(now, { weekStartsOn: 1 }) };
       case "month":
         return { startDate: startOfMonth(now), endDate: endOfMonth(now) };
@@ -135,22 +136,52 @@ const SalesReportsPage = () => {
         </Box>
       ) : data ? (
         <Grid container spacing={3} sx={{ mt: 1 }}>
-          {}
-          <Grid size={{ xs: 12, md: 6 }}>
+          {/* Tarjetas KPI de Métodos de Pago */}
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
-              title="Ventas Totales (Entregadas)"
+              title="Total Facturado"
               value={`C$${data.totalSales.toFixed(2)}`}
-              icon={<AccountBalanceWalletIcon fontSize="large" />}
-              subtitle="Ingresos del periodo"
+              icon={<PointOfSaleIcon fontSize="large" />}
+              subtitle={`${data.totalOrders} factura${data.totalOrders === 1 ? "" : "s"} cobrada${data.totalOrders === 1 ? "" : "s"}`}
+              color="#d32f2f"
+              iconColor="#d32f2f"
+              iconBg="rgba(211, 47, 47, 0.1)"
               masked={privacyMode}
             />
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <StatCard
-              title="Órdenes Completadas"
-              value={data.totalOrders}
-              icon={<ReceiptIcon fontSize="large" />}
-              subtitle="Facturas exitosas"
+              title="Total Efectivo"
+              value={`C$${data.cashSales.toFixed(2)}`}
+              icon={<AttachMoneyIcon fontSize="large" />}
+              subtitle="Directo + porción mixto"
+              color="#2e7d32"
+              iconColor="#2e7d32"
+              iconBg="rgba(46, 125, 50, 0.1)"
+              masked={privacyMode}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <StatCard
+              title="Total Tarjeta / POS"
+              value={`C$${data.cardSales.toFixed(2)}`}
+              icon={<CreditCardIcon fontSize="large" />}
+              subtitle="Datáfono + porción mixto"
+              color="#0288d1"
+              iconColor="#0288d1"
+              iconBg="rgba(2, 136, 209, 0.1)"
+              masked={privacyMode}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <StatCard
+              title="Total App / Transf."
+              value={`C$${data.appSales.toFixed(2)}`}
+              icon={<PhoneAndroidIcon fontSize="large" />}
+              subtitle="Banca en línea + porción mixto"
+              color="#ed6c02"
+              iconColor="#ed6c02"
+              iconBg="rgba(237, 108, 2, 0.1)"
               masked={privacyMode}
             />
           </Grid>

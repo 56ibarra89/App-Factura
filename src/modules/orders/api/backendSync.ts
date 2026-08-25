@@ -111,8 +111,16 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
           tarjeta: Number(
             backendOrder.payments?.find((p) => p.method.toUpperCase() === "TARJETA")?.amount || 0
           ),
+          app: Number(
+            backendOrder.payments?.find((p) => p.method.toUpperCase() === "APP")?.amount || 0
+          ),
         }
       : undefined,
+    payments: backendOrder.payments?.map((p) => ({
+      method: p.method.toUpperCase() as "EFECTIVO" | "TARJETA" | "APP",
+      amount: Number(p.amount),
+      cashierSnapshotName: p.cashierSnapshotName,
+    })),
     paymentMethod: (hasMultiplePayments
       ? "MIXTO"
       : rawPaymentMethod) as PaymentMethod | undefined,
@@ -176,8 +184,9 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     linkedTables: order.linkedTables && order.linkedTables.length > 0 ? order.linkedTables : (order.tableId ? [order.tableId] : undefined),
     payments: order.paymentMethod ? (
       order.paymentMethod === 'MIXTO' && order.splitAmounts ? [
-        { method: 'EFECTIVO', amount: order.splitAmounts.efectivo },
-        { method: 'TARJETA', amount: order.splitAmounts.tarjeta }
+        { method: 'EFECTIVO', amount: order.splitAmounts.efectivo || 0 },
+        { method: 'TARJETA', amount: order.splitAmounts.tarjeta || 0 },
+        { method: 'APP', amount: order.splitAmounts.app || 0 },
       ].filter(p => p.amount > 0) : [{
         method: order.paymentMethod.toUpperCase(),
         amount: order.total,
@@ -242,8 +251,9 @@ export async function syncUpdateOrderItems(order: Order) {
 
 export async function syncFinalizeOrder(order: Order): Promise<Order> {
   const paymentsPayload = order.paymentMethod === 'MIXTO' && order.splitAmounts ? [
-    { method: 'EFECTIVO', amount: order.splitAmounts.efectivo },
-    { method: 'TARJETA', amount: order.splitAmounts.tarjeta }
+    { method: 'EFECTIVO', amount: order.splitAmounts.efectivo || 0 },
+    { method: 'TARJETA', amount: order.splitAmounts.tarjeta || 0 },
+    { method: 'APP', amount: order.splitAmounts.app || 0 },
   ].filter(p => p.amount > 0) : [{
     method: order.paymentMethod?.toUpperCase() || 'EFECTIVO',
     amount: order.total

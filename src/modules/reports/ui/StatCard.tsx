@@ -8,16 +8,27 @@ interface StatCardProps {
   icon?: React.ReactNode;
   subtitle?: string;
   color?: string;
+  iconColor?: string;
+  iconBg?: string;
   masked?: boolean;
 }
 
-export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, subtitle, masked }) => {
+export const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  icon,
+  subtitle,
+  color,
+  iconColor,
+  iconBg,
+  masked,
+}) => {
   return (
     <Card
       sx={{
         borderRadius: 4,
         boxShadow: LOGIN_SHADOWS.card,
-        bgcolor: 'background.default',
+        bgcolor: "background.default",
         display: "flex",
         flexDirection: "column",
         p: 2,
@@ -30,10 +41,19 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, subtitle
       <CardContent sx={{ pb: "16px !important" }}>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start">
           <Box>
-            <Typography variant="subtitle2" color="text.secondary" fontWeight={600} textTransform="uppercase">
+            <Typography
+              variant="subtitle2"
+              color="text.secondary"
+              fontWeight={600}
+              textTransform="uppercase"
+            >
               {title}
             </Typography>
-            <Typography variant="h4" fontWeight={800} sx={{ mt: 1, mb: 0.5, color: "text.primary" }}>
+            <Typography
+              variant="h4"
+              fontWeight={800}
+              sx={{ mt: 1, mb: 0.5, color: color || "text.primary" }}
+            >
               {masked ? "********" : value}
             </Typography>
             {subtitle && (
@@ -51,8 +71,8 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, icon, subtitle
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "rgba(211, 47, 47, 0.1)",
-                color: "#d32f2f",
+                background: iconBg || "rgba(211, 47, 47, 0.1)",
+                color: iconColor || color || "#d32f2f",
               }}
             >
               {icon}

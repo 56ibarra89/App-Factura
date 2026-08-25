@@ -30,6 +30,8 @@ const InvoicesPage = ({
     setEndDate,
     searchQuery,
     setSearchQuery,
+    selectedPaymentMethod,
+    setSelectedPaymentMethod,
     loading,
     filteredOrders,
     handleSearchClick
@@ -96,8 +98,7 @@ const InvoicesPage = ({
       />
 
       <Typography variant="body1" color="text.secondary" mb={3} mt={2}>
-        Consulta el registro histórico de ventas. Filtra por rango de fechas o
-        busca por nombre de cliente/ID.
+        Consulta el registro histórico de ventas. Filtra por rango de fechas, método de pago o busca por cliente/cajero/ID.
       </Typography>
 
       <InvoiceFilters
@@ -107,6 +108,8 @@ const InvoicesPage = ({
         setEndDate={setEndDate}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        selectedPaymentMethod={selectedPaymentMethod}
+        onPaymentMethodChange={setSelectedPaymentMethod}
         onSearchClick={handleSearchClick}
       />
 

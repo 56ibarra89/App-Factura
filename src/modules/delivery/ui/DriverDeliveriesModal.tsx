@@ -154,8 +154,11 @@ export default function DriverDeliveriesModal({
               display="block"
               sx={{ mt: 0.3, whiteSpace: "nowrap", fontSize: "0.72rem" }}
             >
-              Efec: C${order.splitAmounts.efectivo.toFixed(2)} | Tarj: C$
-              {order.splitAmounts.tarjeta.toFixed(2)}
+              Efec: C${(order.splitAmounts.efectivo || 0).toFixed(2)} | Tarj: C$
+              {(order.splitAmounts.tarjeta || 0).toFixed(2)}
+              {order.splitAmounts.app !== undefined && order.splitAmounts.app > 0
+                ? ` | App: C$${order.splitAmounts.app.toFixed(2)}`
+                : ""}
             </Typography>
           )}
         </Box>
