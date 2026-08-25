@@ -57,7 +57,7 @@ export const CajaProvider = ({
 
   useEffect(() => {
     if (currentShift) {
-      if (!username || currentShift.cashierName !== username) {
+      if (!username || (role !== "admin" && currentShift.cashierName !== username)) {
         console.log(
           "[CajaContext] Usuario deslogueado o turno de otro usuario. Limpiando estado.",
         );
@@ -65,7 +65,7 @@ export const CajaProvider = ({
         setCurrentShiftExpenses([]);
       }
     }
-  }, [username, currentShift]);
+  }, [username, role, currentShift]);
 
   useEffect(() => {
     let isMounted = true;

@@ -22,7 +22,7 @@ export function useCloseCashRegister(
   repository: IShiftRepository = defaultShiftRepository,
 ) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { role, logout } = useAuth();
   const { currentShift, cerrarCaja } = useCaja();
   const { config } = useGeneralSettings();
   const [amount, setAmountState] = useState("");
@@ -144,8 +144,12 @@ export function useCloseCashRegister(
       }
     }
 
-    const logoutResult = await logout();
-    navigate(logoutResult.success ? "/" : "/home", { replace: true });
+    if (role === "admin") {
+      navigate("/home", { replace: true });
+    } else {
+      const logoutResult = await logout();
+      navigate(logoutResult.success ? "/" : "/home", { replace: true });
+    }
   };
 
   const handleSubmit = async () => {

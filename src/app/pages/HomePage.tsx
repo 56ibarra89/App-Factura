@@ -106,8 +106,9 @@ const HomePage = () => {
       >
         {menuItems.map((item) => {
           const isDisabled =
-            (item.label === "Abrir Caja" && !!currentShift) ||
-            (item.label === "Cerrar Caja" && !currentShift);
+            role !== "admin" &&
+            ((item.label === "Abrir Caja" && !!currentShift) ||
+              (item.label === "Cerrar Caja" && !currentShift));
 
           return (
             <MenuCard
