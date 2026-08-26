@@ -36,20 +36,6 @@ export interface Shift {
   cashRegisterName?: string;
 }
 
-export type CashRegisterType = 'Principal' | 'Auxiliar' | 'Delivery';
-
-export interface CashRegisterConfig {
-  id: string;
-  name: string;
-  defaultOpeningAmount: number;
-  type?: CashRegisterType;
-  assignedUserIds?: string[];
-  assignedUserNames?: string[];
-
-  assignedUserId?: string;
-  assignedUserName?: string;
-}
-
 export interface OpenShiftData {
   cashierName: string;
   openingAmount: number;
@@ -91,21 +77,4 @@ export interface ShiftClosePreview {
   blockingTables: ShiftCloseBlockingTable[];
   canClose: boolean;
   requiresAuthorization?: boolean;
-}
-
-export interface ShiftProfileConfig {
-  id: string;
-  name: string;
-  startTime: string;
-  endTime: string;
-  description?: string;
-  assignedRole?: string;
-  assignedUserIds?: string[];
-  assignedUserNames?: string[];
-  daysOfWeek?: number[];
-}
-
-export interface CashRegisterConfigState {
-  cashRegisters: CashRegisterConfig[];
-  shiftProfiles: ShiftProfileConfig[];
 }

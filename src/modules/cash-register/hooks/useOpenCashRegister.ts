@@ -1,96 +1,58 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCaja } from "../model/CajaContext";
 import { useGeneralSettings } from "../../settings";
 import { shiftRepository } from "../api/shiftRepository";
-import { useCashRegisterConfig } from "./useCashRegisterConfig";
 import { useAuth } from "../../auth";
-import { useUserDirectory } from "../../accounts";
 
 export function useOpenCashRegister() {
   const navigate = useNavigate();
   const { abrirCaja, currentShift } = useCaja();
   const { config } = useGeneralSettings();
-  const { cajas } = useCashRegisterConfig();
-  const { username, role } = useAuth();
-  const { users } = useUserDirectory();
+  const { role } = useAuth();
 
-  const [selectedRegisterId, setSelectedRegisterId] = useState("");
+  const getDefaultRegisterName = () => {
+    switch (role) {
+      case "cajero_principal":
+        return "Caja Principal";
+      case "despachador":
+        return "Despacho Delivery";
+      case "admin":
+        return "Caja Principal";
+      default:
+        return "Caja Mostrador";
+    }
+  };
+
+  const [cashRegisterName, setCashRegisterName] = useState(getDefaultRegisterName);
   const [amount, setAmount] = useState("");
   const [expectedAmount, setExpectedAmount] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-
-  const currentUser = users.find(u => u.username === username);
-  const currentUserId = currentUser?.id;
-
-  const availableCajas = useMemo(
-    () =>
-      cajas.filter((cashRegister) => {
-        if (role === "admin") return true;
-
-        const assignedIds =
-          cashRegister.assignedUserIds ||
-          (cashRegister.assignedUserId
-            ? [cashRegister.assignedUserId]
-            : []);
-
-        if (assignedIds.length === 0) return true;
-        return currentUserId
-          ? assignedIds.includes(currentUserId)
-          : false;
-      }),
-    [cajas, currentUserId, role],
-  );
-
-  useEffect(() => {
-    if (availableCajas.length === 1 && !selectedRegisterId) {
-      setSelectedRegisterId(availableCajas[0].id);
-      return;
-    }
-
-    if (
-      selectedRegisterId &&
-      !availableCajas.some((cashRegister) => cashRegister.id === selectedRegisterId)
-    ) {
-      setSelectedRegisterId("");
-    }
-  }, [availableCajas, selectedRegisterId]);
 
   useEffect(() => {
     let isMounted = true;
     shiftRepository.getAll().then((shifts) => {
       if (!isMounted) return;
       if (shifts.length > 0) {
-
         const lastShift = shifts[0];
         if (lastShift.status === "closed" && lastShift.closingAmount !== undefined) {
           setExpectedAmount(lastShift.closingAmount);
+          if (config.requireExactOpeningAmount) {
+            setAmount(String(lastShift.closingAmount));
+          }
         }
       }
     });
-    return () => { isMounted = false; };
-  }, []);
-
-  useEffect(() => {
-    if (selectedRegisterId) {
-      const reg = availableCajas.find((c) => c.id === selectedRegisterId);
-      if (reg) {
-        if (config.requireExactOpeningAmount && expectedAmount !== null) {
-          setAmount(String(expectedAmount));
-        } else {
-          setAmount(String(reg.defaultOpeningAmount));
-        }
-      }
-    }
-  }, [selectedRegisterId, availableCajas, config.requireExactOpeningAmount, expectedAmount]);
+    return () => {
+      isMounted = false;
+    };
+  }, [config.requireExactOpeningAmount]);
 
   const numAmount = Number(amount);
 
   const canSubmit = (() => {
     if (currentShift || isSubmitting) return false;
-
-    if (availableCajas.length > 0 && !selectedRegisterId) return false;
     if (amount === "" || !Number.isFinite(numAmount) || numAmount < 0) return false;
 
     if (config.requireExactOpeningAmount && expectedAmount !== null) {
@@ -102,15 +64,12 @@ export function useOpenCashRegister() {
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
-    const selectedRegister = availableCajas.find((c) => c.id === selectedRegisterId);
-    const registerName = selectedRegister ? selectedRegister.name : undefined;
+    const registerName = cashRegisterName.trim() || getDefaultRegisterName();
 
-    console.log("[useAbrirCaja] Ejecutando handleSubmit con monto y caja:", amount, registerName);
     setIsSubmitting(true);
     setError("");
     try {
       await abrirCaja(Number(amount), registerName);
-      console.log("[useAbrirCaja] Navegando a /home...");
       navigate("/home");
     } catch (cause) {
       console.error("Failed to open shift:", cause);
@@ -129,9 +88,8 @@ export function useOpenCashRegister() {
   };
 
   return {
-    cajas: availableCajas,
-    selectedRegisterId,
-    setSelectedRegisterId,
+    cashRegisterName,
+    setCashRegisterName,
     amount,
     setAmount,
     canSubmit,
@@ -143,4 +101,3 @@ export function useOpenCashRegister() {
     handleCancel,
   };
 }
-

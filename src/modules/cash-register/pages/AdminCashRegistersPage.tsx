@@ -1,47 +1,44 @@
-import { Box, Container, Typography, Grid, Tabs, Tab } from "@mui/material";
-import { useState } from "react";
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Button,
+  Alert,
+  Stack,
+} from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { BackButton, PageHeader } from "../../../shared/ui";
-
 import { LOGIN_COLORS } from "../../../shared/theme";
 import { useCashRegisterDashboard } from "../hooks/useCashRegisterDashboard";
-import { useCashRegisterConfig } from "../hooks/useCashRegisterConfig";
 import { CashRegisterStatusCard } from "../ui/admin/CashRegisterStatusCard";
 import { WaiterPerformanceList } from "../ui/admin/WaiterPerformanceList";
-import { CashRegisterConfigTab } from "../ui/admin/CashRegisterConfigTab";
-import { ShiftProfileConfigTab } from "../ui/admin/ShiftProfileConfigTab";
+import { LiveKpiCards } from "../ui/admin/LiveKpiCards";
 
 const AdminCashRegistersPage = () => {
-  const { cajasActivas, waiterPerformance } = useCashRegisterDashboard();
   const {
-    cajas,
-    turnos,
-    addCaja,
-    updateCaja,
-    deleteCaja,
-    addTurno,
-    updateTurno,
-    deleteTurno,
-  } = useCashRegisterConfig();
-
-  const [activeTab, setActiveTab] = useState(0);
-
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
+    cajasActivas,
+    waiterPerformance,
+    liveKpis,
+    loading,
+    isRefreshing,
+    lastUpdated,
+    reloadDashboard,
+  } = useCashRegisterDashboard();
 
   return (
     <Box
       minHeight="100vh"
       sx={{
-        bgcolor: 'background.default',
+        bgcolor: "background.default",
         pt: 4,
         pb: 8,
         px: { xs: 2, md: 6 },
-        position: 'relative',
-        overflowX: 'hidden'
+        position: "relative",
+        overflowX: "hidden",
       }}
     >
-      {}
+      {/* Glow background */}
       <Box
         sx={{
           position: "absolute",
@@ -52,53 +49,86 @@ const AdminCashRegistersPage = () => {
           background: `radial-gradient(circle, ${LOGIN_COLORS.primarySubtle} 0%, rgba(255,255,255,0) 70%)`,
           borderRadius: "50%",
           zIndex: 0,
-          pointerEvents: "none"
+          pointerEvents: "none",
         }}
       />
 
       <Box position="relative" zIndex={1}>
         <PageHeader
-          title="Administración de Cajas"
+          title="Monitoreo de Cajas en Vivo"
           startContent={<BackButton to="/admin" />}
+          actions={
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                Actualizado: {lastUpdated.toLocaleTimeString()}
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={
+                  <RefreshIcon
+                    sx={{
+                      animation: isRefreshing ? "spin 1s linear infinite" : "none",
+                      "@keyframes spin": {
+                        "0%": { transform: "rotate(0deg)" },
+                        "100%": { transform: "rotate(360deg)" },
+                      },
+                    }}
+                  />
+                }
+                onClick={() => void reloadDashboard()}
+                disabled={isRefreshing}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 700,
+                  bgcolor: "background.paper",
+                }}
+              >
+                {isRefreshing ? "Actualizando..." : "Actualizar"}
+              </Button>
+            </Stack>
+          }
         />
 
         <Box sx={{ mt: 2, mb: 4, pl: 1 }}>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 650 }}>
-            Visualiza el estado en tiempo real de las estaciones de cobro, gestiona los perfiles de turnos laborales
-            y define los montos de apertura en efectivo predeterminados del sistema.
+          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 700 }}>
+            Visualiza en tiempo real las cajas abiertas, el flujo de ingresos en efectivo, tarjeta
+            y app, así como el rendimiento del personal en sala.
           </Typography>
         </Box>
 
-        {/* Pestañas de Navegación */}
-        <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 4 }}>
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            textColor="primary"
-            indicatorColor="primary"
-            sx={{
-              "& .MuiTab-root": {
-                fontWeight: "bold",
-                textTransform: "none",
-                fontSize: "1rem",
-              },
-            }}
-          >
-            <Tab label="Monitoreo en Vivo" />
-            <Tab label="Configuración de Cajas" />
-            <Tab label="Perfiles de Turnos" />
-          </Tabs>
-        </Box>
-
         <Container maxWidth={false} disableGutters>
-          {/* Tab 0: Monitoreo en Vivo */}
-          {activeTab === 0 && (
-            <Grid container spacing={4}>
-              {/* Left Column: Cajas Activas */}
-              <Grid size={{ xs: 12, lg: 8 }}>
-                <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 3 }}>
-                  Cajas Trabajando ({cajasActivas.length})
-                </Typography>
+          {/* Barra superior de KPIs Globales */}
+          <LiveKpiCards kpis={liveKpis} loading={loading} />
+
+          <Grid container spacing={4}>
+            {/* Left Column: Cajas Activas */}
+            <Grid size={{ xs: 12, lg: 8 }}>
+              <Typography
+                variant="h5"
+                fontWeight={800}
+                color="text.primary"
+                sx={{ mb: 3 }}
+              >
+                Cajas Trabajando ({cajasActivas.length})
+              </Typography>
+
+              {cajasActivas.length === 0 && !loading ? (
+                <Alert
+                  severity="info"
+                  sx={{
+                    borderRadius: 3.5,
+                    fontWeight: 600,
+                    border: "1px solid",
+                    borderColor: "info.light",
+                    p: 2,
+                  }}
+                >
+                  No hay estaciones de caja abiertas en este momento. Las cajas abiertas
+                  por cajeros principales o despachadores aparecerán aquí automáticamente.
+                </Alert>
+              ) : (
                 <Grid container spacing={3}>
                   {cajasActivas.map((caja) => (
                     <Grid size={{ xs: 12, md: 6 }} key={caja.id}>
@@ -106,34 +136,17 @@ const AdminCashRegistersPage = () => {
                     </Grid>
                   ))}
                 </Grid>
-              </Grid>
-
-              {/* Right Column: Meseros / Rendimiento */}
-              <Grid size={{ xs: 12, lg: 4 }}>
-                <WaiterPerformanceList waiters={waiterPerformance} />
-              </Grid>
+              )}
             </Grid>
-          )}
 
-          {/* Tab 1: Configuración de Cajas */}
-          {activeTab === 1 && (
-            <CashRegisterConfigTab
-              cajas={cajas}
-              onAdd={addCaja}
-              onUpdate={updateCaja}
-              onDelete={deleteCaja}
-            />
-          )}
-
-          {/* Tab 2: Perfiles de Turnos */}
-          {activeTab === 2 && (
-            <ShiftProfileConfigTab
-              turnos={turnos}
-              onAdd={addTurno}
-              onUpdate={updateTurno}
-              onDelete={deleteTurno}
-            />
-          )}
+            {/* Right Column: Meseros / Rendimiento */}
+            <Grid size={{ xs: 12, lg: 4 }}>
+              <WaiterPerformanceList
+                waiters={waiterPerformance}
+                loading={loading}
+              />
+            </Grid>
+          </Grid>
         </Container>
       </Box>
     </Box>
@@ -141,4 +154,3 @@ const AdminCashRegistersPage = () => {
 };
 
 export default AdminCashRegistersPage;
-

@@ -3,21 +3,15 @@ import {
   Button,
   InputAdornment,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
   CircularProgress,
 } from "@mui/material";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import type { CashRegisterConfig } from "../model/cash-register.types";
 
 interface Props {
-  cajas: CashRegisterConfig[];
-  selectedRegisterId: string;
-  onSelectRegister: (id: string) => void;
+  cashRegisterName?: string;
+  onChangeCashRegisterName?: (value: string) => void;
   amount: string;
   onChangeAmount: (value: string) => void;
   onSubmit: () => void;
@@ -30,9 +24,8 @@ interface Props {
 }
 
 export function OpenCashRegisterForm({
-  cajas,
-  selectedRegisterId,
-  onSelectRegister,
+  cashRegisterName,
+  onChangeCashRegisterName,
   amount,
   onChangeAmount,
   onSubmit,
@@ -46,30 +39,27 @@ export function OpenCashRegisterForm({
   const isExactRequired = requireExactOpening && expectedAmount !== null;
   const numAmount = Number(amount);
   const showExactError = isExactRequired && amount !== "" && numAmount !== expectedAmount;
-  
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      {cajas.length > 0 && (
-        <FormControl fullWidth>
-          <InputLabel id="select-caja-label">Estación de Caja</InputLabel>
-          <Select
-            labelId="select-caja-label"
-            value={selectedRegisterId}
-            label="Estación de Caja"
-            onChange={(e) => onSelectRegister(e.target.value)}
-            sx={{
-              borderRadius: 2,
-              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: LOGIN_COLORS.primary },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: LOGIN_COLORS.primary },
-            }}
-          >
-            {cajas.map((c) => (
-              <MenuItem key={c.id} value={c.id}>
-                {c.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      {onChangeCashRegisterName && (
+        <TextField
+          label="Nombre de la estación (opcional)"
+          value={cashRegisterName || ""}
+          onChange={(e) => onChangeCashRegisterName(e.target.value)}
+          fullWidth
+          helperText="Ej. Caja Principal, Caja Mostrador, Despacho Delivery"
+          InputProps={{
+            sx: { borderRadius: 2 },
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              "&:hover fieldset": { borderColor: LOGIN_COLORS.primary },
+              "&.Mui-focused fieldset": { borderColor: LOGIN_COLORS.primary },
+            },
+            "& .MuiInputLabel-root.Mui-focused": { color: LOGIN_COLORS.primary },
+          }}
+        />
       )}
 
       <TextField
@@ -78,7 +68,7 @@ export function OpenCashRegisterForm({
         value={amount}
         onChange={(e) => onChangeAmount(e.target.value)}
         fullWidth
-        autoFocus={cajas.length === 0}
+        autoFocus
         inputProps={{ min: 0, step: "0.01" }}
         InputProps={{
           startAdornment: (
@@ -86,20 +76,20 @@ export function OpenCashRegisterForm({
               C$
             </InputAdornment>
           ),
-          sx: { borderRadius: 2 }
+          sx: { borderRadius: 2 },
         }}
         error={showExactError}
         helperText={
-          isExactRequired 
-            ? `Se requiere un monto exacto de C$ ${expectedAmount?.toFixed(2)} basado en el cierre anterior.` 
-            : "Ingresa el monto en efectivo disponible en gaveta."
+          isExactRequired
+            ? `Se requiere un monto exacto de C$ ${expectedAmount?.toFixed(2)} basado en el cierre anterior.`
+            : "Ingresa el monto en efectivo disponible en gaveta al iniciar el turno."
         }
         sx={{
-          '& .MuiOutlinedInput-root': {
-            '&:hover fieldset': { borderColor: LOGIN_COLORS.primary },
-            '&.Mui-focused fieldset': { borderColor: LOGIN_COLORS.primary },
+          "& .MuiOutlinedInput-root": {
+            "&:hover fieldset": { borderColor: LOGIN_COLORS.primary },
+            "&.Mui-focused fieldset": { borderColor: LOGIN_COLORS.primary },
           },
-          '& .MuiInputLabel-root.Mui-focused': { color: LOGIN_COLORS.primary },
+          "& .MuiInputLabel-root.Mui-focused": { color: LOGIN_COLORS.primary },
         }}
       />
 
@@ -112,12 +102,12 @@ export function OpenCashRegisterForm({
           onClick={onCancel}
           disabled={isSubmitting}
           startIcon={<ArrowBackIcon />}
-          sx={{ 
-            borderRadius: 2, 
+          sx={{
+            borderRadius: 2,
             py: 1.5,
-            color: 'text.secondary',
-            borderColor: 'divider',
-            '&:hover': { bgcolor: 'action.hover', borderColor: 'text.primary' }
+            color: "text.secondary",
+            borderColor: "divider",
+            "&:hover": { bgcolor: "action.hover", borderColor: "text.primary" },
           }}
         >
           Cancelar
@@ -129,13 +119,13 @@ export function OpenCashRegisterForm({
           onClick={onSubmit}
           disabled={!canSubmit}
           startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : undefined}
-          sx={{ 
-            borderRadius: 2, 
+          sx={{
+            borderRadius: 2,
             py: 1.5,
             bgcolor: LOGIN_COLORS.primary,
-            '&:hover': { bgcolor: LOGIN_COLORS.primaryDark },
+            "&:hover": { bgcolor: LOGIN_COLORS.primaryDark },
             boxShadow: `0 4px 14px ${LOGIN_COLORS.primaryShadow}`,
-            fontWeight: 'bold'
+            fontWeight: "bold",
           }}
         >
           {isSubmitting ? "Registrando..." : "Abrir caja"}
