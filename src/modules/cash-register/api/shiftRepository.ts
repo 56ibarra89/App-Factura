@@ -13,8 +13,10 @@ export interface IShiftRepository {
   getClosePreview(
     id: string,
     counted?: { cash?: number; card?: number; app?: number } | number,
+    closeType?: 'HANDOVER' | 'END_OF_DAY',
   ): Promise<ShiftClosePreview>;
   getAll(): Promise<Shift[]>;
+  getActiveShift(): Promise<Shift | null>;
   getActiveShiftForUser(username: string): Promise<Shift | null>;
 }
 
@@ -128,6 +130,7 @@ class ShiftRepository implements IShiftRepository {
   async getClosePreview(
     id: string,
     counted?: { cash?: number; card?: number; app?: number } | number,
+    closeType?: 'HANDOVER' | 'END_OF_DAY',
   ): Promise<ShiftClosePreview> {
     const params = new URLSearchParams();
     if (typeof counted === "number") {
@@ -140,6 +143,9 @@ class ShiftRepository implements IShiftRepository {
       if (counted.app !== undefined)
         params.set("countedApp", counted.app.toFixed(2));
     }
+    if (closeType) {
+      params.set("closeType", closeType);
+    }
     const query = params.toString() ? `?${params.toString()}` : "";
     return apiClient(`/shifts/${id}/close-preview${query}`);
   }
@@ -151,6 +157,21 @@ class ShiftRepository implements IShiftRepository {
     } catch (error) {
       console.error("Error obteniendo turnos de DB:", error);
       return [];
+    }
+  }
+
+  async getActiveShift(): Promise<Shift | null> {
+    try {
+      const response: BackendShift[] = await apiClient(
+        "/shifts?status=OPEN&limit=1",
+      );
+      if (response && response.length > 0) {
+        return this.mapToFrontendShift(response[0]);
+      }
+      return null;
+    } catch (error) {
+      console.error("Error obteniendo turno activo global:", error);
+      return null;
     }
   }
 

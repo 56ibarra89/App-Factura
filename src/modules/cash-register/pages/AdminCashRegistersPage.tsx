@@ -102,14 +102,14 @@ const AdminCashRegistersPage = () => {
           {/* Barra superior de KPIs Globales */}
           <LiveKpiCards kpis={liveKpis} loading={loading} />
 
-          <Grid container spacing={4}>
-            {/* Left Column: Cajas Activas */}
-            <Grid size={{ xs: 12, lg: 8 }}>
+          <Grid container spacing={3.5}>
+            {/* Columna Izquierda: Cajas Activas */}
+            <Grid size={{ xs: 12, lg: 7.5 }}>
               <Typography
                 variant="h5"
                 fontWeight={800}
                 color="text.primary"
-                sx={{ mb: 3 }}
+                sx={{ mb: 2.5 }}
               >
                 Cajas Trabajando ({cajasActivas.length})
               </Typography>
@@ -122,16 +122,22 @@ const AdminCashRegistersPage = () => {
                     fontWeight: 600,
                     border: "1px solid",
                     borderColor: "info.light",
-                    p: 2,
+                    p: 2.5,
                   }}
                 >
                   No hay estaciones de caja abiertas en este momento. Las cajas abiertas
                   por cajeros principales o despachadores aparecerán aquí automáticamente.
                 </Alert>
               ) : (
-                <Grid container spacing={3}>
+                <Grid container spacing={2.5}>
                   {cajasActivas.map((caja) => (
-                    <Grid size={{ xs: 12, md: 6 }} key={caja.id}>
+                    <Grid
+                      size={{
+                        xs: 12,
+                        sm: cajasActivas.length === 1 ? 12 : 6,
+                      }}
+                      key={caja.id}
+                    >
                       <CashRegisterStatusCard caja={caja} />
                     </Grid>
                   ))}
@@ -139,8 +145,8 @@ const AdminCashRegistersPage = () => {
               )}
             </Grid>
 
-            {/* Right Column: Meseros / Rendimiento */}
-            <Grid size={{ xs: 12, lg: 4 }}>
+            {/* Columna Derecha: Top Meseros */}
+            <Grid size={{ xs: 12, lg: 4.5 }}>
               <WaiterPerformanceList
                 waiters={waiterPerformance}
                 loading={loading}

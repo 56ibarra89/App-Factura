@@ -56,33 +56,29 @@ export const CajaProvider = ({
   }, [currentShift?.id, expenseGateway]);
 
   useEffect(() => {
-    if (currentShift) {
-      if (!username || (role !== "admin" && currentShift.cashierName !== username)) {
-        console.log(
-          "[CajaContext] Usuario deslogueado o turno de otro usuario. Limpiando estado.",
-        );
-        setCurrentShift(null);
-        setCurrentShiftExpenses([]);
-      }
+    if (!username) {
+      console.log("[CajaContext] Usuario deslogueado. Limpiando estado.");
+      setCurrentShift(null);
+      setCurrentShiftExpenses([]);
     }
-  }, [username, role, currentShift]);
+  }, [username]);
 
   useEffect(() => {
     let isMounted = true;
     if (username && role !== "motorizado") {
       repository
-        .getActiveShiftForUser(username)
+        .getActiveShift()
         .then((shift) => {
-          if (isMounted && shift) {
+          if (isMounted) {
             console.log(
-              "[CajaContext] Turno activo recuperado del backend para:",
-              username,
+              "[CajaContext] Estado de caja global recuperado:",
+              shift ? `ABIERTA por ${shift.cashierName}` : "CERRADA",
             );
             setCurrentShift(shift);
           }
         })
         .catch((err) =>
-          console.error("Error al recuperar turno activo:", err),
+          console.error("[CajaContext] Error al recuperar turno activo global:", err),
         );
     }
     return () => {

@@ -69,10 +69,17 @@ export const ordersRealtimeGateway: OrdersRealtimeGateway = {
     const handleConnectError = (error: Error) => {
       handlers.onError(error);
 
+      if (!accessTokenStore.get()) {
+        clearManualReconnect();
+        return;
+      }
+
       if (!socket.active && manualReconnectTimer === undefined) {
         manualReconnectTimer = window.setTimeout(() => {
           manualReconnectTimer = undefined;
-          socket.connect();
+          if (accessTokenStore.get()) {
+            socket.connect();
+          }
         }, 3_000);
       }
     };

@@ -1,5 +1,5 @@
 import { Box, Typography, Divider, Alert } from "@mui/material";
-import { AuthLayout, BrandingPanel } from "../../auth";
+import { AuthLayout, BrandingPanel, useAuth } from "../../auth";
 import { OpenCashRegisterForm } from "../ui/OpenCashRegisterForm";
 import { useOpenCashRegister } from "../hooks/useOpenCashRegister";
 import { useEffect } from "react";
@@ -7,6 +7,7 @@ import { useCaja } from "../model/CajaContext";
 
 export default function OpenCashRegisterPage() {
   const { currentShift } = useCaja();
+  const { username } = useAuth();
   const {
     cashRegisterName,
     setCashRegisterName,
@@ -27,6 +28,8 @@ export default function OpenCashRegisterPage() {
       currentShift ? "ABIERTA" : "CERRADA",
     );
   }, [currentShift]);
+
+  const hasMyOpenShift = currentShift && currentShift.cashierName === username;
 
   return (
     <AuthLayout error="" onClearError={() => {}}>
@@ -61,8 +64,7 @@ export default function OpenCashRegisterPage() {
 
         {currentShift && (
           <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>
-            Ya existe un turno abierto para <strong>{currentShift.cashierName}</strong>.
-            No es necesario abrir una nueva caja.
+            Ya existe una caja abierta en el sistema por <strong>{currentShift.cashierName}</strong>. No es posible abrir otra estación.
           </Alert>
         )}
 

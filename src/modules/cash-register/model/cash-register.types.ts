@@ -50,6 +50,7 @@ export interface CloseShiftData {
   discrepancyReason?: string;
   authorizationPin?: string;
   denominationBreakdown?: CashDenominationCount[];
+  closeType?: 'HANDOVER' | 'END_OF_DAY';
 }
 
 export interface CashDenominationCount {
@@ -77,4 +78,5 @@ export interface ShiftClosePreview {
   blockingTables: ShiftCloseBlockingTable[];
   canClose: boolean;
   requiresAuthorization?: boolean;
+  closeType?: 'HANDOVER' | 'END_OF_DAY';
 }

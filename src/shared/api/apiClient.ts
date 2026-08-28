@@ -21,13 +21,13 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
   });
 
   if (!response.ok) {
-    if (response.status === 401 && accessToken) {
+    if (response.status === 401) {
       accessTokenStore.clear();
       if (window.authAPI) {
         window.authAPI.clearToken();
       }
       sessionStore.clear();
-      if (window.location.hash !== "#/") {
+      if (window.location.hash !== "#/" && window.location.hash !== "") {
         window.location.hash = "#/";
       }
       throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");

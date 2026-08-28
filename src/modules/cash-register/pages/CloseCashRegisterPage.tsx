@@ -55,6 +55,8 @@ export default function CloseCashRegisterPage() {
 
         <Divider sx={{ mb: 4 }} />
         <CloseCashRegisterForm
+          closeType={closeCashRegister.closeType}
+          onChangeCloseType={closeCashRegister.setCloseType}
           amount={closeCashRegister.amount}
           onChangeAmount={closeCashRegister.setAmount}
           onApplyBreakdown={closeCashRegister.applyDenominationBreakdown}

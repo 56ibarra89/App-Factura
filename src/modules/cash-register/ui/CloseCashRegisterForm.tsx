@@ -6,13 +6,21 @@ import {
   InputAdornment,
   TextField,
   Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+  Stack,
+  alpha,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import SyncAltIcon from "@mui/icons-material/SyncAlt";
+import NightlightRoundIcon from "@mui/icons-material/NightlightRound";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import type { CashDenominationCount } from "../model/cash-register.types";
 import { CashDenominationDialog } from "./CashDenominationDialog";
 
 interface Props {
+  closeType: 'HANDOVER' | 'END_OF_DAY';
+  onChangeCloseType: (type: 'HANDOVER' | 'END_OF_DAY') => void;
   amount: string;
   onChangeAmount: (value: string) => void;
   declaredCardAmount: string;
@@ -37,6 +45,8 @@ interface Props {
 }
 
 export function CloseCashRegisterForm({
+  closeType,
+  onChangeCloseType,
   amount,
   onChangeAmount,
   declaredCardAmount,
@@ -58,7 +68,107 @@ export function CloseCashRegisterForm({
 }: Props) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-      <Alert severity="info">
+      {/* Selector de Tipo de Cierre */}
+      <Box
+        sx={{
+          p: 2,
+          borderRadius: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
+        }}
+      >
+        <Typography variant="subtitle2" fontWeight="800" gutterBottom color="text.primary">
+          ⚙️ Modalidad de Cierre
+        </Typography>
+        <Typography variant="caption" color="text.secondary" display="block" mb={2}>
+          Selecciona si vas a entregar la caja a otro cajero o si es el cierre final del restaurante.
+        </Typography>
+
+        <ToggleButtonGroup
+          value={closeType}
+          exclusive
+          onChange={(_, newType) => {
+            if (newType) onChangeCloseType(newType);
+          }}
+          fullWidth
+          disabled={loading}
+          sx={{
+            gap: 1.5,
+            "& .MuiToggleButtonGroup-grouped": {
+              border: "1px solid !important",
+              borderColor: "divider !important",
+              borderRadius: "12px !important",
+              px: 2,
+              py: 1.5,
+              textTransform: "none",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              transition: "all 0.2s",
+              "&.Mui-selected": {
+                bgcolor:
+                  closeType === "HANDOVER"
+                    ? alpha("#0288d1", 0.08)
+                    : alpha("#ed6c02", 0.08),
+                borderColor:
+                  closeType === "HANDOVER"
+                    ? "#0288d1 !important"
+                    : "#ed6c02 !important",
+                boxShadow:
+                  closeType === "HANDOVER"
+                    ? "0 2px 8px rgba(2, 136, 209, 0.2)"
+                    : "0 2px 8px rgba(237, 108, 2, 0.2)",
+              },
+            },
+          }}
+        >
+          <ToggleButton value="HANDOVER">
+            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+              <SyncAltIcon sx={{ color: "#0288d1", fontSize: 20 }} />
+              <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
+                Relevo de Turno
+              </Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary" textAlign="left">
+              Cambio de cajero / mitad del día
+            </Typography>
+          </ToggleButton>
+
+          <ToggleButton value="END_OF_DAY">
+            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+              <NightlightRoundIcon sx={{ color: "#ed6c02", fontSize: 20 }} />
+              <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
+                Cierre Final del Día
+              </Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary" textAlign="left">
+              Fin de jornada / apagar sistema
+            </Typography>
+          </ToggleButton>
+        </ToggleButtonGroup>
+
+        {closeType === "HANDOVER" ? (
+          <Alert
+            severity="info"
+            icon={<SyncAltIcon fontSize="inherit" />}
+            sx={{ mt: 2, borderRadius: 2 }}
+          >
+            <strong>Relevo de Turno:</strong> Las mesas ocupadas y pedidos en preparación seguirán abiertos para el siguiente turno. Solo entregarás cuentas del dinero cobrado en tu sesión.
+          </Alert>
+        ) : (
+          <Alert
+            severity="warning"
+            icon={<NightlightRoundIcon fontSize="inherit" />}
+            sx={{ mt: 2, borderRadius: 2 }}
+          >
+            <strong>Cierre Final del Día:</strong> Se exige que todas las mesas estén cobradas o liberadas y no existan pedidos en cocina antes de apagar el sistema.
+          </Alert>
+        )}
+      </Box>
+
+      <Alert severity="info" sx={{ borderRadius: 2 }}>
         Arqueo ciego obligatorio: las ventas, gastos y el total esperado permanecerán ocultos hasta completar el cierre.
       </Alert>
 
@@ -243,7 +353,13 @@ export function CloseCashRegisterForm({
             boxShadow: `0 4px 14px ${LOGIN_COLORS.primaryShadow}`,
           }}
         >
-          {loading ? <CircularProgress size={24} color="inherit" /> : "Cerrar caja"}
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : closeType === "HANDOVER" ? (
+            "Completar Relevo"
+          ) : (
+            "Cerrar Caja Final"
+          )}
         </Button>
       </Box>
     </Box>

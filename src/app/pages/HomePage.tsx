@@ -105,10 +105,16 @@ const HomePage = () => {
         px={2}
       >
         {menuItems.map((item) => {
-          const isDisabled =
-            role !== "admin" &&
-            ((item.label === "Abrir Caja" && !!currentShift) ||
-              (item.label === "Cerrar Caja" && !currentShift));
+          const isCajaAbierta = Boolean(currentShift);
+          let isDisabled = false;
+
+          if (item.label === "Abrir Caja") {
+            // Si ya hay una caja abierta (por gemita, admin, etc.), nadie puede abrir otra
+            isDisabled = isCajaAbierta;
+          } else if (item.label === "Cerrar Caja") {
+            // Solo se puede cerrar si existe una caja abierta
+            isDisabled = !isCajaAbierta;
+          }
 
           return (
             <MenuCard

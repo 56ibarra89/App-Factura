@@ -25,6 +25,7 @@ export function useCloseCashRegister(
   const { role, logout } = useAuth();
   const { currentShift, cerrarCaja } = useCaja();
   const { config } = useGeneralSettings();
+  const [closeType, setCloseTypeState] = useState<'HANDOVER' | 'END_OF_DAY'>('HANDOVER');
   const [amount, setAmountState] = useState("");
   const [declaredCardAmount, setDeclaredCardAmount] = useState("");
   const [declaredAppAmount, setDeclaredAppAmount] = useState("");
@@ -42,16 +43,25 @@ export function useCloseCashRegister(
   >();
 
   const refreshPreview = useCallback(
-    async (counted?: { cash?: number; card?: number; app?: number } | number) => {
+    async (
+      counted?: { cash?: number; card?: number; app?: number } | number,
+      typeOverride?: 'HANDOVER' | 'END_OF_DAY',
+    ) => {
       if (!currentShift?.id) return null;
       setPreflightLoading(true);
+      const targetCloseType = typeOverride ?? closeType;
       try {
         const result = await repository.getClosePreview(
           currentShift.id,
           counted,
+          targetCloseType,
         );
         setPreview(result);
-        setBlockersOpen(!result.canClose);
+        if (targetCloseType === 'END_OF_DAY') {
+          setBlockersOpen(!result.canClose);
+        } else {
+          setBlockersOpen(false);
+        }
         if (counted !== undefined) {
           setRequiresAuthorization(result.requiresAuthorization === true);
         }
@@ -67,12 +77,24 @@ export function useCloseCashRegister(
         setPreflightLoading(false);
       }
     },
-    [currentShift?.id, repository],
+    [currentShift?.id, repository, closeType],
   );
 
   useEffect(() => {
     void refreshPreview();
   }, [refreshPreview]);
+
+  const setCloseType = (type: 'HANDOVER' | 'END_OF_DAY') => {
+    setCloseTypeState(type);
+    void refreshPreview(
+      {
+        cash: Number(amount) || 0,
+        card: Number(declaredCardAmount) || 0,
+        app: Number(declaredAppAmount) || 0,
+      },
+      type,
+    );
+  };
 
   const validAmount =
     amount.trim() !== "" &&
@@ -130,6 +152,7 @@ export function useCloseCashRegister(
         : undefined,
       authorizationPin: authorizationNeeded ? authorizationPin : undefined,
       denominationBreakdown,
+      closeType,
     });
     setPrintShift(closedShift);
 
@@ -156,12 +179,20 @@ export function useCloseCashRegister(
     setLoading(true);
     setError("");
     try {
-      const latestPreview = await refreshPreview({
-        cash: Number(amount) || 0,
-        card: Number(declaredCardAmount) || 0,
-        app: Number(declaredAppAmount) || 0,
-      });
-      if (!latestPreview?.canClose) return;
+      const latestPreview = await refreshPreview(
+        {
+          cash: Number(amount) || 0,
+          card: Number(declaredCardAmount) || 0,
+          app: Number(declaredAppAmount) || 0,
+        },
+        closeType,
+      );
+      if (!latestPreview?.canClose) {
+        if (closeType === 'END_OF_DAY') {
+          setBlockersOpen(true);
+        }
+        return;
+      }
 
       const authorizationNeeded =
         latestPreview.requiresAuthorization === true;
@@ -181,17 +212,22 @@ export function useCloseCashRegister(
           ? caught.message
           : "Error al cerrar la caja. Por favor, intenta de nuevo.",
       );
-      await refreshPreview({
-        cash: Number(amount) || 0,
-        card: Number(declaredCardAmount) || 0,
-        app: Number(declaredAppAmount) || 0,
-      });
+      await refreshPreview(
+        {
+          cash: Number(amount) || 0,
+          card: Number(declaredCardAmount) || 0,
+          app: Number(declaredAppAmount) || 0,
+        },
+        closeType,
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return {
+    closeType,
+    setCloseType,
     amount,
     setAmount,
     declaredCardAmount,

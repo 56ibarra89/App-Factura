@@ -9,7 +9,7 @@ export function useOpenCashRegister() {
   const navigate = useNavigate();
   const { abrirCaja, currentShift } = useCaja();
   const { config } = useGeneralSettings();
-  const { role } = useAuth();
+  const { username, role } = useAuth();
 
   const getDefaultRegisterName = () => {
     switch (role) {
@@ -52,7 +52,7 @@ export function useOpenCashRegister() {
   const numAmount = Number(amount);
 
   const canSubmit = (() => {
-    if (currentShift || isSubmitting) return false;
+    if (Boolean(currentShift) || isSubmitting) return false;
     if (amount === "" || !Number.isFinite(numAmount) || numAmount < 0) return false;
 
     if (config.requireExactOpeningAmount && expectedAmount !== null) {

@@ -1,11 +1,10 @@
-import { Box, Typography, Paper, Grid, Chip, Stack, alpha } from "@mui/material";
+import { Box, Typography, Paper, Chip, Stack, alpha } from "@mui/material";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { LOGIN_COLORS, LOGIN_SHADOWS } from "../../../../shared/theme";
 import { formatCurrency } from "../../../../shared/format";
 import type { CajaActiveMock } from "../../hooks/useCashRegisterDashboard";
@@ -26,53 +25,38 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
   const minutesOpen = Math.floor((timeOpen % (1000 * 60 * 60)) / (1000 * 60));
 
   const roleUpper = (caja.cashierRole || "").toUpperCase();
+  const isPrincipal = roleUpper === "CAJERO_PRINCIPAL";
+  const isDelivery = roleUpper === "DESPACHADOR";
+  const isAdmin = roleUpper === "ADMIN";
 
-  const getRoleConfig = () => {
-    switch (roleUpper) {
-      case "CAJERO_PRINCIPAL":
-        return {
-          label: "Cajero Principal",
-          color: "secondary" as const,
-          icon: "👑",
-          accentColor: "#9c27b0",
-        };
-      case "DESPACHADOR":
-        return {
-          label: "Despacho Delivery",
-          color: "warning" as const,
-          icon: "🛵",
-          accentColor: "#ed6c02",
-        };
-      case "ADMIN":
-        return {
-          label: "Administrador",
-          color: "error" as const,
-          icon: "🛡️",
-          accentColor: LOGIN_COLORS.primary,
-        };
-      case "CAJERO":
-      default:
-        return {
-          label: "Cajero POS",
-          color: "info" as const,
-          icon: "💼",
-          accentColor: "#0288d1",
-        };
-    }
+  const roleConfig = {
+    label: isAdmin
+      ? "Administrador"
+      : isPrincipal
+        ? "Cajero Principal"
+        : isDelivery
+          ? "Despacho Delivery"
+          : "Cajero POS",
+    color: (isAdmin
+      ? "error"
+      : isPrincipal
+        ? "secondary"
+        : isDelivery
+          ? "warning"
+          : "info") as "error" | "secondary" | "warning" | "info",
+    icon: isAdmin ? "🛡️" : isPrincipal ? "👑" : isDelivery ? "🛵" : "💼",
+    accentColor: isAdmin
+      ? LOGIN_COLORS.primary
+      : isPrincipal
+        ? "#9c27b0"
+        : isDelivery
+          ? "#ed6c02"
+          : "#0288d1",
   };
 
-  const roleConfig = getRoleConfig();
-
-  const chartData = [
-    { name: "Efectivo", value: caja.revenueCash, color: "#2e7d32" },
-    { name: "Tarjeta", value: caja.revenueCard, color: "#0288d1" },
-    { name: "App / Transf.", value: appRevenue, color: "#ed6c02" },
-  ].filter((item) => item.value > 0);
-
-  const hasData = chartData.length > 0;
-  const displayChartData = hasData
-    ? chartData
-    : [{ name: "Sin ingresos", value: 1, color: "#e0e0e0" }];
+  const cashPct = totalRevenue > 0 ? (caja.revenueCash / totalRevenue) * 100 : 0;
+  const cardPct = totalRevenue > 0 ? (caja.revenueCard / totalRevenue) * 100 : 0;
+  const appPct = totalRevenue > 0 ? (appRevenue / totalRevenue) * 100 : 0;
 
   return (
     <Paper
@@ -81,19 +65,19 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
         p: 3,
         borderRadius: 4,
         bgcolor: "background.paper",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
-        position: "relative",
-        overflow: "hidden",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
         border: "1px solid",
         borderColor: "divider",
+        position: "relative",
+        overflow: "hidden",
         transition: "transform 0.2s, box-shadow 0.2s",
         "&:hover": {
-          transform: "translateY(-4px)",
+          transform: "translateY(-3px)",
           boxShadow: LOGIN_SHADOWS.card,
         },
       }}
     >
-      {/* Top accent line */}
+      {/* Línea de acento superior según rol */}
       <Box
         sx={{
           position: "absolute",
@@ -105,7 +89,7 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
         }}
       />
 
-      {/* Header */}
+      {/* Cabecera */}
       <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
         <Box>
           <Typography variant="h6" fontWeight="800" color="text.primary">
@@ -114,10 +98,16 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
           <Typography
             variant="body2"
             color="text.secondary"
-            sx={{ display: "flex", alignItems: "center", mt: 0.5 }}
+            sx={{ display: "flex", alignItems: "center", mt: 0.5, gap: 0.5, flexWrap: "wrap" }}
           >
-            <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5 }} />
-            Abierta hace {hoursOpen}h {minutesOpen}m por <strong>&nbsp;{caja.cashier}</strong>
+            <AccessTimeIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+            <span>
+              Abierta hace <strong>{hoursOpen}h {minutesOpen}m</strong>
+            </span>
+            <span>·</span>
+            <span>
+              Por <strong>{caja.cashier}</strong>
+            </span>
           </Typography>
         </Box>
 
@@ -129,141 +119,143 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
         />
       </Box>
 
-      {/* Main Stats with Pie */}
-      <Box display="flex" alignItems="center" mb={2.5}>
-        <Box sx={{ flex: 1 }}>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            fontWeight="700"
-            textTransform="uppercase"
-            letterSpacing={0.5}
-          >
-            Total Recaudado
-          </Typography>
-          <Typography variant="h4" fontWeight="900" color="text.primary" sx={{ mt: 0.5 }}>
-            {formatCurrency(totalRevenue)}
-          </Typography>
-        </Box>
+      {/* Total Recaudado */}
+      <Box mb={2}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          fontWeight={700}
+          textTransform="uppercase"
+          letterSpacing={0.5}
+        >
+          Total Recaudado en el Turno
+        </Typography>
+        <Typography variant="h4" fontWeight={900} color="text.primary" sx={{ mt: 0.25 }}>
+          {formatCurrency(totalRevenue)}
+        </Typography>
+      </Box>
 
-        <Box sx={{ width: 80, height: 80 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={displayChartData}
-                innerRadius={24}
-                outerRadius={38}
-                paddingAngle={hasData ? 3 : 0}
-                dataKey="value"
-                stroke="none"
-              >
-                {displayChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              {hasData && (
-                <RechartsTooltip
-                  formatter={(val: unknown) => formatCurrency(Number(val))}
-                  contentStyle={{
-                    borderRadius: "8px",
-                    border: "none",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                  }}
+      {/* Barra de Distribución Proporcional Multicolor (Sin recortes) */}
+      <Box sx={{ mb: 2.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            height: 10,
+            borderRadius: 5,
+            overflow: "hidden",
+            bgcolor: "grey.100",
+            mb: 1,
+          }}
+        >
+          {totalRevenue === 0 ? (
+            <Box sx={{ width: "100%", bgcolor: "grey.200" }} />
+          ) : (
+            <>
+              {cashPct > 0 && (
+                <Box
+                  sx={{ width: `${cashPct}%`, bgcolor: "#2e7d32" }}
+                  title={`Efectivo: ${cashPct.toFixed(1)}%`}
                 />
               )}
-            </PieChart>
-          </ResponsiveContainer>
+              {cardPct > 0 && (
+                <Box
+                  sx={{ width: `${cardPct}%`, bgcolor: "#0288d1" }}
+                  title={`Tarjeta: ${cardPct.toFixed(1)}%`}
+                />
+              )}
+              {appPct > 0 && (
+                <Box
+                  sx={{ width: `${appPct}%`, bgcolor: "#ed6c02" }}
+                  title={`App: ${appPct.toFixed(1)}%`}
+                />
+              )}
+            </>
+          )}
         </Box>
       </Box>
 
-      {/* 3-way Method Breakdown */}
-      <Grid container spacing={1.5} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 4 }}>
-          <Box
-            sx={{
-              p: 1.25,
-              borderRadius: 2.5,
-              bgcolor: alpha("#2e7d32", 0.06),
-              border: "1px solid",
-              borderColor: alpha("#2e7d32", 0.15),
-            }}
-          >
-            <Box display="flex" alignItems="center" mb={0.5}>
-              <AttachMoneyIcon sx={{ color: "#2e7d32", fontSize: 16, mr: 0.25 }} />
-              <Typography variant="caption" fontWeight="bold" color="text.secondary">
-                Efectivo
-              </Typography>
-            </Box>
-            <Typography variant="body2" fontWeight="800" color="text.primary">
-              {formatCurrency(caja.revenueCash)}
+      {/* 3 Métodos de Pago con estilo uniforme y responsivo */}
+      <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={1.5} mb={2.5}>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2.5,
+            bgcolor: alpha("#2e7d32", 0.05),
+            border: "1px solid",
+            borderColor: alpha("#2e7d32", 0.15),
+          }}
+        >
+          <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
+            <AttachMoneyIcon sx={{ color: "#2e7d32", fontSize: 16 }} />
+            <Typography variant="caption" fontWeight="bold" color="text.secondary">
+              Efectivo
             </Typography>
-          </Box>
-        </Grid>
+          </Stack>
+          <Typography variant="subtitle2" fontWeight="900" color="text.primary">
+            {formatCurrency(caja.revenueCash)}
+          </Typography>
+        </Box>
 
-        <Grid size={{ xs: 4 }}>
-          <Box
-            sx={{
-              p: 1.25,
-              borderRadius: 2.5,
-              bgcolor: alpha("#0288d1", 0.06),
-              border: "1px solid",
-              borderColor: alpha("#0288d1", 0.15),
-            }}
-          >
-            <Box display="flex" alignItems="center" mb={0.5}>
-              <CreditCardIcon sx={{ color: "#0288d1", fontSize: 16, mr: 0.25 }} />
-              <Typography variant="caption" fontWeight="bold" color="text.secondary">
-                Tarjeta
-              </Typography>
-            </Box>
-            <Typography variant="body2" fontWeight="800" color="text.primary">
-              {formatCurrency(caja.revenueCard)}
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2.5,
+            bgcolor: alpha("#0288d1", 0.05),
+            border: "1px solid",
+            borderColor: alpha("#0288d1", 0.15),
+          }}
+        >
+          <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
+            <CreditCardIcon sx={{ color: "#0288d1", fontSize: 16 }} />
+            <Typography variant="caption" fontWeight="bold" color="text.secondary">
+              Tarjeta
             </Typography>
-          </Box>
-        </Grid>
+          </Stack>
+          <Typography variant="subtitle2" fontWeight="900" color="text.primary">
+            {formatCurrency(caja.revenueCard)}
+          </Typography>
+        </Box>
 
-        <Grid size={{ xs: 4 }}>
-          <Box
-            sx={{
-              p: 1.25,
-              borderRadius: 2.5,
-              bgcolor: alpha("#ed6c02", 0.06),
-              border: "1px solid",
-              borderColor: alpha("#ed6c02", 0.15),
-            }}
-          >
-            <Box display="flex" alignItems="center" mb={0.5}>
-              <PhoneAndroidIcon sx={{ color: "#ed6c02", fontSize: 16, mr: 0.25 }} />
-              <Typography variant="caption" fontWeight="bold" color="text.secondary">
-                App / Transf.
-              </Typography>
-            </Box>
-            <Typography variant="body2" fontWeight="800" color="text.primary">
-              {formatCurrency(appRevenue)}
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2.5,
+            bgcolor: alpha("#ed6c02", 0.05),
+            border: "1px solid",
+            borderColor: alpha("#ed6c02", 0.15),
+          }}
+        >
+          <Stack direction="row" spacing={0.5} alignItems="center" mb={0.5}>
+            <PhoneAndroidIcon sx={{ color: "#ed6c02", fontSize: 16 }} />
+            <Typography variant="caption" fontWeight="bold" color="text.secondary">
+              App / Transf.
             </Typography>
-          </Box>
-        </Grid>
-      </Grid>
+          </Stack>
+          <Typography variant="subtitle2" fontWeight="900" color="text.primary">
+            {formatCurrency(appRevenue)}
+          </Typography>
+        </Box>
+      </Box>
 
       {/* Footer Info */}
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
-        sx={{ pt: 1.5, borderTop: "1px dashed", borderColor: "divider" }}
+        sx={{ pt: 2, borderTop: "1px dashed", borderColor: "divider" }}
       >
         <Box display="flex" alignItems="center">
           <ReceiptIcon sx={{ color: "text.secondary", mr: 0.75, fontSize: 18 }} />
           <Typography variant="caption" color="text.secondary" fontWeight="600">
-            <strong>{caja.transactionsCompleted}</strong> transacciones
+            <strong>{caja.transactionsCompleted}</strong> órdenes cobradas
           </Typography>
         </Box>
 
-        {caja.openingAmount !== undefined && (
+        {caja.openingAmount !== undefined && caja.openingAmount > 0 && (
           <Box display="flex" alignItems="center">
             <LockOpenIcon sx={{ color: "text.secondary", mr: 0.5, fontSize: 16 }} />
             <Typography variant="caption" color="text.secondary">
-              Apertura: <strong>{formatCurrency(caja.openingAmount)}</strong>
+              Fondo inicial: <strong>{formatCurrency(caja.openingAmount)}</strong>
             </Typography>
           </Box>
         )}
