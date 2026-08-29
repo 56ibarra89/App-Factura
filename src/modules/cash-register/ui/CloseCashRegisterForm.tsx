@@ -9,28 +9,29 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Stack,
+  Grid,
   alpha,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import NightlightRoundIcon from "@mui/icons-material/NightlightRound";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import type { CashDenominationCount } from "../model/cash-register.types";
 import { CashDenominationDialog } from "./CashDenominationDialog";
 
 interface Props {
-  closeType: 'HANDOVER' | 'END_OF_DAY';
-  onChangeCloseType: (type: 'HANDOVER' | 'END_OF_DAY') => void;
+  closeType: "HANDOVER" | "END_OF_DAY";
+  onChangeCloseType: (type: "HANDOVER" | "END_OF_DAY") => void;
   amount: string;
   onChangeAmount: (value: string) => void;
   declaredCardAmount: string;
   onChangeDeclaredCardAmount: (value: string) => void;
   declaredAppAmount: string;
   onChangeDeclaredAppAmount: (value: string) => void;
-  onApplyBreakdown: (
-    entries: CashDenominationCount[],
-    total: number,
-  ) => void;
+  onApplyBreakdown: (entries: CashDenominationCount[], total: number) => void;
   denominationBreakdown?: CashDenominationCount[];
   onSubmit: () => void;
   onCancel: () => void;
@@ -58,7 +59,6 @@ export function CloseCashRegisterForm({
   onSubmit,
   onCancel,
   canSubmit,
-  openingAmount,
   requiresAuthorization,
   discrepancyReason,
   onChangeDiscrepancyReason,
@@ -68,275 +68,318 @@ export function CloseCashRegisterForm({
 }: Props) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-      {/* Selector de Tipo de Cierre */}
-      <Box
-        sx={{
-          p: 2,
-          borderRadius: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
-        }}
-      >
-        <Typography variant="subtitle2" fontWeight="800" gutterBottom color="text.primary">
-          ⚙️ Modalidad de Cierre
-        </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" mb={2}>
-          Selecciona si vas a entregar la caja a otro cajero o si es el cierre final del restaurante.
-        </Typography>
-
-        <ToggleButtonGroup
-          value={closeType}
-          exclusive
-          onChange={(_, newType) => {
-            if (newType) onChangeCloseType(newType);
-          }}
-          fullWidth
-          disabled={loading}
-          sx={{
-            gap: 1.5,
-            "& .MuiToggleButtonGroup-grouped": {
-              border: "1px solid !important",
-              borderColor: "divider !important",
-              borderRadius: "12px !important",
-              px: 2,
-              py: 1.5,
-              textTransform: "none",
+      <Grid container spacing={3}>
+        {/* COLUMNA IZQUIERDA: Modalidad y Reglas */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Box
+            sx={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "flex-start",
-              justifyContent: "center",
-              transition: "all 0.2s",
-              "&.Mui-selected": {
-                bgcolor:
-                  closeType === "HANDOVER"
-                    ? alpha("#0288d1", 0.08)
-                    : alpha("#ed6c02", 0.08),
-                borderColor:
-                  closeType === "HANDOVER"
-                    ? "#0288d1 !important"
-                    : "#ed6c02 !important",
-                boxShadow:
-                  closeType === "HANDOVER"
-                    ? "0 2px 8px rgba(2, 136, 209, 0.2)"
-                    : "0 2px 8px rgba(237, 108, 2, 0.2)",
-              },
-            },
-          }}
-        >
-          <ToggleButton value="HANDOVER">
-            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
-              <SyncAltIcon sx={{ color: "#0288d1", fontSize: 20 }} />
-              <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
-                Relevo de Turno
-              </Typography>
-            </Stack>
-            <Typography variant="caption" color="text.secondary" textAlign="left">
-              Cambio de cajero / mitad del día
-            </Typography>
-          </ToggleButton>
-
-          <ToggleButton value="END_OF_DAY">
-            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
-              <NightlightRoundIcon sx={{ color: "#ed6c02", fontSize: 20 }} />
-              <Typography variant="subtitle2" fontWeight="bold" color="text.primary">
-                Cierre Final del Día
-              </Typography>
-            </Stack>
-            <Typography variant="caption" color="text.secondary" textAlign="left">
-              Fin de jornada / apagar sistema
-            </Typography>
-          </ToggleButton>
-        </ToggleButtonGroup>
-
-        {closeType === "HANDOVER" ? (
-          <Alert
-            severity="info"
-            icon={<SyncAltIcon fontSize="inherit" />}
-            sx={{ mt: 2, borderRadius: 2 }}
+              gap: 2,
+              height: "100%",
+            }}
           >
-            <strong>Relevo de Turno:</strong> Las mesas ocupadas y pedidos en preparación seguirán abiertos para el siguiente turno. Solo entregarás cuentas del dinero cobrado en tu sesión.
-          </Alert>
-        ) : (
-          <Alert
-            severity="warning"
-            icon={<NightlightRoundIcon fontSize="inherit" />}
-            sx={{ mt: 2, borderRadius: 2 }}
-          >
-            <strong>Cierre Final del Día:</strong> Se exige que todas las mesas estén cobradas o liberadas y no existan pedidos en cocina antes de apagar el sistema.
-          </Alert>
-        )}
-      </Box>
+            {/* Selector de Modalidad */}
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                bgcolor: "background.paper",
+              }}
+            >
+              <Typography
+                variant="subtitle2"
+                fontWeight="800"
+                gutterBottom
+                color="text.primary"
+              >
+                ⚙️ Modalidad de Cierre
+              </Typography>
+              <ToggleButtonGroup
+                value={closeType}
+                exclusive
+                onChange={(_, newType) => {
+                  if (newType) onChangeCloseType(newType);
+                }}
+                fullWidth
+                disabled={loading}
+                sx={{
+                  gap: 1,
+                  my: 1,
+                  "& .MuiToggleButtonGroup-grouped": {
+                    border: "1px solid !important",
+                    borderColor: "divider !important",
+                    borderRadius: "10px !important",
+                    p: 1.2,
+                    textTransform: "none",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    "&.Mui-selected": {
+                      bgcolor:
+                        closeType === "HANDOVER"
+                          ? alpha("#0288d1", 0.08)
+                          : alpha("#ed6c02", 0.08),
+                      borderColor:
+                        closeType === "HANDOVER"
+                          ? "#0288d1 !important"
+                          : "#ed6c02 !important",
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="HANDOVER">
+                  <Stack direction="row" spacing={0.8} alignItems="center">
+                    <SyncAltIcon sx={{ color: "#0288d1", fontSize: 18 }} />
+                    <Typography variant="body2" fontWeight="bold">
+                      Relevo de Turno
+                    </Typography>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    Cambio de cajero
+                  </Typography>
+                </ToggleButton>
+                <ToggleButton value="END_OF_DAY">
+                  <Stack direction="row" spacing={0.8} alignItems="center">
+                    <NightlightRoundIcon sx={{ color: "#ed6c02", fontSize: 18 }} />
+                    <Typography variant="body2" fontWeight="bold">
+                      Cierre Final
+                    </Typography>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    Fin de jornada
+                  </Typography>
+                </ToggleButton>
+              </ToggleButtonGroup>
+              {closeType === "HANDOVER" ? (
+                <Alert
+                  severity="info"
+                  sx={{ py: 0.5, borderRadius: 2, fontSize: "0.78rem" }}
+                >
+                  <strong>Relevo:</strong> Las mesas ocupadas seguirán abiertas para el siguiente turno.
+                </Alert>
+              ) : (
+                <Alert
+                  severity="warning"
+                  sx={{ py: 0.5, borderRadius: 2, fontSize: "0.78rem" }}
+                >
+                  <strong>Cierre Final:</strong> Se exige que todas las mesas estén cobradas o liberadas.
+                </Alert>
+              )}
+            </Box>
 
-      <Alert severity="info" sx={{ borderRadius: 2 }}>
-        Arqueo ciego obligatorio: las ventas, gastos y el total esperado permanecerán ocultos hasta completar el cierre.
-      </Alert>
+            <Alert
+              severity="info"
+              sx={{ py: 0.8, borderRadius: 2, fontSize: "0.8rem" }}
+            >
+              🔒 <strong>Arqueo Ciego:</strong> Las ventas del sistema permanecen ocultas para garantizar un conteo objetivo.
+            </Alert>
 
-      <Box sx={{ bgcolor: "action.hover", p: 2, borderRadius: 2 }}>
-        <Typography variant="caption" color="text.secondary" display="block">
-          Saldo de apertura informado:
-        </Typography>
-        <Typography variant="h6" fontWeight="bold">
-          C${openingAmount.toFixed(2)}
-        </Typography>
-      </Box>
+            {/* Campos de Descuadre con PIN (Si aplica) */}
+            {requiresAuthorization && (
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  border: "1px solid",
+                  borderColor: "warning.main",
+                  bgcolor: alpha("#ed6c02", 0.04),
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1.5,
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  fontWeight="bold"
+                  color="warning.main"
+                >
+                  ⚠️ Descuadre detectado: Ingresa justificación y PIN de autorización
+                </Typography>
+                <TextField
+                  label="Justificación del descuadre"
+                  size="small"
+                  value={discrepancyReason}
+                  onChange={(e) => onChangeDiscrepancyReason(e.target.value)}
+                  multiline
+                  minRows={2}
+                  disabled={loading}
+                  required
+                />
+                <TextField
+                  label="PIN de Gerente / Admin"
+                  size="small"
+                  type="password"
+                  value={authorizationPin}
+                  onChange={(e) =>
+                    onChangeAuthorizationPin(e.target.value.replace(/\D/g, ""))
+                  }
+                  inputProps={{ inputMode: "numeric", maxLength: 12 }}
+                  disabled={loading}
+                  required
+                />
+              </Box>
+            )}
+          </Box>
+        </Grid>
 
-      {/* 1. SECCIÓN EFECTIVO */}
+        {/* COLUMNA DERECHA: Los 3 Canales de Conteo */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Stack spacing={1.8}>
+            {/* 1. Efectivo Físico */}
+            <Box
+              sx={{
+                p: 1.8,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: alpha("#2e7d32", 0.2),
+                bgcolor: alpha("#2e7d32", 0.02),
+              }}
+            >
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={1}
+              >
+                <Stack direction="row" spacing={0.8} alignItems="center">
+                  <AttachMoneyIcon sx={{ color: "#2e7d32", fontSize: 18 }} />
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    1. Efectivo en Cajón
+                  </Typography>
+                </Stack>
+                <CashDenominationDialog
+                  value={denominationBreakdown}
+                  disabled={loading}
+                  onApply={onApplyBreakdown}
+                />
+              </Stack>
+              <TextField
+                size="small"
+                placeholder="0.00"
+                type="number"
+                value={amount}
+                onChange={(e) => onChangeAmount(e.target.value)}
+                fullWidth
+                disabled={loading}
+                inputProps={{ min: 0, step: "0.01" }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Typography fontWeight="bold" variant="body2">
+                        C$
+                      </Typography>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+
+            {/* 2. Tarjetas / Datáfono */}
+            <Box
+              sx={{
+                p: 1.8,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: alpha("#0288d1", 0.2),
+                bgcolor: alpha("#0288d1", 0.02),
+              }}
+            >
+              <Stack
+                direction="row"
+                spacing={0.8}
+                alignItems="center"
+                mb={1}
+              >
+                <CreditCardIcon sx={{ color: "#0288d1", fontSize: 18 }} />
+                <Typography variant="subtitle2" fontWeight="bold">
+                  2. Vouchers de Tarjeta (POS)
+                </Typography>
+              </Stack>
+              <TextField
+                size="small"
+                placeholder="0.00"
+                type="number"
+                value={declaredCardAmount}
+                onChange={(e) => onChangeDeclaredCardAmount(e.target.value)}
+                fullWidth
+                disabled={loading}
+                inputProps={{ min: 0, step: "0.01" }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Typography fontWeight="bold" variant="body2">
+                        C$
+                      </Typography>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+
+            {/* 3. Transferencias / Apps */}
+            <Box
+              sx={{
+                p: 1.8,
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: alpha("#ed6c02", 0.2),
+                bgcolor: alpha("#ed6c02", 0.02),
+              }}
+            >
+              <Stack
+                direction="row"
+                spacing={0.8}
+                alignItems="center"
+                mb={1}
+              >
+                <PhoneAndroidIcon sx={{ color: "#ed6c02", fontSize: 18 }} />
+                <Typography variant="subtitle2" fontWeight="bold">
+                  3. Transferencias / Apps
+                </Typography>
+              </Stack>
+              <TextField
+                size="small"
+                placeholder="0.00"
+                type="number"
+                value={declaredAppAmount}
+                onChange={(e) => onChangeDeclaredAppAmount(e.target.value)}
+                fullWidth
+                disabled={loading}
+                inputProps={{ min: 0, step: "0.01" }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Typography fontWeight="bold" variant="body2">
+                        C$
+                      </Typography>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+          </Stack>
+        </Grid>
+      </Grid>
+
+      {/* ACCIONES INFERIORES */}
       <Box
-        sx={{
-          p: 2,
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
-        }}
+        display="flex"
+        gap={2}
+        mt={1}
+        pt={2}
+        borderTop="1px solid"
+        borderColor="divider"
       >
-        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-          💵 1. Efectivo Físico en Cajón
-        </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
-          Ingresa el monto total de billetes y monedas físicos en caja.
-        </Typography>
-
-        <TextField
-          label="Efectivo físico contado"
-          type="number"
-          value={amount}
-          onChange={(event) => onChangeAmount(event.target.value)}
-          fullWidth
-          autoFocus
-          disabled={loading}
-          inputProps={{ min: 0, step: "0.01" }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Typography fontWeight="bold">C$</Typography>
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            mb: 1.5,
-            "& .MuiOutlinedInput-root": {
-              "&:hover fieldset": { borderColor: LOGIN_COLORS.primary },
-              "&.Mui-focused fieldset": { borderColor: LOGIN_COLORS.primary },
-            },
-            "& .MuiInputLabel-root.Mui-focused": { color: LOGIN_COLORS.primary },
-          }}
-        />
-
-        <CashDenominationDialog
-          value={denominationBreakdown}
-          disabled={loading}
-          onApply={onApplyBreakdown}
-        />
-      </Box>
-
-      {/* 2. SECCIÓN TARJETA / DATÁFONO */}
-      <Box
-        sx={{
-          p: 2,
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
-        }}
-      >
-        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-          💳 2. Vouchers de Tarjeta (Datáfono / POS)
-        </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
-          Digita el monto del reporte de cierre de lote o suma de vouchers firmados.
-        </Typography>
-        <TextField
-          label="Total Vouchers de Tarjeta"
-          type="number"
-          value={declaredCardAmount}
-          onChange={(event) => onChangeDeclaredCardAmount(event.target.value)}
-          fullWidth
-          disabled={loading}
-          inputProps={{ min: 0, step: "0.01" }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Typography fontWeight="bold">C$</Typography>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
-
-      {/* 3. SECCIÓN APP / TRANSFERENCIAS */}
-      <Box
-        sx={{
-          p: 2,
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
-        }}
-      >
-        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-          📱 3. Transferencias / Apps Bancarias
-        </Typography>
-        <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
-          Digita el monto total verificado en la banca en línea o depósitos de apps.
-        </Typography>
-        <TextField
-          label="Total Transferencias / App"
-          type="number"
-          value={declaredAppAmount}
-          onChange={(event) => onChangeDeclaredAppAmount(event.target.value)}
-          fullWidth
-          disabled={loading}
-          inputProps={{ min: 0, step: "0.01" }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Typography fontWeight="bold">C$</Typography>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
-
-      {requiresAuthorization && (
-        <Box display="flex" flexDirection="column" gap={2}>
-          <Alert severity="warning">
-            El arqueo presenta un descuadre en uno o más métodos de pago (Efectivo, Tarjeta o App). La tolerancia es C$0.00: debes ingresar una justificación y el PIN de un administrador o cajero principal.
-          </Alert>
-          <TextField
-            label="Justificación del descuadre"
-            helperText="Escribe al menos 5 caracteres."
-            value={discrepancyReason}
-            onChange={(event) => onChangeDiscrepancyReason(event.target.value)}
-            multiline
-            minRows={2}
-            inputProps={{ minLength: 5, maxLength: 500 }}
-            disabled={loading}
-            required
-          />
-          <TextField
-            label="PIN de autorización"
-            type="password"
-            value={authorizationPin}
-            onChange={(event) =>
-              onChangeAuthorizationPin(event.target.value.replace(/\D/g, ""))
-            }
-            inputProps={{ inputMode: "numeric", maxLength: 12 }}
-            disabled={loading}
-            required
-          />
-        </Box>
-      )}
-
-      <Box display="flex" gap={2} mt={2}>
         <Button
           variant="outlined"
           fullWidth
           onClick={onCancel}
           disabled={loading}
           startIcon={<ArrowBackIcon />}
-          sx={{ borderRadius: 2, py: 1.2 }}
+          sx={{ borderRadius: 2.5, py: 1.2, fontWeight: "bold" }}
         >
           Volver
         </Button>
@@ -346,17 +389,17 @@ export function CloseCashRegisterForm({
           onClick={onSubmit}
           disabled={!canSubmit || loading}
           sx={{
-            borderRadius: 2,
+            borderRadius: 2.5,
             py: 1.2,
             bgcolor: LOGIN_COLORS.primary,
             "&:hover": { bgcolor: LOGIN_COLORS.primaryDark },
-            boxShadow: `0 4px 14px ${LOGIN_COLORS.primaryShadow}`,
+            fontWeight: "bold",
           }}
         >
           {loading ? (
-            <CircularProgress size={24} color="inherit" />
+            <CircularProgress size={22} color="inherit" />
           ) : closeType === "HANDOVER" ? (
-            "Completar Relevo"
+            "Completar Relevo de Turno"
           ) : (
             "Cerrar Caja Final"
           )}
