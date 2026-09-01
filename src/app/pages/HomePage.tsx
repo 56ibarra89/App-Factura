@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Box from "@mui/material/Box";
+import { Box, Typography, Fab, Tooltip } from "@mui/material";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { AccountMenu } from "../../modules/accounts";
 import MenuCard from "../ui/MenuCard";
 import { PageHeader } from "../../shared/ui";
@@ -8,9 +9,8 @@ import { getMenuItems } from "../navigation/menuItems";
 import logoImg from "../../assets/images/logo.png";
 import { useAuth } from "../../modules/auth";
 import { useCaja } from "../../modules/cash-register";
-import { Fab, Tooltip } from "@mui/material";
-import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { DriverDeliveriesModal } from "../../modules/delivery";
+import { ordersGateway } from "../../modules/orders";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -60,7 +60,43 @@ const HomePage = () => {
   }, [role, allMenuItems]);
 
   const [modalOpen, setModalOpen] = useState(false);
-  const canManageDrivers = role === "admin" || role === "despachador";
+  const [pendingDeliveredCount, setPendingDeliveredCount] = useState(0);
+
+  const canManageDrivers =
+    role === "admin" ||
+    role === "cajero_principal" ||
+    role === "cajero" ||
+    role === "despachador";
+
+  // Monitoreo de entregas pendientes de liquidar (status === 'delivered')
+  useEffect(() => {
+    if (!canManageDrivers) return;
+    let isMounted = true;
+
+    const checkDeliveredOrders = async () => {
+      try {
+        const currentOrders = await ordersGateway.listCurrent().catch(() => []);
+        if (isMounted) {
+          const count = (currentOrders || []).filter(
+            (o) => o.orderType === "delivery" && o.status === "delivered"
+          ).length;
+          setPendingDeliveredCount(count);
+        }
+      } catch (error) {
+        console.error("Error verificando entregas de motorizados:", error);
+      }
+    };
+
+    void checkDeliveredOrders();
+    const interval = setInterval(checkDeliveredOrders, 12000); // Consulta cada 12 segundos
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [canManageDrivers]);
+
+  const isCajaAbierta = Boolean(currentShift);
 
   return (
     <Box
@@ -105,11 +141,10 @@ const HomePage = () => {
         px={2}
       >
         {menuItems.map((item) => {
-          const isCajaAbierta = Boolean(currentShift);
           let isDisabled = false;
 
           if (item.label === "Abrir Caja") {
-            // Si ya hay una caja abierta (por gemita, admin, etc.), nadie puede abrir otra
+            // Si ya hay una caja abierta, nadie puede abrir otra
             isDisabled = isCajaAbierta;
           } else if (item.label === "Cerrar Caja") {
             // Solo se puede cerrar si existe una caja abierta
@@ -132,31 +167,78 @@ const HomePage = () => {
         })}
       </Box>
 
-      {/* FAB Control Motorizados */}
+      {/* FAB Control Motorizados con Animación Bounce */}
       {canManageDrivers && (
-        <Tooltip title="Control Motorizados" placement="left">
-          <Fab
-            color="secondary"
-            aria-label="motorizados"
-            onClick={() => setModalOpen(true)}
+        <Tooltip
+          title={
+            pendingDeliveredCount > 0
+              ? `¡Atención! ${pendingDeliveredCount} ${
+                  pendingDeliveredCount === 1
+                    ? "entrega lista para liquidar"
+                    : "entregas listas para liquidar"
+                }`
+              : "Control Motorizados"
+          }
+          placement="left"
+        >
+          <Box
             sx={{
               position: "fixed",
               bottom: 32,
               right: 32,
               zIndex: 1000,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              "@keyframes bounceFab": {
+                "0%, 20%, 50%, 80%, 100%": {
+                  transform: "translateY(0)",
+                },
+                "40%": {
+                  transform: "translateY(-12px)",
+                },
+                "60%": {
+                  transform: "translateY(-6px)",
+                },
+              },
+              animation:
+                pendingDeliveredCount > 0
+                  ? "bounceFab 2s infinite ease-in-out"
+                  : "none",
             }}
           >
-            <TwoWheelerIcon />
-          </Fab>
+            <Fab
+              color="secondary"
+              aria-label="motorizados"
+              onClick={() => setModalOpen(true)}
+              sx={{
+                boxShadow:
+                  pendingDeliveredCount > 0
+                    ? "0 0 24px rgba(156, 39, 176, 0.75)"
+                    : "0 4px 12px rgba(0,0,0,0.3)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  transform: "scale(1.08)",
+                },
+              }}
+            >
+              <TwoWheelerIcon />
+            </Fab>
+          </Box>
         </Tooltip>
       )}
 
-      {/* Modal */}
+      {/* Modal de Control de Motorizados */}
       {canManageDrivers && (
         <DriverDeliveriesModal
           open={modalOpen}
-          onClose={() => setModalOpen(false)}
+          onClose={() => {
+            setModalOpen(false);
+            // Revalidar conteo al cerrar el modal tras cobrar
+            void ordersGateway.listCurrent().then((currentOrders) => {
+              const count = (currentOrders || []).filter(
+                (o) => o.orderType === "delivery" && o.status === "delivered"
+              ).length;
+              setPendingDeliveredCount(count);
+            });
+          }}
         />
       )}
     </Box>
@@ -164,4 +246,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-
