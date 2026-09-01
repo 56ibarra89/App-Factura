@@ -5,9 +5,9 @@ import type {
 import { EMPTY_AUTH_SESSION } from "../model/auth-session.types";
 import type { IKeyValueStorage } from "../../../shared/storage";
 import type { UserRole } from "../model/user.types";
-import { sessionStore } from "../../../shared/storage";
+import { localStore } from "../../../shared/storage";
 
-const SESSION_KEYS = {
+export const SESSION_KEYS = {
   loggedIn: "loggedIn",
   username: "username",
   role: "role",
@@ -27,7 +27,7 @@ export interface AuthSessionGateway {
 }
 
 export function createAuthSessionGateway(
-  storage: IKeyValueStorage = sessionStore,
+  storage: IKeyValueStorage = localStore,
 ): AuthSessionGateway {
   return {
     load() {
@@ -71,7 +71,9 @@ export function createAuthSessionGateway(
     },
 
     clear() {
-      storage.clear();
+      Object.values(SESSION_KEYS).forEach((key) => {
+        storage.removeItem(key);
+      });
     },
 
     getLastActivity() {

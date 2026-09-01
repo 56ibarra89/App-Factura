@@ -4,7 +4,7 @@ import {
   useState,
 } from "react";
 import { logService } from "../../audit";
-import { sessionStore } from "../../../shared/storage";
+import { localStore } from "../../../shared/storage";
 
 const MAX_ATTEMPTS = 3;
 const LOCKOUT_DURATIONS_MS = [
@@ -31,7 +31,7 @@ export interface PinLockoutState {
 
 function getStoredAttempts(): number {
   const value = Number(
-    sessionStore.getItem(STORAGE_ATTEMPTS) || 0,
+    localStore.getItem(STORAGE_ATTEMPTS) || 0,
   );
   return Number.isFinite(value) && value > 0
     ? Math.floor(value)
@@ -40,14 +40,14 @@ function getStoredAttempts(): number {
 
 function getLockoutUntil(): number {
   const value = Number(
-    sessionStore.getItem(STORAGE_LOCKOUT_UNTIL) || 0,
+    localStore.getItem(STORAGE_LOCKOUT_UNTIL) || 0,
   );
   return Number.isFinite(value) ? value : 0;
 }
 
 function getStoredLockoutLevel(): number {
   const value = Number(
-    sessionStore.getItem(STORAGE_LOCKOUT_LEVEL) || 0,
+    localStore.getItem(STORAGE_LOCKOUT_LEVEL) || 0,
   );
   return Number.isFinite(value) && value > 0
     ? Math.floor(value)
@@ -86,8 +86,8 @@ export function usePinLockout(): PinLockoutState {
       } else {
         setLockoutTime(0);
         if (until > 0) {
-          sessionStore.removeItem(STORAGE_LOCKOUT_UNTIL);
-          sessionStore.setItem(STORAGE_ATTEMPTS, "0");
+          localStore.removeItem(STORAGE_LOCKOUT_UNTIL);
+          localStore.setItem(STORAGE_ATTEMPTS, "0");
           setAttempts(0);
         }
       }
@@ -100,7 +100,7 @@ export function usePinLockout(): PinLockoutState {
   const registerFailedAttempt = useCallback(() => {
     const newAttempts = getStoredAttempts() + 1;
     setAttempts(newAttempts);
-    sessionStore.setItem(
+    localStore.setItem(
       STORAGE_ATTEMPTS,
       newAttempts.toString(),
     );
@@ -110,11 +110,11 @@ export function usePinLockout(): PinLockoutState {
       const lockoutDuration = getLockoutDuration(currentLevel);
       const lockoutSeconds = lockoutDuration / 1000;
       const until = Date.now() + lockoutDuration;
-      sessionStore.setItem(
+      localStore.setItem(
         STORAGE_LOCKOUT_UNTIL,
         until.toString(),
       );
-      sessionStore.setItem(
+      localStore.setItem(
         STORAGE_LOCKOUT_LEVEL,
         Math.min(
           currentLevel + 1,
@@ -145,9 +145,9 @@ export function usePinLockout(): PinLockoutState {
   const resetAttempts = useCallback(() => {
     setAttempts(0);
     setLockoutTime(0);
-    sessionStore.setItem(STORAGE_ATTEMPTS, "0");
-    sessionStore.removeItem(STORAGE_LOCKOUT_UNTIL);
-    sessionStore.removeItem(STORAGE_LOCKOUT_LEVEL);
+    localStore.setItem(STORAGE_ATTEMPTS, "0");
+    localStore.removeItem(STORAGE_LOCKOUT_UNTIL);
+    localStore.removeItem(STORAGE_LOCKOUT_LEVEL);
   }, []);
 
   const isLocked = lockoutTime > 0;
@@ -160,4 +160,3 @@ export function usePinLockout(): PinLockoutState {
     resetAttempts,
   };
 }
-

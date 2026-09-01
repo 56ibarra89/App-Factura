@@ -17,9 +17,7 @@ export interface SecureTokenGateway {
 
 export function createSecureTokenGateway(
   runtime: AuthRuntime = window,
-  apiUrl: string =
-    import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:3000",
+  apiUrl: string = import.meta.env.VITE_API_BASE_URL || "",
   tokenStore: AccessTokenStore = accessTokenStore,
 ): SecureTokenGateway {
   return {

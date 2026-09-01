@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useAuthOperations } from "../hooks/useAuthOperations";
 import { useAuthSession } from "../hooks/useAuthSession";
 import { useInactivityTimer } from "../hooks/useInactivityTimer";
@@ -13,6 +13,7 @@ import { secureTokenGateway as defaultTokenGateway } from "../api/secureTokenGat
 import { authService as defaultAuthService } from "../api/authService";
 import type { IAuthService } from "./auth-service.types";
 import { AuthContext } from "./AuthContext";
+import { accessTokenStore } from "../../../shared/api/accessTokenStore";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -41,6 +42,15 @@ export const AuthProvider = ({
     preferencesGateway,
   });
 
+  useEffect(() => {
+    if (session.state.isLoggedIn) {
+      const token = accessTokenStore.get();
+      if (token) {
+        tokenGateway.store(token);
+      }
+    }
+  }, [session.state.isLoggedIn, tokenGateway]);
+
   useInactivityTimer(
     {
       isLoggedIn: session.state.isLoggedIn,
@@ -62,12 +72,10 @@ export const AuthProvider = ({
         logout: authentication.logout,
         logoutAllDevices: authentication.logoutAllDevices,
         clearError: authentication.clearError,
-        validatePinForAction:
-          authentication.validatePinForAction,
+        validatePinForAction: authentication.validatePinForAction,
         updateUsername: session.updateUsername,
         lockoutTime: pinLockout.lockoutTime,
-        loginLockoutTime:
-          loginLockout.loginLockoutTime,
+        loginLockoutTime: loginLockout.loginLockoutTime,
       }}
     >
       {children}
