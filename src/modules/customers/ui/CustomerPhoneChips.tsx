@@ -8,32 +8,32 @@ import {
   Tooltip,
 } from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import HomeIcon from "@mui/icons-material/Home";
+import PhoneIcon from "@mui/icons-material/Phone";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-import type { CustomerAddress } from "../model/customer.types";
+import type { CustomerPhone } from "../model/customer.types";
 
 interface Props {
-  addresses: CustomerAddress[];
+  phones: CustomerPhone[];
   onAdd: (text: string) => void;
   onRemove: (id: string) => void;
   onSetDefault?: (id: string) => void;
   readOnly?: boolean;
 }
 
-const CustomerAddressChips: React.FC<Props> = ({
-  addresses,
+const CustomerPhoneChips: React.FC<Props> = ({
+  phones,
   onAdd,
   onRemove,
   onSetDefault,
   readOnly = false,
 }) => {
-  const [newAddr, setNewAddr] = useState("");
+  const [newPhone, setNewPhone] = useState("");
 
   const handleAdd = () => {
-    if (!newAddr.trim()) return;
-    onAdd(newAddr.trim());
-    setNewAddr("");
+    if (!newPhone.trim()) return;
+    onAdd(newPhone.trim());
+    setNewPhone("");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -51,37 +51,37 @@ const CustomerAddressChips: React.FC<Props> = ({
         fontWeight={600}
         sx={{ mb: 1, display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}
       >
-        Direcciones guardadas (⭐ Principal para Delivery)
+        Teléfonos guardados (⭐ Principal)
       </Typography>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: readOnly ? 0 : 1.5 }}>
-        {addresses.length === 0 && (
+        {phones.length === 0 && (
           <Typography variant="body2" color="text.disabled" sx={{ fontStyle: "italic" }}>
-            Sin direcciones registradas
+            Sin teléfonos registrados
           </Typography>
         )}
-        {addresses.map((addr) => (
+        {phones.map((p) => (
           <Chip
-            key={addr.id}
+            key={p.id}
             icon={
-              <Tooltip title={addr.isDefault ? "Dirección Principal" : "Dirección"}>
-                <HomeIcon sx={{ color: addr.isDefault ? "#f59e0b !important" : undefined }} />
+              <Tooltip title={p.isDefault ? "Teléfono Principal" : "Teléfono"}>
+                <PhoneIcon sx={{ color: p.isDefault ? "#f59e0b !important" : undefined }} />
               </Tooltip>
             }
             label={
               <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                <span>{addr.address}</span>
+                <span>{p.phone}</span>
                 {!readOnly && onSetDefault && (
-                  <Tooltip title={addr.isDefault ? "Dirección Principal" : "Marcar como principal"}>
+                  <Tooltip title={p.isDefault ? "Teléfono Principal" : "Marcar como principal"}>
                     <IconButton
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onSetDefault(addr.id);
+                        onSetDefault(p.id);
                       }}
                       sx={{ p: 0.25, ml: 0.25 }}
                     >
-                      {addr.isDefault ? (
+                      {p.isDefault ? (
                         <StarIcon sx={{ fontSize: 16, color: "#f59e0b" }} />
                       ) : (
                         <StarBorderIcon sx={{ fontSize: 16, color: "text.secondary", "&:hover": { color: "#f59e0b" } }} />
@@ -92,13 +92,13 @@ const CustomerAddressChips: React.FC<Props> = ({
               </Box>
             }
             size="small"
-            variant={addr.isDefault ? "filled" : "outlined"}
-            color={addr.isDefault ? "primary" : "default"}
-            onDelete={readOnly ? undefined : () => onRemove(addr.id)}
+            variant={p.isDefault ? "filled" : "outlined"}
+            color={p.isDefault ? "primary" : "default"}
+            onDelete={readOnly ? undefined : () => onRemove(p.id)}
             sx={{
-              maxWidth: 320,
-              fontWeight: addr.isDefault ? 700 : 400,
-              borderColor: addr.isDefault ? "primary.main" : "divider",
+              maxWidth: 240,
+              fontWeight: p.isDefault ? 700 : 400,
+              borderColor: p.isDefault ? "primary.main" : "divider",
             }}
           />
         ))}
@@ -107,21 +107,21 @@ const CustomerAddressChips: React.FC<Props> = ({
       {!readOnly && (
         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
           <TextField
-            id="customer-new-address-input"
+            id="customer-new-phone-input"
             size="small"
             fullWidth
-            placeholder="Agregar dirección y presionar Enter..."
-            value={newAddr}
-            onChange={(e) => setNewAddr(e.target.value)}
+            placeholder="Agregar teléfono y presionar Enter..."
+            value={newPhone}
+            onChange={(e) => setNewPhone(e.target.value)}
             onKeyDown={handleKeyDown}
           />
-          <Tooltip title="Agregar dirección">
+          <Tooltip title="Agregar teléfono">
             <span>
               <IconButton
-                id="customer-add-address-btn"
+                id="customer-add-phone-btn"
                 color="primary"
                 onClick={handleAdd}
-                disabled={!newAddr.trim()}
+                disabled={!newPhone.trim()}
               >
                 <AddCircleOutlineIcon />
               </IconButton>
@@ -133,4 +133,4 @@ const CustomerAddressChips: React.FC<Props> = ({
   );
 };
 
-export default CustomerAddressChips;
+export default CustomerPhoneChips;

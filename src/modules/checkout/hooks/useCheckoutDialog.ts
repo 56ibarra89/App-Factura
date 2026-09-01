@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Customer } from "../../customers";
+import { customerRepository, type Customer } from "../../customers";
 import type { CheckoutFormValues } from "../model/checkout.types";
 import type { OrderType } from "../../orders";
 import {
@@ -47,6 +47,9 @@ export function useCheckoutDialog({
   const [toastOpen, setToastOpen] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
+  const [matchedCustomer, setMatchedCustomer] = useState<Customer | null>(null);
+
   const { config } = useGeneralSettings();
   const { taxes, isExonerated } = useTaxConfig();
   const exchangeRate = config.exchangeRate > 0 ? config.exchangeRate : 36.5;
@@ -124,34 +127,38 @@ export function useCheckoutDialog({
     if (!open) return;
     setSubmitError("");
     setIsSubmitting(false);
+    setMatchDialogOpen(false);
+    setMatchedCustomer(null);
   }, [open]);
 
-  const handleConfirm = useCallback(async () => {
-    if (!canConfirm || isSubmitting) return;
-
-    setSubmitError("");
-    setIsSubmitting(true);
-    try {
-      const isNewCustomer = await customerDelivery.persistCustomer();
-      if (isNewCustomer) setToastOpen(true);
-
+  const executeFinalSubmission = useCallback(
+    async (
+      targetCustomerId?: string,
+      targetCustomerName?: string,
+      targetCustomerPhone?: string,
+      targetCustomerAddress?: string,
+    ) => {
       await onConfirm({
         paymentMethod: payment.paymentMethod,
         splitAmounts:
           payment.paymentMethod === "MIXTO"
             ? payment.splitAmounts
             : undefined,
-        customerId: customerDelivery.selectedCustomer?.id,
+        customerId: targetCustomerId,
         customerName:
+          targetCustomerName?.trim() ||
           customerDelivery.customerName.trim() ||
           (customerDelivery.customerPhone.trim()
             ? `Cliente ${customerDelivery.customerPhone.trim()}`
             : undefined),
-        customerPhone: customerDelivery.customerPhone.trim() || undefined,
+        customerPhone:
+          targetCustomerPhone?.trim() ||
+          customerDelivery.customerPhone.trim() ||
+          undefined,
         orderType: customerDelivery.orderType,
         customerAddress:
           customerDelivery.orderType === "delivery"
-            ? customerDelivery.customerAddress
+            ? targetCustomerAddress || customerDelivery.customerAddress
             : undefined,
         packagingItems: packaging.packagingItems,
         customerTendered:
@@ -167,6 +174,65 @@ export function useCheckoutDialog({
             ? customerDelivery.deliveryCost
             : undefined,
       });
+    },
+    [
+      customerDelivery.customerAddress,
+      customerDelivery.customerName,
+      customerDelivery.customerPhone,
+      customerDelivery.deliveryCost,
+      customerDelivery.orderType,
+      customerDelivery.selectedDriverId,
+      onConfirm,
+      packaging.packagingItems,
+      payment.paymentMethod,
+      payment.receivedLocal,
+      payment.splitAmounts,
+    ],
+  );
+
+  const handleConfirm = useCallback(async () => {
+    if (!canConfirm || isSubmitting) return;
+
+    setSubmitError("");
+    const name = customerDelivery.customerName.trim();
+    const phone = customerDelivery.customerPhone.trim();
+
+    // Detección de homónimos / coincidencia de cliente
+    if (name.length >= 2) {
+      try {
+        const matches = await customerRepository.searchByName(name);
+        const exactMatch = matches.find(
+          (c) => c.name.trim().toLowerCase() === name.toLowerCase(),
+        );
+
+        if (exactMatch) {
+          const knownPhones = [
+            exactMatch.phone,
+            ...(exactMatch.phones?.map((p) => p.phone) ?? []),
+          ]
+            .filter(Boolean)
+            .map((p) => p!.trim());
+
+          const isKnownPhone = !phone || knownPhones.includes(phone);
+
+          if (!isKnownPhone) {
+            // Existe un cliente registrado con ese nombre, pero el teléfono es nuevo
+            setMatchedCustomer(exactMatch);
+            setMatchDialogOpen(true);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error verificando coincidencia de cliente:", err);
+      }
+    }
+
+    setIsSubmitting(true);
+    try {
+      const isNewCustomer = await customerDelivery.persistCustomer();
+      if (isNewCustomer) setToastOpen(true);
+
+      await executeFinalSubmission(customerDelivery.selectedCustomer?.id);
     } catch (error: unknown) {
       setSubmitError(
         error instanceof Error
@@ -179,12 +245,81 @@ export function useCheckoutDialog({
   }, [
     canConfirm,
     customerDelivery,
+    executeFinalSubmission,
     isSubmitting,
-    onConfirm,
-    packaging.packagingItems,
-    payment.paymentMethod,
-    payment.receivedLocal,
-    payment.splitAmounts,
+  ]);
+
+  const handleConfirmAsNewCustomer = useCallback(async () => {
+    if (!matchedCustomer) return;
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      const name = customerDelivery.customerName.trim();
+      const phone = customerDelivery.customerPhone.trim();
+      const address = customerDelivery.customerAddress?.trim();
+
+      const newCustomer = await customerRepository.createCustomer(
+        name,
+        customerDelivery.orderType === "delivery" ? address : undefined,
+        phone || undefined,
+      );
+
+      setToastOpen(true);
+      setMatchDialogOpen(false);
+      await executeFinalSubmission(newCustomer.id, newCustomer.name, phone, address);
+    } catch (error: unknown) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo crear el nuevo cliente. Inténtalo de nuevo.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [
+    customerDelivery.customerAddress,
+    customerDelivery.customerName,
+    customerDelivery.customerPhone,
+    customerDelivery.orderType,
+    executeFinalSubmission,
+    matchedCustomer,
+  ]);
+
+  const handleConfirmAsExistingCustomer = useCallback(async () => {
+    if (!matchedCustomer) return;
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      const name = customerDelivery.customerName.trim();
+      const phone = customerDelivery.customerPhone.trim();
+      const address = customerDelivery.customerAddress?.trim();
+
+      await customerRepository.update({
+        id: matchedCustomer.id,
+        name,
+        phone: phone || undefined,
+        address: customerDelivery.orderType === "delivery" ? address : undefined,
+      });
+
+      setToastOpen(true);
+      setMatchDialogOpen(false);
+      await executeFinalSubmission(matchedCustomer.id, name, phone, address);
+    } catch (error: unknown) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo actualizar el cliente existente.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [
+    customerDelivery.customerAddress,
+    customerDelivery.customerName,
+    customerDelivery.customerPhone,
+    customerDelivery.orderType,
+    executeFinalSubmission,
+    matchedCustomer,
   ]);
 
   return {
@@ -195,10 +330,15 @@ export function useCheckoutDialog({
     config,
     exchangeRate,
     canConfirm,
-    handleConfirm,
-    isSubmitting,
     submitError,
+    isSubmitting,
     toastOpen,
     setToastOpen,
+    handleConfirm,
+    matchDialogOpen,
+    setMatchDialogOpen,
+    matchedCustomer,
+    handleConfirmAsNewCustomer,
+    handleConfirmAsExistingCustomer,
   };
 }

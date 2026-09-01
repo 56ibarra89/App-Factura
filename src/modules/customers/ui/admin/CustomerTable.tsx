@@ -20,6 +20,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import PersonIcon from "@mui/icons-material/Person";
 import PhoneIcon from "@mui/icons-material/Phone";
+import StarIcon from "@mui/icons-material/Star";
 import type { Customer } from "../../model/customer.types";
 
 interface Props {
@@ -122,7 +123,31 @@ const CustomerTable: React.FC<Props> = ({
 
                 {}
                 <TableCell>
-                  {customer.phone ? (
+                  {customer.phones && customer.phones.length > 0 ? (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <PhoneIcon fontSize="small" color="action" />
+                      <Tooltip
+                        title={
+                          customer.phones.length > 1
+                            ? customer.phones.map((p) => p.phone).join(" • ")
+                            : ""
+                        }
+                      >
+                        <Box sx={{ display: "inline-flex", alignItems: "center" }}>
+                          <Typography variant="body2">{customer.phones[0].phone}</Typography>
+                          {customer.phones.length > 1 && (
+                            <Chip
+                              label={`+${customer.phones.length - 1} tel.`}
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                              sx={{ ml: 0.75, height: 18, fontSize: 10, fontWeight: 600 }}
+                            />
+                          )}
+                        </Box>
+                      </Tooltip>
+                    </Box>
+                  ) : customer.phone ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                       <PhoneIcon fontSize="small" color="action" />
                       <Typography variant="body2">{customer.phone}</Typography>
@@ -139,11 +164,18 @@ const CustomerTable: React.FC<Props> = ({
                   <Tooltip
                     title={
                       customer.addresses.length > 0
-                        ? customer.addresses.map((a) => a.address).join(" | ")
+                        ? customer.addresses
+                            .map((a) => (a.isDefault ? `⭐ ${a.address} (Principal)` : a.address))
+                            .join(" | ")
                         : "Sin direcciones"
                     }
                   >
                     <Chip
+                      icon={
+                        customer.addresses.some((a) => a.isDefault) ? (
+                          <StarIcon sx={{ fontSize: "14px !important", color: "#f59e0b !important" }} />
+                        ) : undefined
+                      }
                       label={
                         customer.addresses.length > 0
                           ? `${customer.addresses.length} ${customer.addresses.length === 1 ? "dirección" : "direcciones"}`

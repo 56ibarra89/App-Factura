@@ -24,6 +24,7 @@ interface CustomerDeliverySectionProps {
   customerPhone: string;
   onCustomerPhoneChange: (value: string) => void;
   onCustomerSelect: (customer: Customer | null) => void;
+  savedPhones?: string[];
   orderType: OrderType;
   onOrderTypeChange: (value: OrderType) => void;
   lockOrderType: boolean;
@@ -46,6 +47,7 @@ export default function CustomerDeliverySection({
   customerPhone,
   onCustomerPhoneChange,
   onCustomerSelect,
+  savedPhones = [],
   orderType,
   onOrderTypeChange,
   lockOrderType,
@@ -71,22 +73,54 @@ export default function CustomerDeliverySection({
         />
       </Box>
 
-      <TextField
-        fullWidth
-        label="Teléfono del Cliente"
-        placeholder="Ej: 7800-0000"
-        value={customerPhone}
-        onChange={(event) => onCustomerPhoneChange(event.target.value)}
-        size="small"
-        sx={{ mb: 2 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <PhoneIcon fontSize="small" color="action" />
-            </InputAdornment>
-          ),
-        }}
-      />
+      {savedPhones.length > 0 ? (
+        <Autocomplete
+          freeSolo
+          options={savedPhones}
+          inputValue={customerPhone}
+          onInputChange={(_event, value) => onCustomerPhoneChange(value)}
+          onChange={(_event, value) =>
+            onCustomerPhoneChange(
+              typeof value === "string" ? value : (value ?? ""),
+            )
+          }
+          sx={{ mb: 2 }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              fullWidth
+              label="Teléfono del Cliente"
+              placeholder="Ej: 7800-0000"
+              size="small"
+              InputProps={{
+                ...params.InputProps,
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PhoneIcon fontSize="small" color="action" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          )}
+        />
+      ) : (
+        <TextField
+          fullWidth
+          label="Teléfono del Cliente"
+          placeholder="Ej: 7800-0000"
+          value={customerPhone}
+          onChange={(event) => onCustomerPhoneChange(event.target.value)}
+          size="small"
+          sx={{ mb: 2 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <PhoneIcon fontSize="small" color="action" />
+              </InputAdornment>
+            ),
+          }}
+        />
+      )}
 
       {!lockOrderType && (
         <>

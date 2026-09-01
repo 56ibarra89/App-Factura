@@ -69,11 +69,15 @@ export default function CustomerAutocomplete({
                   👤 {customer.name}
                 </Typography>
                 <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
-                  {customer.phone && (
+                  {customer.phones && customer.phones.length > 0 ? (
+                    <Typography variant="caption" color="text.secondary">
+                      📞 {customer.phones.map((p) => p.phone).join(" • ")}
+                    </Typography>
+                  ) : customer.phone ? (
                     <Typography variant="caption" color="text.secondary">
                       📞 {customer.phone}
                     </Typography>
-                  )}
+                  ) : null}
                   {primaryAddress && (
                     <Typography variant="caption" color="text.secondary">
                       📍 {primaryAddress}

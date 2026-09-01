@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -20,18 +19,26 @@ import EditIcon from "@mui/icons-material/Edit";
 import type {
   Customer,
   CustomerAddress,
+  CustomerPhone,
   CustomerFormData,
 } from "../model/customer.types";
 import CustomerAddressChips from "./CustomerAddressChips";
+import CustomerPhoneChips from "./CustomerPhoneChips";
 
 interface Props {
   open: boolean;
-
   customer?: Customer | null;
   onClose: () => void;
   onSave: (data: CustomerFormData) => Promise<void>;
+  addPhone?: (phones: CustomerPhone[], text: string) => CustomerPhone[];
+  removePhone?: (phones: CustomerPhone[], id: string) => CustomerPhone[];
+  setDefaultPhone?: (phones: CustomerPhone[], id: string) => CustomerPhone[];
   addAddress: (addresses: CustomerAddress[], text: string) => CustomerAddress[];
   removeAddress: (
+    addresses: CustomerAddress[],
+    id: string,
+  ) => CustomerAddress[];
+  setDefaultAddress?: (
     addresses: CustomerAddress[],
     id: string,
   ) => CustomerAddress[];
@@ -39,7 +46,7 @@ interface Props {
 
 const emptyForm = (): CustomerFormData => ({
   name: "",
-  phone: "",
+  phones: [],
   addresses: [],
 });
 
@@ -48,8 +55,12 @@ const CustomerFormModal: React.FC<Props> = ({
   customer,
   onClose,
   onSave,
+  addPhone,
+  removePhone,
+  setDefaultPhone,
   addAddress,
   removeAddress,
+  setDefaultAddress,
 }) => {
   const isEditing = !!customer;
   const [form, setForm] = useState<CustomerFormData>(emptyForm());
@@ -59,11 +70,22 @@ const CustomerFormModal: React.FC<Props> = ({
   useEffect(() => {
     if (open) {
       if (customer) {
+        let initialPhones: CustomerPhone[] = customer.phones ? [...customer.phones] : [];
+        if (initialPhones.length === 0 && customer.phone) {
+          initialPhones = [
+            {
+              id: "legacy-phone",
+              phone: customer.phone,
+              isDefault: true,
+              lastUsed: new Date().toISOString(),
+            },
+          ];
+        }
         setForm({
           id: customer.id,
           name: customer.name,
-          phone: customer.phone ?? "",
-          addresses: customer.addresses,
+          phones: initialPhones,
+          addresses: customer.addresses || [],
         });
       } else {
         setForm(emptyForm());
@@ -78,18 +100,79 @@ const CustomerFormModal: React.FC<Props> = ({
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
+  const handleAddPhone = (text: string) => {
+    if (addPhone) {
+      setForm((prev) => ({ ...prev, phones: addPhone(prev.phones, text) }));
+    } else {
+      setForm((prev) => {
+        const trimmed = text.trim();
+        if (!trimmed || prev.phones.some((p) => p.phone === trimmed)) return prev;
+        const isFirst = prev.phones.length === 0;
+        return {
+          ...prev,
+          phones: [
+            ...prev.phones,
+            {
+              id: Date.now().toString(),
+              phone: trimmed,
+              isDefault: isFirst,
+              lastUsed: new Date().toISOString(),
+            },
+          ],
+        };
+      });
+    }
+  };
+
+  const handleRemovePhone = (id: string) => {
+    if (removePhone) {
+      setForm((prev) => ({ ...prev, phones: removePhone(prev.phones, id) }));
+    } else {
+      setForm((prev) => {
+        const next = prev.phones.filter((p) => p.id !== id);
+        if (next.length > 0 && !next.some((p) => p.isDefault)) {
+          next[0].isDefault = true;
+        }
+        return { ...prev, phones: next };
+      });
+    }
+  };
+
+  const handleSetDefaultPhone = (id: string) => {
+    if (setDefaultPhone) {
+      setForm((prev) => ({ ...prev, phones: setDefaultPhone(prev.phones, id) }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        phones: prev.phones.map((p) => ({ ...p, isDefault: p.id === id })),
+      }));
+    }
+  };
+
   const handleAddAddress = (text: string) => {
-    setForm((prev) => ({
-      ...prev,
-      addresses: addAddress(prev.addresses, text),
-    }));
+    if (addAddress) {
+      setForm((prev) => ({ ...prev, addresses: addAddress(prev.addresses, text) }));
+    }
   };
 
   const handleRemoveAddress = (id: string) => {
-    setForm((prev) => ({
-      ...prev,
-      addresses: removeAddress(prev.addresses, id),
-    }));
+    if (removeAddress) {
+      setForm((prev) => ({ ...prev, addresses: removeAddress(prev.addresses, id) }));
+    }
+  };
+
+  const handleSetDefaultAddress = (id: string) => {
+    if (setDefaultAddress) {
+      setForm((prev) => ({
+        ...prev,
+        addresses: setDefaultAddress(prev.addresses, id),
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        addresses: prev.addresses.map((a) => ({ ...a, isDefault: a.id === id })),
+      }));
+    }
   };
 
   const handleSubmit = async () => {
@@ -118,7 +201,6 @@ const CustomerFormModal: React.FC<Props> = ({
       fullWidth
       PaperProps={{ sx: { borderRadius: 3 } }}
     >
-      {}
       <DialogTitle
         sx={{
           display: "flex",
@@ -149,7 +231,6 @@ const CustomerFormModal: React.FC<Props> = ({
       <Divider />
 
       <DialogContent sx={{ pt: 3, pb: 2 }}>
-        {}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -157,7 +238,6 @@ const CustomerFormModal: React.FC<Props> = ({
         )}
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-          {}
           <TextField
             id="customer-form-name"
             label="Nombre completo *"
@@ -169,24 +249,20 @@ const CustomerFormModal: React.FC<Props> = ({
             autoFocus={!isEditing}
           />
 
-          {}
-          <TextField
-            id="customer-form-phone"
-            label="Teléfono"
-            fullWidth
-            value={form.phone}
-            onChange={handleChange("phone")}
-            disabled={saving}
-            placeholder="Ej: +505 9999-9999"
+          <CustomerPhoneChips
+            phones={form.phones}
+            onAdd={handleAddPhone}
+            onRemove={handleRemovePhone}
+            onSetDefault={handleSetDefaultPhone}
           />
 
           <Divider sx={{ my: 0.5 }} />
 
-          {}
           <CustomerAddressChips
             addresses={form.addresses}
             onAdd={handleAddAddress}
             onRemove={handleRemoveAddress}
+            onSetDefault={handleSetDefaultAddress}
           />
         </Box>
       </DialogContent>
@@ -224,4 +300,3 @@ const CustomerFormModal: React.FC<Props> = ({
 };
 
 export default CustomerFormModal;
-

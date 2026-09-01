@@ -1,5 +1,18 @@
-import type { Customer } from "../model/customer.types";
+import type {
+  Customer,
+  CustomerAddress,
+  CustomerPhone,
+} from "../model/customer.types";
 import { apiClient } from "../../../shared/api";
+
+export interface UpdateCustomerPayload {
+  id: string;
+  name?: string;
+  phone?: string;
+  address?: string;
+  phones?: CustomerPhone[];
+  addresses?: CustomerAddress[];
+}
 
 export interface ICustomerRepository {
   searchByName(query: string): Promise<Customer[]>;
@@ -14,7 +27,7 @@ export interface ICustomerRepository {
     phone?: string,
   ): Promise<{ customer: Customer; isNew: boolean }>;
   getAll(): Promise<Customer[]>;
-  update(customer: { id: string; name?: string; phone?: string; address?: string }): Promise<Customer>;
+  update(customer: UpdateCustomerPayload): Promise<Customer>;
   delete(id: string): Promise<void>;
   findById(id: string): Promise<Customer | null>;
 }
@@ -62,11 +75,11 @@ class CustomerRepository implements ICustomerRepository {
   }
 
   /** Actualiza un cliente existente por su ID (PATCH /customers/:id). */
-  async update(customer: { id: string; name?: string; phone?: string; address?: string }): Promise<Customer> {
-    const { id, name, phone, address } = customer;
+  async update(customer: UpdateCustomerPayload): Promise<Customer> {
+    const { id, name, phone, address, phones, addresses } = customer;
     return await apiClient(`/customers/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ name, phone, address }),
+      body: JSON.stringify({ name, phone, address, phones, addresses }),
     });
   }
 

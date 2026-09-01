@@ -19,6 +19,7 @@ import {
 import { buildSupplementalCartItems } from "../model/checkoutDomain";
 import { useCheckoutDialog } from "../hooks/useCheckoutDialog";
 import CustomerDeliverySection from "./CustomerDeliverySection";
+import CustomerMatchDialog from "./CustomerMatchDialog";
 import InvoiceSummary from "./InvoiceSummary";
 import PackagingSection from "./PackagingSection";
 import PaymentMethodSelector from "./PaymentMethodSelector";
@@ -146,6 +147,7 @@ export default function FacturaPreviewDialog({
                 customerPhone={checkout.customerPhone}
                 onCustomerPhoneChange={checkout.setCustomerPhone}
                 onCustomerSelect={checkout.handleCustomerSelect}
+                savedPhones={checkout.savedPhones}
                 orderType={checkout.orderType}
                 onOrderTypeChange={checkout.setOrderType}
                 lockOrderType={lockOrderType}
@@ -216,6 +218,20 @@ export default function FacturaPreviewDialog({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <CustomerMatchDialog
+        open={checkout.matchDialogOpen}
+        existingCustomer={checkout.matchedCustomer}
+        newCustomerData={{
+          name: checkout.customerName,
+          phone: checkout.customerPhone,
+          address: checkout.customerAddress,
+        }}
+        onConfirmAsNew={() => void checkout.handleConfirmAsNewCustomer()}
+        onConfirmAsExisting={() => void checkout.handleConfirmAsExistingCustomer()}
+        onCancel={() => checkout.setMatchDialogOpen(false)}
+        loading={checkout.isSubmitting}
+      />
 
       <Snackbar
         open={checkout.toastOpen}

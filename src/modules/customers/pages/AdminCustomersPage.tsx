@@ -41,8 +41,12 @@ const AdminClientes = () => {
         customer={customers.editingCustomer}
         onClose={customers.closeModal}
         onSave={customers.save}
+        addPhone={customers.addPhone}
+        removePhone={customers.removePhone}
+        setDefaultPhone={customers.setDefaultPhone}
         addAddress={customers.addAddress}
         removeAddress={customers.removeAddress}
+        setDefaultAddress={customers.setDefaultAddress}
       />
 
       <ConfirmDialog

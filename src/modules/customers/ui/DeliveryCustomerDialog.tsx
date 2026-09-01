@@ -47,8 +47,12 @@ export default function DeliveryCustomerDialog({
   }, [phoneInput, search]);
 
   const handleSelectExisting = (customer: Customer) => {
-
-    onConfirm(customer, customer.phone || phoneInput);
+    const trimmedInput = phoneInput.trim();
+    const isDigitOnly = /^[0-9+ -]+$/.test(trimmedInput) && trimmedInput.length >= 4;
+    const phoneToUse = isDigitOnly
+      ? trimmedInput
+      : customer.phones?.[0]?.phone || customer.phone || phoneInput;
+    onConfirm(customer, phoneToUse);
     onClose();
   };
 
@@ -107,9 +111,20 @@ export default function DeliveryCustomerDialog({
                             <Typography fontWeight={700}>{customer.name}</Typography>
                           }
                           secondary={
-                            customer.phone
-                              ? `Tel: ${customer.phone}`
-                              : "Sin teléfono registrado"
+                            <Box component="span" sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+                              <Typography component="span" variant="caption" color="text.secondary">
+                                {customer.phones && customer.phones.length > 0
+                                  ? `📞 ${customer.phones.map((p) => p.phone).join(" • ")}`
+                                  : customer.phone
+                                    ? `📞 ${customer.phone}`
+                                    : "Sin teléfono registrado"}
+                              </Typography>
+                              {customer.addresses?.[0] && (
+                                <Typography component="span" variant="caption" color="text.secondary">
+                                  📍 {customer.addresses[0].address}
+                                </Typography>
+                              )}
+                            </Box>
                           }
                         />
                         <Button variant="outlined" size="small" color="primary">

@@ -6,6 +6,7 @@ import {
 import type {
   Customer,
   CustomerAddress,
+  CustomerPhone,
   CustomerFormData,
 } from "../model/customer.types";
 
@@ -43,10 +44,10 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
   const createCustomer = useCallback(
     async (data: CustomerFormData): Promise<void> => {
       const name = data.name.trim();
-      const phone = data.phone.trim() || undefined;
-      const primaryAddress = data.addresses[0]?.address?.trim() || undefined;
+      const defaultPhone = data.phones.find((p) => p.isDefault)?.phone || data.phones[0]?.phone || data.phone?.trim();
+      const defaultAddress = data.addresses.find((a) => a.isDefault)?.address || data.addresses[0]?.address?.trim();
 
-      await repository.createCustomer(name, primaryAddress, phone);
+      await repository.createCustomer(name, defaultAddress, defaultPhone);
       await loadCustomers();
     },
     [repository, loadCustomers],
@@ -58,13 +59,11 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
       const existing = customers.find((c) => c.id === data.id);
       if (!existing) throw new Error("Cliente no encontrado");
 
-      const primaryAddress = data.addresses[0]?.address?.trim() || undefined;
-
       await repository.update({
         id: data.id,
         name: data.name.trim(),
-        phone: data.phone.trim() || undefined,
-        address: primaryAddress,
+        phones: data.phones,
+        addresses: data.addresses,
       });
 
       await loadCustomers();
@@ -80,6 +79,44 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     [repository, loadCustomers],
   );
 
+  const addPhone = (
+    phones: CustomerPhone[],
+    text: string,
+  ): CustomerPhone[] => {
+    const trimmed = text.trim();
+    if (!trimmed) return phones;
+    const already = phones.some(
+      (p) => p.phone === trimmed,
+    );
+    if (already) return phones;
+    const now = new Date().toISOString();
+    const isFirst = phones.length === 0;
+    return [
+      ...phones,
+      { id: generateId(), phone: trimmed, isDefault: isFirst, lastUsed: now },
+    ];
+  };
+
+  const removePhone = (
+    phones: CustomerPhone[],
+    id: string,
+  ): CustomerPhone[] => {
+    const next = phones.filter((p) => p.id !== id);
+    if (next.length > 0 && !next.some((p) => p.isDefault)) {
+      next[0].isDefault = true;
+    }
+    return next;
+  };
+
+  const setDefaultPhone = (
+    phones: CustomerPhone[],
+    id: string,
+  ): CustomerPhone[] =>
+    phones.map((p) => ({
+      ...p,
+      isDefault: p.id === id,
+    }));
+
   const addAddress = (
     addresses: CustomerAddress[],
     text: string,
@@ -91,16 +128,32 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     );
     if (already) return addresses;
     const now = new Date().toISOString();
+    const isFirst = addresses.length === 0;
     return [
       ...addresses,
-      { id: generateId(), address: trimmed, lastUsed: now },
+      { id: generateId(), address: trimmed, isDefault: isFirst, lastUsed: now },
     ];
   };
 
   const removeAddress = (
     addresses: CustomerAddress[],
     id: string,
-  ): CustomerAddress[] => addresses.filter((a) => a.id !== id);
+  ): CustomerAddress[] => {
+    const next = addresses.filter((a) => a.id !== id);
+    if (next.length > 0 && !next.some((a) => a.isDefault)) {
+      next[0].isDefault = true;
+    }
+    return next;
+  };
+
+  const setDefaultAddress = (
+    addresses: CustomerAddress[],
+    id: string,
+  ): CustomerAddress[] =>
+    addresses.map((a) => ({
+      ...a,
+      isDefault: a.id === id,
+    }));
 
   return {
     customers,
@@ -109,8 +162,12 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     createCustomer,
     updateCustomer,
     deleteCustomer,
+    addPhone,
+    removePhone,
+    setDefaultPhone,
     addAddress,
     removeAddress,
+    setDefaultAddress,
     reload: loadCustomers,
   };
 };
