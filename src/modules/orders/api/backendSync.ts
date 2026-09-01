@@ -166,6 +166,7 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     discountAmount: order.discountAmount,
     status: order.status.toLowerCase(),
     timestamp: order.timestamp.toISOString(),
+    customerId: order.customerId,
     customerSnapshotName: order.customerName,
     customerPhone: order.customerPhone,
     orderType: order.orderType ? order.orderType.toLowerCase() : undefined,
@@ -263,7 +264,9 @@ export async function syncFinalizeOrder(order: Order): Promise<Order> {
     method: 'PATCH',
     body: JSON.stringify({
       payments: paymentsPayload,
+      customerId: order.customerId,
       customerSnapshotName: order.customerName,
+      customerPhone: order.customerPhone,
       orderType: order.orderType?.toLowerCase(),
       customerAddress: order.customerAddress,
       subTotal: order.subTotal,

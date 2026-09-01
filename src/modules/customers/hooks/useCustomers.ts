@@ -44,15 +44,9 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     async (data: CustomerFormData): Promise<void> => {
       const name = data.name.trim();
       const phone = data.phone.trim() || undefined;
+      const primaryAddress = data.addresses[0]?.address?.trim() || undefined;
 
-      if (data.addresses.length === 0) {
-        await repository.upsertCustomer(name, undefined, phone);
-      } else {
-        for (const addr of data.addresses) {
-          await repository.upsertCustomer(name, addr.address, phone);
-        }
-      }
-
+      await repository.createCustomer(name, primaryAddress, phone);
       await loadCustomers();
     },
     [repository, loadCustomers],
@@ -64,22 +58,14 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
       const existing = customers.find((c) => c.id === data.id);
       if (!existing) throw new Error("Cliente no encontrado");
 
-      const updated: Customer = {
-        ...existing,
+      const primaryAddress = data.addresses[0]?.address?.trim() || undefined;
+
+      await repository.update({
+        id: data.id,
         name: data.name.trim(),
-        nameLower: data.name.toLowerCase().trim(),
         phone: data.phone.trim() || undefined,
-        addresses: data.addresses,
-        updatedAt: new Date().toISOString(),
-      };
-
-      await repository.update(updated);
-
-      const name = data.name.trim();
-      const phone = data.phone.trim() || undefined;
-      for (const addr of data.addresses) {
-        await repository.upsertCustomer(name, addr.address, phone);
-      }
+        address: primaryAddress,
+      });
 
       await loadCustomers();
     },
@@ -128,4 +114,3 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     reload: loadCustomers,
   };
 };
-

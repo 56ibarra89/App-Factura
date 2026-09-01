@@ -1,1 +1,9 @@
-"use strict";const e=require("electron");e.contextBridge.exposeInMainWorld("printAPI",{printSilent:()=>e.ipcRenderer.send("print-silent")});e.contextBridge.exposeInMainWorld("authAPI",{setToken:(n,r)=>e.ipcRenderer.send("set-secure-token",n,r),clearToken:()=>e.ipcRenderer.send("clear-secure-token")});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("printAPI", {
+  printSilent: () => electron.ipcRenderer.send("print-silent")
+});
+electron.contextBridge.exposeInMainWorld("authAPI", {
+  setToken: (token, apiUrl) => electron.ipcRenderer.send("set-secure-token", token, apiUrl),
+  clearToken: () => electron.ipcRenderer.send("clear-secure-token")
+});

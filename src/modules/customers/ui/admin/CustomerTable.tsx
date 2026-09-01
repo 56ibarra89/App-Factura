@@ -136,12 +136,24 @@ const CustomerTable: React.FC<Props> = ({
 
                 {}
                 <TableCell align="center">
-                  <Chip
-                    label={customer.addresses.length}
-                    size="small"
-                    color={customer.addresses.length > 0 ? "primary" : "default"}
-                    variant="outlined"
-                  />
+                  <Tooltip
+                    title={
+                      customer.addresses.length > 0
+                        ? customer.addresses.map((a) => a.address).join(" | ")
+                        : "Sin direcciones"
+                    }
+                  >
+                    <Chip
+                      label={
+                        customer.addresses.length > 0
+                          ? `${customer.addresses.length} ${customer.addresses.length === 1 ? "dirección" : "direcciones"}`
+                          : "0 dir."
+                      }
+                      size="small"
+                      color={customer.addresses.length > 0 ? "primary" : "default"}
+                      variant="outlined"
+                    />
+                  </Tooltip>
                 </TableCell>
 
                 {}

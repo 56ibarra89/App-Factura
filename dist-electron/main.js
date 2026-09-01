@@ -1,56 +1,91 @@
-import { app as c, BrowserWindow as d, ipcMain as i, safeStorage as l, session as g } from "electron";
-import { fileURLToPath as E } from "node:url";
-import n from "node:path";
-const u = n.dirname(E(import.meta.url));
-process.env.APP_ROOT = n.join(u, "..");
-const p = process.env.VITE_DEV_SERVER_URL, v = n.join(process.env.APP_ROOT, "dist-electron"), m = n.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = p ? n.join(process.env.APP_ROOT, "public") : m;
-let s;
-function f() {
-  s = new d({
-    icon: n.join(process.env.VITE_PUBLIC, "icon.png"),
+import { app, BrowserWindow, ipcMain, safeStorage, session } from "electron";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
+process.env.APP_ROOT = path.join(__dirname$1, "..");
+const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
+const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+let win;
+function createWindow() {
+  win = new BrowserWindow({
+    icon: path.join(process.env.VITE_PUBLIC, "icon.png"),
     webPreferences: {
-      preload: n.join(u, "preload.mjs"),
-      sandbox: !0,
-      contextIsolation: !0,
-      nodeIntegration: !1
+      preload: path.join(__dirname$1, "preload.mjs"),
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false
     }
-  }), s.setMenu(null), p ? s.loadURL(p) : s.loadFile(n.join(m, "index.html"));
+  });
+  win.setMenu(null);
+  if (VITE_DEV_SERVER_URL) {
+    win.loadURL(VITE_DEV_SERVER_URL);
+  } else {
+    win.loadFile(path.join(RENDERER_DIST, "index.html"));
+  }
 }
-c.on("window-all-closed", () => {
-  process.platform !== "darwin" && (c.quit(), s = null);
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+    win = null;
+  }
 });
-c.on("activate", () => {
-  d.getAllWindows().length === 0 && f();
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });
-c.whenReady().then(() => {
-  i.removeAllListeners("print-silent"), i.on("print-silent", (o) => {
-    o.sender.print({
-      silent: !0,
-      printBackground: !0,
+app.whenReady().then(() => {
+  ipcMain.removeAllListeners("print-silent");
+  ipcMain.on("print-silent", (event) => {
+    event.sender.print({
+      silent: true,
+      printBackground: true,
       margins: { marginType: "none" }
-    }, (t, e) => {
-      t || console.error("Error al imprimir:", e);
+    }, (success, failureReason) => {
+      if (!success) console.error("Error al imprimir:", failureReason);
     });
-  }), f();
-  let r = null, a = null;
-  i.removeAllListeners("set-secure-token"), i.on("set-secure-token", (o, t, e) => {
-    l.isEncryptionAvailable() ? (r = l.encryptString(t), a = e, console.log("[Main] Token encriptado y guardado en memoria segura.")) : (console.warn("[Main] safeStorage no disponible. Token guardado sin encriptar en memoria."), r = Buffer.from(t, "utf-8"), a = e);
-  }), i.removeAllListeners("clear-secure-token"), i.on("clear-secure-token", () => {
-    r = null, console.log("[Main] Token eliminado de memoria segura.");
-  }), g.defaultSession.webRequest.onBeforeSendHeaders((o, t) => {
-    if (r && a && o.url.startsWith(a))
+  });
+  createWindow();
+  let encryptedToken = null;
+  let targetApiUrl = null;
+  ipcMain.removeAllListeners("set-secure-token");
+  ipcMain.on("set-secure-token", (event, token, apiUrl) => {
+    if (safeStorage.isEncryptionAvailable()) {
+      encryptedToken = safeStorage.encryptString(token);
+      targetApiUrl = apiUrl;
+      console.log("[Main] Token encriptado y guardado en memoria segura.");
+    } else {
+      console.warn("[Main] safeStorage no disponible. Token guardado sin encriptar en memoria.");
+      encryptedToken = Buffer.from(token, "utf-8");
+      targetApiUrl = apiUrl;
+    }
+  });
+  ipcMain.removeAllListeners("clear-secure-token");
+  ipcMain.on("clear-secure-token", () => {
+    encryptedToken = null;
+    console.log("[Main] Token eliminado de memoria segura.");
+  });
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    if (encryptedToken && targetApiUrl && details.url.startsWith(targetApiUrl)) {
       try {
-        let e = "";
-        l.isEncryptionAvailable() ? e = l.decryptString(r) : e = r.toString("utf-8"), o.requestHeaders.Authorization = `Bearer ${e}`;
+        let tokenStr = "";
+        if (safeStorage.isEncryptionAvailable()) {
+          tokenStr = safeStorage.decryptString(encryptedToken);
+        } else {
+          tokenStr = encryptedToken.toString("utf-8");
+        }
+        details.requestHeaders["Authorization"] = `Bearer ${tokenStr}`;
       } catch (e) {
         console.error("[Main] Error desencriptando token:", e);
       }
-    t({ requestHeaders: o.requestHeaders });
+    }
+    callback({ requestHeaders: details.requestHeaders });
   });
 });
 export {
-  v as MAIN_DIST,
-  m as RENDERER_DIST,
-  p as VITE_DEV_SERVER_URL
+  MAIN_DIST,
+  RENDERER_DIST,
+  VITE_DEV_SERVER_URL
 };

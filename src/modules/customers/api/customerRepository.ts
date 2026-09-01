@@ -3,19 +3,23 @@ import { apiClient } from "../../../shared/api";
 
 export interface ICustomerRepository {
   searchByName(query: string): Promise<Customer[]>;
+  createCustomer(
+    name: string,
+    address?: string,
+    phone?: string,
+  ): Promise<Customer>;
   upsertCustomer(
     name: string,
     address?: string,
     phone?: string,
   ): Promise<{ customer: Customer; isNew: boolean }>;
   getAll(): Promise<Customer[]>;
-  update(customer: Customer): Promise<void>;
+  update(customer: { id: string; name?: string; phone?: string; address?: string }): Promise<Customer>;
   delete(id: string): Promise<void>;
   findById(id: string): Promise<Customer | null>;
 }
 
 class CustomerRepository implements ICustomerRepository {
-
   async searchByName(query: string): Promise<Customer[]> {
     return await apiClient(`/customers?query=${encodeURIComponent(query)}`, {
       method: "GET",
@@ -23,12 +27,26 @@ class CustomerRepository implements ICustomerRepository {
   }
 
   /**
-   * Upsert de cliente:
+   * Creación explícita de un nuevo cliente independiente (POST /customers)
+   */
+  async createCustomer(
+    name: string,
+    address?: string,
+    phone?: string,
+  ): Promise<Customer> {
+    return await apiClient("/customers", {
+      method: "POST",
+      body: JSON.stringify({ name, address, phone }),
+    });
+  }
+
+  /**
+   * Upsert de cliente (legado/fallback)
    */
   async upsertCustomer(
     name: string,
     address?: string,
-    phone?: string
+    phone?: string,
   ): Promise<{ customer: Customer; isNew: boolean }> {
     return await apiClient("/customers/upsert", {
       method: "POST",
@@ -43,12 +61,12 @@ class CustomerRepository implements ICustomerRepository {
     });
   }
 
-  /** Actualiza un cliente existente. */
-  async update(customer: Customer): Promise<void> {
-    const { id, name, phone } = customer;
-    await apiClient(`/customers/${id}`, {
+  /** Actualiza un cliente existente por su ID (PATCH /customers/:id). */
+  async update(customer: { id: string; name?: string; phone?: string; address?: string }): Promise<Customer> {
+    const { id, name, phone, address } = customer;
+    return await apiClient(`/customers/${id}`, {
       method: "PATCH",
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify({ name, phone, address }),
     });
   }
 
@@ -73,4 +91,3 @@ class CustomerRepository implements ICustomerRepository {
 }
 
 export const customerRepository = new CustomerRepository();
-

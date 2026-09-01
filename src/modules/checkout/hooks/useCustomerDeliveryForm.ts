@@ -199,6 +199,7 @@ export function useCustomerDeliveryForm({
     customerAddress,
     setCustomerAddress,
     handleCustomerSelect,
+    selectedCustomer,
     savedAddresses,
     drivers,
     driverStats,

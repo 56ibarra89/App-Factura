@@ -1,4 +1,3 @@
-
 import {
   Autocomplete,
   TextField,
@@ -54,6 +53,8 @@ export default function CustomerAutocomplete({
       renderOption={(props, option) => {
         const customer = option as Customer;
         const { key, ...restProps } = props as { key: React.Key } & React.HTMLAttributes<HTMLLIElement>;
+        const primaryAddress = customer.addresses?.[0]?.address;
+
         return (
           <li key={key} {...restProps}>
             <Box
@@ -61,28 +62,29 @@ export default function CustomerAutocomplete({
               justifyContent="space-between"
               alignItems="center"
               width="100%"
+              py={0.5}
             >
-              <Box>
-                <Typography variant="body2" fontWeight={500}>
-                  {customer.name}
+              <Box display="flex" flexDirection="column" gap={0.25}>
+                <Typography variant="body2" fontWeight={600} color="text.primary">
+                  👤 {customer.name}
                 </Typography>
-                {customer.phone && (
-                  <Typography variant="caption" color="text.secondary">
-                    📞 {customer.phone}
-                  </Typography>
-                )}
-                {customer.addresses.length > 0 && (
-                  <Typography variant="caption" color="text.secondary">
-                    {customer.addresses.length} dirección
-                    {customer.addresses.length > 1 ? "es" : ""} guardada
-                    {customer.addresses.length > 1 ? "s" : ""}
-                  </Typography>
-                )}
+                <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
+                  {customer.phone && (
+                    <Typography variant="caption" color="text.secondary">
+                      📞 {customer.phone}
+                    </Typography>
+                  )}
+                  {primaryAddress && (
+                    <Typography variant="caption" color="text.secondary">
+                      📍 {primaryAddress}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
               {customer.addresses.length > 0 && (
                 <Chip
                   icon={<BookmarkIcon sx={{ fontSize: 12 }} />}
-                  label="Guardado"
+                  label={`${customer.addresses.length} dir.`}
                   size="small"
                   color="success"
                   variant="outlined"
@@ -119,4 +121,3 @@ export default function CustomerAutocomplete({
     />
   );
 }
-

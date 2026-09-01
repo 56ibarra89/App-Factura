@@ -13,6 +13,7 @@ export interface PackagingItem {
 export interface CheckoutFormValues {
   paymentMethod: PaymentMethod;
   splitAmounts?: SplitPaymentAmounts;
+  customerId?: string;
   customerName?: string;
   customerPhone?: string;
   orderType: OrderType;

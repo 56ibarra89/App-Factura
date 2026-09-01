@@ -47,6 +47,7 @@ export function useCheckout(
       return addOrder({
         items,
         ...totals,
+        customerId: form.customerId,
         customerName: form.customerName,
         customerPhone: form.customerPhone,
         orderType: form.orderType,
@@ -131,9 +132,11 @@ export function useCheckout(
 
       return finalizeOrder(orderId, {
         ...totals,
+        customerId: form.customerId,
         paymentMethod: form.paymentMethod,
         splitAmounts: form.splitAmounts,
         customerName: form.customerName,
+        customerPhone: form.customerPhone,
         orderType: form.orderType,
         customerAddress: form.customerAddress,
         ...buildOrderPromotionSelection(promotion),

@@ -141,6 +141,7 @@ export function useCheckoutDialog({
           payment.paymentMethod === "MIXTO"
             ? payment.splitAmounts
             : undefined,
+        customerId: customerDelivery.selectedCustomer?.id,
         customerName:
           customerDelivery.customerName.trim() ||
           (customerDelivery.customerPhone.trim()
