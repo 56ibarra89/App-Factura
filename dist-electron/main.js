@@ -64,8 +64,10 @@ app.whenReady().then(() => {
   });
   ipcMain.removeAllListeners("clear-secure-token");
   ipcMain.on("clear-secure-token", () => {
-    encryptedToken = null;
-    console.log("[Main] Token eliminado de memoria segura.");
+    if (encryptedToken !== null) {
+      encryptedToken = null;
+      console.log("[Main] Token eliminado de memoria segura.");
+    }
   });
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
     if (encryptedToken && targetApiUrl && details.url.startsWith(targetApiUrl)) {

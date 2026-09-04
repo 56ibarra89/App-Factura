@@ -95,8 +95,10 @@ app.whenReady().then(() => {
 
   ipcMain.removeAllListeners('clear-secure-token');
   ipcMain.on('clear-secure-token', () => {
-    encryptedToken = null;
-    console.log("[Main] Token eliminado de memoria segura.");
+    if (encryptedToken !== null) {
+      encryptedToken = null;
+      console.log("[Main] Token eliminado de memoria segura.");
+    }
   });
 
   // Interceptar peticiones para inyectar el token

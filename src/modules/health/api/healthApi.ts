@@ -10,7 +10,7 @@ export const checkBackendHealthApi = async (
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(`${baseUrl}/`, {
+    const response = await fetch(`${baseUrl}/health`, {
       method: "GET",
       signal: controller.signal,
       cache: "no-store",
@@ -19,7 +19,7 @@ export const checkBackendHealthApi = async (
       },
     });
     clearTimeout(timeoutId);
-    return response.ok || (response.status >= 200 && response.status < 500);
+    return response.ok || (response.status >= 200 && response.status < 400);
   } catch {
     clearTimeout(timeoutId);
     return false;

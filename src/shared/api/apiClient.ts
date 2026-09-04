@@ -21,6 +21,44 @@ const AUTH_KEYS = [
   "access_token",
 ] as const;
 
+let isHandlingUnauthorized = false;
+let unauthorizedTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function handleUnauthorizedSession() {
+  if (isHandlingUnauthorized) return;
+  isHandlingUnauthorized = true;
+
+  accessTokenStore.clear();
+  if (window.authAPI) {
+    window.authAPI.clearToken();
+  }
+  sessionStore.clear();
+  AUTH_KEYS.forEach((key) => localStore.removeItem(key));
+
+  // Emitir evento desacoplado para que React Router y los hooks sincronicen
+  window.dispatchEvent(new CustomEvent("appfactura:session-expired"));
+
+  if (window.location.hash !== "#/" && window.location.hash !== "") {
+    window.location.hash = "#/";
+  }
+
+  if (unauthorizedTimeout) clearTimeout(unauthorizedTimeout);
+  unauthorizedTimeout = setTimeout(() => {
+    isHandlingUnauthorized = false;
+  }, 2000);
+}
+
+function isAuthEndpoint(endpoint: string): boolean {
+  return (
+    endpoint.includes("/auth/login") ||
+    endpoint.includes("/auth/pin") ||
+    endpoint.includes("/auth/forgot-password") ||
+    endpoint.includes("/auth/reset-password") ||
+    endpoint.includes("/users/login") ||
+    endpoint.includes("/users/login-pin")
+  );
+}
+
 export const apiClient = async (endpoint: string, options: RequestInit = {}) => {
   const baseUrl = API_BASE_URL || "";
   const url = `${baseUrl}${endpoint}`;
@@ -41,17 +79,10 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
 
   if (!response.ok) {
     if (response.status === 401) {
-      accessTokenStore.clear();
-      if (window.authAPI) {
-        window.authAPI.clearToken();
+      if (!isAuthEndpoint(endpoint)) {
+        handleUnauthorizedSession();
+        throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
       }
-      sessionStore.clear();
-      AUTH_KEYS.forEach((key) => localStore.removeItem(key));
-
-      if (window.location.hash !== "#/" && window.location.hash !== "") {
-        window.location.hash = "#/";
-      }
-      throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
     }
 
     let errorMessage = "Ocurrió un error en la petición al servidor";

@@ -21,23 +21,6 @@ export function useAuthSession(
     gateway.load,
   );
 
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (
-        !event.key ||
-        event.key === SESSION_KEYS.loggedIn ||
-        event.key === SESSION_KEYS.username ||
-        event.key === SESSION_KEYS.role ||
-        event.key === "access_token"
-      ) {
-        setState(gateway.load());
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, [gateway]);
-
   const signIn = useCallback(
     (user: AuthenticatedUser) => {
       gateway.save(user);
@@ -64,6 +47,31 @@ export function useAuthSession(
     },
     [gateway],
   );
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (
+        !event.key ||
+        event.key === SESSION_KEYS.loggedIn ||
+        event.key === SESSION_KEYS.username ||
+        event.key === SESSION_KEYS.role ||
+        event.key === "access_token"
+      ) {
+        setState(gateway.load());
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [gateway]);
+
+  useEffect(() => {
+    const onExpired = () => {
+      signOut();
+    };
+    window.addEventListener("appfactura:session-expired", onExpired);
+    return () => window.removeEventListener("appfactura:session-expired", onExpired);
+  }, [signOut]);
 
   return {
     state,
