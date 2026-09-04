@@ -146,18 +146,6 @@ export function useCustomerDeliveryForm({
     open,
   ]);
 
-  useEffect(() => {
-    if (
-      orderType === "delivery" &&
-      selectedCustomer &&
-      !customerAddress
-    ) {
-      setCustomerAddress(
-        initialAddress || getPreferredOrRecentAddress(selectedCustomer),
-      );
-    }
-  }, [customerAddress, initialAddress, orderType, selectedCustomer]);
-
   const handleCustomerSelect = useCallback(
     (customer: Customer | null) => {
       setSelectedCustomer(customer);
@@ -291,6 +279,7 @@ export function useCustomerDeliveryForm({
     deliveryCost,
     setDeliveryCost,
     deliveryPrices,
+    loadingDrivers,
     persistCustomer,
   };
 }
