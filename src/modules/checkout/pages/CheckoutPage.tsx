@@ -122,6 +122,7 @@ const CheckoutPage = () => {
     resetDelivery,
     closePreview,
     runExclusive,
+    cart,
   });
   const kitchen = useKitchenDispatch({
     tableId,

@@ -4,6 +4,7 @@ import {
   type OrderItem,
 } from "../../orders";
 import { logService } from "../../audit";
+import { printerDispatcherService } from "../../../shared/printing/printerDispatcherService";
 import type { RunExclusiveAction } from "./useExclusiveAction";
 
 interface UseKitchenDispatchOptions {
@@ -82,6 +83,26 @@ export function useKitchenDispatch({
         "KITCHEN_DISPATCH",
         `Pedido enviado a cocina para Mesa ${tableId.split("-M")[1]}`,
       );
+
+      const kitchenItems = cart.filter(
+        (item) => requiresKitchenPreparation(item) && !item.isSentToKitchen,
+      );
+      if (kitchenItems.length > 0) {
+        void printerDispatcherService.printKitchenComanda({
+          orderId: activeOrderId,
+          tableNumber: tableId ? tableId.replace("T-", "").replace("-M", " ") : undefined,
+          orderType: "MESA",
+          waiterOrCashier: username,
+          items: kitchenItems.map((k) => ({
+            name: k.name,
+            quantity: k.quantity,
+            size: k.size,
+            note: k.note,
+            extras: k.extras,
+          })),
+          timestamp: sentAt,
+        });
+      }
 
       setIsSuccessOpen(true);
       setIsConfirmOpen(false);

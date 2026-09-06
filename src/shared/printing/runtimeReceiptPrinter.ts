@@ -5,7 +5,7 @@ import type {
 
 interface PrintRuntime {
   printAPI?: {
-    printSilent(): unknown;
+    printSilent(options?: { deviceName?: string }): unknown;
   };
   print(): void;
 }
@@ -23,6 +23,7 @@ export function createRuntimeReceiptPrinter(
       const {
         renderDelayMs = 0,
         settleDelayMs = 500,
+        deviceName,
       } = options;
 
       if (renderDelayMs > 0) {
@@ -30,7 +31,9 @@ export function createRuntimeReceiptPrinter(
       }
 
       if (runtime.printAPI) {
-        runtime.printAPI.printSilent();
+        runtime.printAPI.printSilent(
+          deviceName ? { deviceName } : undefined,
+        );
         if (settleDelayMs > 0) {
           await wait(settleDelayMs);
         }

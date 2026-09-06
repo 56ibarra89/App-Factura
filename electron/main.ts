@@ -1,6 +1,12 @@
 import { app, BrowserWindow, ipcMain, safeStorage, session } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import {
+  testNetworkPrinter,
+  printNetworkRaw,
+  openDrawerViaNetwork,
+} from './printerNetwork'
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -25,7 +31,7 @@ let win: BrowserWindow | null
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'icon.png'),
+    icon: path.join(process.env.VITE_PUBLIC || '', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       sandbox: true,
@@ -40,7 +46,6 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 }
@@ -64,16 +69,92 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(() => {
+  // 1. Manejador de Impresión Silenciosa (USB / Driver de Windows)
   ipcMain.removeAllListeners('print-silent');
-  ipcMain.on('print-silent', (event) => {
-    event.sender.print({
-      silent: true,
-      printBackground: true,
-      margins: { marginType: 'none' },
-    }, (success, failureReason) => {
-      if (!success) console.error('Error al imprimir:', failureReason)
-    })
+  ipcMain.on('print-silent', (event, options?: { deviceName?: string }) => {
+    event.sender.print(
+      {
+        silent: true,
+        printBackground: true,
+        deviceName: options?.deviceName || '',
+        margins: { marginType: 'none' },
+      },
+      (success, failureReason) => {
+        if (!success) {
+          console.error(
+            'Error al imprimir silencioso en',
+            options?.deviceName || 'impresora predeterminada:',
+            failureReason,
+          )
+        }
+      },
+    )
   })
+
+  // 2. Detección de Impresoras del Sistema (Windows Spooler)
+  ipcMain.removeHandler('get-system-printers');
+  ipcMain.handle('get-system-printers', async (event) => {
+    try {
+      const printers = await event.sender.getPrintersAsync();
+      return printers;
+    } catch (error) {
+      console.error('[Main] Error obteniendo impresoras del sistema:', error);
+      return [];
+    }
+  });
+
+  // 3. Prueba de Conexión LAN (Ping TCP al puerto 9100)
+  ipcMain.removeHandler('test-network-printer');
+  ipcMain.handle(
+    'test-network-printer',
+    async (
+      _event,
+      options: { host: string; port?: number; timeoutMs?: number },
+    ) => {
+      return await testNetworkPrinter(
+        options.host,
+        options.port,
+        options.timeoutMs,
+      );
+    },
+  );
+
+  // 4. Impresión Directa por Red (Socket TCP RAW 9100)
+  ipcMain.removeHandler('print-network-raw');
+  ipcMain.handle(
+    'print-network-raw',
+    async (
+      _event,
+      options: {
+        host: string;
+        port?: number;
+        data: string | number[] | Uint8Array;
+        timeoutMs?: number;
+      },
+    ) => {
+      return await printNetworkRaw(
+        options.host,
+        options.port,
+        options.data,
+        options.timeoutMs,
+      );
+    },
+  );
+
+  // 5. Apertura de Gaveta de Dinero (Pulso RJ11)
+  ipcMain.removeHandler('open-cash-drawer');
+  ipcMain.handle(
+    'open-cash-drawer',
+    async (
+      _event,
+      options?: { host?: string; port?: number; deviceName?: string },
+    ) => {
+      if (options?.host) {
+        return await openDrawerViaNetwork(options.host, options.port);
+      }
+      return { success: true };
+    },
+  );
 
   createWindow();
 
