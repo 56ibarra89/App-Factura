@@ -5,5 +5,9 @@ export type {
   AuditLogLevel,
   LogLevel,
   SystemLog,
+  AuditFiltersState,
+  AuditStats,
+  AuditQueryParams,
 } from "./model/audit.types";
+export { useAuditLog } from "./hooks/useAuditLog";
 export { default as AuditLogPage } from "./pages/AuditLogPage";

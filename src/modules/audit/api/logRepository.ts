@@ -1,4 +1,4 @@
-import type { SystemLog, LogLevel } from "../model/audit.types";
+import type { SystemLog, LogLevel, AuditQueryParams } from "../model/audit.types";
 import {
   apiClient,
   hasAccessToken,
@@ -12,7 +12,7 @@ export interface ILogRepository {
     details?: string,
     level?: LogLevel,
   ): Promise<void>;
-  getRecent(limit?: number): Promise<SystemLog[]>;
+  getRecent(params?: number | AuditQueryParams): Promise<SystemLog[]>;
 }
 
 class LogRepository implements ILogRepository {
@@ -43,10 +43,28 @@ class LogRepository implements ILogRepository {
     }
   }
 
-  async getRecent(limit = 200): Promise<SystemLog[]> {
+  async getRecent(params?: number | AuditQueryParams): Promise<SystemLog[]> {
     try {
-      const logs = await apiClient("/system-logs");
-      return logs.slice(0, limit);
+      const searchParams = new URLSearchParams();
+      if (typeof params === "number") {
+        searchParams.set("limit", String(params));
+      } else if (params) {
+        if (params.limit) searchParams.set("limit", String(params.limit));
+        if (params.user && params.user !== "ALL") searchParams.set("user", params.user);
+        if (params.role && params.role !== "ALL") searchParams.set("role", params.role);
+        if (params.action && params.action !== "ALL") searchParams.set("action", params.action);
+        if (params.level && params.level !== "ALL") searchParams.set("level", params.level);
+        if (params.startDate) searchParams.set("startDate", params.startDate);
+        if (params.endDate) searchParams.set("endDate", params.endDate);
+        if (params.search) searchParams.set("search", params.search);
+      } else {
+        searchParams.set("limit", "500");
+      }
+
+      const queryString = searchParams.toString();
+      const endpoint = queryString ? `/system-logs?${queryString}` : "/system-logs";
+      const logs = await apiClient(endpoint);
+      return Array.isArray(logs) ? logs : [];
     } catch (error) {
       console.error("Error retrieving logs:", error);
       return [];

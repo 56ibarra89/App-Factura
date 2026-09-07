@@ -35,6 +35,7 @@ export function FormattedLogDetails({ details, compact = false }: FormattedLogDe
     );
   }
 
+  // Si no es JSON (texto plano)
   if (!parsed.isJson) {
     return (
       <Typography
@@ -43,19 +44,41 @@ export function FormattedLogDetails({ details, compact = false }: FormattedLogDe
           color: "text.primary",
           lineHeight: 1.5,
           fontWeight: 400,
+          ...(compact
+            ? {
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "block",
+                maxWidth: "100%",
+              }
+            : {}),
         }}
+        title={compact ? parsed.raw : undefined}
       >
         {parsed.raw}
       </Typography>
     );
   }
 
+  // Si es orden de facturación
   if (parsed.orderInfo) {
     const { orderInfo } = parsed;
 
     if (compact) {
       return (
-        <Typography variant="body2" color="text.primary">
+        <Typography
+          variant="body2"
+          color="text.primary"
+          sx={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            display: "block",
+            maxWidth: "100%",
+          }}
+          title={parsed.summaryText}
+        >
           {parsed.summaryText}
           {orderInfo.finalTotal !== undefined && (
             <b> • Total: {formatCurrency(orderInfo.finalTotal)}</b>
@@ -164,7 +187,28 @@ export function FormattedLogDetails({ details, compact = false }: FormattedLogDe
     );
   }
 
-  // Para otros objetos JSON genéricos
+  // Para otros objetos JSON genéricos en modo compacto (celda de tabla)
+  if (compact) {
+    return (
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          display: "block",
+          maxWidth: "100%",
+          fontWeight: 500,
+        }}
+        title={parsed.summaryText}
+      >
+        {parsed.summaryText}
+      </Typography>
+    );
+  }
+
+  // Para otros objetos JSON genéricos en modo extendido
   return (
     <Box sx={{ mt: 0.5 }}>
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap gap={0.8}>
@@ -181,4 +225,3 @@ export function FormattedLogDetails({ details, compact = false }: FormattedLogDe
     </Box>
   );
 }
-

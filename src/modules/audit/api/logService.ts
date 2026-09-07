@@ -1,7 +1,7 @@
 import { logRepository } from "./logRepository";
-import type { LogLevel, SystemLog } from "../model/audit.types";
+import type { LogLevel, SystemLog, AuditQueryParams } from "../model/audit.types";
 
-export type { LogLevel, SystemLog };
+export type { LogLevel, SystemLog, AuditQueryParams };
 
 export const logService = {
 
@@ -16,9 +16,9 @@ export const logService = {
       .add(user, role, action, details, level)
       .catch((err) => console.error("[logService] Error guardando log:", err)),
 
-  getLogs: (limit = 200): Promise<SystemLog[]> =>
+  getLogs: (params: number | AuditQueryParams = 500): Promise<SystemLog[]> =>
     logRepository
-      .getRecent(limit)
+      .getRecent(params)
       .catch((err) => {
         console.error("[logService] Error obteniendo logs:", err);
         return [];

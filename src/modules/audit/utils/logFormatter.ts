@@ -26,6 +26,42 @@ export interface ActionMetadata {
 }
 
 export const ACTION_METADATA_MAP: Record<string, ActionMetadata> = {
+  SHIFT_CLOSED_WITH_DISCREPANCY: {
+    label: "Cierre con Discrepancia",
+    color: "warning",
+    category: "Facturación",
+    iconName: "AccountBalance",
+  },
+  SHIFT_CLOSED: {
+    label: "Cierre de Turno",
+    color: "info",
+    category: "Facturación",
+    iconName: "PointOfSale",
+  },
+  SHIFT_OPENED: {
+    label: "Apertura de Turno",
+    color: "info",
+    category: "Facturación",
+    iconName: "PointOfSale",
+  },
+  APP_CRASH: {
+    label: "Fallo de Sistema",
+    color: "error",
+    category: "Sistema",
+    iconName: "BugReport",
+  },
+  LOGIN_LOCKOUT: {
+    label: "Cuenta Bloqueada",
+    color: "error",
+    category: "Seguridad",
+    iconName: "Lock",
+  },
+  PIN_LOCKOUT: {
+    label: "PIN Bloqueado",
+    color: "error",
+    category: "Seguridad",
+    iconName: "Lock",
+  },
   ORDER_FINALIZED: {
     label: "Orden Facturada",
     color: "success",

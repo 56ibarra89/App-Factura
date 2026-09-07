@@ -1,10 +1,13 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   Chip,
   Paper,
   Typography,
   Box,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import {
   DataGrid,
   type GridColDef,
@@ -20,11 +23,13 @@ import { FormattedLogDetails } from "./FormattedLogDetails";
 interface AuditLogGridProps {
   logs: SystemLog[];
   loading: boolean;
+  onViewDetails?: (log: SystemLog) => void;
 }
 
 export default function AuditLogGrid({
   logs,
   loading,
+  onViewDetails,
 }: AuditLogGridProps) {
   const columns = useMemo<GridColDef<SystemLog>[]>(
     () => [
@@ -32,9 +37,9 @@ export default function AuditLogGrid({
         field: "timestamp",
         headerName: "Fecha y Hora",
         width: 180,
-        renderCell: (params: GridRenderCellParams<SystemLog, number>) => (
+        renderCell: (params: GridRenderCellParams<SystemLog, string | number | Date>) => (
           <Typography variant="body2" fontWeight={500}>
-            {format(params.value ?? 0, "dd MMM yyyy, HH:mm:ss", { locale: es })}
+            {format(new Date(params.value ?? 0), "dd MMM yyyy, HH:mm:ss", { locale: es })}
           </Typography>
         ),
       },
@@ -134,8 +139,29 @@ export default function AuditLogGrid({
           );
         },
       },
+      {
+        field: "actions",
+        headerName: "Detalle",
+        width: 85,
+        sortable: false,
+        filterable: false,
+        renderCell: (params: GridRenderCellParams<SystemLog>) => (
+          <Tooltip title="Inspeccionar Evento">
+            <IconButton
+              size="small"
+              color="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetails?.(params.row);
+              }}
+            >
+              <VisibilityIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ),
+      },
     ],
-    [],
+    [onViewDetails],
   );
 
   return (
@@ -157,11 +183,21 @@ export default function AuditLogGrid({
         initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
         pageSizeOptions={[10, 25, 50]}
         disableRowSelectionOnClick
+        onRowDoubleClick={(params) => onViewDetails?.(params.row)}
+        localeText={{
+          noRowsLabel: "No se encontraron eventos en la bitácora con los filtros aplicados.",
+        }}
         sx={{
           border: 0,
           "& .MuiDataGrid-columnHeaders": {
             bgcolor: "rgba(0,0,0,0.02)",
             fontWeight: "bold",
+          },
+          "& .MuiDataGrid-row": {
+            cursor: "pointer",
+            "&:hover": {
+              bgcolor: "action.hover",
+            },
           },
           "& .MuiDataGrid-cell:focus": { outline: "none" },
         }}
