@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Box,
   Container,
@@ -13,9 +14,11 @@ import {
   adminModules,
   type AdminCategory,
 } from "../navigation/adminModules";
+import { DeliveryPricesDialog } from "../../modules/delivery";
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
+  const [openDeliveryDialog, setOpenDeliveryDialog] = useState(false);
 
   const renderCategory = (categoryName: AdminCategory) => {
     const modules = adminModules.filter((m) => m.category === categoryName);
@@ -39,9 +42,18 @@ const AdminDashboardPage = () => {
                 title={module.title}
                 description={module.description}
                 icon={module.icon}
-                onClick={() =>
-                  module.path ? navigate(module.path) : module.action?.()
-                }
+                onClick={() => {
+                  if (
+                    module.id === "tarifas-delivery" ||
+                    module.actionId === "OPEN_DELIVERY_PRICES"
+                  ) {
+                    setOpenDeliveryDialog(true);
+                  } else if (module.path) {
+                    navigate(module.path);
+                  } else {
+                    module.action?.();
+                  }
+                }}
                 disabled={module.disabled}
               />
             </Grid>
@@ -109,6 +121,11 @@ const AdminDashboardPage = () => {
           {renderCategory("Hardware y Sistema")}
         </Container>
       </Box>
+
+      <DeliveryPricesDialog
+        open={openDeliveryDialog}
+        onClose={() => setOpenDeliveryDialog(false)}
+      />
     </Box>
   );
 };

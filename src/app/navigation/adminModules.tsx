@@ -13,6 +13,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -24,7 +25,7 @@ export interface AdminModuleItem {
   icon: JSX.Element;
   path?: string;
   action?: () => void;
-
+  actionId?: string;
   disabled?: boolean;
 }
 
@@ -118,6 +119,14 @@ export const adminModules: AdminModuleItem[] = [
     description: "Crea y administra diferentes áreas de preparación (Cocina Principal, Bar, etc.) para enrutar los tickets correctamente.",
     icon: <SoupKitchenIcon fontSize="large" />,
     path: "/admin/cocinas",
+  },
+  {
+    id: "tarifas-delivery",
+    category: "Operativa",
+    title: "Tarifas de Delivery",
+    description: "Configura las tarifas y precios rápidos de envío a domicilio para los repartidores.",
+    icon: <TwoWheelerIcon fontSize="large" />,
+    actionId: "OPEN_DELIVERY_PRICES",
   },
 
   {
