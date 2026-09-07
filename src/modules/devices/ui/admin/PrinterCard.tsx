@@ -25,7 +25,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ReplyIcon from "@mui/icons-material/Reply";
 import type { PrinterConfig } from "../../api/printerConfig.types";
-import { printerDispatcherService } from "../../../../shared/printing/printerDispatcherService";
+import { printerDispatcherService } from "../../services/printerDispatcherService";
 
 interface PrinterCardProps {
   printer: PrinterConfig;

@@ -107,6 +107,9 @@ const AdminZonasMeseros = lazy(
 const AdminCocinas = lazy(
   () => import("../../modules/kitchens/pages/AdminKitchensPage")
 );
+const AdminPoliticasGastos = lazy(
+  () => import("../../modules/cash-register/pages/PettyCashPolicyPage")
+);
 
 const RouteFallback = () => (
   <Box
@@ -286,6 +289,10 @@ const AppRoutes = () => (
         <Route
           path="/admin/cajas"
           element={<AdminRoute element={<AdminCajas />} />}
+        />
+        <Route
+          path="/admin/politicas-gastos"
+          element={<AdminRoute element={<AdminPoliticasGastos />} />}
         />
         <Route
           path="/admin/impuestos"

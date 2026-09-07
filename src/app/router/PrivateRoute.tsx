@@ -1,6 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../../modules/auth";
-import type { UserRole } from "../../modules/auth/model/user.types";
+import { useAuth, type UserRole } from "../../modules/auth";
 
 interface PrivateRouteProps {
   element: JSX.Element;

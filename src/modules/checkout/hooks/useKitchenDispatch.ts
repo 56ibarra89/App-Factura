@@ -4,7 +4,7 @@ import {
   type OrderItem,
 } from "../../orders";
 import { logService } from "../../audit";
-import { printerDispatcherService } from "../../../shared/printing/printerDispatcherService";
+import { printerDispatcherService } from "../../devices";
 import type { RunExclusiveAction } from "./useExclusiveAction";
 
 interface UseKitchenDispatchOptions {

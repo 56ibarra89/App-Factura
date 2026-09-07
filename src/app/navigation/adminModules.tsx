@@ -14,6 +14,7 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -127,6 +128,14 @@ export const adminModules: AdminModuleItem[] = [
     description: "Configura las tarifas y precios rápidos de envío a domicilio para los repartidores.",
     icon: <TwoWheelerIcon fontSize="large" />,
     actionId: "OPEN_DELIVERY_PRICES",
+  },
+  {
+    id: "politicas-gastos",
+    category: "Operativa",
+    title: "Políticas de Caja Chica",
+    description: "Establece topes máximos de egreso, comprobantes obligatorios y requerimiento de PIN supervisor.",
+    icon: <AccountBalanceWalletIcon fontSize="large" />,
+    path: "/admin/politicas-gastos",
   },
 
   {

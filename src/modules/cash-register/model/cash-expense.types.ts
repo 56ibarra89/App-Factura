@@ -78,3 +78,35 @@ export interface ListCashExpensesQuery {
   startDate?: string;
   endDate?: string;
 }
+
+export interface CategoryPolicyConfig {
+  enabled: boolean;
+  requiresPin: boolean;
+}
+
+export interface PettyCashPolicy {
+  maxAmountWithoutAuth: number;
+  maxShiftTotal: number;
+  requireVoucherOver: number;
+  requireVoucherAlways: boolean;
+  autoPrintVoucher: boolean;
+  categoryPolicies: Record<CashExpenseCategory, CategoryPolicyConfig>;
+}
+
+export const DEFAULT_PETTY_CASH_POLICY: PettyCashPolicy = {
+  maxAmountWithoutAuth: 250,
+  maxShiftTotal: 1500,
+  requireVoucherOver: 100,
+  requireVoucherAlways: false,
+  autoPrintVoucher: true,
+  categoryPolicies: {
+    INSUMOS_URGENTES: { enabled: true, requiresPin: false },
+    LIMPIEZA_MANTENIMIENTO: { enabled: true, requiresPin: false },
+    TRANSPORTE_FLETE: { enabled: true, requiresPin: false },
+    SERVICIOS_BASICOS: { enabled: true, requiresPin: false },
+    PAGO_PROVEEDOR: { enabled: true, requiresPin: true },
+    ADELANTO_SUELDO: { enabled: true, requiresPin: true },
+    OTROS: { enabled: true, requiresPin: false },
+  },
+};
+

@@ -1,6 +1,6 @@
-import { deviceGateway } from "../../modules/devices/api/deviceGateway";
-import type { PrinterConfig } from "../../modules/devices/api/printerConfig.types";
-import { EscPosBuilder } from "./escposBuilder";
+import { deviceGateway } from "../api/deviceGateway";
+import type { PrinterConfig } from "../api/printerConfig.types";
+import { EscPosBuilder } from "../../../shared/printing/escposBuilder";
 
 export interface KitchenOrderItem {
   name: string;

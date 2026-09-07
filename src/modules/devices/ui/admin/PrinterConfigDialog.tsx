@@ -35,7 +35,7 @@ import type {
   PrinterConnectionType,
   PrinterRole,
 } from "../../api/printerConfig.types";
-import { printerDispatcherService } from "../../../../shared/printing/printerDispatcherService";
+import { printerDispatcherService } from "../../services/printerDispatcherService";
 
 interface PrinterConfigDialogProps {
   open: boolean;

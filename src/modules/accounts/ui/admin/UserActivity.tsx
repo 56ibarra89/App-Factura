@@ -12,9 +12,12 @@ import {
   Avatar,
 } from "@mui/material";
 import type { UserAccount } from "../../model/account.types";
-import { logService, type SystemLog } from "../../../audit";
-import { getActionMetadata } from "../../../audit/utils/logFormatter";
-import { FormattedLogDetails } from "../../../audit/ui/FormattedLogDetails";
+import {
+  logService,
+  type SystemLog,
+  getActionMetadata,
+  FormattedLogDetails,
+} from "../../../audit";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 

@@ -2,11 +2,11 @@ import { Component, ErrorInfo, ReactNode } from "react";
 import { Box, Typography, Button, Paper } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { logService } from "../../modules/audit";
 import { LOGIN_COLORS } from "../theme";
 
 interface Props {
   children: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
@@ -21,21 +21,15 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-
     console.error("Uncaught error:", error, errorInfo);
 
-    logService.log(
-      "system",
-      "critical_error",
-      "APP_CRASH",
-      `Fallo crítico de aplicación: ${error.message}. Stack trace capturado en consola.`,
-      "error"
-    );
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
   }
 
   private handleReset = () => {

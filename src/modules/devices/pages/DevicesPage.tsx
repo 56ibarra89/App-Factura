@@ -21,7 +21,7 @@ import { useAdminDevices } from "../hooks/useAdminDevices";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import type { DeviceGateway } from "../api/deviceGateway";
 import type { PrinterConfig } from "../api/printerConfig.types";
-import { printerDispatcherService } from "../../../shared/printing/printerDispatcherService";
+import { printerDispatcherService } from "../services/printerDispatcherService";
 
 interface PerifericosProps {
   gateway?: DeviceGateway;

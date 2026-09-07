@@ -10,7 +10,7 @@ import {
   receiptPrinter,
   type ReceiptPrinter,
 } from "../../../shared/printing";
-import { printerDispatcherService } from "../../../shared/printing/printerDispatcherService";
+import { printerDispatcherService } from "../../devices";
 import type { RunExclusiveAction } from "./useExclusiveAction";
 
 interface UseBillingFlowOptions {
