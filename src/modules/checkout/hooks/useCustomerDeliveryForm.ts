@@ -10,6 +10,10 @@ import type {
   CheckoutGateway,
   DeliveryDriverStats,
 } from "../api/checkoutGateway";
+import {
+  useDeliveryRules,
+  type DeliveryZone,
+} from "../../delivery";
 
 interface UseCustomerDeliveryFormOptions {
   open: boolean;
@@ -19,6 +23,8 @@ interface UseCustomerDeliveryFormOptions {
   initialOrderType: OrderType;
   initialDriverId: string;
   initialDeliveryCost: number;
+  initialDeliveryZone?: DeliveryZone | null;
+  orderSubTotal?: number;
   gateway: CheckoutGateway;
 }
 
@@ -55,8 +61,14 @@ export function useCustomerDeliveryForm({
   initialOrderType,
   initialDriverId,
   initialDeliveryCost,
+  initialDeliveryZone,
+  orderSubTotal,
   gateway,
 }: UseCustomerDeliveryFormOptions) {
+  const { rules: deliveryRules, activeZones, calculateFee } = useDeliveryRules();
+  const [selectedZone, setSelectedZone] = useState<DeliveryZone | null>(
+    initialDeliveryZone ?? null,
+  );
   const [customerName, setCustomerName] = useState(
     initialCustomer?.name ?? "",
   );
@@ -134,17 +146,64 @@ export function useCustomerDeliveryForm({
     setCustomerAddress(
       initialAddress || getPreferredOrRecentAddress(initialCustomer),
     );
-    setDeliveryCost(initialDeliveryCost);
     setSelectedDriverId(initialDriverId);
-  }, [
-    initialAddress,
-    initialCustomer,
-    initialDeliveryCost,
-    initialDriverId,
-    initialOrderType,
-    initialPhone,
-    open,
-  ]);
+
+    if (initialDeliveryZone) {
+      setSelectedZone(initialDeliveryZone);
+    } else if (activeZones.length > 0) {
+      const match = activeZones.find((z) => z.price === initialDeliveryCost);
+      if (match) {
+        setSelectedZone(match);
+      } else if (initialOrderType === "delivery") {
+        setSelectedZone(activeZones[0]);
+      } else {
+        setSelectedZone(null);
+      }
+    } else {
+      setSelectedZone(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    if (orderType === "delivery") {
+      const currentZone = selectedZone ?? (activeZones.length > 0 ? activeZones[0] : null);
+      if (!selectedZone && currentZone) {
+        setSelectedZone(currentZone);
+      }
+
+      if (currentZone) {
+        const feeInfo = calculateFee(orderSubTotal ?? 0, currentZone.id);
+        setDeliveryCost(feeInfo.customerFee);
+      } else if (
+        deliveryRules.freeDeliveryEnabled &&
+        deliveryRules.freeDeliveryMinAmount > 0 &&
+        (orderSubTotal ?? 0) >= deliveryRules.freeDeliveryMinAmount
+      ) {
+        setDeliveryCost(0);
+      }
+    } else {
+      setDeliveryCost(0);
+    }
+  }, [orderType, selectedZone, activeZones, orderSubTotal, calculateFee, deliveryRules]);
+
+  const handleZoneSelect = useCallback(
+    (zone: DeliveryZone | null) => {
+      setSelectedZone(zone);
+      if (zone) {
+        const feeInfo = calculateFee(orderSubTotal ?? 0, zone.id);
+        setDeliveryCost(feeInfo.customerFee);
+      }
+    },
+    [calculateFee, orderSubTotal],
+  );
+
+  const isFreeDelivery = Boolean(
+    orderType === "delivery" &&
+      deliveryRules.freeDeliveryEnabled &&
+      deliveryRules.freeDeliveryMinAmount > 0 &&
+      (orderSubTotal ?? 0) >= deliveryRules.freeDeliveryMinAmount,
+  );
 
   const handleCustomerSelect = useCallback(
     (customer: Customer | null) => {
@@ -281,5 +340,11 @@ export function useCustomerDeliveryForm({
     deliveryPrices,
     loadingDrivers,
     persistCustomer,
+    selectedZone,
+    setSelectedZone: handleZoneSelect,
+    deliveryRules,
+    activeZones,
+    isFreeDelivery,
+    driverPayout: selectedZone?.driverPayout ?? deliveryCost,
   };
 }

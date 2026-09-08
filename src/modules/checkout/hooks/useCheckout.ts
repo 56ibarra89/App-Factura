@@ -29,6 +29,9 @@ export function useCheckout(
       ...buildSupplementalCartItems(
         form.packagingItems,
         form.orderType === "delivery" ? form.deliveryCost : undefined,
+        form.orderType === "delivery" ? form.deliveryZoneName : undefined,
+        form.orderType === "delivery" ? form.deliveryDriverPayout : undefined,
+        form.orderType === "delivery" ? form.isFreeDelivery : false,
       ),
     ],
     [cart],

@@ -22,4 +22,8 @@ export interface CheckoutFormValues {
   customerTendered?: number;
   driverId?: string;
   deliveryCost?: number;
+  deliveryZoneId?: string;
+  deliveryZoneName?: string;
+  deliveryDriverPayout?: number;
+  isFreeDelivery?: boolean;
 }

@@ -26,6 +26,7 @@ import { useExclusiveAction } from "../hooks/useExclusiveAction";
 import { useKitchenDispatch } from "../hooks/useKitchenDispatch";
 import useCart from "../hooks/useCart";
 import type { Customer } from "../../customers";
+import type { DeliveryZone } from "../../delivery";
 
 interface BillingLocationState {
   fromDeliveryPage?: boolean;
@@ -35,6 +36,8 @@ interface BillingLocationState {
   deliveryCost?: number;
   deliveryDriverId?: string;
   deliveryCustomerTendered?: number;
+  deliveryZone?: DeliveryZone | null;
+  deliveryDriverPayout?: number;
 }
 
 const CheckoutPage = () => {
@@ -206,6 +209,7 @@ const CheckoutPage = () => {
             (deliveryCustomer?.addresses?.[0]?.address ?? ""),
           initialDriverId: state?.deliveryDriverId,
           initialDeliveryCost: state?.deliveryCost,
+          initialDeliveryZone: state?.deliveryZone,
           initialCustomerTendered:
             state?.deliveryCustomerTendered,
           invoiceNumber: billing.createdInvoiceNumber,

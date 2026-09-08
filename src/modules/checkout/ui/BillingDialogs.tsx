@@ -18,6 +18,8 @@ import {
   type RedeemableCertificate,
 } from "../../promotions";
 
+import type { DeliveryZone } from "../../delivery";
+
 interface SelectedProduct {
   name: string;
   prices: ProductPrice[];
@@ -60,6 +62,7 @@ interface InvoiceDialog {
   initialAddress?: string;
   initialDriverId?: string;
   initialDeliveryCost?: number;
+  initialDeliveryZone?: DeliveryZone | null;
   initialCustomerTendered?: number;
   invoiceNumber?: string;
   cashierName?: string;
@@ -172,6 +175,7 @@ export default function BillingDialogs({
         }
         initialDriverId={invoice.initialDriverId}
         initialDeliveryCost={invoice.initialDeliveryCost}
+        initialDeliveryZone={invoice.initialDeliveryZone}
         initialCustomerTendered={invoice.initialCustomerTendered}
         invoiceNumber={invoice.invoiceNumber}
         cashierName={invoice.cashierName}

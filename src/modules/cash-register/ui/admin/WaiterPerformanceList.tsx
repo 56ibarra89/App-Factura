@@ -1,11 +1,11 @@
 import { Box, Typography, Paper, Avatar, Stack, Skeleton } from "@mui/material";
 import TableRestaurantIcon from "@mui/icons-material/TableRestaurant";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import type { WaiterPerformanceMock } from "../../hooks/useCashRegisterDashboard";
+import type { WaiterPerformance } from "../../api/adminDashboardGateway";
 import { formatCurrency } from "../../../../shared/format";
 
 interface Props {
-  waiters: WaiterPerformanceMock[];
+  waiters: WaiterPerformance[];
   loading?: boolean;
 }
 

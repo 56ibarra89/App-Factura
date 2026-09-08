@@ -5,27 +5,37 @@ import {
   useCustomers,
   type Customer,
 } from "../../customers";
-import type { DeliveryDriver } from "../model/delivery.types";
+import type { DeliveryDriver, DeliveryZone } from "../model/delivery.types";
 import {
   deliveryGateway,
   type DeliveryGateway,
 } from "../api/deliveryGateway";
+import { useDeliveryRules } from "./useDeliveryRules";
 
 export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
   const navigate = useNavigate();
   const { suggestions, search, clearSuggestions } = useCustomerSearch();
   const { addAddress, removeAddress, updateCustomer } = useCustomers();
+  const { rules: deliveryRules, activeZones } = useDeliveryRules();
 
   const [phoneInput, setPhoneInput] = useState("");
-  const [transporteInput, setTransporteInput] = useState("0.00");
+  const [transporteInput, setTransporteInput] = useState("30.00");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
+  const [selectedZone, setSelectedZone] = useState<DeliveryZone | null>(null);
   const [stats, setStats] = useState<{ userId: string; todayDeliveries: number }[]>([]);
 
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [customerFormOpen, setCustomerFormOpen] = useState(false);
+
+  useEffect(() => {
+    if (activeZones.length > 0 && !selectedZone) {
+      setSelectedZone(activeZones[0]);
+      setTransporteInput(String(activeZones[0].price));
+    }
+  }, [activeZones, selectedZone]);
 
   useEffect(() => {
     if (phoneInput.length >= 8) {
@@ -74,6 +84,8 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
         deliveryAddress: selectedAddress || undefined,
         deliveryCost: parseFloat(transporteInput) || 0,
         deliveryDriverId: selectedDriverId || undefined,
+        deliveryZone: selectedZone,
+        deliveryDriverPayout: selectedZone?.driverPayout,
       },
     });
   }, [
@@ -83,6 +95,7 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
     selectedAddress,
     transporteInput,
     selectedDriverId,
+    selectedZone,
   ]);
 
   const handleKeypadPress = useCallback(
@@ -138,6 +151,10 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
     stats,
     selectedDriverId,
     setSelectedDriverId,
+    selectedZone,
+    setSelectedZone,
+    deliveryRules,
+    activeZones,
     handleKeypadPress,
     handleConfirm,
     addAddress,

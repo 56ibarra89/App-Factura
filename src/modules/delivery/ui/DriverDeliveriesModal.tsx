@@ -22,7 +22,12 @@ import {
   Divider,
   Snackbar,
   Alert,
+  Chip,
 } from "@mui/material";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
 import type { DeliveryDriver } from "../model/delivery.types";
 import {
   statusLabels,
@@ -30,7 +35,6 @@ import {
   ordersGateway,
   type Order,
 } from "../../orders";
-import Chip from "@mui/material/Chip";
 import { useAuth } from "../../auth";
 import {
   deliveryGateway,
@@ -42,6 +46,32 @@ interface DriverDeliveriesModalProps {
   open: boolean;
   onClose: () => void;
   gateway?: DeliveryGateway;
+}
+
+function getOrderDeliveryInfo(order: Order): {
+  customerDeliveryFee: number;
+  driverPayout: number;
+} {
+  const deliveryItem = order.items?.find((i) =>
+    i.name.toLowerCase().startsWith("delivery")
+  );
+
+  const customerDeliveryFee = deliveryItem ? deliveryItem.price : 0;
+  let driverPayout = customerDeliveryFee;
+
+  if (deliveryItem?.note) {
+    const match = deliveryItem.note.match(/Pago Motorizado:\s*C?\$?([\d.]+)/i);
+    if (match && match[1]) {
+      const parsed = parseFloat(match[1]);
+      if (!isNaN(parsed)) {
+        driverPayout = parsed;
+      }
+    }
+  } else if (!deliveryItem && order.orderType === "delivery") {
+    driverPayout = 30;
+  }
+
+  return { customerDeliveryFee, driverPayout };
 }
 
 export default function DriverDeliveriesModal({
@@ -200,14 +230,31 @@ export default function DriverDeliveriesModal({
 
   const completedOrders = orders.filter((o) => o.status === "delivered" || o.status === "paid");
   const totalRevenue = completedOrders.reduce((acc, o) => acc + o.total, 0);
+  const totalCashCollected = completedOrders.reduce((acc, o) => {
+    const method = (o.paymentMethod || "EFECTIVO").toUpperCase();
+    if (method === "EFECTIVO") return acc + o.total;
+    if (method === "MIXTO" && o.splitAmounts?.efectivo) return acc + o.splitAmounts.efectivo;
+    return acc;
+  }, 0);
+
+  const totalDeliveryFees = completedOrders.reduce((acc, o) => {
+    return acc + getOrderDeliveryInfo(o).customerDeliveryFee;
+  }, 0);
+
+  const totalProductsRevenue = Math.max(0, totalRevenue - totalDeliveryFees);
+
+  const totalDriverPayout = completedOrders.reduce((acc, o) => {
+    return acc + getOrderDeliveryInfo(o).driverPayout;
+  }, 0);
+
   const totalChangeGiven = completedOrders.reduce((acc, o) => acc + (o.deliveryChange || 0), 0);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-      <DialogTitle>Control de Motorizados</DialogTitle>
+      <DialogTitle sx={{ fontWeight: "bold" }}>Liquidación y Control de Motorizados</DialogTitle>
       <Divider />
-      <DialogContent sx={{ display: "flex", height: "550px", p: 0 }}>
-        {}
+      <DialogContent sx={{ display: "flex", height: "600px", p: 0 }}>
+        {/* Lista de Motorizados */}
         <Box sx={{ width: "240px", borderRight: 1, borderColor: "divider", overflowY: "auto" }}>
           <Typography variant="subtitle2" sx={{ p: 2, pb: 1, color: "text.secondary", fontWeight: "bold" }}>
             Motorizados
@@ -244,7 +291,7 @@ export default function DriverDeliveriesModal({
         </Box>
 
         {/* Tabla de órdenes a la derecha */}
-        <Box sx={{ flex: 1, p: 3, display: "flex", flexDirection: "column", bgcolor: "background.default" }}>
+        <Box sx={{ flex: 1, p: 2.5, display: "flex", flexDirection: "column", bgcolor: "background.default", overflow: "hidden" }}>
           {selectedDriverId ? (
             <>
               <Typography variant="h6" gutterBottom fontWeight="bold">
@@ -264,7 +311,8 @@ export default function DriverDeliveriesModal({
                           <TableCell><b>Estado</b></TableCell>
                           <TableCell><b>Detalles</b></TableCell>
                           <TableCell align="center"><b>Método de Pago</b></TableCell>
-                          <TableCell align="right"><b>Total</b></TableCell>
+                          <TableCell align="right"><b>Total Pedido</b></TableCell>
+                          <TableCell align="right"><b>Comisión Rep.</b></TableCell>
                           <TableCell align="right"><b>Paga con</b></TableCell>
                           <TableCell align="right"><b>Vuelto</b></TableCell>
                         </TableRow>
@@ -272,52 +320,58 @@ export default function DriverDeliveriesModal({
                       <TableBody>
                         {orders.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                            <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                               No hay entregas para mostrar.
                             </TableCell>
                           </TableRow>
                         ) : (
-                          orders.map((order) => (
-                            <TableRow key={order.id}>
-                              <TableCell>{order.invoiceNumber || order.id.slice(-6)}</TableCell>
-                              <TableCell>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                  <Chip
-                                    label={statusLabels[order.status] || order.status}
-                                    color={statusColors[order.status] || "default"}
-                                    size="small"
-                                    sx={{ fontWeight: "bold" }}
-                                  />
-                                  {order.status === "delivered" && role !== "despachador" && (
-                                    <Button
-                                      variant="outlined"
+                          orders.map((order) => {
+                            const deliveryInfo = getOrderDeliveryInfo(order);
+                            return (
+                              <TableRow key={order.id}>
+                                <TableCell>{order.invoiceNumber || order.id.slice(-6)}</TableCell>
+                                <TableCell>
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                    <Chip
+                                      label={statusLabels[order.status] || order.status}
+                                      color={statusColors[order.status] || "default"}
                                       size="small"
-                                      color="success"
-                                      onClick={() => handleMarkAsPaid(order.id)}
                                       sx={{ fontWeight: "bold" }}
-                                    >
-                                      Cobrar
-                                    </Button>
-                                  )}
-                                </Box>
-                              </TableCell>
-                              <TableCell>
-                                {order.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}
-                              </TableCell>
-                              <TableCell align="center">
-                                {renderPaymentMethodChip(order)}
-                              </TableCell>
-                              <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                                C${order.total.toFixed(2)}
-                              </TableCell>
-                              <TableCell align="right">
-                                {order.customerTendered ? `C$${order.customerTendered.toFixed(2)}` : "-"}
-                              </TableCell>
-                              <TableCell align="right" sx={{ color: "error.main", fontWeight: "bold" }}>
-                                {order.deliveryChange ? `C$${order.deliveryChange.toFixed(2)}` : "-"}
-                              </TableCell>
-                            </TableRow>
-                          ))
+                                    />
+                                    {order.status === "delivered" && role !== "despachador" && (
+                                      <Button
+                                        variant="outlined"
+                                        size="small"
+                                        color="success"
+                                        onClick={() => handleMarkAsPaid(order.id)}
+                                        sx={{ fontWeight: "bold" }}
+                                      >
+                                        Cobrar
+                                      </Button>
+                                    )}
+                                  </Box>
+                                </TableCell>
+                                <TableCell>
+                                  {order.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}
+                                </TableCell>
+                                <TableCell align="center">
+                                  {renderPaymentMethodChip(order)}
+                                </TableCell>
+                                <TableCell align="right" sx={{ fontWeight: "bold" }}>
+                                  C${order.total.toFixed(2)}
+                                </TableCell>
+                                <TableCell align="right" sx={{ color: "success.main", fontWeight: "bold" }}>
+                                  C${deliveryInfo.driverPayout.toFixed(2)}
+                                </TableCell>
+                                <TableCell align="right">
+                                  {order.customerTendered ? `C$${order.customerTendered.toFixed(2)}` : "-"}
+                                </TableCell>
+                                <TableCell align="right" sx={{ color: "error.main", fontWeight: "bold" }}>
+                                  {order.deliveryChange ? `C$${order.deliveryChange.toFixed(2)}` : "-"}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
                         )}
                       </TableBody>
                     </Table>
@@ -325,18 +379,117 @@ export default function DriverDeliveriesModal({
                 )}
               </Box>
 
-              <Box sx={{ display: "flex", gap: 4, justifyContent: "flex-end", p: 2, bgcolor: "background.paper", borderRadius: 2, border: 1, borderColor: "divider" }}>
-                <Box textAlign="right">
-                  <Typography variant="body2" color="text.secondary">Total Recaudado (Pedidos)</Typography>
-                  <Typography variant="h6" color="primary.main" fontWeight="900">
-                    C${totalRevenue.toFixed(2)}
-                  </Typography>
+              {/* Panel de Liquidación Financiera Cuádruple */}
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: 1.5,
+                  p: 1.5,
+                  bgcolor: "background.paper",
+                  borderRadius: 2,
+                  border: 1,
+                  borderColor: "divider",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      bgcolor: "primary.light",
+                      color: "primary.contrastText",
+                      display: "flex",
+                    }}
+                  >
+                    <AttachMoneyIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                      TOTAL RECAUDADO
+                    </Typography>
+                    <Typography variant="subtitle1" fontWeight="900" color="primary.main" lineHeight={1.2}>
+                      C${totalRevenue.toFixed(2)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Efec: C${totalCashCollected.toFixed(2)}
+                    </Typography>
+                  </Box>
                 </Box>
-                <Box textAlign="right">
-                  <Typography variant="body2" color="text.secondary">Vuelto Entregado</Typography>
-                  <Typography variant="h6" color="error.main" fontWeight="900">
-                    C${totalChangeGiven.toFixed(2)}
-                  </Typography>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      bgcolor: "info.light",
+                      color: "info.contrastText",
+                      display: "flex",
+                    }}
+                  >
+                    <RestaurantIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                      VENTA NETA PRODUCTOS
+                    </Typography>
+                    <Typography variant="subtitle1" fontWeight="900" color="info.main" lineHeight={1.2}>
+                      C${totalProductsRevenue.toFixed(2)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Caja Restaurante
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      bgcolor: "success.light",
+                      color: "success.contrastText",
+                      display: "flex",
+                    }}
+                  >
+                    <TwoWheelerIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                      FLETES MOTORIZADO
+                    </Typography>
+                    <Typography variant="subtitle1" fontWeight="900" color="success.main" lineHeight={1.2}>
+                      C${totalDriverPayout.toFixed(2)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {completedOrders.length} entregas
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Box
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      bgcolor: "error.light",
+                      color: "error.contrastText",
+                      display: "flex",
+                    }}
+                  >
+                    <ChangeCircleIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                      VUELTO ENTREGADO
+                    </Typography>
+                    <Typography variant="subtitle1" fontWeight="900" color="error.main" lineHeight={1.2}>
+                      C${totalChangeGiven.toFixed(2)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      A clientes
+                    </Typography>
+                  </Box>
                 </Box>
               </Box>
             </>
@@ -368,4 +521,3 @@ export default function DriverDeliveriesModal({
     </Dialog>
   );
 }
-

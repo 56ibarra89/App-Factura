@@ -7,10 +7,10 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import { LOGIN_COLORS, LOGIN_SHADOWS } from "../../../../shared/theme";
 import { formatCurrency } from "../../../../shared/format";
-import type { CajaActiveMock } from "../../hooks/useCashRegisterDashboard";
+import type { ActiveCashRegister } from "../../api/adminDashboardGateway";
 
 interface Props {
-  caja: CajaActiveMock;
+  caja: ActiveCashRegister;
 }
 
 export const CashRegisterStatusCard = ({ caja }: Props) => {

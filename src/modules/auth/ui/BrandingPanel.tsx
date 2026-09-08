@@ -56,8 +56,7 @@ export const BrandingPanel = ({
           bgcolor: "white",
         }}
         onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-          e.currentTarget.src =
-            "https://via.placeholder.com/110/cf1f2e/ffffff?text=LOGO";
+          e.currentTarget.style.display = "none";
         }}
       />
 

@@ -97,8 +97,7 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
                 },
               }}
               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                e.currentTarget.src =
-                  "https://via.placeholder.com/100/cf1f2e/ffffff?text=PIZZA";
+                e.currentTarget.style.display = "none";
               }}
             />
           </Box>

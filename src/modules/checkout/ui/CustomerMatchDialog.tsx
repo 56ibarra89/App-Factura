@@ -221,7 +221,7 @@ export default function CustomerMatchDialog({
             </Box>
             <Box flex={1}>
               <Typography variant="subtitle1" fontWeight={700} color="primary.main">
-                👤 Crear como Nuevo Cliente
+                Crear como Nuevo Cliente
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
                 Es otra persona con el mismo nombre (homónimo). Creará un nuevo perfil independiente sin alterar al cliente anterior.
@@ -273,7 +273,7 @@ export default function CustomerMatchDialog({
             </Box>
             <Box flex={1}>
               <Typography variant="subtitle1" fontWeight={700} color="success.main">
-                🔄 Vincular al Cliente Existente
+                Vincular al Cliente Existente
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
                 Es el mismo cliente con otro número o dirección. Agregará este teléfono y domicilio a su historial existente.

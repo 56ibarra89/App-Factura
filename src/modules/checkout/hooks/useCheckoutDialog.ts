@@ -14,10 +14,12 @@ import { useCheckoutPayment } from "./useCheckoutPayment";
 import { useCustomerDeliveryForm } from "./useCustomerDeliveryForm";
 import { usePackagingSelection } from "./usePackagingSelection";
 import { useGeneralSettings, useTaxConfig } from "../../settings";
+import type { DeliveryZone } from "../../delivery";
 
 interface UseCheckoutDialogOptions {
   open: boolean;
   total: number;
+  orderSubTotal?: number;
   isTableMode: boolean;
   initialCustomer: Customer | null;
   initialPhone: string;
@@ -25,6 +27,7 @@ interface UseCheckoutDialogOptions {
   initialOrderType: OrderType;
   initialDriverId: string;
   initialDeliveryCost: number;
+  initialDeliveryZone?: DeliveryZone | null;
   initialCustomerTendered?: number;
   onConfirm: (values: CheckoutFormValues) => void | Promise<void>;
   gateway?: CheckoutGateway;
@@ -33,6 +36,7 @@ interface UseCheckoutDialogOptions {
 export function useCheckoutDialog({
   open,
   total,
+  orderSubTotal,
   isTableMode,
   initialCustomer,
   initialPhone,
@@ -40,6 +44,7 @@ export function useCheckoutDialog({
   initialOrderType,
   initialDriverId,
   initialDeliveryCost,
+  initialDeliveryZone,
   initialCustomerTendered,
   onConfirm,
   gateway = checkoutGateway,
@@ -62,6 +67,8 @@ export function useCheckoutDialog({
     initialOrderType,
     initialDriverId,
     initialDeliveryCost,
+    initialDeliveryZone,
+    orderSubTotal: orderSubTotal ?? total,
     gateway,
   });
   const packaging = usePackagingSelection({
@@ -109,12 +116,16 @@ export function useCheckoutDialog({
         customerAddress: customerDelivery.customerAddress,
         selectedDriverId: customerDelivery.selectedDriverId,
         deliveryCost: customerDelivery.deliveryCost,
+        isFreeDelivery: customerDelivery.isFreeDelivery,
+        hasAvailableDrivers: customerDelivery.drivers.length > 0,
         packagingIsConfigured: packaging.packagingConfig.length > 0,
         hasSelectedPackaging: packaging.packagingItems.length > 0,
       }),
     [
       customerDelivery.customerAddress,
       customerDelivery.deliveryCost,
+      customerDelivery.drivers.length,
+      customerDelivery.isFreeDelivery,
       customerDelivery.orderType,
       customerDelivery.selectedDriverId,
       packaging.packagingConfig.length,
@@ -173,6 +184,22 @@ export function useCheckoutDialog({
           customerDelivery.orderType === "delivery"
             ? customerDelivery.deliveryCost
             : undefined,
+        deliveryZoneId:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.selectedZone?.id
+            : undefined,
+        deliveryZoneName:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.selectedZone?.name
+            : undefined,
+        deliveryDriverPayout:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.driverPayout
+            : undefined,
+        isFreeDelivery:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.isFreeDelivery
+            : false,
       });
     },
     [
@@ -182,6 +209,9 @@ export function useCheckoutDialog({
       customerDelivery.deliveryCost,
       customerDelivery.orderType,
       customerDelivery.selectedDriverId,
+      customerDelivery.selectedZone,
+      customerDelivery.driverPayout,
+      customerDelivery.isFreeDelivery,
       onConfirm,
       packaging.packagingItems,
       payment.paymentMethod,

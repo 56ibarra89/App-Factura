@@ -128,10 +128,16 @@ export default function InvoiceSummary({
           <Typography>C${totalPackagingCost.toFixed(2)}</Typography>
         </Box>
       )}
-      {showDeliveryCost && deliveryCost > 0 && (
+      {showDeliveryCost && (
         <Box display="flex" justifyContent="space-between" mb={1}>
           <Typography>Transporte:</Typography>
-          <Typography>C${deliveryCost.toFixed(2)}</Typography>
+          {deliveryCost > 0 ? (
+            <Typography>C${deliveryCost.toFixed(2)}</Typography>
+          ) : (
+            <Typography color="success.main" fontWeight="bold">
+              GRATIS
+            </Typography>
+          )}
         </Box>
       )}
       <Box display="flex" justifyContent="space-between" mb={2}>

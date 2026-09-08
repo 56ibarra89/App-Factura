@@ -35,6 +35,9 @@ export function buildOrderPromotionSelection(
 export function buildSupplementalCartItems(
   packagingItems: readonly PackagingItem[],
   deliveryCost?: number,
+  deliveryZoneName?: string,
+  deliveryDriverPayout?: number,
+  isFreeDelivery?: boolean,
 ): OrderItem[] {
   const items: OrderItem[] = packagingItems.map((packaging) => ({
     id: crypto.randomUUID(),
@@ -46,15 +49,27 @@ export function buildSupplementalCartItems(
     isSentToKitchen: false,
   }));
 
-  if (deliveryCost && deliveryCost > 0) {
+  if ((deliveryCost !== undefined && deliveryCost > 0) || isFreeDelivery) {
+    const isFree = Boolean(isFreeDelivery || deliveryCost === 0);
+    const noteParts: string[] = [];
+    if (deliveryZoneName) {
+      noteParts.push(`Zona: ${deliveryZoneName}`);
+    }
+    if (deliveryDriverPayout !== undefined) {
+      noteParts.push(`Pago Motorizado: C$${deliveryDriverPayout.toFixed(2)}`);
+    }
+    if (isFree) {
+      noteParts.push("Envío Gratis por Consumo Mínimo");
+    }
+
     items.push({
       id: crypto.randomUUID(),
-      name: "Delivery",
-      price: deliveryCost,
+      name: isFree ? "Delivery (Envío Gratis)" : "Delivery",
+      price: isFree ? 0 : (deliveryCost ?? 0),
       size: "único",
       quantity: 1,
       extras: [],
-      note: "Cargo por transporte",
+      note: noteParts.length > 0 ? noteParts.join(" | ") : "Cargo por transporte",
       isSentToKitchen: false,
     });
   }

@@ -7,9 +7,6 @@ import {
   type LiveKpis,
 } from "../api/adminDashboardGateway";
 
-export type CajaActiveMock = ActiveCashRegister;
-export type WaiterPerformanceMock = WaiterPerformance;
-
 const DEFAULT_KPIS: LiveKpis = {
   totalSalesToday: 0,
   activeOccupiedTables: 0,
@@ -21,9 +18,9 @@ export const useCashRegisterDashboard = (
   gateway: AdminDashboardGateway = adminDashboardGateway,
   autoRefreshIntervalMs: number = 30000,
 ) => {
-  const [cajasActivas, setCajasActivas] = useState<CajaActiveMock[]>([]);
+  const [cajasActivas, setCajasActivas] = useState<ActiveCashRegister[]>([]);
   const [waiterPerformance, setWaiterPerformance] = useState<
-    WaiterPerformanceMock[]
+    WaiterPerformance[]
   >([]);
   const [liveKpis, setLiveKpis] = useState<LiveKpis>(DEFAULT_KPIS);
   const [loading, setLoading] = useState(true);

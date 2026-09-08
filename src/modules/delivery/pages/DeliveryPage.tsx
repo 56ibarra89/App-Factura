@@ -28,6 +28,11 @@ export default function DeliveryPage() {
     selectedDriverId,
     setSelectedDriverId,
 
+    selectedZone,
+    setSelectedZone,
+    activeZones,
+    deliveryRules,
+
     handleKeypadPress,
     handleConfirm,
     addAddress,
@@ -51,6 +56,10 @@ export default function DeliveryPage() {
           stats={stats}
           selectedDriverId={selectedDriverId}
           setSelectedDriverId={setSelectedDriverId}
+          selectedZone={selectedZone}
+          onSelectZone={setSelectedZone}
+          activeZones={activeZones}
+          deliveryRules={deliveryRules}
         />
 
         <DeliveryKeypadPanel

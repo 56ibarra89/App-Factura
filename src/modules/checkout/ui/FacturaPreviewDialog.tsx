@@ -24,6 +24,7 @@ import InvoiceSummary from "./InvoiceSummary";
 import PackagingSection from "./PackagingSection";
 import PaymentMethodSelector from "./PaymentMethodSelector";
 import { TicketPrint } from "../../invoices";
+import type { DeliveryZone } from "../../delivery";
 
 interface FacturaPreviewDialogProps {
   open: boolean;
@@ -49,6 +50,7 @@ interface FacturaPreviewDialogProps {
   initialOrderType?: OrderType;
   initialDriverId?: string;
   initialDeliveryCost?: number;
+  initialDeliveryZone?: DeliveryZone | null;
   initialCustomerTendered?: number;
   lockOrderType?: boolean;
   hideDeliveryOption?: boolean;
@@ -78,6 +80,7 @@ export default function FacturaPreviewDialog({
   initialOrderType = "local",
   initialDriverId = "",
   initialDeliveryCost = 0,
+  initialDeliveryZone,
   initialCustomerTendered,
   lockOrderType = false,
   hideDeliveryOption = false,
@@ -87,6 +90,7 @@ export default function FacturaPreviewDialog({
   const checkout = useCheckoutDialog({
     open,
     total,
+    orderSubTotal: subTotal,
     isTableMode,
     initialCustomer,
     initialPhone,
@@ -94,12 +98,16 @@ export default function FacturaPreviewDialog({
     initialOrderType,
     initialDriverId,
     initialDeliveryCost,
+    initialDeliveryZone,
     initialCustomerTendered,
     onConfirm,
   });
   const supplementalCart = buildSupplementalCartItems(
     checkout.packagingItems,
     checkout.orderType === "delivery" ? checkout.deliveryCost : undefined,
+    checkout.orderType === "delivery" ? checkout.selectedZone?.name : undefined,
+    checkout.orderType === "delivery" ? checkout.driverPayout : undefined,
+    checkout.orderType === "delivery" ? checkout.isFreeDelivery : false,
   );
   const printableCart = [...cart, ...supplementalCart];
 
@@ -162,6 +170,12 @@ export default function FacturaPreviewDialog({
                 deliveryCost={checkout.deliveryCost}
                 onDeliveryCostChange={checkout.setDeliveryCost}
                 deliveryPrices={checkout.deliveryPrices}
+                subTotal={subTotal}
+                selectedZone={checkout.selectedZone}
+                onZoneChange={checkout.setSelectedZone}
+                activeZones={checkout.activeZones}
+                deliveryRules={checkout.deliveryRules}
+                isFreeDelivery={checkout.isFreeDelivery}
               />
               {(checkout.orderType === "llevar" ||
                 checkout.orderType === "delivery") && (
