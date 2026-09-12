@@ -18,12 +18,19 @@ const OrderGrid: React.FC<OrderGridProps> = ({ orders, selectedKitchenId, kitche
     <Grid container spacing={3}>
       {orders.map((order) => {
         const filteredItems = selectedKitchenId
-          ? order.items.filter(item => item.kitchenId === selectedKitchenId)
+          ? order.items.filter(
+              (item) =>
+                item.kitchenId === selectedKitchenId ||
+                (item.isCombo &&
+                  item.comboSelections?.some(
+                    (sel) => sel.kitchenId === selectedKitchenId,
+                  )),
+            )
           : order.items;
 
         if (filteredItems.length === 0) return null;
 
-        const ticketKey = `${order.id}-${filteredItems[0]?.kitchenId || 'all'}-${filteredItems[0]?.sentAt || 0}`;
+        const ticketKey = `${order.id}-${filteredItems[0]?.kitchenId || "all"}-${filteredItems[0]?.sentAt || 0}`;
 
         return (
           <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={ticketKey}>

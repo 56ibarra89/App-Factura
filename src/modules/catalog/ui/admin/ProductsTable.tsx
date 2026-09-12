@@ -1,10 +1,11 @@
 
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Paper, IconButton, Typography } from "@mui/material";
+import { Paper, IconButton, Typography, Box, Chip } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { Category, Product } from "../../model/catalog.types";
 import { RoleGuard } from "../../../auth";
+import { LOGIN_COLORS } from "../../../../shared/theme";
 import React from 'react';
 
 interface ProductsTableProps {
@@ -24,19 +25,46 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
       name: product.name,
       description: product.description || "",
       category: cat.label,
-      prices: product.prices
-        .map((p) =>
-          p.size === "único"
-            ? `C$${p.price.toFixed(2)}`
-            : `${p.size}: C$${p.price.toFixed(2)}`
-        )
-        .join(" | "),
+      prices: product.isCombo
+        ? `Precio Combo: C$${(product.comboPrice ?? product.prices[0]?.price ?? 0).toFixed(2)} (${product.comboGroups?.length || 0} componentes)`
+        : product.prices
+            .map((p) =>
+              p.size === "único"
+                ? `C$${p.price.toFixed(2)}`
+                : `${p.size}: C$${p.price.toFixed(2)}`
+            )
+            .join(" | "),
       rawProduct: product,
     }))
   );
 
   const columns: GridColDef[] = [
-    { field: "name", headerName: "Nombre", flex: 1 },
+    {
+      field: "name",
+      headerName: "Nombre",
+      flex: 1.2,
+      renderCell: (params) => (
+        <Box display="flex" alignItems="center" gap={1} height="100%">
+          <Typography variant="body2" fontWeight={params.row.rawProduct.isCombo ? 700 : 400}>
+            {params.value}
+          </Typography>
+          {params.row.rawProduct.isCombo && (
+            <Chip
+              label="COMBO"
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: "0.65rem",
+                fontWeight: 800,
+                bgcolor: "rgba(207, 31, 46, 0.12)",
+                color: LOGIN_COLORS.primary,
+                border: "1px solid rgba(207, 31, 46, 0.3)",
+              }}
+            />
+          )}
+        </Box>
+      ),
+    },
     { field: "description", headerName: "Descripción", flex: 1.5 },
     { field: "category", headerName: "Categoría", flex: 1 },
     { field: "prices", headerName: "Precios", flex: 2 },

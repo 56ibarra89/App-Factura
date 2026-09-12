@@ -13,6 +13,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import TimerIcon from "@mui/icons-material/Timer";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import TakeoutDiningIcon from "@mui/icons-material/TakeoutDining";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
 import { Order, OrderStatus } from "../model/order.types";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import { formatItemName, formatTableName } from "../../../shared/format";
@@ -83,7 +84,14 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const ticketSentAt = displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
   const sentAtTimestampMs = ticketSentAt ? new Date(ticketSentAt).getTime() : undefined;
   const urgency = getTicketUrgency(ticketSentAt);
-  const isTakeout = !order.tableId && order.orderType !== "delivery";
+  const normalizedOrderType = order.orderType
+    ? order.orderType.toLowerCase()
+    : order.tableId
+      ? "local"
+      : "llevar";
+  const isTakeout = normalizedOrderType === "llevar";
+  const isLocal = normalizedOrderType === "local";
+  const isDelivery = normalizedOrderType === "delivery";
   const finalStatusBadge = FINAL_STATUS_BADGES[order.status];
   const statusBadge = finalStatusBadge ?? urgency;
 
@@ -138,7 +146,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               Hora: {new Date(order.timestamp).toLocaleTimeString()}
             </Typography>
 
-            {(order.customerName || order.tableId || hasPackaging || order.orderType === "delivery" || isTakeout) && (
+            {(order.customerName || order.tableId || isLocal || hasPackaging || isDelivery || isTakeout) && (
               <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" useFlexGap sx={{ rowGap: 1 }}>
                 {order.customerName && (
                   <Chip
@@ -148,7 +156,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     sx={{ height: 20, fontSize: "0.65rem" }}
                   />
                 )}
-                {order.tableId && (
+                {order.tableId ? (
                   <Chip
                     label={
                       resolveTableName?.(order.tableId) ??
@@ -159,7 +167,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     variant="outlined"
                     sx={{ height: 20, fontSize: "0.65rem" }}
                   />
-                )}
+                ) : isLocal ? (
+                  <Chip
+                    icon={<RestaurantIcon sx={{ fontSize: "0.75rem !important" }} />}
+                    label="Comer en el Local"
+                    size="small"
+                    color="success"
+                    sx={{ height: 20, fontSize: "0.65rem", fontWeight: "bold" }}
+                  />
+                ) : null}
                 {isTakeout && (
                   <Chip
                     icon={<TakeoutDiningIcon sx={{ fontSize: "0.75rem !important" }} />}
@@ -177,7 +193,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     sx={{ height: 20, fontSize: "0.65rem", fontWeight: "bold" }}
                   />
                 )}
-                {order.orderType === "delivery" && (
+                {isDelivery && (
                   <Chip
                     icon={<TwoWheelerIcon sx={{ fontSize: "0.75rem !important" }} />}
                     label="Delivery"
@@ -208,6 +224,22 @@ const OrderCard: React.FC<OrderCardProps> = ({
             const kitchenName = kitchens.find((k) => k.id === item.kitchenId)?.name || "Sin área";
             const status = item.kitchenStatus || order.status;
 
+            const comboKitchenNames = Array.from(
+              new Set(
+                (item.comboSelections || [])
+                  .map((s) => kitchens.find((k) => k.id === s.kitchenId)?.name)
+                  .filter(Boolean) as string[],
+              ),
+            );
+
+            const displayKitchenHeader = item.isCombo
+              ? comboKitchenNames.length > 1
+                ? `Áreas: ${comboKitchenNames.join(", ")}`
+                : comboKitchenNames.length === 1
+                  ? comboKitchenNames[0]
+                  : kitchenName
+              : kitchenName;
+
             return (
               <Box
                 key={idx}
@@ -223,8 +255,46 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     <Typography variant="body2" fontWeight="medium">
                       {item.quantity}x {formatItemName(item.name, item.size)}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {kitchenName}
+                    {item.comboSelections && item.comboSelections.length > 0 && (
+                      <Box
+                        sx={{
+                          my: 0.5,
+                          pl: 1,
+                          borderLeft: "2px solid",
+                          borderColor: "primary.main",
+                        }}
+                      >
+                        {item.comboSelections.map((sel, selIdx) => {
+                          const selKitchenName = kitchens.find((k) => k.id === sel.kitchenId)?.name;
+                          const catBadge = sel.categoryName ? ` [${sel.categoryName}]` : "";
+                          const statusBadge = sel.kitchenStatus
+                            ? sel.kitchenStatus === "ready"
+                              ? " • ✅ Listo"
+                              : sel.kitchenStatus === "preparing"
+                                ? " • 👨‍🍳 Preparando"
+                                : sel.kitchenStatus === "delivered"
+                                  ? " • 📦 Entregado"
+                                  : " • ⏳ Pendiente"
+                            : "";
+                          return (
+                            <Typography
+                              key={selIdx}
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: "block" }}
+                            >
+                              • {sel.quantity}x {sel.productName}
+                              {sel.size && sel.size !== "único" ? ` (${sel.size})` : ""}
+                              {catBadge}
+                              {selKitchenName && ` (📍 ${selKitchenName})`}
+                              {statusBadge}
+                            </Typography>
+                          );
+                        })}
+                      </Box>
+                    )}
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                      📍 {displayKitchenHeader}
                     </Typography>
                   </Box>
                   <Box>

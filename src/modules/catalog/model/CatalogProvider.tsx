@@ -57,6 +57,9 @@ export const CatalogProvider = ({
         hasMultipleSizes: product.hasMultipleSizes ?? false,
         prices: product.prices,
         extras: product.extras || [],
+        isCombo: product.isCombo ?? false,
+        comboPrice: product.comboPrice,
+        comboGroups: product.comboGroups,
       });
       await loadCategories();
     } catch (error) {
@@ -79,6 +82,9 @@ export const CatalogProvider = ({
         hasMultipleSizes: updatedProduct.hasMultipleSizes ?? false,
         prices: updatedProduct.prices,
         extras: updatedProduct.extras || [],
+        isCombo: updatedProduct.isCombo ?? false,
+        comboPrice: updatedProduct.comboPrice,
+        comboGroups: updatedProduct.comboGroups,
       });
       await loadCategories();
     } catch (error) {

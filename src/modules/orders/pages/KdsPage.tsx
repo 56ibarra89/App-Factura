@@ -66,7 +66,14 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
     if (isCook && !selectedKitchenId) return [];
     if (!selectedKitchenId) return activeOrders;
     return activeOrders.filter((order) =>
-      order.items.some((item) => item.kitchenId === selectedKitchenId)
+      order.items.some(
+        (item) =>
+          item.kitchenId === selectedKitchenId ||
+          (item.isCombo &&
+            item.comboSelections?.some(
+              (sel) => sel.kitchenId === selectedKitchenId,
+            )),
+      ),
     );
   }, [activeOrders, isCook, selectedKitchenId]);
 
@@ -137,7 +144,14 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
         >
           {filteredOrders.map((order) => {
             const itemsForKitchen = selectedKitchenId
-              ? order.items.filter((i) => i.kitchenId === selectedKitchenId)
+              ? order.items.filter(
+                  (i) =>
+                    i.kitchenId === selectedKitchenId ||
+                    (i.isCombo &&
+                      i.comboSelections?.some(
+                        (sel) => sel.kitchenId === selectedKitchenId,
+                      )),
+                )
               : undefined;
 
             return (
@@ -146,6 +160,7 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
                 order={order}
                 filteredItems={itemsForKitchen}
                 kitchens={kitchens}
+                selectedKitchenId={selectedKitchenId}
                 resolveTableName={resolveTableName}
                 onUpdateStatus={
                   updateOrderStatus as (

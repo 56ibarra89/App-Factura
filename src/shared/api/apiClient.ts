@@ -88,7 +88,11 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
     let errorMessage = "Ocurrió un error en la petición al servidor";
     try {
       const errorData = await response.json();
-      errorMessage = errorData.message || errorMessage;
+      if (Array.isArray(errorData.message)) {
+        errorMessage = errorData.message.join(", ");
+      } else if (typeof errorData.message === "string") {
+        errorMessage = errorData.message;
+      }
     } catch {
       errorMessage = response.statusText || errorMessage;
     }

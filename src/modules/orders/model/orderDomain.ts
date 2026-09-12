@@ -149,8 +149,39 @@ export const orderMutations = {
         if (sentAt) {
           const kitchenStatus = status as KitchenStatus;
           const updatedItems = order.items.map((item) => {
-            const matchKitchenId = kitchenId ? item.kitchenId === kitchenId : true;
             const matchItemId = itemId !== undefined ? item.id === itemId : true;
+
+            if (item.isCombo && Array.isArray(item.comboSelections) && matchItemId) {
+              const updatedSelections = item.comboSelections.map((sel) => {
+                if (!kitchenId || sel.kitchenId === kitchenId) {
+                  return { ...sel, kitchenStatus };
+                }
+                return sel;
+              });
+
+              const allDelivered = updatedSelections.every(
+                (s) => s.kitchenStatus === "delivered",
+              );
+              const allReadyOrDelivered = updatedSelections.every(
+                (s) => s.kitchenStatus === "ready" || s.kitchenStatus === "delivered",
+              );
+              const anyPreparingOrReady = updatedSelections.some(
+                (s) => s.kitchenStatus === "preparing" || s.kitchenStatus === "ready",
+              );
+
+              let overallStatus: KitchenStatus = "pending";
+              if (allDelivered) overallStatus = "delivered";
+              else if (allReadyOrDelivered) overallStatus = "ready";
+              else if (anyPreparingOrReady) overallStatus = "preparing";
+
+              return {
+                ...item,
+                kitchenStatus: overallStatus,
+                comboSelections: updatedSelections,
+              };
+            }
+
+            const matchKitchenId = kitchenId ? item.kitchenId === kitchenId : true;
 
             if (
               requiresKitchenPreparation(item) &&

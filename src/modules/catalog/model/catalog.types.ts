@@ -26,6 +26,21 @@ export interface ProductPrice {
   price: number;
 }
 
+export interface ComboGroupOptionDef {
+  id?: string;
+  itemProductId: string;
+  itemProductName?: string;
+  size?: string;
+  extraPrice?: number;
+}
+
+export interface ComboGroupDef {
+  id?: string;
+  name: string;
+  requiredCount: number;
+  options: ComboGroupOptionDef[];
+}
+
 export interface Product {
   id?: string;
   categoryId?: string;
@@ -33,6 +48,9 @@ export interface Product {
   description?: string;
   prices: ProductPrice[];
   hasMultipleSizes?: boolean;
+  isCombo?: boolean;
+  comboPrice?: number;
+  comboGroups?: ComboGroupDef[];
   extras?: ExtraIngredientDef[];
 }
 

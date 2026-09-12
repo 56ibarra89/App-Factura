@@ -1,4 +1,4 @@
-import { Box, Button, Paper, Stack } from "@mui/material";
+import { Box, Button, Paper, Stack, Snackbar, Alert } from "@mui/material";
 import {
   BackButton,
   ConfirmDialog,
@@ -6,11 +6,13 @@ import {
 } from "../../../shared/ui";
 import CategoryIcon from "@mui/icons-material/Category";
 import AddIcon from "@mui/icons-material/Add";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useState, useRef } from "react";
 import { useCatalog } from "../hooks/useCatalog";
 import type { Product } from "../model/catalog.types";
 import ProductsTable from "../ui/admin/ProductsTable";
 import ProductFormDialog from "../ui/admin/ProductFormDialog";
+import ComboFormDialog from "../ui/admin/ComboFormDialog";
 import CategoryManagerDialog from "../ui/admin/CategoryManagerDialog";
 import { DeliveryPricesDialog } from "../../delivery";
 import PackagingSizesDialog from "../ui/admin/PackagingSizesDialog";
@@ -30,6 +32,7 @@ const ProductsPage = () => {
   };
 
   const [showForm, setShowForm] = useState(false);
+  const [showComboForm, setShowComboForm] = useState(false);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showDeliveryPrices, setShowDeliveryPrices] = useState(false);
   const [showPackagingSizes, setShowPackagingSizes] = useState(false);
@@ -54,10 +57,20 @@ const ProductsPage = () => {
     setShowForm(true);
   };
 
+  const handleAddCombo = () => {
+    blurActiveElement();
+    setEditing(null);
+    setShowComboForm(true);
+  };
+
   const handleEdit = (product: Product, category: string) => {
     blurActiveElement();
     setEditing({ product, category });
-    setShowForm(true);
+    if (product.isCombo) {
+      setShowComboForm(true);
+    } else {
+      setShowForm(true);
+    }
   };
 
   const handleDeleteClick = (name: string, category: string) => {
@@ -69,22 +82,67 @@ const ProductsPage = () => {
     });
   };
 
-  const handleConfirmDelete = () => {
-    deleteProduct(deleteConfirm.category, deleteConfirm.name);
-    logService.log(username, role, "PRODUCT_DELETE", `Producto "${deleteConfirm.name}" eliminado de la categoría "${deleteConfirm.category}"`);
-    setDeleteConfirm({ ...deleteConfirm, open: false });
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteProduct(deleteConfirm.category, deleteConfirm.name);
+      logService.log(username, role, "PRODUCT_DELETE", `Producto "${deleteConfirm.name}" eliminado de la categoría "${deleteConfirm.category}"`);
+      setSnackbar({
+        open: true,
+        message: `"${deleteConfirm.name}" eliminado correctamente`,
+        severity: "success",
+      });
+    } catch (error: any) {
+      console.error("Error al eliminar:", error);
+      setSnackbar({
+        open: true,
+        message: error?.message || "Error al eliminar el producto",
+        severity: "error",
+      });
+    } finally {
+      setDeleteConfirm((prev) => ({ ...prev, open: false }));
+    }
   };
 
-  const handleSubmit = (category: string, newProduct: Product, oldName?: string) => {
-    if (oldName) {
-      updateProduct(category, oldName, newProduct);
-      logService.log(username, role, "PRODUCT_UPDATE", `Producto "${oldName}" actualizado en la categoría "${category}"`);
-    } else {
-      addProduct(category, newProduct);
-      logService.log(username, role, "PRODUCT_CREATE", `Producto "${newProduct.name}" creado en la categoría "${category}"`);
+  const handleSubmit = async (category: string, newProduct: Product, oldName?: string) => {
+    try {
+      if (oldName) {
+        await updateProduct(category, oldName, newProduct);
+        logService.log(username, role, "PRODUCT_UPDATE", `${newProduct.isCombo ? 'Combo' : 'Producto'} "${oldName}" actualizado en la categoría "${category}"`);
+        setSnackbar({
+          open: true,
+          message: `${newProduct.isCombo ? 'Combo' : 'Producto'} "${newProduct.name}" actualizado exitosamente`,
+          severity: "success",
+        });
+      } else {
+        await addProduct(category, newProduct);
+        logService.log(username, role, "PRODUCT_CREATE", `${newProduct.isCombo ? 'Combo' : 'Producto'} "${newProduct.name}" creado en la categoría "${category}"`);
+        setSnackbar({
+          open: true,
+          message: `${newProduct.isCombo ? 'Combo' : 'Producto'} "${newProduct.name}" creado exitosamente`,
+          severity: "success",
+        });
+      }
+      setShowForm(false);
+      setShowComboForm(false);
+      setEditing(null);
+    } catch (error: any) {
+      console.error("Error al guardar producto/combo:", error);
+      setSnackbar({
+        open: true,
+        message: error?.message || "Error al guardar el producto o combo",
+        severity: "error",
+      });
     }
-    setShowForm(false);
-    setEditing(null);
   };
   return (
     <Box
@@ -154,6 +212,25 @@ const ProductsPage = () => {
                 Gestionar Empaques
               </Button>
               <Button
+                variant="contained"
+                size="small"
+                onClick={handleAddCombo}
+                startIcon={<AutoAwesomeIcon />}
+                sx={{
+                  borderRadius: 2,
+                  bgcolor: "#d32f2f",
+                  background: "linear-gradient(135deg, #d32f2f 0%, #f57c00 100%)",
+                  color: "#fff",
+                  fontWeight: 700,
+                  boxShadow: "0 4px 12px rgba(211, 47, 47, 0.25)",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #b71c1c 0%, #e65100 100%)",
+                  },
+                }}
+              >
+                Crear Combo
+              </Button>
+              <Button
                 ref={addButtonRef}
                 variant="contained"
                 size="small"
@@ -188,6 +265,17 @@ const ProductsPage = () => {
         disableRestoreFocus={true}
       />
 
+      <ComboFormDialog
+        open={showComboForm}
+        onClose={() => {
+          setShowComboForm(false);
+          setEditing(null);
+        }}
+        onSubmit={handleSubmit}
+        editing={editing}
+        disableRestoreFocus={true}
+      />
+
       <ConfirmDialog
         open={deleteConfirm.open}
         title="Confirmar eliminación"
@@ -210,6 +298,22 @@ const ProductsPage = () => {
         open={showPackagingSizes}
         onClose={() => setShowPackagingSizes(false)}
       />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%", borderRadius: 2, fontWeight: 600 }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

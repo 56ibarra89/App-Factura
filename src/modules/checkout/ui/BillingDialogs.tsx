@@ -3,7 +3,8 @@ import { ConfirmDialog } from "../../../shared/ui";
 import ExtrasDialog from "./ExtrasDialog";
 import FacturaPreviewDialog from "./FacturaPreviewDialog";
 import SelectSizeDialog from "./SelectSizeDialog";
-import type { OrderItem } from "../../orders";
+import { ComboSelectionDialog } from "./ComboSelectionDialog";
+import type { OrderItem, OrderItemInput } from "../../orders";
 import type { CheckoutFormValues } from "../model/checkout.types";
 import type { Customer } from "../../customers";
 import type {
@@ -32,8 +33,11 @@ interface PendingProduct {
 
 interface ProductDialogs {
   selectedProduct: SelectedProduct | null;
+  selectedComboProduct?: { product: Product; kitchenId?: string } | null;
   pendingItem: PendingProduct | null;
   closeSizeDialog(): void;
+  closeComboDialog?(): void;
+  confirmCombo?(item: OrderItemInput): void;
   selectSize(selected: {
     name: string;
     price: number;
@@ -142,6 +146,16 @@ export default function BillingDialogs({
           extras={products.pendingItem.product.extras || []}
           onClose={products.cancelExtras}
           onConfirm={products.confirmExtras}
+        />
+      )}
+
+      {products.selectedComboProduct && (
+        <ComboSelectionDialog
+          open={Boolean(products.selectedComboProduct)}
+          comboProduct={products.selectedComboProduct.product}
+          kitchenId={products.selectedComboProduct.kitchenId}
+          onClose={products.closeComboDialog || (() => {})}
+          onConfirm={products.confirmCombo || (() => {})}
         />
       )}
 

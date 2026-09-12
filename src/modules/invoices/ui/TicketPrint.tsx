@@ -222,6 +222,39 @@ const TicketPrint = ({
                     {itemTotal.toFixed(2)}
                   </Typography>
                 </Box>
+                {item.comboSelections?.map((selection, sIdx) => {
+                  const sizeText =
+                    selection.size && selection.size !== "único"
+                      ? ` (${selection.size})`
+                      : "";
+                  const extraText =
+                    selection.extraPrice && selection.extraPrice > 0
+                      ? ` (+${selection.extraPrice.toFixed(2)})`
+                      : "";
+                  return (
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      key={`combo-sel-${sIdx}`}
+                      pl={1.5}
+                    >
+                      <Typography
+                        variant="body2"
+                        fontFamily="inherit"
+                        sx={{ width: "15%", fontSize: "0.75rem" }}
+                      />
+                      <Typography
+                        variant="body2"
+                        fontFamily="inherit"
+                        sx={{ width: "85%", fontSize: "0.75rem" }}
+                      >
+                        - {selection.quantity}x {selection.productName}
+                        {sizeText}
+                        {extraText}
+                      </Typography>
+                    </Box>
+                  );
+                })}
                 {item.extras?.map((extra, eIdx) => (
                   <Box
                     display="flex"

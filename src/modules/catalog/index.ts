@@ -11,6 +11,8 @@ export type {
 export type { CatalogContextValue } from "./model/CatalogContext";
 export type {
   Category,
+  ComboGroupDef,
+  ComboGroupOptionDef,
   ExtraFormItem,
   ExtraIngredientDef,
   ExtraPrice,

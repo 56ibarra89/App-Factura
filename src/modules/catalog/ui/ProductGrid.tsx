@@ -16,8 +16,9 @@ const ProductGrid = ({ products, onProductClick }: ProductGridProps) => {
           <ProductCard
             key={item.name}
             name={item.name}
-            price={item.prices?.[0]?.price || 0}
+            price={item.isCombo ? item.comboPrice || 0 : item.prices?.[0]?.price || 0}
             description={item.description}
+            isCombo={item.isCombo}
             onClick={() => onProductClick(item)}
           />
         ))}

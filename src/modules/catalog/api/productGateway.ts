@@ -9,6 +9,9 @@ export interface ProductPayload {
   hasMultipleSizes: boolean;
   prices: Product["prices"];
   extras: NonNullable<Product["extras"]>;
+  isCombo?: boolean;
+  comboPrice?: number;
+  comboGroups?: Product["comboGroups"];
 }
 
 export interface CategoryPayload {

@@ -18,6 +18,20 @@ export interface OrderPromotionSelection {
   happyHourId?: number;
 }
 
+export interface SelectedComboOptionItem {
+  groupId: string;
+  groupName: string;
+  productId: string;
+  productName: string;
+  size?: string;
+  quantity: number;
+  extraPrice: number;
+  kitchenId?: string;
+  categoryId?: string;
+  categoryName?: string;
+  kitchenStatus?: KitchenStatus;
+}
+
 export interface OrderItem {
   id?: number | string;
   productId?: string;
@@ -35,6 +49,8 @@ export interface OrderItem {
   kitchenStatus?: KitchenStatus;
   kitchenId?: string;
   certificateSerial?: string;
+  isCombo?: boolean;
+  comboSelections?: SelectedComboOptionItem[];
 }
 
 export type OrderItemInput = Pick<
@@ -45,7 +61,7 @@ export type OrderItemInput = Pick<
     Pick<
       OrderItem,
       "productId" | "note" | "giftQuantity" | "giftReason" | "kitchenId" | "certificateSerial"
-      | "categoryId"
+      | "categoryId" | "isCombo" | "comboSelections"
     >
   >;
 

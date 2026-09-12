@@ -51,6 +51,38 @@ export default function InvoiceSummary({
               primary={`${formatItemName(item.name, item.size)} x${item.quantity}`}
               secondary={
                 <Box component="span" display="flex" flexDirection="column">
+                  {item.comboSelections && item.comboSelections.length > 0 && (
+                    <Box
+                      component="span"
+                      sx={{
+                        display: "block",
+                        my: 0.5,
+                        pl: 1,
+                        borderLeft: "2px solid",
+                        borderColor: "primary.main",
+                      }}
+                    >
+                      {item.comboSelections.map((s, sIdx) => {
+                        const sizeText =
+                          s.size && s.size !== "único" ? ` (${s.size})` : "";
+                        const extraText =
+                          s.extraPrice && s.extraPrice > 0
+                            ? ` (+C$${s.extraPrice.toFixed(2)})`
+                            : "";
+                        return (
+                          <Typography
+                            key={sIdx}
+                            component="span"
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: "block", fontSize: "0.75rem" }}
+                          >
+                            • {s.quantity}x {s.productName}{sizeText}{extraText}
+                          </Typography>
+                        );
+                      })}
+                    </Box>
+                  )}
                   {item.extras?.length > 0 && (
                     <Typography
                       component="span"

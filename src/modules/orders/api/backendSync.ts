@@ -1,4 +1,4 @@
-import { Order, OrderStatus, OrderType, PaymentMethod, KitchenStatus } from "../model/order.types";
+import { Order, OrderStatus, OrderType, PaymentMethod, KitchenStatus, SelectedComboOptionItem } from "../model/order.types";
 import { apiClient } from "../../../shared/api";
 
 interface BackendExtra {
@@ -22,6 +22,8 @@ interface BackendItem {
   sentAt?: string | Date;
   kitchenStatus?: string;
   kitchenId?: string;
+  isCombo?: boolean;
+  comboSelections?: SelectedComboOptionItem[];
 }
 
 export interface BackendOrder {
@@ -71,7 +73,7 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       price: Number(i.price),
       size: i.size.toLowerCase(),
       quantity: Number(i.quantity),
-      extras: i.extras.map((e: BackendExtra) => ({ name: e.name, price: Number(e.price) })),
+      extras: (i.extras || []).map((e: BackendExtra) => ({ name: e.name, price: Number(e.price) })),
       note: i.note,
       giftQuantity: i.giftQuantity,
       giftReason: i.giftReason,
@@ -79,6 +81,8 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
       kitchenStatus: i.kitchenStatus ? (i.kitchenStatus.toLowerCase() as KitchenStatus) : undefined,
       kitchenId: i.kitchenId,
+      isCombo: Boolean(i.isCombo),
+      comboSelections: i.comboSelections ? i.comboSelections : undefined,
     })),
     subTotal: backendOrder.subTotal !== null && backendOrder.subTotal !== undefined ? Number(backendOrder.subTotal) : undefined,
     discountAmount: backendOrder.discountAmount !== null && backendOrder.discountAmount !== undefined ? Number(backendOrder.discountAmount) : undefined,
@@ -159,6 +163,8 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
       sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
       kitchenStatus: i.kitchenStatus,
       kitchenId: i.kitchenId,
+      isCombo: Boolean(i.isCombo),
+      comboSelections: i.comboSelections || undefined,
     })),
     total: order.total,
     subTotal: order.subTotal,
@@ -234,6 +240,8 @@ export async function syncUpdateOrderItems(order: Order) {
         sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
         kitchenStatus: i.kitchenStatus,
         kitchenId: i.kitchenId,
+        isCombo: Boolean(i.isCombo),
+        comboSelections: i.comboSelections || undefined,
       })),
       total: order.total,
       subTotal: order.subTotal,

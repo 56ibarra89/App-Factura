@@ -8,6 +8,15 @@ export interface KitchenOrderItem {
   size?: string;
   note?: string;
   extras?: Array<{ name: string }>;
+  isCombo?: boolean;
+  comboSelections?: Array<{
+    productName: string;
+    quantity: number;
+    size?: string;
+    extraPrice?: number;
+    categoryName?: string;
+    kitchenId?: string;
+  }>;
 }
 
 export interface KitchenComandaData {
@@ -225,6 +234,14 @@ class PrinterDispatcherService {
       builder.line(`[ ${item.quantity} ] ${item.name.toUpperCase()}${sizeText}`);
 
       builder.size("normal").bold(false);
+
+      if (item.comboSelections && item.comboSelections.length > 0) {
+        item.comboSelections.forEach((sel) => {
+          const selSize = sel.size && sel.size !== "único" ? ` (${sel.size})` : "";
+          const catTag = sel.categoryName ? ` [${sel.categoryName.toUpperCase()}]` : "";
+          builder.line(`   > ${sel.quantity}x ${sel.productName.toUpperCase()}${selSize}${catTag}`);
+        });
+      }
 
       if (item.extras && item.extras.length > 0) {
         item.extras.forEach((extra) => {

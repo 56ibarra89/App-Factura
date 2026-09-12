@@ -99,6 +99,8 @@ export function useKitchenDispatch({
             size: k.size,
             note: k.note,
             extras: k.extras,
+            isCombo: k.isCombo,
+            comboSelections: k.comboSelections,
           })),
           timestamp: sentAt,
         });

@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { useCartStore } from "./useCartStore";
 import { useCheckout } from "./useCheckout";
@@ -32,18 +31,20 @@ function useCart() {
   const {
     selectedProduct,
     setSelectedProduct,
+    selectedComboProduct,
     pendingItem,
     startSelection,
     selectSize,
     confirmExtras,
     cancelExtras,
+    confirmCombo,
+    closeComboDialog,
   } = useProductSelection(handleConfirmProduct);
 
   const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } =
     useCheckout(cart, promotion);
 
   return {
-
     cart,
     promotion,
     subTotal,
@@ -52,6 +53,7 @@ function useCart() {
     total,
     selectedProduct,
     setSelectedProduct,
+    selectedComboProduct,
     pendingItem,
 
     handleChangeQuantity: changeQuantity,
@@ -61,6 +63,8 @@ function useCart() {
     handleSelectSize: selectSize,
     handleConfirmExtras: confirmExtras,
     handleCancelExtras: cancelExtras,
+    handleConfirmCombo: confirmCombo,
+    handleCloseComboDialog: closeComboDialog,
     handleRemoveItem: removeItem,
     handleClearCart: clearCart,
     handleConfirmFactura: confirmFactura,
@@ -74,4 +78,3 @@ function useCart() {
 }
 
 export default useCart;
-

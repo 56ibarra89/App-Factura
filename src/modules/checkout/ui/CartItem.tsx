@@ -9,7 +9,11 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
+import Chip from "@mui/material/Chip";
+import Inventory2Icon from "@mui/icons-material/Inventory2";
 import type { SelectedExtra } from "../../catalog";
+import type { SelectedComboOptionItem } from "../../orders";
+import { LOGIN_COLORS } from "../../../shared/theme";
 
 interface CartItemProps {
   name: string;
@@ -17,6 +21,8 @@ interface CartItemProps {
   quantity: number;
   extras?: SelectedExtra[];
   note?: string;
+  isCombo?: boolean;
+  comboSelections?: SelectedComboOptionItem[];
   onAdd: () => void;
   onRemove: () => void;
   onChangeQuantity?: (qty: number) => void;
@@ -32,6 +38,8 @@ const CartItem = ({
   quantity,
   extras = EMPTY_EXTRAS,
   note,
+  isCombo,
+  comboSelections,
   onAdd,
   onRemove,
   onChangeQuantity,
@@ -49,8 +57,56 @@ const CartItem = ({
         mb: 1,
       }}
     >
-      <Box>
-        <Typography fontWeight="bold">{name}</Typography>
+      <Box sx={{ minWidth: 0, flex: 1, mr: 1 }}>
+        <Box display="flex" alignItems="center" gap={0.8} flexWrap="wrap">
+          <Typography fontWeight="bold">{name}</Typography>
+          {isCombo && (
+            <Chip
+              icon={<Inventory2Icon sx={{ fontSize: "0.75rem !important", color: "#fff" }} />}
+              label="COMBO"
+              size="small"
+              sx={{
+                bgcolor: LOGIN_COLORS.primary,
+                color: "#fff",
+                fontWeight: "bold",
+                fontSize: "0.6rem",
+                height: 18,
+              }}
+            />
+          )}
+        </Box>
+
+        {/* Desglose de ítems seleccionados del combo */}
+        {comboSelections && comboSelections.length > 0 && (
+          <Box
+            mt={0.5}
+            mb={0.5}
+            pl={1}
+            sx={{
+              borderLeft: "2px solid",
+              borderColor: LOGIN_COLORS.primary,
+            }}
+          >
+            {comboSelections.map((s, sIdx) => {
+              const sizeText = s.size && s.size !== "único" ? ` (${s.size})` : "";
+              const extraText =
+                s.extraPrice && s.extraPrice > 0
+                  ? ` (+C$${s.extraPrice.toFixed(2)})`
+                  : "";
+              return (
+                <Typography
+                  key={sIdx}
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "block", fontSize: "0.75rem", lineHeight: 1.3 }}
+                >
+                  • {s.quantity}x {s.productName}{sizeText}{extraText}
+                </Typography>
+              );
+            })}
+          </Box>
+        )}
+
         {extras.length > 0 && (
           <Typography variant="caption" color="primary.main" sx={{ display: "block" }}>
             + {extras.map((e) => e.name).join(", ")}

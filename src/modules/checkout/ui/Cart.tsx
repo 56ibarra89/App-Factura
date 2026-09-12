@@ -60,13 +60,20 @@ const Cart = ({
             extras={item.extras}
             note={item.note}
             giftQuantity={item.giftQuantity}
+            isCombo={item.isCombo}
+            comboSelections={item.comboSelections}
             onAdd={() =>
               onAddItem({
+                productId: item.productId,
+                categoryId: item.categoryId,
                 name: item.name,
                 price: item.price,
                 size: item.size,
                 extras: item.extras,
                 note: item.note,
+                isCombo: item.isCombo,
+                comboSelections: item.comboSelections,
+                kitchenId: item.kitchenId,
               })
             }
             onRemove={() => onRemoveItem(i)}

@@ -125,13 +125,20 @@ export function useBillingFlow({
           if (kitchenItems.length > 0) {
             void printerDispatcherService.printKitchenComanda({
               orderId: invoiceNumber,
-              orderType: form.orderType === "delivery" ? "DELIVERY" : "LLEVAR",
+              orderType:
+                form.orderType === "delivery"
+                  ? "DELIVERY"
+                  : form.orderType === "local"
+                    ? "LOCAL"
+                    : "LLEVAR",
               items: kitchenItems.map((k) => ({
                 name: k.name,
                 quantity: k.quantity,
                 size: k.size,
                 note: k.note,
                 extras: k.extras,
+                isCombo: k.isCombo,
+                comboSelections: k.comboSelections,
               })),
               timestamp: Date.now(),
             });

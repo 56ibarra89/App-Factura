@@ -67,6 +67,7 @@ const CheckoutPage = () => {
     total,
     selectedProduct,
     setSelectedProduct,
+    selectedComboProduct,
     pendingItem,
     handleChangeQuantity,
     handleAddToCartItem,
@@ -74,6 +75,8 @@ const CheckoutPage = () => {
     handleSelectSize,
     handleConfirmExtras,
     handleCancelExtras,
+    handleConfirmCombo,
+    handleCloseComboDialog,
     handleRemoveItem,
     handleConfirmFactura,
     handleChangeGiftQuantity,
@@ -185,8 +188,11 @@ const CheckoutPage = () => {
       <BillingDialogs
         products={{
           selectedProduct,
+          selectedComboProduct,
           pendingItem,
           closeSizeDialog: () => setSelectedProduct(null),
+          closeComboDialog: handleCloseComboDialog,
+          confirmCombo: handleConfirmCombo,
           selectSize: handleSelectSize,
           cancelExtras: handleCancelExtras,
           confirmExtras: handleConfirmExtras,

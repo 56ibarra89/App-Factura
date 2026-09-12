@@ -37,25 +37,53 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
       const relevantItems = selectedKitchenId
         ? order.items.filter(
             (i) =>
-              i.kitchenId === selectedKitchenId &&
-              requiresKitchenPreparation(i)
+              requiresKitchenPreparation(i) &&
+              (i.kitchenId === selectedKitchenId ||
+                (i.isCombo &&
+                  i.comboSelections?.some(
+                    (sel) => sel.kitchenId === selectedKitchenId,
+                  ))),
           )
         : order.items.filter(requiresKitchenPreparation);
 
       if (relevantItems.length === 0) return order.status;
 
+      const getItemStatus = (item: Order["items"][0]): OrderStatus => {
+        if (item.isCombo && Array.isArray(item.comboSelections) && selectedKitchenId) {
+          const stationSelections = item.comboSelections.filter(
+            (s) => s.kitchenId === selectedKitchenId,
+          );
+          if (stationSelections.length > 0) {
+            const allDelivered = stationSelections.every(
+              (s) => s.kitchenStatus === "delivered",
+            );
+            if (allDelivered) return "delivered";
+            const allReadyOrDelivered = stationSelections.every(
+              (s) => s.kitchenStatus === "ready" || s.kitchenStatus === "delivered",
+            );
+            if (allReadyOrDelivered) return "ready";
+            const anyPreparingOrReady = stationSelections.some(
+              (s) => s.kitchenStatus === "preparing" || s.kitchenStatus === "ready",
+            );
+            if (anyPreparingOrReady) return "preparing";
+            return "pending";
+          }
+        }
+        return item.kitchenStatus || order.status;
+      };
+
       const allDelivered = relevantItems.every(
-        (i) => i.kitchenStatus === "delivered"
+        (i) => getItemStatus(i) === "delivered",
       );
       if (allDelivered) return "delivered";
 
       const allReadyOrDelivered = relevantItems.every(
-        (i) => i.kitchenStatus === "ready" || i.kitchenStatus === "delivered"
+        (i) => getItemStatus(i) === "ready" || getItemStatus(i) === "delivered",
       );
       if (allReadyOrDelivered) return "ready";
 
       const anyPreparingOrReady = relevantItems.some(
-        (i) => i.kitchenStatus === "preparing" || i.kitchenStatus === "ready"
+        (i) => getItemStatus(i) === "preparing" || getItemStatus(i) === "ready",
       );
       if (anyPreparingOrReady) return "preparing";
 
@@ -70,8 +98,12 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
       order.items.some(
         (item) =>
           requiresKitchenPreparation(item) &&
-          item.kitchenId === selectedKitchenId,
-      )
+          (item.kitchenId === selectedKitchenId ||
+            (item.isCombo &&
+              item.comboSelections?.some(
+                (sel) => sel.kitchenId === selectedKitchenId,
+              ))),
+      ),
     );
   }, [orders, selectedKitchenId]);
 
@@ -199,7 +231,14 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
             ) : (
               col.orders.map((order) => {
                 const itemsForKitchen = selectedKitchenId
-                  ? order.items.filter((i) => i.kitchenId === selectedKitchenId)
+                  ? order.items.filter(
+                      (i) =>
+                        i.kitchenId === selectedKitchenId ||
+                        (i.isCombo &&
+                          i.comboSelections?.some(
+                            (sel) => sel.kitchenId === selectedKitchenId,
+                          )),
+                    )
                   : undefined;
 
                 return (
@@ -208,6 +247,7 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
                     order={order}
                     filteredItems={itemsForKitchen}
                     kitchens={kitchens}
+                    selectedKitchenId={selectedKitchenId}
                     resolveTableName={resolveTableName}
                     onUpdateStatus={onUpdateStatus}
                   />
