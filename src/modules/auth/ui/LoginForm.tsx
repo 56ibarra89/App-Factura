@@ -178,7 +178,7 @@ export const LoginForm = ({
         disabled={pinLockoutTime > 0}
       >
         {pinLockoutTime > 0
-          ? `PIN bloqueado (${pinLockoutTime}s)`
+          ? `PIN en pausa (${pinLockoutTime}s)`
           : "Ingresar con PIN táctil"}
       </Button>
     </Box>

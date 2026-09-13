@@ -10,6 +10,7 @@ export type {
 } from "./model/AuthContext";
 export type {
   AuthLoginResult,
+  AuthPinLoginResult,
   IAuthService,
   LogoutResult,
 } from "./model/auth-service.types";

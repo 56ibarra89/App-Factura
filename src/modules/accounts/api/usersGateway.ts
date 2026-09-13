@@ -21,6 +21,7 @@ export type UserMutationPayload = Partial<
     | "isActive"
     | "workDays"
     | "themePreference"
+    | "currentPassword"
   >
 >;
 
@@ -37,7 +38,7 @@ export interface UserAdministrationGateway {
 
 export interface UserProfileGateway {
   findByUsername(username: string): Promise<UserProfile>;
-  update(id: string, payload: UserMutationPayload): Promise<UserProfile>;
+  updateOwn(payload: UserMutationPayload): Promise<UserProfile>;
 }
 
 export interface UserScheduleGateway {
@@ -63,6 +64,12 @@ export const usersGateway: UsersHttpAdapter = {
 
   update: (id, payload) =>
     apiClient(`/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  updateOwn: (payload) =>
+    apiClient("/users/me", {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),

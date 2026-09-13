@@ -43,7 +43,9 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.username || !formData.firstName || !formData.pin) return;
+    if (!formData.username || !formData.firstName) return;
+    if (!isEditing && !formData.pin) return;
+    if (formData.pin && !/^\d{6}$/.test(formData.pin)) return;
     if (hasPasswordInput && !isPasswordValid) return;
     const userToSave: UserAccount = {
       ...formData,
@@ -78,7 +80,8 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
   };
 
   const requirements = [
-    { regex: /.{8,}/, msg: "Mínimo 8 caracteres" },
+    { regex: /^.{8,128}$/, msg: "Entre 8 y 128 caracteres" },
+    { regex: /^[A-Za-z\d@$!%*?&]+$/, msg: "Sin espacios ni caracteres no permitidos" },
     { regex: /[A-Z]/, msg: "Mayúscula" },
     { regex: /[a-z]/, msg: "Minúscula" },
     { regex: /[0-9]/, msg: "Número" },
@@ -164,11 +167,12 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
               label="PIN Numérico"
               type="text"
               value={formData.pin || ""}
-              onChange={e => handleChange("pin", e.target.value.replace(/\D/g, '').substring(0,4))}
-              inputProps={{ maxLength: 4 }}
-              required
+              onChange={e => handleChange("pin", e.target.value.replace(/\D/g, '').substring(0,6))}
+              inputProps={{ maxLength: 6 }}
+              required={!isEditing}
               variant="filled"
-              helperText="4 dígitos para acciones rápidas."
+              placeholder={isEditing ? (formData.hasPin ? "●●●●●● (dejar en blanco para conservar)" : "Ingresar nuevo PIN") : "6 dígitos"}
+              helperText={isEditing ? "Dejar en blanco para conservar el PIN actual." : "6 dígitos para acciones rápidas."}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -188,8 +192,9 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
               fullWidth
               size="small"
               label="Contraseña Principal"
-              type="text"
+              type="password"
               value={formData.password || ""}
+              inputProps={{ maxLength: 128 }}
               onChange={e => handleChange("password", e.target.value)}
               required={!isEditing}
               variant="filled"
@@ -298,4 +303,3 @@ function PersonAddAlt1Icon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
-

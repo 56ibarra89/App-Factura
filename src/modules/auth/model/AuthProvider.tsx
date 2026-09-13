@@ -41,15 +41,22 @@ export const AuthProvider = ({
     tokenGateway,
     preferencesGateway,
   });
+  const isLoggedIn = session.state.isLoggedIn;
+  const signOut = session.signOut;
 
   useEffect(() => {
-    if (session.state.isLoggedIn) {
-      const token = accessTokenStore.get();
-      if (token) {
-        tokenGateway.store(token);
-      }
+    if (!isLoggedIn) return;
+
+    if (window.authAPI) {
+      void window.authAPI.hasToken().then((hasToken) => {
+        if (!hasToken) signOut();
+      });
+      return;
     }
-  }, [session.state.isLoggedIn, tokenGateway]);
+
+    const token = accessTokenStore.get();
+    if (!token) signOut();
+  }, [isLoggedIn, signOut]);
 
   useInactivityTimer(
     {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { authService, useAuth } from "../../auth";
+import { useAuth } from "../../auth";
 import { getThemePreference, setThemePreference, type ThemePreference } from "../../../shared/preferences";
 import { validatePasswordStrength } from "../../../shared/validation";
 import {
@@ -12,7 +12,7 @@ import type { AccountData } from "../model/account.types";
 export function useAccountSettings(
   gateway: UserProfileGateway = usersGateway,
 ) {
-  const { username, email, updateUsername } = useAuth();
+  const { username, email, updateUsername, logout } = useAuth();
 
   const [data, setData] = useState<AccountData>({
     nombreCompleto: "",
@@ -69,7 +69,7 @@ export function useAccountSettings(
 
       if (data.id) {
         gateway
-          .update(data.id, { themePreference: value as ThemePreference })
+          .updateOwn({ themePreference: value as ThemePreference })
           .catch((err) =>
             console.error("Error guardando tema en background", err),
           );
@@ -114,25 +114,19 @@ export function useAccountSettings(
         return;
       }
 
-      // Validar contraseña actual directamente en el backend
-      try {
-        const loginResult = await authService.login(username, data.passwordActual);
-        if (!loginResult.success) {
-          setError("La contraseña actual es incorrecta");
-          setLoading(false);
-          return;
-        }
-      } catch {
-        setError("Error validando la contraseña actual");
+    }
+
+    if (data.pin) {
+      if (!/^\d{6}$/.test(data.pin)) {
+        setError("El nuevo PIN debe ser un código numérico de exactamente 6 dígitos");
         setLoading(false);
         return;
       }
-    }
-
-    if (!data.pin || data.pin.length !== 4 || !/^\d+$/.test(data.pin)) {
-      setError("El PIN debe ser un código numérico de exactamente 4 dígitos");
-      setLoading(false);
-      return;
+      if (!data.passwordActual) {
+        setError("Necesita la contraseña actual para cambiar el PIN");
+        setLoading(false);
+        return;
+      }
     }
 
     try {
@@ -144,17 +138,24 @@ export function useAccountSettings(
         username: data.nombreUsuario.trim(),
         firstName,
         lastName,
-        email: data.email,
-        pin: data.pin,
+        ...(data.email.trim() ? { email: data.email.trim() } : {}),
         themePreference: data.themePreference,
       };
+
+      if (data.pin) {
+        updatePayload.pin = data.pin;
+      }
 
       const passwordChanged = !!data.nuevaPassword;
       if (passwordChanged) {
         updatePayload.password = data.nuevaPassword;
       }
 
-      await gateway.update(data.id, updatePayload);
+      if (data.pin || passwordChanged) {
+        updatePayload.currentPassword = data.passwordActual;
+      }
+
+      await gateway.updateOwn(updatePayload);
 
       if (username !== data.nombreUsuario.trim()) {
         updateUsername(data.nombreUsuario.trim());
@@ -162,14 +163,15 @@ export function useAccountSettings(
 
       setData((prev) => ({
         ...prev,
+        pin: "",
         passwordActual: "",
         nuevaPassword: "",
         confirmarPassword: "",
       }));
 
       setSuccess("Datos actualizados correctamente");
-      if (passwordChanged) {
-        setShowLogoutModal(true);
+      if (passwordChanged || Boolean(data.pin)) {
+        await logout();
       }
     } catch (err: unknown) {
       console.error("Error actualizando perfil", err);
@@ -196,4 +198,3 @@ export function useAccountSettings(
     handleSave,
   };
 }
-

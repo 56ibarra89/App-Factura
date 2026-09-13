@@ -22,7 +22,8 @@ export const ResetPassword = () => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const requirements = [
-    { regex: /.{8,}/, msg: "Mínimo 8 caracteres" },
+    { regex: /^.{8,128}$/, msg: "Entre 8 y 128 caracteres" },
+    { regex: /^[A-Za-z\d@$!%*?&]+$/, msg: "Sin espacios ni caracteres no permitidos" },
     { regex: /[A-Z]/, msg: "Mayúscula" },
     { regex: /[a-z]/, msg: "Minúscula" },
     { regex: /[0-9]/, msg: "Número" },
@@ -131,6 +132,7 @@ export const ResetPassword = () => {
           fullWidth
           margin="normal"
           value={newPassword}
+          inputProps={{ maxLength: 128 }}
           onChange={(e) => setNewPassword(e.target.value)}
           disabled={loading || success !== null || !token}
           error={hasPasswordInput && !isPasswordValid}
@@ -178,6 +180,7 @@ export const ResetPassword = () => {
           fullWidth
           margin="normal"
           value={confirmPassword}
+          inputProps={{ maxLength: 128 }}
           onChange={(e) => setConfirmPassword(e.target.value)}
           disabled={loading || success !== null || !token}
           sx={inputSx}
@@ -212,4 +215,3 @@ export const ResetPassword = () => {
     </Box>
   );
 };
-

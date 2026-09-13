@@ -26,7 +26,8 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
   const { role } = useAuth();
 
   const requirements = [
-    { regex: /.{8,}/, msg: "Mínimo 8 caracteres" },
+    { regex: /^.{8,128}$/, msg: "Entre 8 y 128 caracteres" },
+    { regex: /^[A-Za-z\d@$!%*?&]+$/, msg: "Sin espacios ni caracteres no permitidos" },
     { regex: /[A-Z]/, msg: "Mayúscula" },
     { regex: /[a-z]/, msg: "Minúscula" },
     { regex: /[0-9]/, msg: "Número" },
@@ -134,9 +135,10 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
           variant="outlined"
           type={showPin ? "text" : "password"}
           value={data.pin}
-          onChange={(e) => onChange("pin", e.target.value.replace(/\D/g, '').substring(0, 4))}
-          inputProps={{ maxLength: 4, inputMode: "numeric" }}
-          helperText="Debe ser un código numérico de 4 dígitos"
+          onChange={(e) => onChange("pin", e.target.value.replace(/\D/g, '').substring(0, 6))}
+          inputProps={{ maxLength: 6, inputMode: "numeric" }}
+          placeholder="Dejar en blanco para conservar el actual"
+          helperText="Dejar en blanco para conservar el actual (o ingrese exactamente 6 dígitos)"
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -155,7 +157,7 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
           type={showCurrentPassword ? "text" : "password"}
           value={data.passwordActual}
           onChange={(e) => onChange("passwordActual", e.target.value)}
-          helperText="Requerida solo si está cambiando la contraseña"
+          helperText="Requerida para cambiar la contraseña o el PIN"
           sx={{ maxWidth: { sm: "calc(50% - 8px)" } }}
           InputProps={{
             endAdornment: (
@@ -176,6 +178,7 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
               variant="outlined"
               type={showNewPassword ? "text" : "password"}
               value={data.nuevaPassword}
+              inputProps={{ maxLength: 128 }}
               onChange={(e) => onChange("nuevaPassword", e.target.value)}
               error={hasPasswordInput && !isPasswordValid}
               InputProps={{
@@ -221,6 +224,7 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
               variant="outlined"
               type={showConfirmPassword ? "text" : "password"}
               value={data.confirmarPassword}
+              inputProps={{ maxLength: 128 }}
               onChange={(e) => onChange("confirmarPassword", e.target.value)}
               error={Boolean(passwordsMismatch)}
               helperText={passwordsMismatch ? "Las contraseñas no coinciden" : (passwordsMatch ? "Las contraseñas coinciden" : "")}

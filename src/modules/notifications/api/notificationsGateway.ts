@@ -30,19 +30,65 @@ export const notificationsGateway: NotificationsGateway = {
   },
 
   subscribe(onNotification) {
-    const token = accessTokenStore.get();
-    const streamUrl = token
-      ? `${API_BASE_URL}/notifications/stream?token=${encodeURIComponent(token)}`
-      : `${API_BASE_URL}/notifications/stream`;
+    let stopped = false;
+    let controller: AbortController | null = null;
+    let reconnectTimer: number | undefined;
 
-    const eventSource = new EventSource(streamUrl);
-    eventSource.onmessage = (event) => {
+    const connect = async () => {
+      controller = new AbortController();
+      const token = accessTokenStore.get();
       try {
-        onNotification(JSON.parse(event.data) as NotificationItem);
+        const response = await fetch(`${API_BASE_URL}/notifications/stream`, {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          signal: controller.signal,
+        });
+        if (!response.ok || !response.body) {
+          throw new Error(`Notification stream failed (${response.status})`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (!stopped) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
+          let boundary = buffer.indexOf("\n\n");
+          while (boundary >= 0) {
+            const block = buffer.slice(0, boundary);
+            buffer = buffer.slice(boundary + 2);
+            const data = block
+              .split("\n")
+              .filter((line) => line.startsWith("data:"))
+              .map((line) => line.slice(5).trimStart())
+              .join("\n");
+            if (data) {
+              try {
+                onNotification(JSON.parse(data) as NotificationItem);
+              } catch (error) {
+                console.error("Error parsing notification stream", error);
+              }
+            }
+            boundary = buffer.indexOf("\n\n");
+          }
+        }
       } catch (error) {
-        console.error("Error parsing notification stream", error);
+        if (!stopped && !(error instanceof DOMException && error.name === "AbortError")) {
+          console.error("Notification stream disconnected", error);
+        }
+      } finally {
+        if (!stopped) {
+          reconnectTimer = window.setTimeout(() => void connect(), 3_000);
+        }
       }
     };
-    return () => eventSource.close();
+
+    void connect();
+    return () => {
+      stopped = true;
+      controller?.abort();
+      if (reconnectTimer !== undefined) window.clearTimeout(reconnectTimer);
+    };
   },
 };

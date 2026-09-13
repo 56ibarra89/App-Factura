@@ -136,7 +136,7 @@ export default function CashExpenseDialog({
     onClose();
   };
 
-  const executeExpenseCreation = async () => {
+  const executeExpenseCreation = async (authorizationPin?: string) => {
     setLoading(true);
     setError("");
 
@@ -148,6 +148,7 @@ export default function CashExpenseDialog({
         voucherNumber: voucherNumber.trim() || undefined,
         notes: notes.trim() || undefined,
         shiftId,
+        authorizationPin,
       });
 
       if (autoPrint) {
@@ -209,7 +210,7 @@ export default function CashExpenseDialog({
     await executeExpenseCreation();
   };
 
-  const handlePinSuccess = async () => {
+  const handlePinSuccess = async (authorizationPin?: string) => {
     setPinDialogOpen(false);
     logService.log(
       username || "supervisor",
@@ -220,7 +221,7 @@ export default function CashExpenseDialog({
       )} en categoría "${CASH_EXPENSE_CATEGORY_LABELS[category]?.label || category}". Motivo: ${reason}`,
       "warn",
     );
-    await executeExpenseCreation();
+    await executeExpenseCreation(authorizationPin);
   };
 
   return (

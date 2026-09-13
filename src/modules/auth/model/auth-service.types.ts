@@ -9,6 +9,7 @@ export interface AuthLoginResult {
   lastName?: string;
   access_token?: string;
   themePreference?: string;
+  errorMessage?: string;
 }
 
 export interface LogoutResult {
@@ -16,9 +17,29 @@ export interface LogoutResult {
   message?: string;
 }
 
+export interface AuthPinLoginSuccess {
+  success: true;
+  username: string;
+  role: UserRole;
+  firstName: string;
+  lastName: string;
+  access_token: string;
+  themePreference: string;
+}
+
+export interface AuthPinLoginFailure {
+  success: false;
+  retryAfterSeconds?: number;
+  errorMessage?: string;
+}
+
+export type AuthPinLoginResult =
+  | AuthPinLoginSuccess
+  | AuthPinLoginFailure;
+
 export interface IAuthService {
   login(username: string, password: string): Promise<AuthLoginResult>;
-  loginWithPin(pin: string): Promise<{ username: string; role: UserRole; firstName: string; lastName: string; access_token: string; themePreference: string } | null>;
+  loginWithPin(pin: string): Promise<AuthPinLoginResult>;
   requestPasswordReset(identifier: string): Promise<{ success: boolean; message?: string }>;
   resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message?: string }>;
   logout(): Promise<LogoutResult>;

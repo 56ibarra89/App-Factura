@@ -69,6 +69,7 @@ export interface CreateCashExpenseDto {
   voucherNumber?: string;
   notes?: string;
   shiftId?: string;
+  authorizationPin?: string;
 }
 
 export interface ListCashExpensesQuery {
@@ -109,4 +110,3 @@ export const DEFAULT_PETTY_CASH_POLICY: PettyCashPolicy = {
     OTROS: { enabled: true, requiresPin: false },
   },
 };
-

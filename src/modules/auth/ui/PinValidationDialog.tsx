@@ -30,8 +30,8 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
   const [error, setError] = useState("");
 
   const handleValidation = async () => {
-    if (pin.length === 0) {
-      setError("Ingresa un PIN");
+    if (pin.length !== 6) {
+      setError("Ingresa los 6 dígitos del PIN");
       return;
     }
 
@@ -87,7 +87,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
                 key={num}
                 variant="outlined"
                 onClick={() => {
-                  if (pin.length < 4 && lockoutTime === 0) {
+                  if (pin.length < 6 && lockoutTime === 0) {
                     setPin(p => p + num.toString());
                     setError("");
                   }
@@ -110,7 +110,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
             <Button
               variant="outlined"
               onClick={() => {
-                if (pin.length < 4 && lockoutTime === 0) {
+                if (pin.length < 6 && lockoutTime === 0) {
                   setPin(p => p + "0");
                   setError("");
                 }
@@ -124,7 +124,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
               variant="contained"
               color="primary"
               onClick={handleValidation}
-              disabled={loading || pin.length === 0 || lockoutTime > 0}
+              disabled={loading || pin.length !== 6 || lockoutTime > 0}
               sx={{ height: 60, borderRadius: 2, bgcolor: lockoutTime > 0 ? "grey.400" : LOGIN_COLORS.primary }}
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : lockoutTime > 0 ? "❌" : "OK"}
@@ -133,7 +133,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
 
           <Box display="flex" justifyContent="center" height={24}>
             {}
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <Box
                 key={i}
                 sx={{
@@ -150,7 +150,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
 
           {error && (
             <Typography color="error" variant="body2" textAlign="center" mt={1} fontWeight={lockoutTime > 0 ? "bold" : "normal"}>
-              {lockoutTime > 0 ? `BLOQUEADO: Intenta en ${lockoutTime}s` : error}
+              {lockoutTime > 0 ? `PAUSA DE SEGURIDAD: Intenta en ${lockoutTime}s` : error}
             </Typography>
           )}
         </Box>
@@ -165,4 +165,3 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
 };
 
 export default PinValidationDialog;
-

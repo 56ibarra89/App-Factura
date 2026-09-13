@@ -7,7 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../model/AuthContext";
 
-const MAX_PIN_LENGTH = 4;
+const MAX_PIN_LENGTH = 6;
 
 export const useLoginPin = () => {
   const navigate = useNavigate();

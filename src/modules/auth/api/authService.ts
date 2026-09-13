@@ -2,7 +2,7 @@ import type {
   IAuthService,
   AuthLoginResult,
 } from "../model/auth-service.types";
-import { apiClient } from "../../../shared/api";
+import { ApiClientError, apiClient } from "../../../shared/api";
 import type { UserRole } from "../model/user.types";
 
 interface AuthResponse {
@@ -46,9 +46,16 @@ export const authService: IAuthService = {
         access_token: result.access_token,
         themePreference: result.themePreference
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Login fallido:", error);
-      return { success: false };
+      const msg = getErrorMessage(error, "");
+      const isThrottled = msg.toLowerCase().includes("too many requests") || msg.toLowerCase().includes("throttler");
+      return {
+        success: false,
+        errorMessage: isThrottled
+          ? "Demasiados intentos de acceso. Por favor espera un minuto antes de reintentar."
+          : (msg && !msg.includes("401") ? msg : undefined),
+      };
     }
   },
 
@@ -59,10 +66,20 @@ export const authService: IAuthService = {
         body: JSON.stringify({ pin }),
       });
       
-      return result;
-    } catch (error) {
+      return { ...result, success: true };
+    } catch (error: unknown) {
       console.error("Login con PIN fallido:", error);
-      return null;
+      return {
+        success: false,
+        retryAfterSeconds:
+          error instanceof ApiClientError
+            ? error.retryAfterSeconds
+            : undefined,
+        errorMessage: getErrorMessage(
+          error,
+          "No fue posible validar el PIN.",
+        ),
+      };
     }
   },
 
@@ -99,9 +116,12 @@ export const authService: IAuthService = {
   },
 
   logout: async () => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 5_000);
     try {
       const result: MessageResponse = await apiClient("/auth/logout", {
         method: "POST",
+        signal: controller.signal,
       });
       return { success: true, message: result?.message };
     } catch (error: unknown) {
@@ -109,6 +129,8 @@ export const authService: IAuthService = {
         success: false,
         message: getErrorMessage(error, "No fue posible cerrar la sesión."),
       };
+    } finally {
+      window.clearTimeout(timeout);
     }
   },
 

@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld("printAPI", {
 
 contextBridge.exposeInMainWorld("authAPI", {
   setToken: (token: string, apiUrl: string) =>
-    ipcRenderer.send("set-secure-token", token, apiUrl),
-  clearToken: () => ipcRenderer.send("clear-secure-token"),
+    ipcRenderer.invoke("set-secure-token", token, apiUrl),
+  clearToken: () => ipcRenderer.invoke("clear-secure-token"),
+  hasToken: () => ipcRenderer.invoke("has-secure-token"),
 });

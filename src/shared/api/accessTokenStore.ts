@@ -6,36 +6,22 @@ export interface AccessTokenStore {
   clear(): void;
 }
 
-const ACCESS_TOKEN_KEY = "access_token";
 let currentAccessToken: string | null = null;
 
-if (typeof window !== "undefined") {
-  window.addEventListener("storage", (event) => {
-    if (event.key === ACCESS_TOKEN_KEY || event.key === null) {
-      currentAccessToken = localStore.getItem(ACCESS_TOKEN_KEY);
-    }
-  });
-}
+// Remove tokens persisted by versions prior to the secure in-memory/Electron store.
+localStore.removeItem("access_token");
 
 export const accessTokenStore: AccessTokenStore = {
   get() {
-    if (currentAccessToken) return currentAccessToken;
-    const stored = localStore.getItem(ACCESS_TOKEN_KEY);
-    if (stored) {
-      currentAccessToken = stored;
-      return stored;
-    }
-    return null;
+    return currentAccessToken;
   },
 
   set(token) {
     currentAccessToken = token;
-    localStore.setItem(ACCESS_TOKEN_KEY, token);
   },
 
   clear() {
     currentAccessToken = null;
-    localStore.removeItem(ACCESS_TOKEN_KEY);
   },
 };
 

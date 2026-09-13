@@ -6,8 +6,10 @@ export interface UserAccount {
   email?: string;
   firstName: string;
   lastName: string;
-  pin: string;
+  pin?: string;
+  hasPin?: boolean;
   password?: string;
+  currentPassword?: string;
   role: UserRole;
   isActive: boolean;
   createdAt: string;

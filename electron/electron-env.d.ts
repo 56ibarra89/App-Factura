@@ -53,7 +53,8 @@ interface Window {
     }) => Promise<{ success: boolean; error?: string }>;
   };
   authAPI?: {
-    setToken: (token: string, apiUrl: string) => void;
-    clearToken: () => void;
+    setToken: (token: string, apiUrl: string) => Promise<boolean>;
+    clearToken: () => Promise<void>;
+    hasToken: () => Promise<boolean>;
   };
 }

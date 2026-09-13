@@ -5,14 +5,14 @@ import {
 
 interface AuthRuntime {
   authAPI?: {
-    setToken(token: string, apiUrl: string): void;
-    clearToken(): void;
+    setToken(token: string, apiUrl: string): Promise<boolean>;
+    clearToken(): Promise<void>;
   };
 }
 
 export interface SecureTokenGateway {
-  store(token: string): void;
-  clear(): void;
+  store(token: string): Promise<void>;
+  clear(): Promise<void>;
 }
 
 export function createSecureTokenGateway(
@@ -21,14 +21,19 @@ export function createSecureTokenGateway(
   tokenStore: AccessTokenStore = accessTokenStore,
 ): SecureTokenGateway {
   return {
-    store(token) {
+    async store(token) {
+      if (runtime.authAPI) {
+        tokenStore.clear();
+        const stored = await runtime.authAPI.setToken(token, apiUrl);
+        if (!stored) throw new Error("No fue posible proteger la sesión.");
+        return;
+      }
       tokenStore.set(token);
-      runtime.authAPI?.setToken(token, apiUrl);
     },
 
-    clear() {
+    async clear() {
       tokenStore.clear();
-      runtime.authAPI?.clearToken();
+      await runtime.authAPI?.clearToken();
     },
   };
 }

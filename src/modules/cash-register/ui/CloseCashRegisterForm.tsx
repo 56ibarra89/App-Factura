@@ -214,9 +214,9 @@ export function CloseCashRegisterForm({
                   type="password"
                   value={authorizationPin}
                   onChange={(e) =>
-                    onChangeAuthorizationPin(e.target.value.replace(/\D/g, ""))
+                    onChangeAuthorizationPin(e.target.value.replace(/\D/g, "").slice(0, 6))
                   }
-                  inputProps={{ inputMode: "numeric", maxLength: 12 }}
+                  inputProps={{ inputMode: "numeric", maxLength: 6 }}
                   disabled={loading}
                   required
                 />

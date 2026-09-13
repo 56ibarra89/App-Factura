@@ -13,6 +13,12 @@ export interface PinValidationResult {
   error?: string;
 }
 
+function getAuthenticationError(error: unknown): string {
+  return error instanceof Error && error.message
+    ? error.message
+    : "Error en la autenticación";
+}
+
 interface UseAuthOperationsOptions {
   service: IAuthService;
   session: AuthSessionController;
@@ -39,7 +45,7 @@ export function useAuthOperations({
   } = session;
   const {
     isLocked: isPinLocked,
-    registerFailedAttempt: registerFailedPinAttempt,
+    applyServerLockout,
     resetAttempts: resetPinAttempts,
   } = pinLockout;
 
@@ -47,7 +53,7 @@ export function useAuthOperations({
     setError("");
   }, []);
 
-  const completeLogout = useCallback(() => {
+  const completeLogout = useCallback(async () => {
     const { username, role } = sessionState;
     if (username) {
       logService.log(
@@ -58,7 +64,7 @@ export function useAuthOperations({
       );
     }
 
-    tokenGateway.clear();
+    await tokenGateway.clear();
     signOut();
   }, [
     sessionState,
@@ -67,21 +73,16 @@ export function useAuthOperations({
   ]);
 
   const logout = useCallback(async (): Promise<LogoutResult> => {
-    const result =
-      sessionState.role === "cajero_principal"
-        ? await service.logout()
-        : { success: true };
-    if (!result.success) return result;
-
-    completeLogout();
-    return result;
-  }, [completeLogout, service, sessionState.role]);
+    const result = await service.logout();
+    await completeLogout();
+    return result.success ? result : { success: true };
+  }, [completeLogout, service]);
 
   const logoutAllDevices = useCallback(async (): Promise<LogoutResult> => {
     const result = await service.logoutAllDevices();
     if (!result.success) return result;
 
-    completeLogout();
+    await completeLogout();
     return result;
   }, [completeLogout, service]);
 
@@ -112,7 +113,7 @@ export function useAuthOperations({
             result.username || username;
 
           if (result.access_token) {
-            tokenGateway.store(result.access_token);
+            await tokenGateway.store(result.access_token);
           }
           preferencesGateway.applyTheme(
             result.themePreference === "dark"
@@ -141,6 +142,11 @@ export function useAuthOperations({
           return true;
         }
 
+        if (result.errorMessage) {
+          setError(result.errorMessage);
+          return false;
+        }
+
         const locked =
           loginLockout.registerFailedLogin(username);
         setError(
@@ -151,8 +157,8 @@ export function useAuthOperations({
               }`,
         );
         return false;
-      } catch {
-        setError("Error en la autenticación");
+      } catch (err: unknown) {
+        setError(getAuthenticationError(err));
         return false;
       } finally {
         setLoading(false);
@@ -180,9 +186,9 @@ export function useAuthOperations({
       try {
         const result = await service.loginWithPin(pin);
 
-        if (result) {
+        if (result.success) {
           if (result.access_token) {
-            tokenGateway.store(result.access_token);
+            await tokenGateway.store(result.access_token);
           }
           preferencesGateway.applyTheme(
             result.themePreference === "dark"
@@ -207,15 +213,17 @@ export function useAuthOperations({
           return true;
         }
 
-        const failure = registerFailedPinAttempt();
-        setError(
-          failure.locked
-            ? `Demasiados intentos fallidos. Bloqueado por ${failure.lockoutSeconds} segundos.`
-            : `PIN incorrecto. Intentos restantes: ${failure.remainingAttempts}`,
-        );
+        if (result.retryAfterSeconds) {
+          applyServerLockout(result.retryAfterSeconds);
+          setError(
+            `PIN incorrecto. Reintenta en ${result.retryAfterSeconds} segundos.`,
+          );
+        } else {
+          setError(result.errorMessage || "No fue posible validar el PIN.");
+        }
         return false;
-      } catch {
-        setError("Error en la autenticación");
+      } catch (err: unknown) {
+        setError(getAuthenticationError(err));
         return false;
       } finally {
         setLoading(false);
@@ -223,8 +231,8 @@ export function useAuthOperations({
     },
     [
       isPinLocked,
+      applyServerLockout,
       preferencesGateway,
-      registerFailedPinAttempt,
       resetPinAttempts,
       service,
       signIn,
@@ -244,27 +252,26 @@ export function useAuthOperations({
       try {
         const result = await service.loginWithPin(pin);
         if (
-          result &&
-          (result.role === "admin" ||
-            result.username === "admin")
+          result.success &&
+          (result.role === "admin" || result.username === "admin")
         ) {
           resetPinAttempts();
           return { success: true };
         }
 
-        const failure = registerFailedPinAttempt();
-        if (failure.locked) {
+        if (!result.success && result.retryAfterSeconds) {
+          applyServerLockout(result.retryAfterSeconds);
           return {
             success: false,
-            error: `Demasiados intentos fallidos. Bloqueado por ${failure.lockoutSeconds} segundos.`,
+            error: `PIN incorrecto. Reintenta en ${result.retryAfterSeconds} segundos.`,
           };
         }
 
         return {
           success: false,
-          error: result
+          error: result.success
             ? "Este usuario no tiene permisos de administrador."
-            : `PIN incorrecto. Intentos restantes: ${failure.remainingAttempts}`,
+            : result.errorMessage || "No fue posible validar el PIN.",
         };
       } catch {
         return {
@@ -275,7 +282,7 @@ export function useAuthOperations({
     },
     [
       isPinLocked,
-      registerFailedPinAttempt,
+      applyServerLockout,
       resetPinAttempts,
       service,
     ],

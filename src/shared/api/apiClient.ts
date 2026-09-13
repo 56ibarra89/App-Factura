@@ -3,6 +3,17 @@ import { accessTokenStore } from "./accessTokenStore";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+export class ApiClientError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly retryAfterSeconds?: number,
+  ) {
+    super(message);
+    this.name = "ApiClientError";
+  }
+}
+
 if (!API_BASE_URL) {
   console.error(
     "⚠️ [API Client] La variable de entorno VITE_API_BASE_URL no está definida en el archivo .env. " +
@@ -18,7 +29,6 @@ const AUTH_KEYS = [
   "firstName",
   "lastName",
   "lastActivity",
-  "access_token",
 ] as const;
 
 let isHandlingUnauthorized = false;
@@ -30,7 +40,7 @@ function handleUnauthorizedSession() {
 
   accessTokenStore.clear();
   if (window.authAPI) {
-    window.authAPI.clearToken();
+    void window.authAPI.clearToken();
   }
   sessionStore.clear();
   AUTH_KEYS.forEach((key) => localStore.removeItem(key));
@@ -86,6 +96,7 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
     }
 
     let errorMessage = "Ocurrió un error en la petición al servidor";
+    let retryAfterSeconds: number | undefined;
     try {
       const errorData = await response.json();
       if (Array.isArray(errorData.message)) {
@@ -93,10 +104,23 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
       } else if (typeof errorData.message === "string") {
         errorMessage = errorData.message;
       }
+      if (
+        typeof errorData.retryAfterSeconds === "number" &&
+        Number.isFinite(errorData.retryAfterSeconds)
+      ) {
+        retryAfterSeconds = Math.max(
+          1,
+          Math.ceil(errorData.retryAfterSeconds),
+        );
+      }
     } catch {
       errorMessage = response.statusText || errorMessage;
     }
-    throw new Error(errorMessage);
+    throw new ApiClientError(
+      errorMessage,
+      response.status,
+      retryAfterSeconds,
+    );
   }
 
   if (response.status === 204) {

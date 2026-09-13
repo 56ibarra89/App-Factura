@@ -1,4 +1,4 @@
-export { apiClient } from "./apiClient";
+export { apiClient, ApiClientError } from "./apiClient";
 export { hasAccessToken } from "./accessTokenStore";
 export {
   runtimeConfigGateway,

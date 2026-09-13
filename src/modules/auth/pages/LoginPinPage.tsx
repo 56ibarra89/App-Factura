@@ -120,7 +120,7 @@ const LoginPin = () => {
         </Typography>
         <Typography variant="body1" color="text.secondary" mb={5} align="center">
           {lockoutTime > 0 
-            ? `SISTEMA BLOQUEADO: Intenta de nuevo en ${lockoutTime}s` 
+            ? `PAUSA DE SEGURIDAD: Intenta de nuevo en ${lockoutTime}s` 
             : "Para acceder al sistema"}
         </Typography>
 

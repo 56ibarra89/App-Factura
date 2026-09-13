@@ -8,6 +8,7 @@ electron.contextBridge.exposeInMainWorld("printAPI", {
   openCashDrawer: (options) => electron.ipcRenderer.invoke("open-cash-drawer", options)
 });
 electron.contextBridge.exposeInMainWorld("authAPI", {
-  setToken: (token, apiUrl) => electron.ipcRenderer.send("set-secure-token", token, apiUrl),
-  clearToken: () => electron.ipcRenderer.send("clear-secure-token")
+  setToken: (token, apiUrl) => electron.ipcRenderer.invoke("set-secure-token", token, apiUrl),
+  clearToken: () => electron.ipcRenderer.invoke("clear-secure-token"),
+  hasToken: () => electron.ipcRenderer.invoke("has-secure-token")
 });

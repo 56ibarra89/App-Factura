@@ -54,8 +54,7 @@ export function useAuthSession(
         !event.key ||
         event.key === SESSION_KEYS.loggedIn ||
         event.key === SESSION_KEYS.username ||
-        event.key === SESSION_KEYS.role ||
-        event.key === "access_token"
+        event.key === SESSION_KEYS.role
       ) {
         setState(gateway.load());
       }

@@ -110,7 +110,7 @@ export function useCloseCashRegister(
   const validAuthorization =
     !requiresAuthorization ||
     (discrepancyReason.trim().length >= 5 &&
-      /^\d{4,12}$/.test(authorizationPin));
+      /^\d{6}$/.test(authorizationPin));
   const canSubmit =
     validAmount &&
     Boolean(preview?.canClose) &&
@@ -200,7 +200,7 @@ export function useCloseCashRegister(
       if (
         authorizationNeeded &&
         (discrepancyReason.trim().length < 5 ||
-          !/^\d{4,12}$/.test(authorizationPin))
+          !/^\d{6}$/.test(authorizationPin))
       ) {
         return;
       }

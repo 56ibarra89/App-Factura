@@ -42,6 +42,18 @@ function createWindow() {
 
   // Remover el menú por defecto (File, Edit, View, Window, Help)
   win.setMenu(null)
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  win.webContents.on('will-navigate', (event, navigationUrl) => {
+    const currentUrl = win?.webContents.getURL()
+    if (!currentUrl) return
+    try {
+      if (new URL(navigationUrl).origin !== new URL(currentUrl).origin) {
+        event.preventDefault()
+      }
+    } catch {
+      event.preventDefault()
+    }
+  })
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
@@ -159,32 +171,56 @@ app.whenReady().then(() => {
   createWindow();
 
   let encryptedToken: Buffer | null = null;
-  let targetApiUrl: string | null = null;
+  let targetApiOrigin: string | null = null;
 
-  ipcMain.removeAllListeners('set-secure-token');
-  ipcMain.on('set-secure-token', (event, token: string, apiUrl: string) => {
+  ipcMain.removeHandler('set-secure-token');
+  ipcMain.handle('set-secure-token', (event, token: string, apiUrl: string) => {
+    if (event.sender !== win?.webContents) return false;
+    if (typeof token !== 'string' || token.length < 16 || token.length > 8192) {
+      return false;
+    }
+    let apiOrigin: string;
+    try {
+      const parsed = new URL(apiUrl);
+      if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+      apiOrigin = parsed.origin;
+    } catch {
+      return false;
+    }
+
     if (safeStorage.isEncryptionAvailable()) {
       encryptedToken = safeStorage.encryptString(token);
-      targetApiUrl = apiUrl;
-      console.log("[Main] Token encriptado y guardado en memoria segura.");
     } else {
-      console.warn("[Main] safeStorage no disponible. Token guardado sin encriptar en memoria.");
       encryptedToken = Buffer.from(token, 'utf-8');
-      targetApiUrl = apiUrl;
     }
+    targetApiOrigin = apiOrigin;
+    return true;
   });
 
-  ipcMain.removeAllListeners('clear-secure-token');
-  ipcMain.on('clear-secure-token', () => {
-    if (encryptedToken !== null) {
-      encryptedToken = null;
-      console.log("[Main] Token eliminado de memoria segura.");
-    }
+  ipcMain.removeHandler('clear-secure-token');
+  ipcMain.handle('clear-secure-token', (event) => {
+    if (event.sender !== win?.webContents) return;
+    encryptedToken = null;
+    targetApiOrigin = null;
   });
+
+  ipcMain.removeHandler('has-secure-token');
+  ipcMain.handle('has-secure-token', (event) =>
+    event.sender === win?.webContents && encryptedToken !== null,
+  );
 
   // Interceptar peticiones para inyectar el token
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-    if (encryptedToken && targetApiUrl && details.url.startsWith(targetApiUrl)) {
+    const belongsToAppWindow = details.webContentsId === win?.webContents.id
+    let matchesApiOrigin = false;
+    if (targetApiOrigin) {
+      try {
+        matchesApiOrigin = new URL(details.url).origin === targetApiOrigin;
+      } catch {
+        matchesApiOrigin = false;
+      }
+    }
+    if (encryptedToken && belongsToAppWindow && matchesApiOrigin) {
       try {
         let tokenStr = '';
         if (safeStorage.isEncryptionAvailable()) {

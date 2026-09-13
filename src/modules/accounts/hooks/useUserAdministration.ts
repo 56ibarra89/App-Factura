@@ -27,12 +27,12 @@ export function useUserAdministration(
           username: user.username,
           firstName: user.firstName,
           lastName: user.lastName,
-          pin: user.pin,
           role: user.role,
           isActive: user.isActive,
           workDays: user.workDays,
         };
 
+        if (user.pin?.trim()) payload.pin = user.pin.trim();
         if (user.email) payload.email = user.email;
         if (user.password?.trim()) {
           payload.password = user.password;
