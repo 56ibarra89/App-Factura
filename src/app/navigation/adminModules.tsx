@@ -15,6 +15,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import SpeedIcon from "@mui/icons-material/Speed";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -31,12 +32,12 @@ export interface AdminModuleItem {
 }
 
 export const adminModules: AdminModuleItem[] = [
-
   {
     id: "empresa",
     category: "General",
     title: "Datos de la Empresa",
-    description: "Personaliza el logotipo, nombre de negocio, dirección, teléfono y pie de página de los tickets.",
+    description:
+      "Personaliza el logotipo, nombre de negocio, dirección, teléfono y pie de página de los tickets.",
     icon: <BusinessIcon fontSize="large" />,
     path: "/admin/empresa",
   },
@@ -44,7 +45,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "configuracion",
     category: "General",
     title: "Control General",
-    description: "Ajusta las preferencias del sistema, moneda local y comportamiento en la apertura de caja.",
+    description:
+      "Ajusta las preferencias del sistema, moneda local y comportamiento en la apertura de caja.",
     icon: <SettingsIcon fontSize="large" />,
     path: "/admin/configuracion",
   },
@@ -52,7 +54,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "impuestos",
     category: "General",
     title: "Impuestos",
-    description: "Gestiona múltiples tasas impositivas y reglas especiales aisladas de la configuración habitual.",
+    description:
+      "Gestiona múltiples tasas impositivas y reglas especiales aisladas de la configuración habitual.",
     icon: <PercentIcon fontSize="large" />,
     path: "/admin/impuestos",
   },
@@ -61,7 +64,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "horarios",
     category: "Operativa",
     title: "Horarios de Empleados",
-    description: "Gestiona los días de trabajo de cada empleado. Útil para habilitar la lista de motorizados por día.",
+    description:
+      "Gestiona los días de trabajo de cada empleado. Útil para habilitar la lista de motorizados por día.",
     icon: <CalendarMonthIcon fontSize="large" />,
     path: "/admin/horarios",
   },
@@ -69,7 +73,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "zonas-meseros",
     category: "Operativa",
     title: "Zonas de Meseros",
-    description: "Asigna en qué planta o área trabajará cada mesero dependiendo del día de la semana.",
+    description:
+      "Asigna en qué planta o área trabajará cada mesero dependiendo del día de la semana.",
     icon: <LocationOnIcon fontSize="large" />,
     path: "/admin/zonas-meseros",
   },
@@ -77,7 +82,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "usuarios",
     category: "Operativa",
     title: "Usuarios y Roles",
-    description: "Administra el acceso al sistema, crea empleados y asigna permisos específicos por rol.",
+    description:
+      "Administra el acceso al sistema, crea empleados y asigna permisos específicos por rol.",
     icon: <PeopleIcon fontSize="large" />,
     path: "/admin/cuentas",
   },
@@ -85,7 +91,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "clientes",
     category: "Operativa",
     title: "Clientes",
-    description: "Consulta, crea, edita y elimina la información de tus clientes: nombre, teléfono y direcciones.",
+    description:
+      "Consulta, crea, edita y elimina la información de tus clientes: nombre, teléfono y direcciones.",
     icon: <PeopleAltIcon fontSize="large" />,
     path: "/admin/clientes",
   },
@@ -93,7 +100,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "promociones",
     category: "Operativa",
     title: "Promociones",
-    description: "Configura reglas automáticas de descuento, horas felices (Happy Hour) o cupones manuales.",
+    description:
+      "Configura reglas automáticas de descuento, horas felices (Happy Hour) o cupones manuales.",
     icon: <LocalOfferIcon fontSize="large" />,
     path: "/admin/promociones",
   },
@@ -101,7 +109,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "turnos",
     category: "Operativa",
     title: "Cajas y Turnos",
-    description: "Define perfiles de turnos laborales y fija los montos de apertura en efectivo predeterminados.",
+    description:
+      "Define perfiles de turnos laborales y fija los montos de apertura en efectivo predeterminados.",
     icon: <AccessTimeIcon fontSize="large" />,
     path: "/admin/cajas",
   },
@@ -109,7 +118,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "mesas",
     category: "Operativa",
     title: "Plano de Mesas",
-    description: "Edita visualmente el diseño del restaurante, acomodando identificadores y salas libremente.",
+    description:
+      "Edita visualmente el diseño del restaurante, acomodando identificadores y salas libremente.",
     icon: <DashboardCustomizeIcon fontSize="large" />,
     path: "/admin/mesas",
   },
@@ -117,7 +127,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "cocinas",
     category: "Operativa",
     title: "Gestión de Cocinas",
-    description: "Crea y administra diferentes áreas de preparación (Cocina Principal, Bar, etc.) para enrutar los tickets correctamente.",
+    description:
+      "Crea y administra diferentes áreas de preparación (Cocina Principal, Bar, etc.) para enrutar los tickets correctamente.",
     icon: <SoupKitchenIcon fontSize="large" />,
     path: "/admin/cocinas",
   },
@@ -125,7 +136,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "tarifas-delivery",
     category: "Operativa",
     title: "Tarifas de Delivery",
-    description: "Configura las tarifas y precios rápidos de envío a domicilio para los repartidores.",
+    description:
+      "Configura las tarifas y precios rápidos de envío a domicilio para los repartidores.",
     icon: <TwoWheelerIcon fontSize="large" />,
     actionId: "OPEN_DELIVERY_PRICES",
   },
@@ -133,16 +145,27 @@ export const adminModules: AdminModuleItem[] = [
     id: "politicas-gastos",
     category: "Operativa",
     title: "Políticas de Caja Chica",
-    description: "Establece topes máximos de egreso, comprobantes obligatorios y requerimiento de PIN supervisor.",
+    description:
+      "Establece topes máximos de egreso, comprobantes obligatorios y requerimiento de PIN supervisor.",
     icon: <AccountBalanceWalletIcon fontSize="large" />,
     path: "/admin/politicas-gastos",
+  },
+  {
+    id: "tiempos-servicio",
+    category: "Operativa",
+    title: "Tiempos de Servicio y Alertas",
+    description:
+      "Configura el semáforo del KDS, el límite de delivery y consulta métricas de cumplimiento.",
+    icon: <SpeedIcon fontSize="large" />,
+    path: "/admin/tiempos-servicio",
   },
 
   {
     id: "perifericos",
     category: "Hardware y Sistema",
     title: "Periféricos",
-    description: "Administra impresoras térmicas (Múltiples) y gavetas de dinero conectadas al sistema.",
+    description:
+      "Administra impresoras térmicas (Múltiples) y gavetas de dinero conectadas al sistema.",
     icon: <PrintIcon fontSize="large" />,
     path: "/admin/perifericos",
   },
@@ -150,7 +173,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "auditoria",
     category: "Hardware y Sistema",
     title: "Bitácora de Auditoría",
-    description: "Revisa el registro de auditoría de arqueos, cancelaciones de factura y movimientos sensibles.",
+    description:
+      "Revisa el registro de auditoría de arqueos, cancelaciones de factura y movimientos sensibles.",
     icon: <SecurityIcon fontSize="large" />,
     path: "/admin/bitacora",
   },
@@ -158,7 +182,8 @@ export const adminModules: AdminModuleItem[] = [
     id: "facturacion_electronica",
     category: "Hardware y Sistema",
     title: "Correlativos Factura",
-    description: "Gestiona los números de comprobante, rangos de folio autorizados y secuencias de facturación.",
+    description:
+      "Gestiona los números de comprobante, rangos de folio autorizados y secuencias de facturación.",
     icon: <ReceiptLongIcon fontSize="large" />,
     path: "/admin/correlativos",
   },
@@ -166,9 +191,9 @@ export const adminModules: AdminModuleItem[] = [
     id: "respaldos",
     category: "Hardware y Sistema",
     title: "Respaldos de Datos",
-    description: "Exporta la configuración, menú e histórico. Crea y restaura copias de seguridad totales.",
+    description:
+      "Exporta la configuración, menú e histórico. Crea y restaura copias de seguridad totales.",
     icon: <SaveIcon fontSize="large" />,
     path: "/admin/respaldos",
-  }
+  },
 ];
-

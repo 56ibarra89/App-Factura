@@ -13,8 +13,8 @@ export interface UrgencyInfo {
 
 export function getTicketUrgency(
   timestamp: string | number | Date,
-  warningThresholdMinutes = 10,
-  criticalThresholdMinutes = 15
+  warningThresholdMinutes = 12,
+  criticalThresholdMinutes = 18,
 ): UrgencyInfo {
   const timeMs = new Date(timestamp).getTime();
   const nowMs = Date.now();
@@ -58,4 +58,3 @@ export function getTicketUrgency(
     label: `${minutes} min`,
   };
 }
-

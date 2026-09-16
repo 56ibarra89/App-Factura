@@ -1,4 +1,11 @@
-import { Order, OrderStatus, OrderType, PaymentMethod, KitchenStatus, SelectedComboOptionItem } from "../model/order.types";
+import {
+  Order,
+  OrderStatus,
+  OrderType,
+  PaymentMethod,
+  KitchenStatus,
+  SelectedComboOptionItem,
+} from "../model/order.types";
 import { apiClient } from "../../../shared/api";
 
 interface BackendExtra {
@@ -35,6 +42,9 @@ export interface BackendOrder {
   total: number | string;
   customerTendered?: number | string | null;
   deliveryChange?: number | string | null;
+  kitchenReadyAt?: string | Date | null;
+  deliveryStartedAt?: string | Date | null;
+  deliveredAt?: string | Date | null;
   status: string;
   timestamp: string | Date;
   customerSnapshotName?: string;
@@ -50,7 +60,12 @@ export interface BackendOrder {
   discountId?: number | null;
   happyHourId?: number | null;
   linkedTables?: string[];
-  payments?: { method: string; amount: number | string; cashierId?: string; cashierSnapshotName?: string }[];
+  payments?: {
+    method: string;
+    amount: number | string;
+    cashierId?: string;
+    cashierSnapshotName?: string;
+  }[];
   cashierSnapshotName?: string;
   isSentToKitchen?: boolean;
   invoice?: { invoiceNumber: string };
@@ -58,10 +73,12 @@ export interface BackendOrder {
 }
 
 export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
-  const hasMultiplePayments = backendOrder.payments && backendOrder.payments.length > 1;
-  const rawPaymentMethod = backendOrder.payments && backendOrder.payments.length > 0 
-    ? backendOrder.payments[0].method.toUpperCase() 
-    : undefined;
+  const hasMultiplePayments =
+    backendOrder.payments && backendOrder.payments.length > 1;
+  const rawPaymentMethod =
+    backendOrder.payments && backendOrder.payments.length > 0
+      ? backendOrder.payments[0].method.toUpperCase()
+      : undefined;
 
   return {
     id: backendOrder.id,
@@ -73,29 +90,68 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       price: Number(i.price),
       size: i.size.toLowerCase(),
       quantity: Number(i.quantity),
-      extras: (i.extras || []).map((e: BackendExtra) => ({ name: e.name, price: Number(e.price) })),
+      extras: (i.extras || []).map((e: BackendExtra) => ({
+        name: e.name,
+        price: Number(e.price),
+      })),
       note: i.note,
       giftQuantity: i.giftQuantity,
       giftReason: i.giftReason,
       isSentToKitchen: i.isSentToKitchen,
       sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
-      kitchenStatus: i.kitchenStatus ? (i.kitchenStatus.toLowerCase() as KitchenStatus) : undefined,
+      kitchenStatus: i.kitchenStatus
+        ? (i.kitchenStatus.toLowerCase() as KitchenStatus)
+        : undefined,
       kitchenId: i.kitchenId,
       isCombo: Boolean(i.isCombo),
       comboSelections: i.comboSelections ? i.comboSelections : undefined,
     })),
-    subTotal: backendOrder.subTotal !== null && backendOrder.subTotal !== undefined ? Number(backendOrder.subTotal) : undefined,
-    discountAmount: backendOrder.discountAmount !== null && backendOrder.discountAmount !== undefined ? Number(backendOrder.discountAmount) : undefined,
-    taxAmount: backendOrder.taxAmount !== null && backendOrder.taxAmount !== undefined ? Number(backendOrder.taxAmount) : undefined,
+    subTotal:
+      backendOrder.subTotal !== null && backendOrder.subTotal !== undefined
+        ? Number(backendOrder.subTotal)
+        : undefined,
+    discountAmount:
+      backendOrder.discountAmount !== null &&
+      backendOrder.discountAmount !== undefined
+        ? Number(backendOrder.discountAmount)
+        : undefined,
+    taxAmount:
+      backendOrder.taxAmount !== null && backendOrder.taxAmount !== undefined
+        ? Number(backendOrder.taxAmount)
+        : undefined,
     total: Number(backendOrder.total),
-    customerTendered: backendOrder.customerTendered !== null && backendOrder.customerTendered !== undefined ? Number(backendOrder.customerTendered) : undefined,
-    deliveryChange: backendOrder.deliveryChange !== null && backendOrder.deliveryChange !== undefined ? Number(backendOrder.deliveryChange) : undefined,
+    customerTendered:
+      backendOrder.customerTendered !== null &&
+      backendOrder.customerTendered !== undefined
+        ? Number(backendOrder.customerTendered)
+        : undefined,
+    deliveryChange:
+      backendOrder.deliveryChange !== null &&
+      backendOrder.deliveryChange !== undefined
+        ? Number(backendOrder.deliveryChange)
+        : undefined,
+    kitchenReadyAt: backendOrder.kitchenReadyAt
+      ? new Date(backendOrder.kitchenReadyAt)
+      : undefined,
+    deliveryStartedAt: backendOrder.deliveryStartedAt
+      ? new Date(backendOrder.deliveryStartedAt)
+      : undefined,
+    deliveredAt: backendOrder.deliveredAt
+      ? new Date(backendOrder.deliveredAt)
+      : undefined,
     status: backendOrder.status.toLowerCase() as OrderStatus,
     timestamp: new Date(backendOrder.timestamp),
-    customerName: backendOrder.customerSnapshotName || backendOrder.customer?.name || undefined,
-    customerPhone: backendOrder.customerPhone || backendOrder.customer?.phone || undefined,
-    customerId: backendOrder.customerId || backendOrder.customer?.id || undefined,
-    orderType: backendOrder.orderType ? (backendOrder.orderType.toLowerCase() as OrderType) : undefined,
+    customerName:
+      backendOrder.customerSnapshotName ||
+      backendOrder.customer?.name ||
+      undefined,
+    customerPhone:
+      backendOrder.customerPhone || backendOrder.customer?.phone || undefined,
+    customerId:
+      backendOrder.customerId || backendOrder.customer?.id || undefined,
+    orderType: backendOrder.orderType
+      ? (backendOrder.orderType.toLowerCase() as OrderType)
+      : undefined,
     customerAddress: backendOrder.customerAddress || undefined,
     driverId: backendOrder.driverId || undefined,
     promotionSource: backendOrder.promotionSource
@@ -105,18 +161,26 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
     couponId: backendOrder.cuponId ?? undefined,
     discountId: backendOrder.discountId ?? undefined,
     happyHourId: backendOrder.happyHourId ?? undefined,
-    tableId: backendOrder.linkedTables && backendOrder.linkedTables.length > 0 ? backendOrder.linkedTables[0] : undefined,
+    tableId:
+      backendOrder.linkedTables && backendOrder.linkedTables.length > 0
+        ? backendOrder.linkedTables[0]
+        : undefined,
     linkedTables: backendOrder.linkedTables,
     splitAmounts: hasMultiplePayments
       ? {
           efectivo: Number(
-            backendOrder.payments?.find((p) => p.method.toUpperCase() === "EFECTIVO")?.amount || 0
+            backendOrder.payments?.find(
+              (p) => p.method.toUpperCase() === "EFECTIVO",
+            )?.amount || 0,
           ),
           tarjeta: Number(
-            backendOrder.payments?.find((p) => p.method.toUpperCase() === "TARJETA")?.amount || 0
+            backendOrder.payments?.find(
+              (p) => p.method.toUpperCase() === "TARJETA",
+            )?.amount || 0,
           ),
           app: Number(
-            backendOrder.payments?.find((p) => p.method.toUpperCase() === "APP")?.amount || 0
+            backendOrder.payments?.find((p) => p.method.toUpperCase() === "APP")
+              ?.amount || 0,
           ),
         }
       : undefined,
@@ -125,21 +189,27 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       amount: Number(p.amount),
       cashierSnapshotName: p.cashierSnapshotName,
     })),
-    paymentMethod: (hasMultiplePayments
-      ? "MIXTO"
-      : rawPaymentMethod) as PaymentMethod | undefined,
+    paymentMethod: (hasMultiplePayments ? "MIXTO" : rawPaymentMethod) as
+      | PaymentMethod
+      | undefined,
     cashierName: backendOrder.cashierSnapshotName || undefined,
     isSentToKitchen: backendOrder.isSentToKitchen,
-    invoiceNumber: backendOrder.invoice?.invoiceNumber || backendOrder.invoiceNumber || undefined,
+    invoiceNumber:
+      backendOrder.invoice?.invoiceNumber ||
+      backendOrder.invoiceNumber ||
+      undefined,
   };
 }
 
 export async function fetchOrdersFromBackend(): Promise<Order[]> {
-  const data = await apiClient('/orders?scope=todayOrActive');
+  const data = await apiClient("/orders?scope=todayOrActive");
   return data.map(mapBackendOrderToFrontend);
 }
 
-export async function fetchOrdersByDateRange(startDate: Date, endDate: Date): Promise<Order[]> {
+export async function fetchOrdersByDateRange(
+  startDate: Date,
+  endDate: Date,
+): Promise<Order[]> {
   const start = startDate.toISOString();
   const end = endDate.toISOString();
   const data = await apiClient(`/orders?startDate=${start}&endDate=${end}`);
@@ -149,13 +219,15 @@ export async function fetchOrdersByDateRange(startDate: Date, endDate: Date): Pr
 export async function syncAddOrderToBackend(order: Order): Promise<Order> {
   const payload = {
     id: order.id,
-    items: order.items.map(i => ({
+    items: order.items.map((i) => ({
       productId: i.productId,
       name: i.name,
       price: i.price,
-      size: i.size.toLowerCase() === 'unico' ? 'único' : i.size.toLowerCase(),
+      size: i.size.toLowerCase() === "unico" ? "único" : i.size.toLowerCase(),
       quantity: i.quantity,
-      extras: i.extras ? i.extras.map(e => ({ name: e.name, price: e.price })) : [],
+      extras: i.extras
+        ? i.extras.map((e) => ({ name: e.name, price: e.price }))
+        : [],
       note: i.note,
       giftQuantity: i.giftQuantity || 0,
       giftReason: i.giftReason,
@@ -188,51 +260,76 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     certificateSerials: order.certificateSerials,
     cashierSnapshotName: order.cashierName,
     isSentToKitchen: order.isSentToKitchen,
-    linkedTables: order.linkedTables && order.linkedTables.length > 0 ? order.linkedTables : (order.tableId ? [order.tableId] : undefined),
-    payments: order.paymentMethod ? (
-      order.paymentMethod === 'MIXTO' && order.splitAmounts ? [
-        { method: 'EFECTIVO', amount: order.splitAmounts.efectivo || 0 },
-        { method: 'TARJETA', amount: order.splitAmounts.tarjeta || 0 },
-        { method: 'APP', amount: order.splitAmounts.app || 0 },
-      ].filter(p => p.amount > 0) : [{
-        method: order.paymentMethod.toUpperCase(),
-        amount: order.total,
-      }]
-    ) : undefined,
+    linkedTables:
+      order.linkedTables && order.linkedTables.length > 0
+        ? order.linkedTables
+        : order.tableId
+          ? [order.tableId]
+          : undefined,
+    payments: order.paymentMethod
+      ? order.paymentMethod === "MIXTO" && order.splitAmounts
+        ? [
+            { method: "EFECTIVO", amount: order.splitAmounts.efectivo || 0 },
+            { method: "TARJETA", amount: order.splitAmounts.tarjeta || 0 },
+            { method: "APP", amount: order.splitAmounts.app || 0 },
+          ].filter((p) => p.amount > 0)
+        : [
+            {
+              method: order.paymentMethod.toUpperCase(),
+              amount: order.total,
+            },
+          ]
+      : undefined,
   };
 
-  const response = await apiClient('/orders', {
-    method: 'POST',
+  const response = await apiClient("/orders", {
+    method: "POST",
     body: JSON.stringify(payload),
   });
   return mapBackendOrderToFrontend(response);
 }
 
-export async function syncUpdateOrderStatus(orderId: string, status: OrderStatus, cancelReason?: string, adminPin?: string, sentAt?: number, kitchenId?: string, itemId?: number | string) {
+export async function syncUpdateOrderStatus(
+  orderId: string,
+  status: OrderStatus,
+  cancelReason?: string,
+  adminPin?: string,
+  sentAt?: number,
+  kitchenId?: string,
+  itemId?: number | string,
+) {
   await apiClient(`/orders/${orderId}/status`, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify({
       status: status.toLowerCase(),
       ...(sentAt ? { sentAt } : {}),
       ...(kitchenId ? { kitchenId } : {}),
-      ...(typeof itemId === 'number' ? { itemId } : {}),
+      ...(typeof itemId === "number" ? { itemId } : {}),
       ...(adminPin ? { adminPin } : {}),
       ...(cancelReason ? { cancelReason } : {}),
     }),
   });
 }
 
+export async function syncStartDelivery(orderId: string): Promise<void> {
+  await apiClient(`/orders/${orderId}/start-delivery`, {
+    method: "PATCH",
+  });
+}
+
 export async function syncUpdateOrderItems(order: Order) {
   const response = await apiClient(`/orders/${order.id}/items`, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify({
-      items: order.items.map(i => ({
+      items: order.items.map((i) => ({
         productId: i.productId,
         name: i.name,
         price: i.price,
-        size: i.size.toLowerCase() === 'unico' ? 'único' : i.size.toLowerCase(),
+        size: i.size.toLowerCase() === "unico" ? "único" : i.size.toLowerCase(),
         quantity: i.quantity,
-        extras: i.extras ? i.extras.map(e => ({ name: e.name, price: e.price })) : [],
+        extras: i.extras
+          ? i.extras.map((e) => ({ name: e.name, price: e.price }))
+          : [],
         note: i.note,
         giftQuantity: i.giftQuantity || 0,
         giftReason: i.giftReason,
@@ -259,17 +356,22 @@ export async function syncUpdateOrderItems(order: Order) {
 }
 
 export async function syncFinalizeOrder(order: Order): Promise<Order> {
-  const paymentsPayload = order.paymentMethod === 'MIXTO' && order.splitAmounts ? [
-    { method: 'EFECTIVO', amount: order.splitAmounts.efectivo || 0 },
-    { method: 'TARJETA', amount: order.splitAmounts.tarjeta || 0 },
-    { method: 'APP', amount: order.splitAmounts.app || 0 },
-  ].filter(p => p.amount > 0) : [{
-    method: order.paymentMethod?.toUpperCase() || 'EFECTIVO',
-    amount: order.total
-  }];
+  const paymentsPayload =
+    order.paymentMethod === "MIXTO" && order.splitAmounts
+      ? [
+          { method: "EFECTIVO", amount: order.splitAmounts.efectivo || 0 },
+          { method: "TARJETA", amount: order.splitAmounts.tarjeta || 0 },
+          { method: "APP", amount: order.splitAmounts.app || 0 },
+        ].filter((p) => p.amount > 0)
+      : [
+          {
+            method: order.paymentMethod?.toUpperCase() || "EFECTIVO",
+            amount: order.total,
+          },
+        ];
 
   const response = await apiClient(`/orders/${order.id}/finalize`, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify({
       payments: paymentsPayload,
       customerId: order.customerId,
@@ -292,9 +394,12 @@ export async function syncFinalizeOrder(order: Order): Promise<Order> {
   return mapBackendOrderToFrontend(response);
 }
 
-export async function syncUpdateTables(orderId: string, linkedTables: string[]) {
+export async function syncUpdateTables(
+  orderId: string,
+  linkedTables: string[],
+) {
   await apiClient(`/orders/${orderId}/tables`, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify({ tableIds: linkedTables }),
   });
 }

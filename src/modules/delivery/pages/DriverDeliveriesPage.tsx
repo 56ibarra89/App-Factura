@@ -36,6 +36,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import PaymentsIcon from "@mui/icons-material/Payments";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useAuth } from "../../auth";
 import { deliveryGateway } from "../api/deliveryGateway";
 import { PaymentConfirmationDialog } from "../ui/PaymentConfirmationDialog";
@@ -48,9 +49,12 @@ import {
 } from "../../orders";
 import { customerRepository, type Customer } from "../../customers";
 import { usersGateway, type UserAccount } from "../../accounts";
+import { useServiceSlaConfig } from "../../settings";
 
 export default function DriverDeliveriesPage() {
   const { role, username } = useAuth();
+  const { config: serviceSlas } = useServiceSlaConfig();
+  const [clock, setClock] = useState(() => Date.now());
 
   const [drivers, setDrivers] = useState<UserAccount[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
@@ -60,7 +64,7 @@ export default function DriverDeliveriesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [tabFilter, setTabFilter] = useState<"pending" | "delivered" | "all">(
-    "pending"
+    "pending",
   );
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -75,9 +79,14 @@ export default function DriverDeliveriesPage() {
 
   const isMotorizado = role === "motorizado";
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const isOrderReadyForDelivery = (order: Order) => {
     const sentItems = order.items.filter(
-      (item) => requiresKitchenPreparation(item) && item.isSentToKitchen
+      (item) => requiresKitchenPreparation(item) && item.isSentToKitchen,
     );
     if (sentItems.length === 0) return true;
     return (
@@ -85,7 +94,7 @@ export default function DriverDeliveriesPage() {
       order.status === "delivered" ||
       order.status === "paid" ||
       sentItems.every(
-        (i) => i.kitchenStatus === "ready" || i.kitchenStatus === "delivered"
+        (i) => i.kitchenStatus === "ready" || i.kitchenStatus === "delivered",
       )
     );
   };
@@ -106,7 +115,7 @@ export default function DriverDeliveriesPage() {
 
       if (isMotorizado) {
         const myUser = usersList.find(
-          (u) => u.username.toLowerCase() === (username || "").toLowerCase()
+          (u) => u.username.toLowerCase() === (username || "").toLowerCase(),
         );
         if (myUser) {
           setSelectedDriverId(myUser.id);
@@ -154,7 +163,8 @@ export default function DriverDeliveriesPage() {
       const combined = Array.from(orderMap.values());
 
       combined.sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       );
 
       setOrders(combined);
@@ -215,13 +225,40 @@ export default function DriverDeliveriesPage() {
     } catch (err: unknown) {
       console.error("Error al marcar como entregado:", err);
       const errorMessage =
-        (err as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message ||
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ||
         (err instanceof Error ? err.message : undefined) ||
         "No se pudo actualizar el estado del pedido.";
       setSnackbar({
         open: true,
         message: errorMessage,
+        severity: "error",
+      });
+    }
+  };
+
+  const handleStartDelivery = async (order: Order) => {
+    if (!isOrderReadyForDelivery(order)) {
+      setSnackbar({
+        open: true,
+        message: "El pedido aún no está listo para iniciar la ruta.",
+        severity: "warning",
+      });
+      return;
+    }
+    try {
+      await ordersGateway.startDelivery(order.id);
+      setSnackbar({
+        open: true,
+        message: `Ruta iniciada para el pedido #${order.invoiceNumber || order.id.slice(-6)}.`,
+        severity: "success",
+      });
+      await fetchAllDeliveryOrders();
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message:
+          err instanceof Error ? err.message : "No se pudo iniciar la ruta.",
         severity: "error",
       });
     }
@@ -276,13 +313,16 @@ export default function DriverDeliveriesPage() {
     return allUsers.find(
       (u) =>
         u.id === selectedDriverId ||
-        u.username.toLowerCase() === selectedDriverId.toLowerCase()
+        u.username.toLowerCase() === selectedDriverId.toLowerCase(),
     );
   }, [allUsers, selectedDriverId]);
 
   const selectedDriverName = useMemo(() => {
     if (selectedDriverUser) {
-      return `${selectedDriverUser.firstName} ${selectedDriverUser.lastName}`.trim() || selectedDriverUser.username;
+      return (
+        `${selectedDriverUser.firstName} ${selectedDriverUser.lastName}`.trim() ||
+        selectedDriverUser.username
+      );
     }
     if (username) return username;
     return "Motorizado";
@@ -296,7 +336,9 @@ export default function DriverDeliveriesPage() {
         const myUserId = selectedDriverUser?.id || selectedDriverId;
         const myUsername = username?.toLowerCase();
         const myFullName = selectedDriverUser
-          ? `${selectedDriverUser.firstName} ${selectedDriverUser.lastName}`.trim().toLowerCase()
+          ? `${selectedDriverUser.firstName} ${selectedDriverUser.lastName}`
+              .trim()
+              .toLowerCase()
           : "";
 
         const orderDriver = (order.driverId || "").toLowerCase();
@@ -304,7 +346,8 @@ export default function DriverDeliveriesPage() {
         const matchId = Boolean(myUserId && order.driverId === myUserId);
         const matchUser = Boolean(myUsername && orderDriver === myUsername);
         const matchFullName = Boolean(myFullName && orderDriver === myFullName);
-        const unassignedDelivery = !order.driverId && order.orderType === "delivery";
+        const unassignedDelivery =
+          !order.driverId && order.orderType === "delivery";
 
         return matchId || matchUser || matchFullName || unassignedDelivery;
       }
@@ -317,7 +360,8 @@ export default function DriverDeliveriesPage() {
       const matchId = order.driverId === selectedDriverId;
       const matchUser =
         selectedDriverUser &&
-        order.driverId?.toLowerCase() === selectedDriverUser.username.toLowerCase();
+        order.driverId?.toLowerCase() ===
+          selectedDriverUser.username.toLowerCase();
 
       return matchId || matchUser;
     });
@@ -355,7 +399,7 @@ export default function DriverDeliveriesPage() {
           ""
         ).includes(query);
         const itemsMatch = order.items.some((i) =>
-          i.name.toLowerCase().includes(query)
+          i.name.toLowerCase().includes(query),
         );
 
         if (
@@ -375,22 +419,43 @@ export default function DriverDeliveriesPage() {
 
   // Cálculos de liquidación del motorizado
   const completedOrders = useMemo(
-    () => driverOrders.filter((o) => o.status === "delivered" || o.status === "paid"),
-    [driverOrders]
+    () =>
+      driverOrders.filter(
+        (o) => o.status === "delivered" || o.status === "paid",
+      ),
+    [driverOrders],
   );
   const pendingOrdersCount = useMemo(
     () =>
-      driverOrders.filter((o) => o.status !== "delivered" && o.status !== "paid")
-        .length,
-    [driverOrders]
+      driverOrders.filter(
+        (o) => o.status !== "delivered" && o.status !== "paid",
+      ).length,
+    [driverOrders],
+  );
+  const overdueOrdersCount = useMemo(
+    () =>
+      driverOrders.filter((order) => {
+        if (
+          !order.deliveryStartedAt ||
+          order.status === "delivered" ||
+          order.status === "paid"
+        ) {
+          return false;
+        }
+        return (
+          clock - new Date(order.deliveryStartedAt).getTime() >=
+          serviceSlas.deliveryMaxMinutes * 60000
+        );
+      }).length,
+    [clock, driverOrders, serviceSlas.deliveryMaxMinutes],
   );
   const totalRevenue = useMemo(
     () => completedOrders.reduce((acc, o) => acc + o.total, 0),
-    [completedOrders]
+    [completedOrders],
   );
   const totalChangeGiven = useMemo(
     () => completedOrders.reduce((acc, o) => acc + (o.deliveryChange || 0), 0),
-    [completedOrders]
+    [completedOrders],
   );
 
   return (
@@ -437,7 +502,11 @@ export default function DriverDeliveriesPage() {
           alignItems: { xs: "stretch", md: "center" },
         }}
       >
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
+          alignItems="center"
+        >
           <Box
             sx={{
               display: "flex",
@@ -452,7 +521,9 @@ export default function DriverDeliveriesPage() {
           >
             <TwoWheelerIcon fontSize="medium" />
             <Typography variant="subtitle1" fontWeight="800">
-              {isMotorizado ? `Mis Entregas: ${selectedDriverName}` : "Control de Entregas"}
+              {isMotorizado
+                ? `Mis Entregas: ${selectedDriverName}`
+                : "Control de Entregas"}
             </Typography>
           </Box>
 
@@ -485,6 +556,14 @@ export default function DriverDeliveriesPage() {
             color={pendingOrdersCount > 0 ? "warning" : "default"}
             sx={{ fontWeight: "bold" }}
           />
+          {overdueOrdersCount > 0 && (
+            <Chip
+              icon={<WarningAmberIcon />}
+              label={`${overdueOrdersCount} Fuera de tiempo`}
+              color="error"
+              sx={{ fontWeight: "bold" }}
+            />
+          )}
           <Chip
             icon={<CheckCircleIcon />}
             label={`${completedOrders.length} Entregados`}
@@ -551,7 +630,11 @@ export default function DriverDeliveriesPage() {
             ),
             endAdornment: searchTerm ? (
               <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setSearchTerm("")} edge="end">
+                <IconButton
+                  size="small"
+                  onClick={() => setSearchTerm("")}
+                  edge="end"
+                >
                   <ClearIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>
@@ -564,7 +647,9 @@ export default function DriverDeliveriesPage() {
       {loading ? (
         <Box display="flex" flexDirection="column" alignItems="center" py={8}>
           <CircularProgress color="error" size={36} sx={{ mb: 2 }} />
-          <Typography color="text.secondary">Cargando pedidos de entrega...</Typography>
+          <Typography color="text.secondary">
+            Cargando pedidos de entrega...
+          </Typography>
         </Box>
       ) : filteredOrders.length > 0 ? (
         <Box
@@ -581,6 +666,19 @@ export default function DriverDeliveriesPage() {
               order.customerPhone || getCustomerPhone(order.customerName);
             const isCompleted =
               order.status === "delivered" || order.status === "paid";
+            const routeMinutes = order.deliveryStartedAt
+              ? Math.max(
+                  0,
+                  Math.floor(
+                    (clock - new Date(order.deliveryStartedAt).getTime()) /
+                      60000,
+                  ),
+                )
+              : null;
+            const isOverdue =
+              !isCompleted &&
+              routeMinutes !== null &&
+              routeMinutes >= serviceSlas.deliveryMaxMinutes;
 
             return (
               <Card
@@ -592,16 +690,25 @@ export default function DriverDeliveriesPage() {
                   display: "flex",
                   flexDirection: "column",
                   border: "2px solid",
-                  borderColor: isCompleted
-                    ? "success.main"
-                    : order.status === "ready"
-                    ? "primary.main"
-                    : "divider",
+                  borderColor: isOverdue
+                    ? "error.main"
+                    : isCompleted
+                      ? "success.main"
+                      : order.status === "ready"
+                        ? "primary.main"
+                        : "divider",
                   transition: "transform 0.2s, box-shadow 0.2s",
                   "&:hover": {
                     transform: "translateY(-3px)",
                     boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
                   },
+                  ...(isOverdue && {
+                    animation: "deliverySlaPulse 1.6s ease-in-out infinite",
+                    "@keyframes deliverySlaPulse": {
+                      "0%, 100%": { boxShadow: "0 0 0 rgba(211,47,47,0.15)" },
+                      "50%": { boxShadow: "0 0 22px rgba(211,47,47,0.55)" },
+                    },
+                  }),
                 }}
               >
                 {/* Encabezado del Ticket */}
@@ -618,11 +725,19 @@ export default function DriverDeliveriesPage() {
                   }}
                 >
                   <Box>
-                    <Typography variant="h6" fontWeight="900" color="text.primary">
-                      {order.invoiceNumber ? `#${order.invoiceNumber}` : `ID: ${order.id.slice(-6)}`}
+                    <Typography
+                      variant="h6"
+                      fontWeight="900"
+                      color="text.primary"
+                    >
+                      {order.invoiceNumber
+                        ? `#${order.invoiceNumber}`
+                        : `ID: ${order.id.slice(-6)}`}
                     </Typography>
                     <Stack direction="row" spacing={0.5} alignItems="center">
-                      <AccessTimeIcon sx={{ fontSize: "0.85rem", color: "text.secondary" }} />
+                      <AccessTimeIcon
+                        sx={{ fontSize: "0.85rem", color: "text.secondary" }}
+                      />
                       <Typography variant="caption" color="text.secondary">
                         {new Date(order.timestamp).toLocaleTimeString([], {
                           hour: "2-digit",
@@ -640,6 +755,18 @@ export default function DriverDeliveriesPage() {
                   />
                 </Box>
 
+                {routeMinutes !== null && !isCompleted && (
+                  <Alert
+                    severity={isOverdue ? "error" : "info"}
+                    icon={isOverdue ? <WarningAmberIcon /> : <TwoWheelerIcon />}
+                    sx={{ borderRadius: 0, fontWeight: 800 }}
+                  >
+                    {isOverdue
+                      ? `Retraso: ${routeMinutes} min en ruta. Contacta al cliente.`
+                      : `En ruta: ${routeMinutes} de ${serviceSlas.deliveryMaxMinutes} min.`}
+                  </Alert>
+                )}
+
                 <CardContent sx={{ flexGrow: 1, p: 2 }}>
                   {/* Datos del Cliente */}
                   <Paper
@@ -655,13 +782,21 @@ export default function DriverDeliveriesPage() {
                       {/* Nombre */}
                       <Box display="flex" alignItems="center" gap={1}>
                         <PersonIcon color="primary" fontSize="small" />
-                        <Typography variant="subtitle2" fontWeight="800" color="text.primary">
+                        <Typography
+                          variant="subtitle2"
+                          fontWeight="800"
+                          color="text.primary"
+                        >
                           {order.customerName || "Cliente No Especificado"}
                         </Typography>
                       </Box>
 
                       {/* Teléfono */}
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
                         <Box display="flex" alignItems="center" gap={1}>
                           <PhoneIcon color="action" fontSize="small" />
                           <Typography variant="body2" fontWeight="600">
@@ -678,7 +813,11 @@ export default function DriverDeliveriesPage() {
                                 {customerPhone}
                               </Box>
                             ) : (
-                              <Typography component="span" variant="body2" color="text.secondary">
+                              <Typography
+                                component="span"
+                                variant="body2"
+                                color="text.secondary"
+                              >
                                 Sin teléfono registrado
                               </Typography>
                             )}
@@ -688,7 +827,9 @@ export default function DriverDeliveriesPage() {
                           <Tooltip title="Copiar teléfono">
                             <IconButton
                               size="small"
-                              onClick={() => copyToClipboard(customerPhone, "Teléfono")}
+                              onClick={() =>
+                                copyToClipboard(customerPhone, "Teléfono")
+                              }
                             >
                               <ContentCopyIcon fontSize="inherit" />
                             </IconButton>
@@ -697,11 +838,29 @@ export default function DriverDeliveriesPage() {
                       </Box>
 
                       {/* Dirección */}
-                      <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-                        <Box display="flex" alignItems="flex-start" gap={1} flex={1}>
-                          <LocationOnIcon color="error" fontSize="small" sx={{ mt: 0.2 }} />
-                          <Typography variant="body2" color="text.primary" fontWeight="500">
-                            {order.customerAddress || "Sin dirección especificada"}
+                      <Box
+                        display="flex"
+                        alignItems="flex-start"
+                        justifyContent="space-between"
+                      >
+                        <Box
+                          display="flex"
+                          alignItems="flex-start"
+                          gap={1}
+                          flex={1}
+                        >
+                          <LocationOnIcon
+                            color="error"
+                            fontSize="small"
+                            sx={{ mt: 0.2 }}
+                          />
+                          <Typography
+                            variant="body2"
+                            color="text.primary"
+                            fontWeight="500"
+                          >
+                            {order.customerAddress ||
+                              "Sin dirección especificada"}
                           </Typography>
                         </Box>
                         {order.customerAddress && (
@@ -709,7 +868,10 @@ export default function DriverDeliveriesPage() {
                             <IconButton
                               size="small"
                               onClick={() =>
-                                copyToClipboard(order.customerAddress!, "Dirección")
+                                copyToClipboard(
+                                  order.customerAddress!,
+                                  "Dirección",
+                                )
                               }
                             >
                               <ContentCopyIcon fontSize="inherit" />
@@ -743,7 +905,11 @@ export default function DriverDeliveriesPage() {
                               {item.quantity}x {item.name}
                             </Typography>
                             {item.extras && item.extras.length > 0 && (
-                              <Typography variant="caption" color="text.secondary" display="block">
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                              >
                                 + {item.extras.map((e) => e.name).join(", ")}
                               </Typography>
                             )}
@@ -776,12 +942,19 @@ export default function DriverDeliveriesPage() {
                       bgcolor: "action.hover",
                     }}
                   >
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      mb={0.5}
+                    >
                       <Typography variant="subtitle2" color="text.secondary">
                         Método de Pago:
                       </Typography>
                       {(() => {
-                        const method = (order.paymentMethod || "EFECTIVO").toUpperCase();
+                        const method = (
+                          order.paymentMethod || "EFECTIVO"
+                        ).toUpperCase();
                         if (method === "MIXTO") {
                           return (
                             <Chip
@@ -836,78 +1009,123 @@ export default function DriverDeliveriesPage() {
                           border: "1px dashed rgba(2, 136, 209, 0.3)",
                         }}
                       >
-                        <Typography variant="caption" fontWeight="bold" color="info.main">
-                          Efectivo: C${(order.splitAmounts.efectivo || 0).toFixed(2)}
+                        <Typography
+                          variant="caption"
+                          fontWeight="bold"
+                          color="info.main"
+                        >
+                          Efectivo: C$
+                          {(order.splitAmounts.efectivo || 0).toFixed(2)}
                         </Typography>
-                        <Typography variant="caption" fontWeight="bold" color="info.main">
-                          Tarjeta: C${(order.splitAmounts.tarjeta || 0).toFixed(2)}
+                        <Typography
+                          variant="caption"
+                          fontWeight="bold"
+                          color="info.main"
+                        >
+                          Tarjeta: C$
+                          {(order.splitAmounts.tarjeta || 0).toFixed(2)}
                         </Typography>
-                        {order.splitAmounts.app !== undefined && order.splitAmounts.app > 0 && (
-                          <Typography variant="caption" fontWeight="bold" color="info.main">
-                            App: C${order.splitAmounts.app.toFixed(2)}
-                          </Typography>
-                        )}
+                        {order.splitAmounts.app !== undefined &&
+                          order.splitAmounts.app > 0 && (
+                            <Typography
+                              variant="caption"
+                              fontWeight="bold"
+                              color="info.main"
+                            >
+                              App: C${order.splitAmounts.app.toFixed(2)}
+                            </Typography>
+                          )}
                       </Box>
                     )}
 
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      mb={0.5}
+                    >
                       <Typography variant="subtitle1" fontWeight="bold">
                         TOTAL A COBRAR:
                       </Typography>
-                      <Typography variant="h6" fontWeight="900" color="primary.main">
+                      <Typography
+                        variant="h6"
+                        fontWeight="900"
+                        color="primary.main"
+                      >
                         C${order.total.toFixed(2)}
                       </Typography>
                     </Box>
 
-                    {order.customerTendered !== undefined && order.customerTendered > 0 && (
-                      <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Typography variant="body2" color="text.secondary">
-                          Cliente Paga Con:
-                        </Typography>
-                        <Typography variant="body2" fontWeight="bold">
-                          C${order.customerTendered.toFixed(2)}
-                        </Typography>
-                      </Box>
-                    )}
+                    {order.customerTendered !== undefined &&
+                      order.customerTendered > 0 && (
+                        <Box
+                          display="flex"
+                          justifyContent="space-between"
+                          alignItems="center"
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            Cliente Paga Con:
+                          </Typography>
+                          <Typography variant="body2" fontWeight="bold">
+                            C${order.customerTendered.toFixed(2)}
+                          </Typography>
+                        </Box>
+                      )}
 
-                    {order.deliveryChange !== undefined && order.deliveryChange > 0 && (
-                      <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        mt={0.5}
-                        sx={{
-                          p: 0.8,
-                          borderRadius: 1,
-                          bgcolor: "rgba(211, 47, 47, 0.1)",
-                          color: "error.main",
-                        }}
-                      >
-                        <Typography variant="body2" fontWeight="800">
-                          VUELTO A ENTREGAR:
-                        </Typography>
-                        <Typography variant="body1" fontWeight="900">
-                          C${order.deliveryChange.toFixed(2)}
-                        </Typography>
-                      </Box>
-                    )}
+                    {order.deliveryChange !== undefined &&
+                      order.deliveryChange > 0 && (
+                        <Box
+                          display="flex"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          mt={0.5}
+                          sx={{
+                            p: 0.8,
+                            borderRadius: 1,
+                            bgcolor: "rgba(211, 47, 47, 0.1)",
+                            color: "error.main",
+                          }}
+                        >
+                          <Typography variant="body2" fontWeight="800">
+                            VUELTO A ENTREGAR:
+                          </Typography>
+                          <Typography variant="body1" fontWeight="900">
+                            C${order.deliveryChange.toFixed(2)}
+                          </Typography>
+                        </Box>
+                      )}
                   </Box>
                 </CardContent>
 
                 {}
-                <CardActions sx={{ p: 2, pt: 0, justifyContent: "space-between" }}>
+                <CardActions
+                  sx={{ p: 2, pt: 0, justifyContent: "space-between" }}
+                >
                   {order.status !== "delivered" && order.status !== "paid" ? (
                     (() => {
                       const isReady = isOrderReadyForDelivery(order);
+                      const hasStartedRoute = Boolean(order.deliveryStartedAt);
                       const buttonContent = (
                         <Button
                           fullWidth
                           variant="contained"
-                          color={isReady ? "error" : "inherit"}
+                          color={
+                            isReady
+                              ? hasStartedRoute
+                                ? "error"
+                                : "primary"
+                              : "inherit"
+                          }
                           size="large"
                           disabled={!isReady}
-                          startIcon={isReady ? <CheckCircleIcon /> : <AccessTimeIcon />}
-                          onClick={() => handleMarkAsDelivered(order)}
+                          startIcon={
+                            isReady ? <CheckCircleIcon /> : <AccessTimeIcon />
+                          }
+                          onClick={() =>
+                            hasStartedRoute
+                              ? handleMarkAsDelivered(order)
+                              : handleStartDelivery(order)
+                          }
                           sx={{
                             fontWeight: "bold",
                             py: 1,
@@ -917,7 +1135,11 @@ export default function DriverDeliveriesPage() {
                             }),
                           }}
                         >
-                          {isReady ? "Recibido de cocina" : "Pendiente en Cocina"}
+                          {isReady
+                            ? hasStartedRoute
+                              ? "Marcar como entregado"
+                              : "Iniciar ruta"
+                            : "Pendiente en Cocina"}
                         </Button>
                       );
 
@@ -979,7 +1201,9 @@ export default function DriverDeliveriesPage() {
             bgcolor: "background.paper",
           }}
         >
-          <TwoWheelerIcon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
+          <TwoWheelerIcon
+            sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}
+          />
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             No hay pedidos para mostrar
           </Typography>
@@ -1067,4 +1291,3 @@ export default function DriverDeliveriesPage() {
     </Box>
   );
 }
-

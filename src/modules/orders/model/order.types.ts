@@ -1,14 +1,21 @@
-import type {
-  ProductSize,
-  SelectedExtra,
-} from "../../catalog";
+import type { ProductSize, SelectedExtra } from "../../catalog";
 
-export type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivered' | 'paid' | 'cancelled';
-export type KitchenStatus = 'pending' | 'preparing' | 'ready' | 'delivered';
+export type OrderStatus =
+  | "pending"
+  | "preparing"
+  | "ready"
+  | "delivered"
+  | "paid"
+  | "cancelled";
+export type KitchenStatus = "pending" | "preparing" | "ready" | "delivered";
 
-export type PaymentMethod = 'EFECTIVO' | 'TARJETA' | 'APP' | 'MIXTO';
-export type OrderType = 'local' | 'llevar' | 'delivery';
-export type OrderPromotionSource = 'none' | 'coupon' | 'discount' | 'happy-hour';
+export type PaymentMethod = "EFECTIVO" | "TARJETA" | "APP" | "MIXTO";
+export type OrderType = "local" | "llevar" | "delivery";
+export type OrderPromotionSource =
+  | "none"
+  | "coupon"
+  | "discount"
+  | "happy-hour";
 
 export interface OrderPromotionSelection {
   promotionSource?: OrderPromotionSource;
@@ -60,13 +67,20 @@ export type OrderItemInput = Pick<
   Partial<
     Pick<
       OrderItem,
-      "productId" | "note" | "giftQuantity" | "giftReason" | "kitchenId" | "certificateSerial"
-      | "categoryId" | "isCombo" | "comboSelections"
+      | "productId"
+      | "note"
+      | "giftQuantity"
+      | "giftReason"
+      | "kitchenId"
+      | "certificateSerial"
+      | "categoryId"
+      | "isCombo"
+      | "comboSelections"
     >
   >;
 
 export interface OrderPaymentDetail {
-  method: 'EFECTIVO' | 'TARJETA' | 'APP';
+  method: "EFECTIVO" | "TARJETA" | "APP";
   amount: number;
   reference?: string;
   cashierSnapshotName?: string;
@@ -91,6 +105,9 @@ export interface Order extends OrderPromotionSelection {
   tableId?: string;
   customerTendered?: number;
   deliveryChange?: number;
+  kitchenReadyAt?: Date;
+  deliveryStartedAt?: Date;
+  deliveredAt?: Date;
   paymentMethod?: PaymentMethod;
   splitAmounts?: {
     efectivo?: number;

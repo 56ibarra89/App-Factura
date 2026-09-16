@@ -15,6 +15,7 @@ import { KdsCard } from "../ui/kds/KdsCard";
 import OrderEmptyState from "../ui/OrderEmptyState";
 import { getTicketUrgency } from "../utils/timeUrgency";
 import type { OrderStatus } from "../model/order.types";
+import { useServiceSlaConfig } from "../../settings";
 
 interface KdsPageProps {
   resolveTableName?: (tableId: string) => string;
@@ -23,6 +24,7 @@ interface KdsPageProps {
 const KdsPage = ({ resolveTableName }: KdsPageProps) => {
   const { activeOrders, updateOrderStatus } = useOrderManagement();
   const { role } = useAuth();
+  const { config: serviceSlas } = useServiceSlaConfig();
   const {
     kitchens,
     isLoading: isKitchenAccessLoading,
@@ -32,9 +34,10 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
   } = useAccessibleKitchens();
 
   const [savedKitchenId, setSelectedKitchen] = useState<string>(() =>
-    getSelectedKitchenId()
+    getSelectedKitchenId(),
   );
   const [viewMode, setViewMode] = useState<"kanban" | "grid">("kanban");
+  const [clock, setClock] = useState(() => Date.now());
   const isCook = role === "cocinero";
   const activeKitchens = useMemo(
     () => kitchens.filter((kitchen) => kitchen.isActive),
@@ -44,10 +47,16 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
     savedKitchenId === "" ||
     activeKitchens.some((kitchen) => kitchen.id === savedKitchenId);
   const selectedKitchenId = isCook
-    ? activeKitchens.find((kitchen) => kitchen.id === assignedKitchenId)?.id ?? ""
+    ? (activeKitchens.find((kitchen) => kitchen.id === assignedKitchenId)?.id ??
+      "")
     : isSavedKitchenValid
       ? savedKitchenId
       : "";
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!isCook && !isSavedKitchenValid && !isKitchenAccessLoading) {
@@ -82,10 +91,17 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
 
   const criticalCount = useMemo(() => {
     return filteredOrders.filter((order) => {
-      const urgency = getTicketUrgency(order.timestamp);
+      const ticketSentAt =
+        order.items.find((item) => item.isSentToKitchen)?.sentAt ??
+        order.timestamp;
+      const urgency = getTicketUrgency(
+        ticketSentAt,
+        serviceSlas.kitchenWarningMinutes,
+        serviceSlas.kitchenCriticalMinutes,
+      );
       return urgency.level === "critical";
     }).length;
-  }, [filteredOrders]);
+  }, [clock, filteredOrders, serviceSlas]);
 
   const accessMessage = assignmentError
     ? assignmentError
@@ -134,6 +150,8 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
           selectedKitchenId={selectedKitchenId}
           kitchens={kitchens}
           resolveTableName={resolveTableName}
+          warningThresholdMinutes={serviceSlas.kitchenWarningMinutes}
+          criticalThresholdMinutes={serviceSlas.kitchenCriticalMinutes}
           onUpdateStatus={updateOrderStatus}
         />
       ) : (
@@ -162,6 +180,8 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
                 kitchens={kitchens}
                 selectedKitchenId={selectedKitchenId}
                 resolveTableName={resolveTableName}
+                warningThresholdMinutes={serviceSlas.kitchenWarningMinutes}
+                criticalThresholdMinutes={serviceSlas.kitchenCriticalMinutes}
                 onUpdateStatus={
                   updateOrderStatus as (
                     id: string,
@@ -170,7 +190,7 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
                     adminPin?: string,
                     sentAt?: number,
                     kitchenId?: string,
-                    itemId?: number | string
+                    itemId?: number | string,
                   ) => void
                 }
               />
@@ -209,4 +229,3 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
 };
 
 export default KdsPage;
-

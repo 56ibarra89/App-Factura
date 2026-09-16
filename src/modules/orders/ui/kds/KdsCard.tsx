@@ -16,7 +16,11 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import TakeoutDiningIcon from "@mui/icons-material/TakeoutDining";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import type { Order, OrderStatus, SelectedComboOptionItem } from "../../model/order.types";
+import type {
+  Order,
+  OrderStatus,
+  SelectedComboOptionItem,
+} from "../../model/order.types";
 import {
   isPackagingOrderItem,
   requiresKitchenPreparation,
@@ -33,6 +37,8 @@ interface KdsCardProps {
   kitchens: Kitchen[];
   selectedKitchenId?: string;
   resolveTableName?: (tableId: string) => string;
+  warningThresholdMinutes?: number;
+  criticalThresholdMinutes?: number;
   onUpdateStatus: (
     id: string,
     status: OrderStatus,
@@ -40,7 +46,7 @@ interface KdsCardProps {
     adminPin?: string,
     sentAt?: number,
     kitchenId?: string,
-    itemId?: number | string
+    itemId?: number | string,
   ) => void;
 }
 
@@ -50,6 +56,8 @@ export const KdsCard: React.FC<KdsCardProps> = ({
   kitchens,
   selectedKitchenId,
   resolveTableName,
+  warningThresholdMinutes = 12,
+  criticalThresholdMinutes = 18,
   onUpdateStatus,
 }) => {
   const itemsToUse = filteredItems || order.items;
@@ -100,7 +108,8 @@ export const KdsCard: React.FC<KdsCardProps> = ({
         return productMetaMap.byId.get(productId)!.categoryName;
       }
       if (name && productMetaMap.byName.has(name.toLowerCase().trim())) {
-        return productMetaMap.byName.get(name.toLowerCase().trim())!.categoryName;
+        return productMetaMap.byName.get(name.toLowerCase().trim())!
+          .categoryName;
       }
       return undefined;
     },
@@ -130,9 +139,16 @@ export const KdsCard: React.FC<KdsCardProps> = ({
     [categories, productMetaMap],
   );
 
-  const ticketSentAt = displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
-  const sentAtTimestampMs = ticketSentAt ? new Date(ticketSentAt).getTime() : undefined;
-  const urgency = getTicketUrgency(ticketSentAt);
+  const ticketSentAt =
+    displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
+  const sentAtTimestampMs = ticketSentAt
+    ? new Date(ticketSentAt).getTime()
+    : undefined;
+  const urgency = getTicketUrgency(
+    ticketSentAt,
+    warningThresholdMinutes,
+    criticalThresholdMinutes,
+  );
   const normalizedOrderType = order.orderType
     ? order.orderType.toLowerCase()
     : order.tableId
@@ -172,7 +188,9 @@ export const KdsCard: React.FC<KdsCardProps> = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          animation: urgency.isPulsing ? "pulseBorder 1.5s infinite ease-in-out" : "none",
+          animation: urgency.isPulsing
+            ? "pulseBorder 1.5s infinite ease-in-out"
+            : "none",
           "@keyframes pulseBorder": {
             "0%": { opacity: 0.7 },
             "50%": { opacity: 1 },
@@ -191,20 +209,46 @@ export const KdsCard: React.FC<KdsCardProps> = ({
           </Typography>
         </Stack>
 
-        <Typography variant="caption" color="text.secondary" sx={{ fontFamily: "monospace" }}>
-          {new Date(order.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontFamily: "monospace" }}
+        >
+          {new Date(order.timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </Typography>
       </Box>
 
       <CardContent sx={{ flexGrow: 1, p: 2.5, "&:last-child": { pb: 2.5 } }}>
         {/* Encabezado del ticket */}
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          mb={1.5}
+        >
           <Box>
-            <Typography variant="h5" fontWeight="900" color="text.primary" sx={{ letterSpacing: "-0.5px" }}>
-              {order.invoiceNumber ? `#${order.invoiceNumber}` : "Orden en Curso"}
+            <Typography
+              variant="h5"
+              fontWeight="900"
+              color="text.primary"
+              sx={{ letterSpacing: "-0.5px" }}
+            >
+              {order.invoiceNumber
+                ? `#${order.invoiceNumber}`
+                : "Orden en Curso"}
             </Typography>
 
-            <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" useFlexGap sx={{ rowGap: 1 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              mt={0.5}
+              flexWrap="wrap"
+              useFlexGap
+              sx={{ rowGap: 1 }}
+            >
               {order.customerName && (
                 <Chip
                   label={order.customerName}
@@ -228,7 +272,9 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                 />
               ) : isLocal ? (
                 <Chip
-                  icon={<RestaurantIcon sx={{ fontSize: "0.9rem !important" }} />}
+                  icon={
+                    <RestaurantIcon sx={{ fontSize: "0.9rem !important" }} />
+                  }
                   label="Comer en el Local"
                   size="small"
                   color="success"
@@ -237,7 +283,9 @@ export const KdsCard: React.FC<KdsCardProps> = ({
               ) : null}
               {isTakeout && (
                 <Chip
-                  icon={<TakeoutDiningIcon sx={{ fontSize: "0.9rem !important" }} />}
+                  icon={
+                    <TakeoutDiningIcon sx={{ fontSize: "0.9rem !important" }} />
+                  }
                   label="Para Llevar"
                   size="small"
                   color="info"
@@ -246,7 +294,9 @@ export const KdsCard: React.FC<KdsCardProps> = ({
               )}
               {isDelivery && (
                 <Chip
-                  icon={<TwoWheelerIcon sx={{ fontSize: "0.9rem !important" }} />}
+                  icon={
+                    <TwoWheelerIcon sx={{ fontSize: "0.9rem !important" }} />
+                  }
                   label="Delivery"
                   size="small"
                   color="error"
@@ -255,8 +305,12 @@ export const KdsCard: React.FC<KdsCardProps> = ({
               )}
               {hasPackaging && (
                 <Chip
-                  icon={<LocalShippingIcon sx={{ fontSize: "0.9rem !important" }} />}
-                  label={order.tableId ? "Solicitó Empaque" : "Requiere Empaque"}
+                  icon={
+                    <LocalShippingIcon sx={{ fontSize: "0.9rem !important" }} />
+                  }
+                  label={
+                    order.tableId ? "Solicitó Empaque" : "Requiere Empaque"
+                  }
                   size="small"
                   color="warning"
                   sx={{ fontWeight: 800, fontSize: "0.75rem" }}
@@ -275,27 +329,30 @@ export const KdsCard: React.FC<KdsCardProps> = ({
 
             // CASO 1: ÍTEM ES UN COMBO
             if (item.isCombo) {
-              const enrichedSelections = (item.comboSelections || []).map((sel) => {
-                const catName = resolveItemCategoryName(
-                  sel.productId,
-                  sel.productName,
-                  sel.categoryName,
-                  sel.categoryId,
-                );
-                const kId = resolveItemKitchenId(
-                  sel.productId,
-                  sel.productName,
-                  sel.kitchenId,
-                  sel.categoryId,
-                );
-                const kName = kitchens.find((k) => k.id === kId)?.name || "Sin área";
-                return {
-                  ...sel,
-                  resolvedCategoryName: catName,
-                  resolvedKitchenId: kId,
-                  resolvedKitchenName: kName,
-                };
-              });
+              const enrichedSelections = (item.comboSelections || []).map(
+                (sel) => {
+                  const catName = resolveItemCategoryName(
+                    sel.productId,
+                    sel.productName,
+                    sel.categoryName,
+                    sel.categoryId,
+                  );
+                  const kId = resolveItemKitchenId(
+                    sel.productId,
+                    sel.productName,
+                    sel.kitchenId,
+                    sel.categoryId,
+                  );
+                  const kName =
+                    kitchens.find((k) => k.id === kId)?.name || "Sin área";
+                  return {
+                    ...sel,
+                    resolvedCategoryName: catName,
+                    resolvedKitchenId: kId,
+                    resolvedKitchenName: kName,
+                  };
+                },
+              );
 
               // Si se filtra por una estación de cocina específica
               if (selectedKitchenId) {
@@ -317,16 +374,21 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                   (s) => s.kitchenStatus === "delivered",
                 );
                 const stationAllReady = stationSelections.every(
-                  (s) => s.kitchenStatus === "ready" || s.kitchenStatus === "delivered",
+                  (s) =>
+                    s.kitchenStatus === "ready" ||
+                    s.kitchenStatus === "delivered",
                 );
                 const stationAnyPreparingOrReady = stationSelections.some(
-                  (s) => s.kitchenStatus === "preparing" || s.kitchenStatus === "ready",
+                  (s) =>
+                    s.kitchenStatus === "preparing" ||
+                    s.kitchenStatus === "ready",
                 );
 
                 let stationStatus: OrderStatus = "pending";
                 if (stationAllDelivered) stationStatus = "delivered";
                 else if (stationAllReady) stationStatus = "ready";
-                else if (stationAnyPreparingOrReady) stationStatus = "preparing";
+                else if (stationAnyPreparingOrReady)
+                  stationStatus = "preparing";
 
                 return (
                   <Box
@@ -334,15 +396,28 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                     sx={{
                       p: 1.5,
                       borderRadius: 2,
-                      bgcolor: item.note ? "rgba(255, 193, 7, 0.12)" : "action.hover",
+                      bgcolor: item.note
+                        ? "rgba(255, 193, 7, 0.12)"
+                        : "action.hover",
                       border: "1px solid",
                       borderColor: item.note ? "#ffc107" : "divider",
                       borderLeft: `5px solid ${LOGIN_COLORS.primary}`,
                     }}
                   >
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1.5}>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="flex-start"
+                      gap={1.5}
+                    >
                       <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Stack direction="row" spacing={0.8} alignItems="center" flexWrap="wrap" mb={0.8}>
+                        <Stack
+                          direction="row"
+                          spacing={0.8}
+                          alignItems="center"
+                          flexWrap="wrap"
+                          mb={0.8}
+                        >
                           <Chip
                             label={`📦 Combo: ${item.name}`}
                             size="small"
@@ -371,22 +446,46 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                         <Stack spacing={0.8}>
                           {stationSelections.map((sel, sIdx) => {
                             const sizeText =
-                              sel.size && sel.size !== "único" ? ` (${sel.size})` : "";
+                              sel.size && sel.size !== "único"
+                                ? ` (${sel.size})`
+                                : "";
                             return (
                               <Box key={sIdx} sx={{ pl: 0.5 }}>
-                                <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                                <Box
+                                  display="flex"
+                                  alignItems="center"
+                                  gap={1}
+                                  flexWrap="wrap"
+                                >
                                   <Typography
                                     variant="body1"
                                     fontWeight="900"
                                     color="text.primary"
-                                    sx={{ fontSize: "1.05rem", lineHeight: 1.25 }}
+                                    sx={{
+                                      fontSize: "1.05rem",
+                                      lineHeight: 1.25,
+                                    }}
                                   >
-                                    <Box component="span" sx={{ color: LOGIN_COLORS.primary, mr: 0.6 }}>
+                                    <Box
+                                      component="span"
+                                      sx={{
+                                        color: LOGIN_COLORS.primary,
+                                        mr: 0.6,
+                                      }}
+                                    >
                                       {sel.quantity * item.quantity}x
                                     </Box>
                                     {sel.productName}
                                     {sizeText && (
-                                      <Box component="span" sx={{ color: "text.secondary", fontWeight: 600, ml: 0.6, fontSize: "0.9rem" }}>
+                                      <Box
+                                        component="span"
+                                        sx={{
+                                          color: "text.secondary",
+                                          fontWeight: 600,
+                                          ml: 0.6,
+                                          fontSize: "0.9rem",
+                                        }}
+                                      >
                                         {sizeText}
                                       </Box>
                                     )}
@@ -423,8 +522,14 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                               gap: 0.5,
                             }}
                           >
-                            <WarningAmberIcon sx={{ color: "#ffc107", fontSize: "1rem" }} />
-                            <Typography variant="caption" fontWeight="700" color="text.primary">
+                            <WarningAmberIcon
+                              sx={{ color: "#ffc107", fontSize: "1rem" }}
+                            />
+                            <Typography
+                              variant="caption"
+                              fontWeight="700"
+                              color="text.primary"
+                            >
                               NOTA: {item.note}
                             </Typography>
                           </Box>
@@ -530,7 +635,11 @@ export const KdsCard: React.FC<KdsCardProps> = ({
 
               // Vista general "Todas las áreas de cocina"
               const allUniqueKitchenNames = Array.from(
-                new Set(enrichedSelections.map((s) => s.resolvedKitchenName).filter(Boolean)),
+                new Set(
+                  enrichedSelections
+                    .map((s) => s.resolvedKitchenName)
+                    .filter(Boolean),
+                ),
               );
 
               return (
@@ -539,17 +648,37 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                   sx={{
                     p: 1.5,
                     borderRadius: 2,
-                    bgcolor: item.note ? "rgba(255, 193, 7, 0.12)" : "action.hover",
+                    bgcolor: item.note
+                      ? "rgba(255, 193, 7, 0.12)"
+                      : "action.hover",
                     border: "1px solid",
                     borderColor: item.note ? "#ffc107" : "divider",
                     borderLeft: `5px solid ${LOGIN_COLORS.primary}`,
                   }}
                 >
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1.5}>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="flex-start"
+                    gap={1.5}
+                  >
                     <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Stack direction="row" spacing={1} alignItems="center" mb={1} flexWrap="wrap">
-                        <Typography variant="body1" fontWeight="900" color="text.primary">
-                          <Box component="span" sx={{ color: LOGIN_COLORS.primary, mr: 0.5 }}>
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        alignItems="center"
+                        mb={1}
+                        flexWrap="wrap"
+                      >
+                        <Typography
+                          variant="body1"
+                          fontWeight="900"
+                          color="text.primary"
+                        >
+                          <Box
+                            component="span"
+                            sx={{ color: LOGIN_COLORS.primary, mr: 0.5 }}
+                          >
                             {item.quantity}x
                           </Box>
                           {formatItemName(item.name, item.size)}
@@ -580,10 +709,19 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                       </Stack>
 
                       {/* Desglose ordenado con Categoría y Cocina */}
-                      <Stack spacing={0.8} sx={{ pl: 1, borderLeft: "3px solid", borderColor: LOGIN_COLORS.primary }}>
+                      <Stack
+                        spacing={0.8}
+                        sx={{
+                          pl: 1,
+                          borderLeft: "3px solid",
+                          borderColor: LOGIN_COLORS.primary,
+                        }}
+                      >
                         {enrichedSelections.map((sel, selIdx) => {
                           const sizeText =
-                            sel.size && sel.size !== "único" ? ` (${sel.size})` : "";
+                            sel.size && sel.size !== "único"
+                              ? ` (${sel.size})`
+                              : "";
                           return (
                             <Box
                               key={selIdx}
@@ -605,12 +743,24 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                                 color="text.primary"
                                 sx={{ fontSize: "0.88rem" }}
                               >
-                                ↳ {sel.quantity * item.quantity}x {sel.productName}
-                                <Box component="span" sx={{ color: "text.secondary", fontWeight: 500, ml: 0.5 }}>
+                                ↳ {sel.quantity * item.quantity}x{" "}
+                                {sel.productName}
+                                <Box
+                                  component="span"
+                                  sx={{
+                                    color: "text.secondary",
+                                    fontWeight: 500,
+                                    ml: 0.5,
+                                  }}
+                                >
                                   {sizeText}
                                 </Box>
                               </Typography>
-                              <Stack direction="row" spacing={0.6} alignItems="center">
+                              <Stack
+                                direction="row"
+                                spacing={0.6}
+                                alignItems="center"
+                              >
                                 {sel.resolvedCategoryName && (
                                   <Chip
                                     label={`🏷️ ${sel.resolvedCategoryName}`}
@@ -621,7 +771,8 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                                       height: 20,
                                       bgcolor: "rgba(211, 47, 47, 0.08)",
                                       color: LOGIN_COLORS.primary,
-                                      border: "1px solid rgba(211, 47, 47, 0.2)",
+                                      border:
+                                        "1px solid rgba(211, 47, 47, 0.2)",
                                     }}
                                   />
                                 )}
@@ -641,27 +792,45 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                                     label="Listo"
                                     size="small"
                                     color="success"
-                                    sx={{ height: 20, fontSize: "0.65rem", fontWeight: 800 }}
+                                    sx={{
+                                      height: 20,
+                                      fontSize: "0.65rem",
+                                      fontWeight: 800,
+                                    }}
                                   />
                                 ) : sel.kitchenStatus === "preparing" ? (
                                   <Chip
                                     label="Preparando"
                                     size="small"
                                     color="primary"
-                                    sx={{ height: 20, fontSize: "0.65rem", fontWeight: 800 }}
+                                    sx={{
+                                      height: 20,
+                                      fontSize: "0.65rem",
+                                      fontWeight: 800,
+                                    }}
                                   />
                                 ) : sel.kitchenStatus === "delivered" ? (
                                   <Chip
                                     label="Entregado"
                                     size="small"
-                                    sx={{ height: 20, fontSize: "0.65rem", fontWeight: 800, bgcolor: "rgba(46, 125, 50, 0.2)", color: "#2e7d32" }}
+                                    sx={{
+                                      height: 20,
+                                      fontSize: "0.65rem",
+                                      fontWeight: 800,
+                                      bgcolor: "rgba(46, 125, 50, 0.2)",
+                                      color: "#2e7d32",
+                                    }}
                                   />
                                 ) : (
                                   <Chip
                                     label="Pendiente"
                                     size="small"
                                     color="warning"
-                                    sx={{ height: 20, fontSize: "0.65rem", fontWeight: 800 }}
+                                    sx={{
+                                      height: 20,
+                                      fontSize: "0.65rem",
+                                      fontWeight: 800,
+                                    }}
                                   />
                                 )}
                               </Stack>
@@ -683,8 +852,14 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                             gap: 0.5,
                           }}
                         >
-                          <WarningAmberIcon sx={{ color: "#ffc107", fontSize: "1rem" }} />
-                          <Typography variant="caption" fontWeight="700" color="text.primary">
+                          <WarningAmberIcon
+                            sx={{ color: "#ffc107", fontSize: "1rem" }}
+                          />
+                          <Typography
+                            variant="caption"
+                            fontWeight="700"
+                            color="text.primary"
+                          >
                             NOTA: {item.note}
                           </Typography>
                         </Box>
@@ -810,14 +985,26 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                 sx={{
                   p: 1.5,
                   borderRadius: 2,
-                  bgcolor: item.note ? "rgba(255, 193, 7, 0.12)" : "action.hover",
+                  bgcolor: item.note
+                    ? "rgba(255, 193, 7, 0.12)"
+                    : "action.hover",
                   border: "1px solid",
                   borderColor: item.note ? "#ffc107" : "divider",
                 }}
               >
-                <Box display="flex" justifyContent="space-between" alignItems="center" gap={1.5}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  gap={1.5}
+                >
                   <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Box display="flex" alignItems="center" flexWrap="wrap" gap={0.8}>
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      flexWrap="wrap"
+                      gap={0.8}
+                    >
                       <Typography
                         variant="body1"
                         fontWeight="800"
@@ -828,7 +1015,14 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                           wordBreak: "break-word",
                         }}
                       >
-                        <Box component="span" sx={{ color: LOGIN_COLORS.primary, fontWeight: 900, mr: 0.5 }}>
+                        <Box
+                          component="span"
+                          sx={{
+                            color: LOGIN_COLORS.primary,
+                            fontWeight: 900,
+                            mr: 0.5,
+                          }}
+                        >
                           {item.quantity}x
                         </Box>
                         {formatItemName(item.name, item.size)}
@@ -867,7 +1061,12 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                     <Typography
                       variant="caption"
                       color="text.secondary"
-                      sx={{ fontSize: "0.75rem", display: "block", mt: 0.4, fontWeight: 600 }}
+                      sx={{
+                        fontSize: "0.75rem",
+                        display: "block",
+                        mt: 0.4,
+                        fontWeight: 600,
+                      }}
                     >
                       📍 {resolvedKName}
                     </Typography>
@@ -980,8 +1179,14 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                       gap: 0.5,
                     }}
                   >
-                    <WarningAmberIcon sx={{ color: "#ffc107", fontSize: "1rem" }} />
-                    <Typography variant="caption" fontWeight="700" color="text.primary">
+                    <WarningAmberIcon
+                      sx={{ color: "#ffc107", fontSize: "1rem" }}
+                    />
+                    <Typography
+                      variant="caption"
+                      fontWeight="700"
+                      color="text.primary"
+                    >
                       NOTA: {item.note}
                     </Typography>
                   </Box>
@@ -994,4 +1199,3 @@ export const KdsCard: React.FC<KdsCardProps> = ({
     </Card>
   );
 };
-

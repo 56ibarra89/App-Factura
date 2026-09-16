@@ -4,6 +4,7 @@ import {
   fetchOrdersFromBackend,
   syncAddOrderToBackend,
   syncFinalizeOrder,
+  syncStartDelivery,
   syncUpdateOrderItems,
   syncUpdateOrderStatus,
   syncUpdateTables,
@@ -33,6 +34,7 @@ export interface OrderCreationGateway {
 
 export interface OrderStatusGateway {
   updateStatus(command: UpdateOrderStatusCommand): Promise<void>;
+  startDelivery(orderId: string): Promise<void>;
 }
 
 export interface OrderItemsGateway {
@@ -77,6 +79,7 @@ export const ordersGateway: OrdersGateway = {
       kitchenId,
       itemId,
     ),
+  startDelivery: syncStartDelivery,
   updateItems: syncUpdateOrderItems,
   finalize: syncFinalizeOrder,
   updateTables: syncUpdateTables,

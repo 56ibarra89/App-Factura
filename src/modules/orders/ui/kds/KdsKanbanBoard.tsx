@@ -13,6 +13,8 @@ interface KdsKanbanBoardProps {
   selectedKitchenId: string;
   kitchens: Kitchen[];
   resolveTableName?: (tableId: string) => string;
+  warningThresholdMinutes: number;
+  criticalThresholdMinutes: number;
   onUpdateStatus: (
     id: string,
     status: OrderStatus,
@@ -20,7 +22,7 @@ interface KdsKanbanBoardProps {
     adminPin?: string,
     sentAt?: number,
     kitchenId?: string,
-    itemId?: number | string
+    itemId?: number | string,
   ) => void;
 }
 
@@ -29,9 +31,10 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
   selectedKitchenId,
   kitchens,
   resolveTableName,
+  warningThresholdMinutes,
+  criticalThresholdMinutes,
   onUpdateStatus,
 }) => {
-
   const getOrderEffectiveStatus = React.useCallback(
     (order: Order): OrderStatus => {
       const relevantItems = selectedKitchenId
@@ -49,7 +52,11 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
       if (relevantItems.length === 0) return order.status;
 
       const getItemStatus = (item: Order["items"][0]): OrderStatus => {
-        if (item.isCombo && Array.isArray(item.comboSelections) && selectedKitchenId) {
+        if (
+          item.isCombo &&
+          Array.isArray(item.comboSelections) &&
+          selectedKitchenId
+        ) {
           const stationSelections = item.comboSelections.filter(
             (s) => s.kitchenId === selectedKitchenId,
           );
@@ -59,11 +66,13 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
             );
             if (allDelivered) return "delivered";
             const allReadyOrDelivered = stationSelections.every(
-              (s) => s.kitchenStatus === "ready" || s.kitchenStatus === "delivered",
+              (s) =>
+                s.kitchenStatus === "ready" || s.kitchenStatus === "delivered",
             );
             if (allReadyOrDelivered) return "ready";
             const anyPreparingOrReady = stationSelections.some(
-              (s) => s.kitchenStatus === "preparing" || s.kitchenStatus === "ready",
+              (s) =>
+                s.kitchenStatus === "preparing" || s.kitchenStatus === "ready",
             );
             if (anyPreparingOrReady) return "preparing";
             return "pending";
@@ -89,7 +98,7 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
 
       return "pending";
     },
-    [selectedKitchenId]
+    [selectedKitchenId],
   );
 
   const filteredOrders = React.useMemo(() => {
@@ -123,7 +132,11 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
       }
     });
 
-    return { pendingOrders: pending, preparingOrders: preparing, readyOrders: ready };
+    return {
+      pendingOrders: pending,
+      preparingOrders: preparing,
+      readyOrders: ready,
+    };
   }, [filteredOrders, getOrderEffectiveStatus]);
 
   const columns = [
@@ -190,7 +203,11 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
           >
             <Stack direction="row" spacing={1.5} alignItems="center">
               {col.icon}
-              <Typography variant="h6" fontWeight="900" sx={{ color: "text.primary", letterSpacing: "0.5px" }}>
+              <Typography
+                variant="h6"
+                fontWeight="900"
+                sx={{ color: "text.primary", letterSpacing: "0.5px" }}
+              >
                 {col.title}
               </Typography>
             </Stack>
@@ -249,6 +266,8 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
                     kitchens={kitchens}
                     selectedKitchenId={selectedKitchenId}
                     resolveTableName={resolveTableName}
+                    warningThresholdMinutes={warningThresholdMinutes}
+                    criticalThresholdMinutes={criticalThresholdMinutes}
                     onUpdateStatus={onUpdateStatus}
                   />
                 );
@@ -260,4 +279,3 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
     </Box>
   );
 };
-

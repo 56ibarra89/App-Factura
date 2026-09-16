@@ -8,107 +8,98 @@ import { CajaProvider } from "../../modules/cash-register";
 
 const Home = lazy(() => import("../pages/HomePage"));
 const Facturacion = lazy(
-  () => import("../../modules/checkout/pages/CheckoutPage")
+  () => import("../../modules/checkout/pages/CheckoutPage"),
 );
 const DeliveryPage = lazy(
-  () => import("../../modules/delivery/pages/DeliveryPage")
+  () => import("../../modules/delivery/pages/DeliveryPage"),
 );
 const MisEntregas = lazy(
-  () => import("../../modules/delivery/pages/DriverDeliveriesPage")
+  () => import("../../modules/delivery/pages/DriverDeliveriesPage"),
 );
-const Producto = lazy(
-  () => import("../../modules/catalog/pages/ProductsPage")
-);
+const Producto = lazy(() => import("../../modules/catalog/pages/ProductsPage"));
 const ForgotPassword = lazy(
-  () => import("../../modules/auth/pages/ForgotPasswordPage")
+  () => import("../../modules/auth/pages/ForgotPasswordPage"),
 );
 const ResetPassword = lazy(() =>
   import("../../modules/auth/pages/ResetPasswordPage").then((module) => ({
     default: module.ResetPassword,
-  }))
+  })),
 );
-const LoginPin = lazy(
-  () => import("../../modules/auth/pages/LoginPinPage")
-);
+const LoginPin = lazy(() => import("../../modules/auth/pages/LoginPinPage"));
 const AbrirCajaPage = lazy(
-  () => import("../../modules/cash-register/pages/OpenCashRegisterPage")
+  () => import("../../modules/cash-register/pages/OpenCashRegisterPage"),
 );
-const Mesa = lazy(
-  () => import("../../modules/tables/pages/TablesPage")
-);
-const Ordenes = lazy(
-  () => import("../pages/OrdersRoutePage")
-);
-const KdsPage = lazy(
-  () => import("../../modules/orders/pages/KdsPage")
-);
+const Mesa = lazy(() => import("../../modules/tables/pages/TablesPage"));
+const Ordenes = lazy(() => import("../pages/OrdersRoutePage"));
+const KdsPage = lazy(() => import("../../modules/orders/pages/KdsPage"));
 const AnularFactura = lazy(
-  () => import("../../modules/invoices/pages/CancelInvoicePage")
+  () => import("../../modules/invoices/pages/CancelInvoicePage"),
 );
 const ConsultarFacturas = lazy(
-  () => import("../../modules/invoices/pages/InvoicesPage")
+  () => import("../../modules/invoices/pages/InvoicesPage"),
 );
 const Reportes = lazy(
-  () => import("../../modules/reports/pages/SalesReportsPage")
+  () => import("../../modules/reports/pages/SalesReportsPage"),
 );
-const Administracion = lazy(
-  () => import("../pages/AdminDashboardPage")
-);
+const Administracion = lazy(() => import("../pages/AdminDashboardPage"));
 const CerrarCajaPage = lazy(
-  () => import("../../modules/cash-register/pages/CloseCashRegisterPage")
+  () => import("../../modules/cash-register/pages/CloseCashRegisterPage"),
 );
 const ConsultarTurnos = lazy(
-  () => import("../../modules/cash-register/pages/ShiftHistoryPage")
+  () => import("../../modules/cash-register/pages/ShiftHistoryPage"),
 );
 const CashExpensesPage = lazy(
-  () => import("../../modules/cash-register/pages/CashExpensesPage")
+  () => import("../../modules/cash-register/pages/CashExpensesPage"),
 );
-const MiCuenta = lazy(() => import("../../modules/accounts/pages/MyAccountPage"));
+const MiCuenta = lazy(
+  () => import("../../modules/accounts/pages/MyAccountPage"),
+);
 const Cuentas = lazy(() => import("../../modules/accounts/pages/AccountsPage"));
 const ConfigurarMesas = lazy(
-  () => import("../../modules/tables/pages/TableConfigurationPage")
+  () => import("../../modules/tables/pages/TableConfigurationPage"),
 );
 const AdminCajas = lazy(
-  () => import("../../modules/cash-register/pages/AdminCashRegistersPage")
+  () => import("../../modules/cash-register/pages/AdminCashRegistersPage"),
 );
 const AdminImpuestos = lazy(
-  () => import("../../modules/settings/pages/TaxSettingsPage")
+  () => import("../../modules/settings/pages/TaxSettingsPage"),
 );
 const AdminConfiguracion = lazy(
-  () => import("../../modules/settings/pages/GeneralSettingsPage")
+  () => import("../../modules/settings/pages/GeneralSettingsPage"),
 );
 const AdminEmpresa = lazy(
-  () => import("../../modules/settings/pages/CompanySettingsPage")
+  () => import("../../modules/settings/pages/CompanySettingsPage"),
 );
-const Bitacora = lazy(
-  () => import("../pages/AuditLogRoutePage")
-);
+const Bitacora = lazy(() => import("../pages/AuditLogRoutePage"));
 const Perifericos = lazy(
-  () => import("../../modules/devices/pages/DevicesPage")
+  () => import("../../modules/devices/pages/DevicesPage"),
 );
 const AdminPromociones = lazy(
-  () => import("../../modules/promotions/pages/AdminPromotionsPage")
+  () => import("../../modules/promotions/pages/AdminPromotionsPage"),
 );
 const AdminCorrelativos = lazy(
-  () => import("../../modules/fiscal/pages/FiscalSequencesPage")
+  () => import("../../modules/fiscal/pages/FiscalSequencesPage"),
 );
 const AdminRespaldos = lazy(
-  () => import("../../modules/backups/pages/BackupsPage")
+  () => import("../../modules/backups/pages/BackupsPage"),
 );
 const AdminClientes = lazy(
-  () => import("../../modules/customers/pages/AdminCustomersPage")
+  () => import("../../modules/customers/pages/AdminCustomersPage"),
 );
 const AdminHorarios = lazy(
-  () => import("../../modules/accounts/pages/EmployeeSchedulesPage")
+  () => import("../../modules/accounts/pages/EmployeeSchedulesPage"),
 );
 const AdminZonasMeseros = lazy(
-  () => import("../../modules/tables/pages/WaiterZonesPage")
+  () => import("../../modules/tables/pages/WaiterZonesPage"),
 );
 const AdminCocinas = lazy(
-  () => import("../../modules/kitchens/pages/AdminKitchensPage")
+  () => import("../../modules/kitchens/pages/AdminKitchensPage"),
 );
 const AdminPoliticasGastos = lazy(
-  () => import("../../modules/cash-register/pages/PettyCashPolicyPage")
+  () => import("../../modules/cash-register/pages/PettyCashPolicyPage"),
+);
+const AdminTiemposServicio = lazy(
+  () => import("../../modules/settings/pages/ServiceSlaSettingsPage"),
 );
 
 const RouteFallback = () => (
@@ -150,7 +141,13 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<Facturacion />}
-              allowedRoles={["admin", "cajero", "cajero_principal", "mesero", "despachador"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "mesero",
+                "despachador",
+              ]}
             />
           }
         />
@@ -295,6 +292,10 @@ const AppRoutes = () => (
           element={<AdminRoute element={<AdminPoliticasGastos />} />}
         />
         <Route
+          path="/admin/tiempos-servicio"
+          element={<AdminRoute element={<AdminTiemposServicio />} />}
+        />
+        <Route
           path="/admin/impuestos"
           element={<AdminRoute element={<AdminImpuestos />} />}
         />
@@ -340,4 +341,3 @@ const AppRoutes = () => (
 );
 
 export default AppRoutes;
-
