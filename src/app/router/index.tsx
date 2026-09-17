@@ -101,6 +101,9 @@ const AdminPoliticasGastos = lazy(
 const AdminTiemposServicio = lazy(
   () => import("../../modules/settings/pages/ServiceSlaSettingsPage"),
 );
+const AdminPoliticasAnulacion = lazy(
+  () => import("../../modules/settings/pages/VoidWastePolicyPage"),
+);
 
 const RouteFallback = () => (
   <Box
@@ -294,6 +297,10 @@ const AppRoutes = () => (
         <Route
           path="/admin/tiempos-servicio"
           element={<AdminRoute element={<AdminTiemposServicio />} />}
+        />
+        <Route
+          path="/admin/politicas-anulacion"
+          element={<AdminRoute element={<AdminPoliticasAnulacion />} />}
         />
         <Route
           path="/admin/impuestos"

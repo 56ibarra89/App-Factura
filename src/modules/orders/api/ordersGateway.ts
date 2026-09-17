@@ -18,6 +18,7 @@ export interface UpdateOrderStatusCommand {
   sentAt?: number;
   kitchenId?: string;
   itemId?: number | string;
+  cancelReasonId?: string;
 }
 
 export interface CurrentOrdersGateway {
@@ -69,6 +70,7 @@ export const ordersGateway: OrdersGateway = {
     sentAt,
     kitchenId,
     itemId,
+    cancelReasonId,
   }) =>
     syncUpdateOrderStatus(
       orderId,
@@ -78,6 +80,7 @@ export const ordersGateway: OrdersGateway = {
       sentAt,
       kitchenId,
       itemId,
+      cancelReasonId,
     ),
   startDelivery: syncStartDelivery,
   updateItems: syncUpdateOrderItems,

@@ -20,6 +20,7 @@ export interface OrderCommands {
     sentAt?: number,
     kitchenId?: string,
     itemId?: number | string,
+    cancelReasonId?: string,
   ): void;
   removeOrder(orderId: string): void;
   clearHistory(): void;
@@ -38,14 +39,8 @@ export interface OrderCommands {
   ): Promise<string | void>;
   markAsSentToKitchen(orderId: string): void;
   markAsSentToKitchenByTable(tableId: string): void;
-  moveOrder(
-    sourceTableId: string,
-    destinationTableId: string | string[],
-  ): void;
-  unirMesas(
-    sourceTableId: string,
-    destinationTableId: string | string[],
-  ): void;
+  moveOrder(sourceTableId: string, destinationTableId: string | string[]): void;
+  unirMesas(sourceTableId: string, destinationTableId: string | string[]): void;
 }
 
 export type OrderContextValue = OrderQueries & OrderCommands;

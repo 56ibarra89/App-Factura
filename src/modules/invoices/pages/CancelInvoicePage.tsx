@@ -25,15 +25,10 @@ const CancelInvoicePage = () => {
         startContent={<BackButton to="/home" />}
       />
 
-      <Typography
-        variant="body1"
-        color="text.secondary"
-        mb={2}
-        mt={2}
-      >
-        Aquí puedes consultar el registro histórico y anular
-        una factura si hubo algún error. Esta acción requiere
-        un PIN de administrador.
+      <Typography variant="body1" color="text.secondary" mb={2} mt={2}>
+        Aquí puedes consultar el registro histórico y anular una factura si hubo
+        algún error. El PIN de supervisor se solicita según las políticas
+        operativas configuradas.
       </Typography>
 
       <InvoiceCancellationFilters
@@ -54,20 +49,19 @@ const CancelInvoicePage = () => {
         page={cancellation.page}
         rowsPerPage={cancellation.rowsPerPage}
         floors={floorsConfig}
-        onRequestCancellation={
-          cancellation.requestCancellation
-        }
+        onRequestCancellation={cancellation.requestCancellation}
         onPageChange={cancellation.changePage}
-        onRowsPerPageChange={
-          cancellation.changeRowsPerPage
-        }
+        onRowsPerPageChange={cancellation.changeRowsPerPage}
       />
 
       <InvoiceCancellationDialogs
         reasonOpen={cancellation.dialogs.reasonOpen}
         pinOpen={cancellation.dialogs.pinOpen}
-        reason={cancellation.dialogs.reason}
-        onReasonChange={cancellation.dialogs.setReason}
+        reasons={cancellation.dialogs.reasons}
+        reasonId={cancellation.dialogs.reasonId}
+        note={cancellation.dialogs.note}
+        onReasonChange={cancellation.dialogs.setReasonId}
+        onNoteChange={cancellation.dialogs.setNote}
         onCloseReason={cancellation.dialogs.closeReason}
         onSubmitReason={cancellation.dialogs.submitReason}
         onClosePin={cancellation.dialogs.closePin}

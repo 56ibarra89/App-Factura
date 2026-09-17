@@ -1,43 +1,55 @@
 import { useState, useEffect, useMemo } from "react";
-import { Alert, Box, Typography, Stack, Button, Tabs, Tab } from "@mui/material";
 import {
-  BackButton,
-  ConfirmDialog,
-  PageHeader,
-} from "../../../shared/ui";
+  Alert,
+  Box,
+  Typography,
+  Stack,
+  Button,
+  Tabs,
+  Tab,
+} from "@mui/material";
+import { BackButton, ConfirmDialog, PageHeader } from "../../../shared/ui";
 import TimerIcon from "@mui/icons-material/Timer";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import OrderGrid from "../ui/OrderGrid";
 import OrderEmptyState from "../ui/OrderEmptyState";
-import {
-  PinValidationDialog,
-  RoleGuard,
-  useAuth,
-} from "../../auth";
+import { RoleGuard, useAuth } from "../../auth";
 
 import { useOrderManagement } from "../hooks/useOrderManagement";
 import { useAccessibleKitchens } from "../../kitchens";
 import { logService } from "../../audit";
 import { LOGIN_COLORS } from "../../../shared/theme";
-import { getSelectedKitchenId, setSelectedKitchenId as saveSelectedKitchenId } from "../api/selectedKitchenPreference";
+import {
+  getSelectedKitchenId,
+  setSelectedKitchenId as saveSelectedKitchenId,
+} from "../api/selectedKitchenPreference";
+import { InvoiceCancellationDialogs } from "../../invoices/ui/InvoiceCancellationDialogs";
+import { voidWastePolicyGateway } from "../../settings/api/voidWastePolicyGateway";
+import {
+  DEFAULT_VOID_WASTE_POLICY_CONFIG,
+  type VoidWastePolicyConfig,
+} from "../../settings/model/voidWastePolicy.types";
+import type { Order } from "../model/order.types";
 
 interface OrdersPageProps {
   resolveTableName?: (tableId: string) => string;
 }
 
 const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
-  const {
-    activeOrders,
-    finishedOrders,
-    updateOrderStatus,
-    clearHistory
-  } = useOrderManagement();
+  const { activeOrders, finishedOrders, updateOrderStatus, clearHistory } =
+    useOrderManagement();
 
   const { username, role: userRole } = useAuth();
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
-  const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [reasonDialogOpen, setReasonDialogOpen] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [cancelReasonId, setCancelReasonId] = useState("");
+  const [cancelNote, setCancelNote] = useState("");
+  const [voidPolicy, setVoidPolicy] = useState<VoidWastePolicyConfig>(
+    DEFAULT_VOID_WASTE_POLICY_CONFIG,
+  );
 
   const {
     kitchens,
@@ -50,11 +62,17 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
     return getSelectedKitchenId();
   });
 
-  const activeKitchens = useMemo(() => kitchens.filter((k) => k.isActive), [kitchens]);
+  const activeKitchens = useMemo(
+    () => kitchens.filter((k) => k.isActive),
+    [kitchens],
+  );
   const isCook = userRole === "cocinero";
-  const isValidKitchen = savedKitchenId === "" || activeKitchens.some((k) => k.id === savedKitchenId);
+  const isValidKitchen =
+    savedKitchenId === "" ||
+    activeKitchens.some((k) => k.id === savedKitchenId);
   const selectedKitchenId = isCook
-    ? activeKitchens.find((kitchen) => kitchen.id === assignedKitchenId)?.id ?? ""
+    ? (activeKitchens.find((kitchen) => kitchen.id === assignedKitchenId)?.id ??
+      "")
     : isValidKitchen
       ? savedKitchenId
       : "";
@@ -69,7 +87,14 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
     }
   }, [isCook, isKitchenAccessLoading, isValidKitchen]);
 
-  const handleKitchenChange = (event: React.SyntheticEvent, newValue: string) => {
+  useEffect(() => {
+    void voidWastePolicyGateway.load().then(setVoidPolicy);
+  }, []);
+
+  const handleKitchenChange = (
+    event: React.SyntheticEvent,
+    newValue: string,
+  ) => {
     if (isCook) return;
     setSelectedKitchen(newValue);
     saveSelectedKitchenId(newValue);
@@ -105,28 +130,70 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
 
   const handleClearHistory = () => {
     clearHistory();
-    logService.log(username, userRole, "CLEAR_HISTORY", "Vaciado manual de todo el historial de órdenes");
+    logService.log(
+      username,
+      userRole,
+      "CLEAR_HISTORY",
+      "Vaciado manual de todo el historial de órdenes",
+    );
     setIsClearConfirmOpen(false);
   };
 
   const handleDeleteOrder = (id: string) => {
-    setOrderToDelete(id);
-    setPinDialogOpen(true);
+    const order = [...activeOrders, ...finishedOrders].find(
+      (candidate) => candidate.id === id,
+    );
+    if (!order) return;
+    setOrderToDelete(order);
+    setCancelReasonId(
+      voidPolicy.reasons.find((reason) => reason.isActive)?.id ?? "",
+    );
+    setCancelNote("");
+    setReasonDialogOpen(true);
   };
 
   const handleCancelSuccess = (pin?: string) => {
     if (orderToDelete) {
-      updateOrderStatus(orderToDelete, "cancelled", undefined, pin);
+      updateOrderStatus(
+        orderToDelete.id,
+        "cancelled",
+        cancelNote,
+        pin,
+        undefined,
+        undefined,
+        undefined,
+        cancelReasonId,
+      );
     }
     setPinDialogOpen(false);
     setOrderToDelete(null);
+  };
+
+  const submitCancellationReason = () => {
+    if (!orderToDelete || !cancelReasonId) return;
+    setReasonDialogOpen(false);
+    const selectedReason = voidPolicy.reasons.find(
+      (reason) => reason.id === cancelReasonId,
+    );
+    const wasPrepared = orderToDelete.items.some(
+      (item) =>
+        item.isSentToKitchen &&
+        ["preparing", "ready", "delivered"].includes(item.kitchenStatus ?? ""),
+    );
+    const requiresPin =
+      selectedReason?.requiresSupervisor ||
+      (voidPolicy.requireSupervisorForPaidOrders &&
+        orderToDelete.status === "paid") ||
+      (voidPolicy.requireSupervisorWhenPreparationStarted && wasPrepared);
+    if (requiresPin) setPinDialogOpen(true);
+    else handleCancelSuccess();
   };
 
   return (
     <Box
       minHeight="100vh"
       sx={{
-        bgcolor: 'background.default',
+        bgcolor: "background.default",
         pt: 4,
         pb: 4,
         px: { xs: 2, md: 6 },
@@ -137,39 +204,61 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
         startContent={<BackButton to="/home" />}
         actions={
           !isCook ? (
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ bgcolor: 'rgba(0,0,0,0.03)', px: 1.5, py: 0.5, borderRadius: 2 }}>
-              <TimerIcon color="action" fontSize="small" />
-              <Typography variant="body2" fontWeight="600" color="text.secondary">
-                {visibleActiveOrders.length} activas
-              </Typography>
-            </Stack>
-            <RoleGuard allowedRoles={["admin"]}>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => setIsClearConfirmOpen(true)}
-                startIcon={<DeleteIcon />}
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
                 sx={{
-                  color: LOGIN_COLORS.primary,
-                  borderColor: LOGIN_COLORS.primary,
-                  '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' },
+                  bgcolor: "rgba(0,0,0,0.03)",
+                  px: 1.5,
+                  py: 0.5,
                   borderRadius: 2,
-                  px: 2,
-                  height: 36
                 }}
               >
-                Limpiar Historial
-              </Button>
-            </RoleGuard>
-          </Stack>
+                <TimerIcon color="action" fontSize="small" />
+                <Typography
+                  variant="body2"
+                  fontWeight="600"
+                  color="text.secondary"
+                >
+                  {visibleActiveOrders.length} activas
+                </Typography>
+              </Stack>
+              <RoleGuard allowedRoles={["admin"]}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setIsClearConfirmOpen(true)}
+                  startIcon={<DeleteIcon />}
+                  sx={{
+                    color: LOGIN_COLORS.primary,
+                    borderColor: LOGIN_COLORS.primary,
+                    "&:hover": {
+                      borderColor: LOGIN_COLORS.primaryDark,
+                      bgcolor: "rgba(0,0,0,0.02)",
+                    },
+                    borderRadius: 2,
+                    px: 2,
+                    height: 36,
+                  }}
+                >
+                  Limpiar Historial
+                </Button>
+              </RoleGuard>
+            </Stack>
           ) : undefined
         }
       />
 
       {(!isCook || activeKitchens.length > 0) && (
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-          <Tabs value={selectedKitchenId} onChange={handleKitchenChange} variant="scrollable" scrollButtons="auto">
+        <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+          <Tabs
+            value={selectedKitchenId}
+            onChange={handleKitchenChange}
+            variant="scrollable"
+            scrollButtons="auto"
+          >
             {!isCook && <Tab label="Todas las áreas" value="" />}
             {activeKitchens.map((k) => (
               <Tab key={k.id} label={k.name} value={k.id} />
@@ -246,16 +335,25 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
         disableEnforceFocus
       />
 
-      {/* Security Dialog */}
       {!isCook && (
-        <PinValidationDialog
-          open={pinDialogOpen}
-          onClose={() => {
+        <InvoiceCancellationDialogs
+          reasonOpen={reasonDialogOpen}
+          pinOpen={pinDialogOpen}
+          reasons={voidPolicy.reasons.filter((reason) => reason.isActive)}
+          reasonId={cancelReasonId}
+          note={cancelNote}
+          onReasonChange={setCancelReasonId}
+          onNoteChange={setCancelNote}
+          onCloseReason={() => {
+            setReasonDialogOpen(false);
+            setOrderToDelete(null);
+          }}
+          onSubmitReason={submitCancellationReason}
+          onClosePin={() => {
             setPinDialogOpen(false);
             setOrderToDelete(null);
           }}
-          onSuccess={handleCancelSuccess}
-          title="Anular Factura"
+          onConfirm={handleCancelSuccess}
         />
       )}
     </Box>
@@ -263,4 +361,3 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
 };
 
 export default OrdersPage;
-

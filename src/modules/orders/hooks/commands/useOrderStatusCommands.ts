@@ -1,7 +1,5 @@
 import { useCallback } from "react";
-import {
-  orderMutations,
-} from "../../model/orderDomain";
+import { orderMutations } from "../../model/orderDomain";
 import type {
   OrderItemsGateway,
   OrderStatusGateway,
@@ -21,9 +19,7 @@ export function useOrderStatusCommands({
   statusGateway,
   itemsGateway,
 }: UseOrderStatusCommandsOptions) {
-  const updateOrderStatus = useCallback<
-    OrderCommands["updateOrderStatus"]
-  >(
+  const updateOrderStatus = useCallback<OrderCommands["updateOrderStatus"]>(
     (
       orderId,
       status,
@@ -32,17 +28,17 @@ export function useOrderStatusCommands({
       sentAt,
       kitchenId,
       itemId,
+      cancelReasonId,
     ) => {
       updateOrders((current) => {
-        const result =
-          orderMutations.updateOrderStatus(
-            current,
-            orderId,
-            status,
-            sentAt,
-            kitchenId,
-            itemId,
-          );
+        const result = orderMutations.updateOrderStatus(
+          current,
+          orderId,
+          status,
+          sentAt,
+          kitchenId,
+          itemId,
+        );
         return result.orders;
       });
       void statusGateway
@@ -54,29 +50,24 @@ export function useOrderStatusCommands({
           sentAt,
           kitchenId,
           itemId,
+          cancelReasonId,
         })
         .catch((error: unknown) =>
-          console.error(
-            "Error updating order status",
-            error,
-          ),
+          console.error("Error updating order status", error),
         );
     },
     [statusGateway, updateOrders],
   );
 
-  const markAsSentToKitchen = useCallback<
-    OrderCommands["markAsSentToKitchen"]
-  >(
+  const markAsSentToKitchen = useCallback<OrderCommands["markAsSentToKitchen"]>(
     (orderId) => {
       let modifiedOrder: Order | undefined;
       updateOrders((current) => {
-        const result =
-          orderMutations.markAsSentToKitchen(
-            current,
-            orderId,
-            Date.now(),
-          );
+        const result = orderMutations.markAsSentToKitchen(
+          current,
+          orderId,
+          Date.now(),
+        );
         modifiedOrder = result.modified;
         return result.orders;
       });
@@ -85,10 +76,7 @@ export function useOrderStatusCommands({
         void itemsGateway
           .updateItems(modifiedOrder)
           .catch((error: unknown) =>
-            console.error(
-              "Error marking order for kitchen",
-              error,
-            ),
+            console.error("Error marking order for kitchen", error),
           );
       }
     },
@@ -101,12 +89,11 @@ export function useOrderStatusCommands({
     (tableId) => {
       let modifiedOrder: Order | undefined;
       updateOrders((current) => {
-        const result =
-          orderMutations.markAsSentToKitchenByTable(
-            current,
-            tableId,
-            Date.now(),
-          );
+        const result = orderMutations.markAsSentToKitchenByTable(
+          current,
+          tableId,
+          Date.now(),
+        );
         modifiedOrder = result.modified;
         return result.orders;
       });
@@ -115,10 +102,7 @@ export function useOrderStatusCommands({
         void itemsGateway
           .updateItems(modifiedOrder)
           .catch((error: unknown) =>
-            console.error(
-              "Error marking table order for kitchen",
-              error,
-            ),
+            console.error("Error marking table order for kitchen", error),
           );
       }
     },

@@ -4,17 +4,25 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   TextField,
   Typography,
 } from "@mui/material";
 import { PinValidationDialog } from "../../auth";
 import { LOGIN_COLORS } from "../../../shared/theme";
+import type { CancellationReasonPolicy } from "../../settings/model/voidWastePolicy.types";
 
 interface InvoiceCancellationDialogsProps {
   reasonOpen: boolean;
   pinOpen: boolean;
-  reason: string;
-  onReasonChange(reason: string): void;
+  reasons: CancellationReasonPolicy[];
+  reasonId: string;
+  note: string;
+  onReasonChange(reasonId: string): void;
+  onNoteChange(note: string): void;
   onCloseReason(): void;
   onSubmitReason(): void;
   onClosePin(): void;
@@ -24,8 +32,11 @@ interface InvoiceCancellationDialogsProps {
 export function InvoiceCancellationDialogs({
   reasonOpen,
   pinOpen,
-  reason,
+  reasons,
+  reasonId,
+  note,
   onReasonChange,
+  onNoteChange,
   onCloseReason,
   onSubmitReason,
   onClosePin,
@@ -33,12 +44,7 @@ export function InvoiceCancellationDialogs({
 }: InvoiceCancellationDialogsProps) {
   return (
     <>
-      <Dialog
-        open={reasonOpen}
-        onClose={onCloseReason}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={reasonOpen} onClose={onCloseReason} maxWidth="sm" fullWidth>
         <DialogTitle
           sx={{
             fontWeight: "bold",
@@ -48,26 +54,33 @@ export function InvoiceCancellationDialogs({
           Motivo de Anulación
         </DialogTitle>
         <DialogContent>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            mb={2}
-            mt={1}
-          >
-            Por favor, explica brevemente por qué estás
-            anulando esta factura (por ejemplo: intento de
-            robo o fraude con tarjeta).
+          <Typography variant="body2" color="text.secondary" mb={2} mt={1}>
+            Selecciona un motivo oficial. El sistema pedirá PIN cuando la orden
+            esté pagada, la cocina ya haya iniciado o el motivo lo requiera.
           </Typography>
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel>Motivo oficial</InputLabel>
+            <Select
+              autoFocus
+              label="Motivo oficial"
+              value={reasonId}
+              onChange={(event) => onReasonChange(event.target.value)}
+            >
+              {reasons.map((reason) => (
+                <MenuItem key={reason.id} value={reason.id}>
+                  {reason.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
-            autoFocus
             fullWidth
             multiline
             rows={3}
-            placeholder="Escribe el motivo aquí..."
-            value={reason}
-            onChange={(event) =>
-              onReasonChange(event.target.value)
-            }
+            label="Nota adicional (opcional)"
+            placeholder="Detalle útil para auditoría..."
+            value={note}
+            onChange={(event) => onNoteChange(event.target.value)}
           />
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>
@@ -83,7 +96,7 @@ export function InvoiceCancellationDialogs({
                 bgcolor: LOGIN_COLORS.primaryDark,
               },
             }}
-            disabled={!reason.trim()}
+            disabled={!reasonId}
           >
             Siguiente
           </Button>

@@ -16,6 +16,7 @@ import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SpeedIcon from "@mui/icons-material/Speed";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -158,6 +159,15 @@ export const adminModules: AdminModuleItem[] = [
       "Configura el semáforo del KDS, el límite de delivery y consulta métricas de cumplimiento.",
     icon: <SpeedIcon fontSize="large" />,
     path: "/admin/tiempos-servicio",
+  },
+  {
+    id: "politicas-anulacion",
+    category: "Operativa",
+    title: "Anulaciones, Mermas y Cortesías",
+    description:
+      "Define motivos oficiales, reglas de PIN supervisor y consulta las pérdidas operativas.",
+    icon: <ReportProblemIcon fontSize="large" />,
+    path: "/admin/politicas-anulacion",
   },
 
   {

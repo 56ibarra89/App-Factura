@@ -297,6 +297,7 @@ export async function syncUpdateOrderStatus(
   sentAt?: number,
   kitchenId?: string,
   itemId?: number | string,
+  cancelReasonId?: string,
 ) {
   await apiClient(`/orders/${orderId}/status`, {
     method: "PATCH",
@@ -307,6 +308,7 @@ export async function syncUpdateOrderStatus(
       ...(typeof itemId === "number" ? { itemId } : {}),
       ...(adminPin ? { adminPin } : {}),
       ...(cancelReason ? { cancelReason } : {}),
+      ...(cancelReasonId ? { cancelReasonId } : {}),
     }),
   });
 }
