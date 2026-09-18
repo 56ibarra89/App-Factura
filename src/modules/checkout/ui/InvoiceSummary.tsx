@@ -9,6 +9,7 @@ import {
 import type { OrderItem } from "../../orders";
 import type { GeneralConfigState } from "../../settings";
 import { formatItemName } from "../../../shared/format";
+import KitchenModifierChips from "../../orders/ui/KitchenModifierChips";
 
 interface InvoiceSummaryProps {
   cart: OrderItem[];
@@ -77,7 +78,9 @@ export default function InvoiceSummary({
                             color="text.secondary"
                             sx={{ display: "block", fontSize: "0.75rem" }}
                           >
-                            • {s.quantity}x {s.productName}{sizeText}{extraText}
+                            • {s.quantity}x {s.productName}
+                            {sizeText}
+                            {extraText}
                           </Typography>
                         );
                       })}
@@ -98,6 +101,10 @@ export default function InvoiceSummary({
                         .join(", ")}
                     </Typography>
                   )}
+                  <KitchenModifierChips
+                    modifiers={item.kitchenModifiers}
+                    compact
+                  />
                   {item.note && (
                     <Typography
                       component="span"
@@ -115,10 +122,7 @@ export default function InvoiceSummary({
                   >
                     {`C$${item.price.toFixed(2)} c/u — Subtotal: C$${(
                       item.price *
-                      Math.max(
-                        0,
-                        item.quantity - (item.giftQuantity ?? 0),
-                      )
+                      Math.max(0, item.quantity - (item.giftQuantity ?? 0))
                     ).toFixed(2)}`}
                   </Typography>
                   {(item.giftQuantity ?? 0) > 0 && (

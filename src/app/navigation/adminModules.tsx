@@ -17,6 +17,8 @@ import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SpeedIcon from "@mui/icons-material/Speed";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import TuneIcon from "@mui/icons-material/Tune";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -59,6 +61,15 @@ export const adminModules: AdminModuleItem[] = [
       "Gestiona múltiples tasas impositivas y reglas especiales aisladas de la configuración habitual.",
     icon: <PercentIcon fontSize="large" />,
     path: "/admin/impuestos",
+  },
+  {
+    id: "metodos-pago",
+    category: "General",
+    title: "Métodos de Pago y Bancos",
+    description:
+      "Configura cuentas, terminales POS, referencias obligatorias y comisiones bancarias.",
+    icon: <AccountBalanceIcon fontSize="large" />,
+    path: "/admin/metodos-pago",
   },
 
   {
@@ -168,6 +179,15 @@ export const adminModules: AdminModuleItem[] = [
       "Define motivos oficiales, reglas de PIN supervisor y consulta las pérdidas operativas.",
     icon: <ReportProblemIcon fontSize="large" />,
     path: "/admin/politicas-anulacion",
+  },
+  {
+    id: "modificadores-cocina",
+    category: "Operativa",
+    title: "Modificadores de Cocina",
+    description:
+      "Crea instrucciones rápidas, asígnalas por categoría y estandariza su lectura en KDS y comandas.",
+    icon: <TuneIcon fontSize="large" />,
+    path: "/admin/modificadores-cocina",
   },
 
   {

@@ -104,6 +104,12 @@ const AdminTiemposServicio = lazy(
 const AdminPoliticasAnulacion = lazy(
   () => import("../../modules/settings/pages/VoidWastePolicyPage"),
 );
+const AdminMetodosPago = lazy(
+  () => import("../../modules/settings/pages/PaymentMethodsSettingsPage"),
+);
+const AdminModificadoresCocina = lazy(
+  () => import("../../modules/settings/pages/KitchenModifiersSettingsPage"),
+);
 
 const RouteFallback = () => (
   <Box
@@ -305,6 +311,14 @@ const AppRoutes = () => (
         <Route
           path="/admin/impuestos"
           element={<AdminRoute element={<AdminImpuestos />} />}
+        />
+        <Route
+          path="/admin/metodos-pago"
+          element={<AdminRoute element={<AdminMetodosPago />} />}
+        />
+        <Route
+          path="/admin/modificadores-cocina"
+          element={<AdminRoute element={<AdminModificadoresCocina />} />}
         />
         <Route
           path="/admin/configuracion"

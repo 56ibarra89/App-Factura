@@ -1,12 +1,15 @@
 import { deviceGateway } from "../api/deviceGateway";
 import type { PrinterConfig } from "../api/printerConfig.types";
 import { EscPosBuilder } from "../../../shared/printing/escposBuilder";
+import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
+import { KITCHEN_MODIFIER_PREFIXES } from "../../settings/model/kitchenModifiers.types";
 
 export interface KitchenOrderItem {
   name: string;
   quantity: number;
   size?: string;
   note?: string;
+  kitchenModifiers?: KitchenModifierSelection[];
   extras?: Array<{ name: string }>;
   isCombo?: boolean;
   comboSelections?: Array<{
@@ -45,7 +48,11 @@ class PrinterDispatcherService {
    */
   async getPrinters(forceRefresh = false): Promise<PrinterConfig[]> {
     const now = Date.now();
-    if (!forceRefresh && this.cachedPrinters && now - this.lastFetchTime < 5000) {
+    if (
+      !forceRefresh &&
+      this.cachedPrinters &&
+      now - this.lastFetchTime < 5000
+    ) {
       return this.cachedPrinters;
     }
     try {
@@ -105,7 +112,11 @@ class PrinterDispatcherService {
     port = 9100,
   ): Promise<{ success: boolean; latencyMs?: number; error?: string }> {
     if (window.printAPI?.testNetworkPrinter) {
-      return await window.printAPI.testNetworkPrinter({ host, port, timeoutMs: 3000 });
+      return await window.printAPI.testNetworkPrinter({
+        host,
+        port,
+        timeoutMs: 3000,
+      });
     }
     return {
       success: false,
@@ -161,10 +172,16 @@ class PrinterDispatcherService {
     // Impresión por Red LAN
     if (printer.connectionType === "network") {
       if (!printer.ipAddress) {
-        return { success: false, error: "La impresora no tiene dirección IP configurada." };
+        return {
+          success: false,
+          error: "La impresora no tiene dirección IP configurada.",
+        };
       }
       if (!window.printAPI?.printNetworkRaw) {
-        return { success: false, error: "printNetworkRaw no disponible en Electron." };
+        return {
+          success: false,
+          error: "printNetworkRaw no disponible en Electron.",
+        };
       }
 
       const res = await window.printAPI.printNetworkRaw({
@@ -181,7 +198,9 @@ class PrinterDispatcherService {
     if (window.printAPI?.printSilent) {
       window.printAPI.printSilent({ deviceName: printer.windowsDeviceName });
       if (printer.openCashDrawer && window.printAPI.openCashDrawer) {
-        await window.printAPI.openCashDrawer({ deviceName: printer.windowsDeviceName });
+        await window.printAPI.openCashDrawer({
+          deviceName: printer.windowsDeviceName,
+        });
       }
       return { success: true };
     }
@@ -196,8 +215,14 @@ class PrinterDispatcherService {
   private buildKitchenComandaBuffer(data: KitchenComandaData): Uint8Array {
     const builder = new EscPosBuilder();
     const dateStr = data.timestamp
-      ? new Date(data.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      : new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      ? new Date(data.timestamp).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
 
     builder
       .align("center")
@@ -206,17 +231,17 @@ class PrinterDispatcherService {
       .line("=== ORDEN COCINA ===")
       .size("large");
 
-    if (data.tableNumber !== undefined && data.tableNumber !== null && data.tableNumber !== "") {
+    if (
+      data.tableNumber !== undefined &&
+      data.tableNumber !== null &&
+      data.tableNumber !== ""
+    ) {
       builder.line(`MESA: ${data.tableNumber}`);
     } else {
       builder.line(`${(data.orderType || "PARA LLEVAR").toUpperCase()}`);
     }
 
-    builder
-      .size("normal")
-      .bold(false)
-      .align("left")
-      .separator("-");
+    builder.size("normal").bold(false).align("left").separator("-");
 
     if (data.orderId) {
       builder.line(`Orden #: ${data.orderId.slice(-6)}`);
@@ -231,15 +256,22 @@ class PrinterDispatcherService {
     data.items.forEach((item) => {
       builder.bold(true).size("double-height");
       const sizeText = item.size ? ` (${item.size})` : "";
-      builder.line(`[ ${item.quantity} ] ${item.name.toUpperCase()}${sizeText}`);
+      builder.line(
+        `[ ${item.quantity} ] ${item.name.toUpperCase()}${sizeText}`,
+      );
 
       builder.size("normal").bold(false);
 
       if (item.comboSelections && item.comboSelections.length > 0) {
         item.comboSelections.forEach((sel) => {
-          const selSize = sel.size && sel.size !== "único" ? ` (${sel.size})` : "";
-          const catTag = sel.categoryName ? ` [${sel.categoryName.toUpperCase()}]` : "";
-          builder.line(`   > ${sel.quantity}x ${sel.productName.toUpperCase()}${selSize}${catTag}`);
+          const selSize =
+            sel.size && sel.size !== "único" ? ` (${sel.size})` : "";
+          const catTag = sel.categoryName
+            ? ` [${sel.categoryName.toUpperCase()}]`
+            : "";
+          builder.line(
+            `   > ${sel.quantity}x ${sel.productName.toUpperCase()}${selSize}${catTag}`,
+          );
         });
       }
 
@@ -249,18 +281,25 @@ class PrinterDispatcherService {
         });
       }
 
+      if (item.kitchenModifiers && item.kitchenModifiers.length > 0) {
+        builder.bold(true);
+        item.kitchenModifiers.forEach((modifier) => {
+          builder.line(
+            `   ${KITCHEN_MODIFIER_PREFIXES[modifier.kind]} ${modifier.label.toUpperCase()}`,
+          );
+        });
+        builder.bold(false);
+      }
+
       if (item.note) {
         builder.bold(true);
-        builder.line(`   * NOTA: ${item.note}`);
+        builder.line(`   ! NOTA LIBRE: ${item.note}`);
         builder.bold(false);
       }
       builder.feed(1);
     });
 
-    builder
-      .separator("=")
-      .feed(2)
-      .cut();
+    builder.separator("=").feed(2).cut();
 
     return builder.toBytes();
   }
@@ -268,7 +307,9 @@ class PrinterDispatcherService {
   /**
    * Despacha una comanda a la impresora de cocina con soporte de FAILOVER / RESPALDO automático
    */
-  async printKitchenComanda(data: KitchenComandaData): Promise<PrintDispatchResult> {
+  async printKitchenComanda(
+    data: KitchenComandaData,
+  ): Promise<PrintDispatchResult> {
     if (!data.items || data.items.length === 0) {
       return { success: true };
     }
@@ -287,7 +328,10 @@ class PrinterDispatcherService {
           fallbackPrinter: cashierPrinter.name,
         };
       }
-      return { success: false, error: "No hay impresoras activas configuradas en el sistema." };
+      return {
+        success: false,
+        error: "No hay impresoras activas configuradas en el sistema.",
+      };
     }
 
     const comandaBuffer = this.buildKitchenComandaBuffer(data);
@@ -328,14 +372,21 @@ class PrinterDispatcherService {
           );
         } catch (err: unknown) {
           const errMsg = err instanceof Error ? err.message : String(err);
-          return await this.executeFailover(kitchenPrinter, data, comandaBuffer, errMsg);
+          return await this.executeFailover(
+            kitchenPrinter,
+            data,
+            comandaBuffer,
+            errMsg,
+          );
         }
       }
     }
 
     // Si la impresora de cocina es USB / Windows
     if (window.printAPI?.printSilent) {
-      window.printAPI.printSilent({ deviceName: kitchenPrinter.windowsDeviceName });
+      window.printAPI.printSilent({
+        deviceName: kitchenPrinter.windowsDeviceName,
+      });
       return { success: true, originalPrinter: kitchenPrinter.name };
     }
 
@@ -365,7 +416,10 @@ class PrinterDispatcherService {
     // 2. Si no hay respaldo explícito, buscar la impresora de caja
     if (!fallbackPrinter) {
       fallbackPrinter = printers.find(
-        (p) => p.id !== failedPrinter.id && p.isActive && (p.role === "cashier" || p.role === "both"),
+        (p) =>
+          p.id !== failedPrinter.id &&
+          p.isActive &&
+          (p.role === "cashier" || p.role === "both"),
       );
     }
 
@@ -381,7 +435,10 @@ class PrinterDispatcherService {
     }
 
     // Enviar comanda a la impresora de respaldo
-    if (fallbackPrinter.connectionType === "network" && fallbackPrinter.ipAddress) {
+    if (
+      fallbackPrinter.connectionType === "network" &&
+      fallbackPrinter.ipAddress
+    ) {
       if (window.printAPI?.printNetworkRaw) {
         await window.printAPI.printNetworkRaw({
           host: fallbackPrinter.ipAddress,
@@ -415,7 +472,10 @@ class PrinterDispatcherService {
   /**
    * Envía la comanda a la impresora de caja mediante la API de Electron
    */
-  private printToCashierPrinter(data: KitchenComandaData, printer: PrinterConfig) {
+  private printToCashierPrinter(
+    data: KitchenComandaData,
+    printer: PrinterConfig,
+  ) {
     if (window.printAPI?.printSilent) {
       window.printAPI.printSilent({ deviceName: printer.windowsDeviceName });
     } else {

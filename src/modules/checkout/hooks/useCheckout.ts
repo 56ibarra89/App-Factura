@@ -1,8 +1,5 @@
 import { useCallback } from "react";
-import {
-  useOrderCommands,
-  type OrderItem,
-} from "../../orders";
+import { useOrderCommands, type OrderItem } from "../../orders";
 import {
   buildSupplementalCartItems,
   buildOrderPromotionSelection,
@@ -10,9 +7,7 @@ import {
 } from "../model/checkoutDomain";
 import type { CheckoutFormValues } from "../model/checkout.types";
 import { calculateCartTotals } from "../model/cartTotals";
-import type {
-  AppliedPromotion,
-} from "../../promotions";
+import type { AppliedPromotion } from "../../promotions";
 import { useTaxConfig } from "../../settings";
 
 export function useCheckout(
@@ -40,12 +35,7 @@ export function useCheckout(
   const confirmFactura = useCallback(
     async (form: CheckoutFormValues) => {
       const items = buildCheckoutCart(form);
-      const totals = calculateCartTotals(
-        items,
-        taxes,
-        isExonerated,
-        promotion,
-      );
+      const totals = calculateCartTotals(items, taxes, isExonerated, promotion);
 
       return addOrder({
         items,
@@ -57,29 +47,19 @@ export function useCheckout(
         customerAddress: form.customerAddress,
         paymentMethod: form.paymentMethod,
         splitAmounts: form.splitAmounts,
+        payments: form.payments,
         ...buildOrderPromotionSelection(promotion),
         certificateSerials: extractCertificateSerials(items),
         driverId: form.driverId,
         customerTendered: form.customerTendered,
       });
     },
-    [
-      addOrder,
-      buildCheckoutCart,
-      isExonerated,
-      promotion,
-      taxes,
-    ],
+    [addOrder, buildCheckoutCart, isExonerated, promotion, taxes],
   );
 
   const saveTableOrder = useCallback(
     async (orderId?: string, tableId?: string) => {
-      const totals = calculateCartTotals(
-        cart,
-        taxes,
-        isExonerated,
-        promotion,
-      );
+      const totals = calculateCartTotals(cart, taxes, isExonerated, promotion);
 
       if (orderId) {
         await updateOrderItems(
@@ -103,25 +83,13 @@ export function useCheckout(
         certificateSerials: extractCertificateSerials(cart),
       });
     },
-    [
-      addOrder,
-      cart,
-      isExonerated,
-      promotion,
-      taxes,
-      updateOrderItems,
-    ],
+    [addOrder, cart, isExonerated, promotion, taxes, updateOrderItems],
   );
 
   const finalizeTableOrder = useCallback(
     async (orderId: string, form: CheckoutFormValues) => {
       const items = buildCheckoutCart(form);
-      const totals = calculateCartTotals(
-        items,
-        taxes,
-        isExonerated,
-        promotion,
-      );
+      const totals = calculateCartTotals(items, taxes, isExonerated, promotion);
 
       await updateOrderItems(
         orderId,
@@ -138,6 +106,7 @@ export function useCheckout(
         customerId: form.customerId,
         paymentMethod: form.paymentMethod,
         splitAmounts: form.splitAmounts,
+        payments: form.payments,
         customerName: form.customerName,
         customerPhone: form.customerPhone,
         orderType: form.orderType,

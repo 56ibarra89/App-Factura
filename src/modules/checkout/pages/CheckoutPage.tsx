@@ -1,25 +1,11 @@
 import Box from "@mui/material/Box";
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import {
-  useLocation,
-  useSearchParams,
-} from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import BillingDialogs from "../ui/BillingDialogs";
 import Cart from "../ui/Cart";
-import {
-  CategoryTabs,
-  ProductGrid,
-  useCatalog,
-} from "../../catalog";
+import { CategoryTabs, ProductGrid, useCatalog } from "../../catalog";
 import { useAuth } from "../../auth";
-import {
-  useOrderCommands,
-  useOrderQueries,
-} from "../../orders";
+import { useOrderCommands, useOrderQueries } from "../../orders";
 import { useBillingFlow } from "../hooks/useBillingFlow";
 import { useCertificateRedemption } from "../../promotions";
 import { useExclusiveAction } from "../hooks/useExclusiveAction";
@@ -49,8 +35,9 @@ const CheckoutPage = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [certificateOpen, setCertificateOpen] = useState(false);
-  const [deliveryCustomer, setDeliveryCustomer] =
-    useState<Customer | null>(state?.deliveryCustomer || null);
+  const [deliveryCustomer, setDeliveryCustomer] = useState<Customer | null>(
+    state?.deliveryCustomer || null,
+  );
   const [deliveryPhone, setDeliveryPhone] = useState(
     state?.deliveryPhone || "",
   );
@@ -80,6 +67,7 @@ const CheckoutPage = () => {
     handleRemoveItem,
     handleConfirmFactura,
     handleChangeGiftQuantity,
+    handleChangeKitchenInstructions,
     handleSaveTableOrder,
     handleFinalizeTableOrder,
     handleSetCart,
@@ -90,13 +78,10 @@ const CheckoutPage = () => {
 
   const [searchParams] = useSearchParams();
   const tableId = searchParams.get("tableId");
-  const isCheckoutMode =
-    searchParams.get("checkout") === "true";
+  const isCheckoutMode = searchParams.get("checkout") === "true";
   const { getOrderByTable } = useOrderQueries();
   const { markAsSentToKitchenByTable } = useOrderCommands();
-  const activeOrder = tableId
-    ? getOrderByTable(tableId)
-    : null;
+  const activeOrder = tableId ? getOrderByTable(tableId) : null;
 
   useEffect(() => {
     if (activeOrder && cart.length === 0) {
@@ -120,7 +105,9 @@ const CheckoutPage = () => {
     isCheckoutMode,
     activeOrder,
     deliveryDriverId: state?.deliveryDriverId,
-    fromDeliveryPage: Boolean(state?.fromDeliveryPage || role === "despachador"),
+    fromDeliveryPage: Boolean(
+      state?.fromDeliveryPage || role === "despachador",
+    ),
     confirmInvoice: handleConfirmFactura,
     saveTableOrder: handleSaveTableOrder,
     finalizeTableOrder: handleFinalizeTableOrder,
@@ -147,26 +134,20 @@ const CheckoutPage = () => {
     addItem: handleAddToCartItem,
   });
 
-  const currentProducts =
-    categories[selectedTab]?.items || [];
+  const currentProducts = categories[selectedTab]?.items || [];
 
   return (
     <Box display="flex" height="100vh" overflow="hidden">
       <CategoryTabs
         categories={categories}
         selectedTab={selectedTab}
-        onTabChange={(_, newValue) =>
-          setSelectedTab(newValue)
-        }
+        onTabChange={(_, newValue) => setSelectedTab(newValue)}
       />
 
       <ProductGrid
         products={currentProducts}
         onProductClick={(product) =>
-          handleAddToCart(
-            product,
-            categories[selectedTab]?.kitchenId,
-          )
+          handleAddToCart(product, categories[selectedTab]?.kitchenId)
         }
       />
 
@@ -179,6 +160,7 @@ const CheckoutPage = () => {
         onRemoveItem={handleRemoveItem}
         onChangeQuantity={handleChangeQuantity}
         onChangeGiftQuantity={handleChangeGiftQuantity}
+        onChangeKitchenInstructions={handleChangeKitchenInstructions}
         onPreviewClick={() => setPreviewOpen(true)}
         onOpenCertificado={() => setCertificateOpen(true)}
         onSendToKitchen={kitchen.requestDispatch}
@@ -216,8 +198,7 @@ const CheckoutPage = () => {
           initialDriverId: state?.deliveryDriverId,
           initialDeliveryCost: state?.deliveryCost,
           initialDeliveryZone: state?.deliveryZone,
-          initialCustomerTendered:
-            state?.deliveryCustomerTendered,
+          initialCustomerTendered: state?.deliveryCustomerTendered,
           invoiceNumber: billing.createdInvoiceNumber,
           cashierName: activeOrder?.cashierName,
           close: closePreview,

@@ -269,7 +269,7 @@ export default function DriverDeliveriesPage() {
   };
 
   const handleConfirmPayment = async (
-    payments: { method: string; amount: number }[],
+    payments: import("../../orders").OrderPaymentDetail[],
     paymentMethodLabel: string,
   ) => {
     if (!payingOrder) return;

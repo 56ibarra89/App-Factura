@@ -1,8 +1,5 @@
 import { useCallback, useState } from "react";
-import {
-  requiresKitchenPreparation,
-  type OrderItem,
-} from "../../orders";
+import { requiresKitchenPreparation, type OrderItem } from "../../orders";
 import { logService } from "../../audit";
 import { printerDispatcherService } from "../../devices";
 import type { RunExclusiveAction } from "./useExclusiveAction";
@@ -90,7 +87,9 @@ export function useKitchenDispatch({
       if (kitchenItems.length > 0) {
         void printerDispatcherService.printKitchenComanda({
           orderId: activeOrderId,
-          tableNumber: tableId ? tableId.replace("T-", "").replace("-M", " ") : undefined,
+          tableNumber: tableId
+            ? tableId.replace("T-", "").replace("-M", " ")
+            : undefined,
           orderType: "MESA",
           waiterOrCashier: username,
           items: kitchenItems.map((k) => ({
@@ -98,6 +97,7 @@ export function useKitchenDispatch({
             quantity: k.quantity,
             size: k.size,
             note: k.note,
+            kitchenModifiers: k.kitchenModifiers,
             extras: k.extras,
             isCombo: k.isCombo,
             comboSelections: k.comboSelections,

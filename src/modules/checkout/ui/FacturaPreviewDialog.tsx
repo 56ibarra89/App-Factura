@@ -12,10 +12,7 @@ import type { OrderItem } from "../../orders";
 import type { CheckoutFormValues } from "../model/checkout.types";
 import type { Customer } from "../../customers";
 import type { OrderType } from "../../orders";
-import {
-  PromocionesSelector,
-  type AppliedPromotion,
-} from "../../promotions";
+import { PromocionesSelector, type AppliedPromotion } from "../../promotions";
 import { buildSupplementalCartItems } from "../model/checkoutDomain";
 import { useCheckoutDialog } from "../hooks/useCheckoutDialog";
 import CustomerDeliverySection from "./CustomerDeliverySection";
@@ -193,8 +190,15 @@ export default function FacturaPreviewDialog({
               <Divider sx={{ my: 2 }} />
               <PaymentMethodSelector
                 total={checkout.finalTotal}
+                methods={checkout.methods}
                 paymentMethod={checkout.paymentMethod}
                 setPaymentMethod={checkout.setPaymentMethod}
+                selectedMethodId={checkout.selectedMethodId}
+                setSelectedMethodId={checkout.setSelectedMethodId}
+                mixedMethodIds={checkout.mixedMethodIds}
+                setMixedMethodIds={checkout.setMixedMethodIds}
+                paymentReferences={checkout.paymentReferences}
+                setPaymentReferences={checkout.setPaymentReferences}
                 splitAmounts={checkout.splitAmounts}
                 setSplitAmounts={checkout.setSplitAmounts}
                 receivedLocal={checkout.receivedLocal}
@@ -206,9 +210,6 @@ export default function FacturaPreviewDialog({
                   checkout.config.secondaryCurrencySymbol
                 }
                 exchangeRate={checkout.exchangeRate}
-                enableSecondaryCurrency={
-                  checkout.config.enableSecondaryCurrency
-                }
               />
             </>
           )}
@@ -242,7 +243,9 @@ export default function FacturaPreviewDialog({
           address: checkout.customerAddress,
         }}
         onConfirmAsNew={() => void checkout.handleConfirmAsNewCustomer()}
-        onConfirmAsExisting={() => void checkout.handleConfirmAsExistingCustomer()}
+        onConfirmAsExisting={() =>
+          void checkout.handleConfirmAsExistingCustomer()
+        }
         onCancel={() => checkout.setMatchDialogOpen(false)}
         loading={checkout.isSubmitting}
       />

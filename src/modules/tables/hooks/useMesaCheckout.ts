@@ -1,13 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
-import {
-  useOrderCommands,
-  type Order,
-  type OrderItem,
-} from "../../orders";
+import { useOrderCommands, type Order, type OrderItem } from "../../orders";
 import { useTaxConfig } from "../../settings";
-import type {
-  AppliedPromotion,
-} from "../../promotions";
+import type { AppliedPromotion } from "../../promotions";
 import {
   buildSupplementalCartItems,
   buildOrderPromotionSelection,
@@ -15,28 +9,26 @@ import {
   extractCertificateSerials,
   type CheckoutFormValues,
 } from "../../checkout";
-import {
-  receiptPrinter,
-  type ReceiptPrinter,
-} from "../../../shared/printing";
+import { receiptPrinter, type ReceiptPrinter } from "../../../shared/printing";
 
 export function useMesaCheckout(
   restoreFocus: () => void,
   printer: ReceiptPrinter = receiptPrinter,
 ) {
-  const { finalizeOrder, updateOrderItems } =
-    useOrderCommands();
+  const { finalizeOrder, updateOrderItems } = useOrderCommands();
   const { taxes, isExonerated } = useTaxConfig();
 
   const [checkoutOrder, setCheckoutOrder] = useState<Order | null>(null);
   const [checkoutPromotion, setCheckoutPromotion] =
     useState<AppliedPromotion | null>(null);
-  const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<string | undefined>(undefined);
+  const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<
+    string | undefined
+  >(undefined);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const checkoutCart: OrderItem[] = useMemo(
     () => (checkoutOrder ? checkoutOrder.items : []),
-    [checkoutOrder]
+    [checkoutOrder],
   );
 
   const {
@@ -45,8 +37,9 @@ export function useMesaCheckout(
     total: checkoutTotal,
     discountAmount: checkoutDiscountAmount,
   } = useMemo(
-    () => calculateCartTotals(checkoutCart, taxes, isExonerated, checkoutPromotion),
-    [checkoutCart, taxes, isExonerated, checkoutPromotion]
+    () =>
+      calculateCartTotals(checkoutCart, taxes, isExonerated, checkoutPromotion),
+    [checkoutCart, taxes, isExonerated, checkoutPromotion],
   );
 
   const openCheckoutPreview = useCallback((order: Order) => {
@@ -95,6 +88,7 @@ export function useMesaCheckout(
         ...totals,
         paymentMethod: form.paymentMethod,
         splitAmounts: form.splitAmounts,
+        payments: form.payments,
         customerName: form.customerName,
         orderType: form.orderType,
         customerAddress: form.customerAddress,
@@ -125,7 +119,7 @@ export function useMesaCheckout(
       printer,
       taxes,
       updateOrderItems,
-    ]
+    ],
   );
 
   return {

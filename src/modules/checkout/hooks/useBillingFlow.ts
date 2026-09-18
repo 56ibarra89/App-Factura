@@ -6,10 +6,7 @@ import {
   type Order,
   type OrderItem,
 } from "../../orders";
-import {
-  receiptPrinter,
-  type ReceiptPrinter,
-} from "../../../shared/printing";
+import { receiptPrinter, type ReceiptPrinter } from "../../../shared/printing";
 import { printerDispatcherService } from "../../devices";
 import type { RunExclusiveAction } from "./useExclusiveAction";
 
@@ -20,9 +17,7 @@ interface UseBillingFlowOptions {
   deliveryDriverId?: string;
   fromDeliveryPage?: boolean;
   cart?: OrderItem[];
-  confirmInvoice(
-    form: CheckoutFormValues,
-  ): Promise<string | void>;
+  confirmInvoice(form: CheckoutFormValues): Promise<string | void>;
   saveTableOrder(orderId?: string, tableId?: string): Promise<unknown>;
   finalizeTableOrder(
     orderId: string,
@@ -88,9 +83,7 @@ export function useBillingFlow({
               form,
             );
             if (!invoiceNumber) {
-              throw new Error(
-                "El backend no devolvió un número de factura.",
-              );
+              throw new Error("El backend no devolvió un número de factura.");
             }
 
             await completeAndPrint(invoiceNumber, isCash);
@@ -110,9 +103,7 @@ export function useBillingFlow({
           driverId: form.driverId || deliveryDriverId,
         });
         if (!invoiceNumber) {
-          throw new Error(
-            "El backend no devolvió un número de factura.",
-          );
+          throw new Error("El backend no devolvió un número de factura.");
         }
 
         await completeAndPrint(invoiceNumber, isCash);
@@ -136,6 +127,7 @@ export function useBillingFlow({
                 quantity: k.quantity,
                 size: k.size,
                 note: k.note,
+                kitchenModifiers: k.kitchenModifiers,
                 extras: k.extras,
                 isCombo: k.isCombo,
                 comboSelections: k.comboSelections,

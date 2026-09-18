@@ -7,6 +7,7 @@ import {
   SelectedComboOptionItem,
 } from "../model/order.types";
 import { apiClient } from "../../../shared/api";
+import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
 
 interface BackendExtra {
   name: string;
@@ -23,6 +24,7 @@ interface BackendItem {
   quantity: number | string;
   extras: BackendExtra[];
   note?: string;
+  kitchenModifiers?: KitchenModifierSelection[];
   giftQuantity?: number;
   giftReason?: string;
   isSentToKitchen?: boolean;
@@ -32,6 +34,11 @@ interface BackendItem {
   isCombo?: boolean;
   comboSelections?: SelectedComboOptionItem[];
 }
+
+const toKitchenModifierPayload = (
+  modifiers?: KitchenModifierSelection[],
+): KitchenModifierSelection[] | undefined =>
+  modifiers?.map(({ id, label, kind }) => ({ id, label, kind }));
 
 export interface BackendOrder {
   id: string;
@@ -65,6 +72,15 @@ export interface BackendOrder {
     amount: number | string;
     cashierId?: string;
     cashierSnapshotName?: string;
+    reference?: string;
+    methodConfigId?: string;
+    methodSnapshotName?: string;
+    methodType?: string;
+    currency?: string;
+    originalAmount?: number | string;
+    exchangeRate?: number | string;
+    commissionRate?: number | string;
+    commissionAmount?: number | string;
   }[];
   cashierSnapshotName?: string;
   isSentToKitchen?: boolean;
@@ -95,6 +111,7 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
         price: Number(e.price),
       })),
       note: i.note,
+      kitchenModifiers: toKitchenModifierPayload(i.kitchenModifiers),
       giftQuantity: i.giftQuantity,
       giftReason: i.giftReason,
       isSentToKitchen: i.isSentToKitchen,
@@ -188,6 +205,21 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       method: p.method.toUpperCase() as "EFECTIVO" | "TARJETA" | "APP",
       amount: Number(p.amount),
       cashierSnapshotName: p.cashierSnapshotName,
+      reference: p.reference,
+      methodConfigId: p.methodConfigId,
+      methodSnapshotName: p.methodSnapshotName,
+      methodType: p.methodType,
+      currency: p.currency,
+      originalAmount:
+        p.originalAmount === undefined ? undefined : Number(p.originalAmount),
+      exchangeRate:
+        p.exchangeRate === undefined ? undefined : Number(p.exchangeRate),
+      commissionRate:
+        p.commissionRate === undefined ? undefined : Number(p.commissionRate),
+      commissionAmount:
+        p.commissionAmount === undefined
+          ? undefined
+          : Number(p.commissionAmount),
     })),
     paymentMethod: (hasMultiplePayments ? "MIXTO" : rawPaymentMethod) as
       | PaymentMethod
@@ -229,6 +261,7 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
         ? i.extras.map((e) => ({ name: e.name, price: e.price }))
         : [],
       note: i.note,
+      kitchenModifiers: toKitchenModifierPayload(i.kitchenModifiers),
       giftQuantity: i.giftQuantity || 0,
       giftReason: i.giftReason,
       isSentToKitchen: !!i.isSentToKitchen,
@@ -266,20 +299,22 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
         : order.tableId
           ? [order.tableId]
           : undefined,
-    payments: order.paymentMethod
-      ? order.paymentMethod === "MIXTO" && order.splitAmounts
-        ? [
-            { method: "EFECTIVO", amount: order.splitAmounts.efectivo || 0 },
-            { method: "TARJETA", amount: order.splitAmounts.tarjeta || 0 },
-            { method: "APP", amount: order.splitAmounts.app || 0 },
-          ].filter((p) => p.amount > 0)
-        : [
-            {
-              method: order.paymentMethod.toUpperCase(),
-              amount: order.total,
-            },
-          ]
-      : undefined,
+    payments: order.payments?.length
+      ? order.payments
+      : order.paymentMethod
+        ? order.paymentMethod === "MIXTO" && order.splitAmounts
+          ? [
+              { method: "EFECTIVO", amount: order.splitAmounts.efectivo || 0 },
+              { method: "TARJETA", amount: order.splitAmounts.tarjeta || 0 },
+              { method: "APP", amount: order.splitAmounts.app || 0 },
+            ].filter((p) => p.amount > 0)
+          : [
+              {
+                method: order.paymentMethod.toUpperCase(),
+                amount: order.total,
+              },
+            ]
+        : undefined,
   };
 
   const response = await apiClient("/orders", {
@@ -333,6 +368,7 @@ export async function syncUpdateOrderItems(order: Order) {
           ? i.extras.map((e) => ({ name: e.name, price: e.price }))
           : [],
         note: i.note,
+        kitchenModifiers: toKitchenModifierPayload(i.kitchenModifiers),
         giftQuantity: i.giftQuantity || 0,
         giftReason: i.giftReason,
         isSentToKitchen: !!i.isSentToKitchen,
@@ -358,8 +394,9 @@ export async function syncUpdateOrderItems(order: Order) {
 }
 
 export async function syncFinalizeOrder(order: Order): Promise<Order> {
-  const paymentsPayload =
-    order.paymentMethod === "MIXTO" && order.splitAmounts
+  const paymentsPayload = order.payments?.length
+    ? order.payments
+    : order.paymentMethod === "MIXTO" && order.splitAmounts
       ? [
           { method: "EFECTIVO", amount: order.splitAmounts.efectivo || 0 },
           { method: "TARJETA", amount: order.splitAmounts.tarjeta || 0 },

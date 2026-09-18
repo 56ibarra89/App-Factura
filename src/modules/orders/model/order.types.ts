@@ -1,4 +1,5 @@
 import type { ProductSize, SelectedExtra } from "../../catalog";
+import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
 
 export type OrderStatus =
   | "pending"
@@ -49,6 +50,7 @@ export interface OrderItem {
   quantity: number;
   extras: SelectedExtra[];
   note?: string;
+  kitchenModifiers?: KitchenModifierSelection[];
   giftQuantity?: number;
   giftReason?: string;
   isSentToKitchen?: boolean;
@@ -69,6 +71,7 @@ export type OrderItemInput = Pick<
       OrderItem,
       | "productId"
       | "note"
+      | "kitchenModifiers"
       | "giftQuantity"
       | "giftReason"
       | "kitchenId"
@@ -83,6 +86,14 @@ export interface OrderPaymentDetail {
   method: "EFECTIVO" | "TARJETA" | "APP";
   amount: number;
   reference?: string;
+  methodConfigId?: string;
+  methodSnapshotName?: string;
+  methodType?: string;
+  currency?: string;
+  originalAmount?: number;
+  exchangeRate?: number;
+  commissionRate?: number;
+  commissionAmount?: number;
   cashierSnapshotName?: string;
 }
 

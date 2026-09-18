@@ -2,10 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { customerRepository, type Customer } from "../../customers";
 import type { CheckoutFormValues } from "../model/checkout.types";
 import type { OrderType } from "../../orders";
-import {
-  checkoutGateway,
-  type CheckoutGateway,
-} from "../api/checkoutGateway";
+import { checkoutGateway, type CheckoutGateway } from "../api/checkoutGateway";
 import {
   calculateCheckoutCosts,
   canSubmitCheckout,
@@ -77,9 +74,7 @@ export function useCheckoutDialog({
     gateway,
   });
 
-  const taxPercentage = isExonerated
-    ? 0
-    : (taxes[0]?.percentage ?? 0);
+  const taxPercentage = isExonerated ? 0 : (taxes[0]?.percentage ?? 0);
   const costs = useMemo(
     () =>
       calculateCheckoutCosts({
@@ -152,9 +147,8 @@ export function useCheckoutDialog({
       await onConfirm({
         paymentMethod: payment.paymentMethod,
         splitAmounts:
-          payment.paymentMethod === "MIXTO"
-            ? payment.splitAmounts
-            : undefined,
+          payment.paymentMethod === "MIXTO" ? payment.splitAmounts : undefined,
+        payments: payment.payments,
         customerId: targetCustomerId,
         customerName:
           targetCustomerName?.trim() ||
@@ -174,7 +168,9 @@ export function useCheckoutDialog({
         packagingItems: packaging.packagingItems,
         customerTendered:
           payment.paymentMethod === "EFECTIVO"
-            ? Number(payment.receivedLocal) || undefined
+            ? Number(payment.receivedLocal || 0) +
+                Number(payment.receivedSecondary || 0) * exchangeRate ||
+              undefined
             : undefined,
         driverId:
           customerDelivery.orderType === "delivery"
@@ -212,10 +208,13 @@ export function useCheckoutDialog({
       customerDelivery.selectedZone,
       customerDelivery.driverPayout,
       customerDelivery.isFreeDelivery,
+      exchangeRate,
       onConfirm,
       packaging.packagingItems,
       payment.paymentMethod,
+      payment.payments,
       payment.receivedLocal,
+      payment.receivedSecondary,
       payment.splitAmounts,
     ],
   );
@@ -272,12 +271,7 @@ export function useCheckoutDialog({
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    canConfirm,
-    customerDelivery,
-    executeFinalSubmission,
-    isSubmitting,
-  ]);
+  }, [canConfirm, customerDelivery, executeFinalSubmission, isSubmitting]);
 
   const handleConfirmAsNewCustomer = useCallback(async () => {
     if (!matchedCustomer) return;
@@ -296,7 +290,12 @@ export function useCheckoutDialog({
 
       setToastOpen(true);
       setMatchDialogOpen(false);
-      await executeFinalSubmission(newCustomer.id, newCustomer.name, phone, address);
+      await executeFinalSubmission(
+        newCustomer.id,
+        newCustomer.name,
+        phone,
+        address,
+      );
     } catch (error: unknown) {
       setSubmitError(
         error instanceof Error
@@ -328,7 +327,8 @@ export function useCheckoutDialog({
         id: matchedCustomer.id,
         name,
         phone: phone || undefined,
-        address: customerDelivery.orderType === "delivery" ? address : undefined,
+        address:
+          customerDelivery.orderType === "delivery" ? address : undefined,
       });
 
       setToastOpen(true);

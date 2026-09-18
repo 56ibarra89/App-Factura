@@ -13,7 +13,7 @@ export interface IShiftRepository {
   getClosePreview(
     id: string,
     counted?: { cash?: number; card?: number; app?: number } | number,
-    closeType?: 'HANDOVER' | 'END_OF_DAY',
+    closeType?: "HANDOVER" | "END_OF_DAY",
   ): Promise<ShiftClosePreview>;
   getAll(): Promise<Shift[]>;
   getActiveShift(): Promise<Shift | null>;
@@ -26,7 +26,9 @@ class ShiftRepository implements IShiftRepository {
       id: backendShift.id,
       cashierName: backendShift.cashierSnapshotName,
       startTime: new Date(backendShift.startTime),
-      endTime: backendShift.endTime ? new Date(backendShift.endTime) : undefined,
+      endTime: backendShift.endTime
+        ? new Date(backendShift.endTime)
+        : undefined,
       openingAmount: Number(backendShift.openingAmount),
       closingAmount:
         backendShift.closingAmount !== undefined &&
@@ -98,6 +100,16 @@ class ShiftRepository implements IShiftRepository {
       authorizedByName: backendShift.authorizedBySnapshotName,
       authorizedByRole: backendShift.authorizedByRole,
       denominationBreakdown: backendShift.denominationBreakdown,
+      paymentBreakdown: backendShift.paymentBreakdown,
+      totalPaymentCommission:
+        backendShift.totalPaymentCommission === undefined ||
+        backendShift.totalPaymentCommission === null
+          ? undefined
+          : Number(backendShift.totalPaymentCommission),
+      netSales:
+        backendShift.netSales === undefined || backendShift.netSales === null
+          ? undefined
+          : Number(backendShift.netSales),
     };
   }
 
@@ -130,7 +142,7 @@ class ShiftRepository implements IShiftRepository {
   async getClosePreview(
     id: string,
     counted?: { cash?: number; card?: number; app?: number } | number,
-    closeType?: 'HANDOVER' | 'END_OF_DAY',
+    closeType?: "HANDOVER" | "END_OF_DAY",
   ): Promise<ShiftClosePreview> {
     const params = new URLSearchParams();
     if (typeof counted === "number") {
@@ -223,6 +235,18 @@ interface BackendShift {
     denomination: number;
     quantity: number;
   }>;
+  paymentBreakdown?: Array<{
+    methodId: string;
+    name: string;
+    type: string;
+    currency: string;
+    transactionCount: number;
+    grossAmount: number;
+    commissionAmount: number;
+    netAmount: number;
+  }>;
+  totalPaymentCommission?: number | string | null;
+  netSales?: number | string | null;
   expenses?: CashExpense[];
   status: "OPEN" | "CLOSED";
   notes?: string;

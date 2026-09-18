@@ -23,6 +23,7 @@ import {
   isPackagingOrderItem,
   requiresKitchenPreparation,
 } from "../model/orderItemDomain";
+import KitchenModifierChips from "./KitchenModifierChips";
 
 interface FinalStatusBadge {
   label: string;
@@ -64,7 +65,7 @@ interface OrderCardProps {
     adminPin?: string,
     sentAt?: number,
     kitchenId?: string,
-    itemId?: number | string
+    itemId?: number | string,
   ) => void;
   onDelete?: (id: string) => void;
 }
@@ -81,8 +82,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
   const hasPackaging = order.items.some(isPackagingOrderItem);
   const displayItems = itemsToUse.filter(requiresKitchenPreparation);
 
-  const ticketSentAt = displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
-  const sentAtTimestampMs = ticketSentAt ? new Date(ticketSentAt).getTime() : undefined;
+  const ticketSentAt =
+    displayItems.find((i) => i.isSentToKitchen)?.sentAt || order.timestamp;
+  const sentAtTimestampMs = ticketSentAt
+    ? new Date(ticketSentAt).getTime()
+    : undefined;
   const urgency = getTicketUrgency(ticketSentAt);
   const normalizedOrderType = order.orderType
     ? order.orderType.toLowerCase()
@@ -107,19 +111,26 @@ const OrderCard: React.FC<OrderCardProps> = ({
           !finalStatusBadge && urgency.level === "critical"
             ? urgency.color
             : order.status === "ready"
-            ? LOGIN_COLORS.primary
-            : "transparent"
+              ? LOGIN_COLORS.primary
+              : "transparent"
         }`,
         transition: "transform 0.2s",
         "&:hover": { transform: "translateY(-4px)" },
       }}
     >
       <CardContent sx={{ flexGrow: 1 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          mb={2}
+        >
           <Box>
             <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
               <Typography variant="h6" fontWeight="bold" color="text.primary">
-                {order.invoiceNumber ? `#${order.invoiceNumber}` : "Orden en Curso"}
+                {order.invoiceNumber
+                  ? `#${order.invoiceNumber}`
+                  : "Orden en Curso"}
               </Typography>
               <Chip
                 icon={
@@ -142,12 +153,28 @@ const OrderCard: React.FC<OrderCardProps> = ({
               />
             </Stack>
 
-            <Typography variant="caption" color="text.secondary" display="block">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
               Hora: {new Date(order.timestamp).toLocaleTimeString()}
             </Typography>
 
-            {(order.customerName || order.tableId || isLocal || hasPackaging || isDelivery || isTakeout) && (
-              <Stack direction="row" spacing={1} mt={0.5} flexWrap="wrap" useFlexGap sx={{ rowGap: 1 }}>
+            {(order.customerName ||
+              order.tableId ||
+              isLocal ||
+              hasPackaging ||
+              isDelivery ||
+              isTakeout) && (
+              <Stack
+                direction="row"
+                spacing={1}
+                mt={0.5}
+                flexWrap="wrap"
+                useFlexGap
+                sx={{ rowGap: 1 }}
+              >
                 {order.customerName && (
                   <Chip
                     label={order.customerName}
@@ -169,7 +196,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
                   />
                 ) : isLocal ? (
                   <Chip
-                    icon={<RestaurantIcon sx={{ fontSize: "0.75rem !important" }} />}
+                    icon={
+                      <RestaurantIcon sx={{ fontSize: "0.75rem !important" }} />
+                    }
                     label="Comer en el Local"
                     size="small"
                     color="success"
@@ -178,7 +207,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 ) : null}
                 {isTakeout && (
                   <Chip
-                    icon={<TakeoutDiningIcon sx={{ fontSize: "0.75rem !important" }} />}
+                    icon={
+                      <TakeoutDiningIcon
+                        sx={{ fontSize: "0.75rem !important" }}
+                      />
+                    }
                     label="Para Llevar"
                     size="small"
                     color="info"
@@ -187,7 +220,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 )}
                 {hasPackaging && (
                   <Chip
-                    label={order.tableId ? "Solicitó Empaque" : "Requiere Empaque"}
+                    label={
+                      order.tableId ? "Solicitó Empaque" : "Requiere Empaque"
+                    }
                     size="small"
                     color="warning"
                     sx={{ height: 20, fontSize: "0.65rem", fontWeight: "bold" }}
@@ -195,7 +230,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 )}
                 {isDelivery && (
                   <Chip
-                    icon={<TwoWheelerIcon sx={{ fontSize: "0.75rem !important" }} />}
+                    icon={
+                      <TwoWheelerIcon sx={{ fontSize: "0.75rem !important" }} />
+                    }
                     label="Delivery"
                     size="small"
                     color="error"
@@ -221,7 +258,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
         <Stack spacing={1}>
           {displayItems.map((item, idx) => {
-            const kitchenName = kitchens.find((k) => k.id === item.kitchenId)?.name || "Sin área";
+            const kitchenName =
+              kitchens.find((k) => k.id === item.kitchenId)?.name || "Sin área";
             const status = item.kitchenStatus || order.status;
 
             const comboKitchenNames = Array.from(
@@ -245,55 +283,72 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 key={idx}
                 sx={{
                   p: 1,
-                  bgcolor: item.note ? "rgba(255, 193, 7, 0.08)" : "transparent",
+                  bgcolor: item.note
+                    ? "rgba(255, 193, 7, 0.08)"
+                    : "transparent",
                   borderRadius: 1,
                   border: "1px solid rgba(0,0,0,0.05)",
                 }}
               >
-                <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
                   <Box>
                     <Typography variant="body2" fontWeight="medium">
                       {item.quantity}x {formatItemName(item.name, item.size)}
                     </Typography>
-                    {item.comboSelections && item.comboSelections.length > 0 && (
-                      <Box
-                        sx={{
-                          my: 0.5,
-                          pl: 1,
-                          borderLeft: "2px solid",
-                          borderColor: "primary.main",
-                        }}
-                      >
-                        {item.comboSelections.map((sel, selIdx) => {
-                          const selKitchenName = kitchens.find((k) => k.id === sel.kitchenId)?.name;
-                          const catBadge = sel.categoryName ? ` [${sel.categoryName}]` : "";
-                          const statusBadge = sel.kitchenStatus
-                            ? sel.kitchenStatus === "ready"
-                              ? " • ✅ Listo"
-                              : sel.kitchenStatus === "preparing"
-                                ? " • 👨‍🍳 Preparando"
-                                : sel.kitchenStatus === "delivered"
-                                  ? " • 📦 Entregado"
-                                  : " • ⏳ Pendiente"
-                            : "";
-                          return (
-                            <Typography
-                              key={selIdx}
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ display: "block" }}
-                            >
-                              • {sel.quantity}x {sel.productName}
-                              {sel.size && sel.size !== "único" ? ` (${sel.size})` : ""}
-                              {catBadge}
-                              {selKitchenName && ` (📍 ${selKitchenName})`}
-                              {statusBadge}
-                            </Typography>
-                          );
-                        })}
-                      </Box>
-                    )}
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    {item.comboSelections &&
+                      item.comboSelections.length > 0 && (
+                        <Box
+                          sx={{
+                            my: 0.5,
+                            pl: 1,
+                            borderLeft: "2px solid",
+                            borderColor: "primary.main",
+                          }}
+                        >
+                          {item.comboSelections.map((sel, selIdx) => {
+                            const selKitchenName = kitchens.find(
+                              (k) => k.id === sel.kitchenId,
+                            )?.name;
+                            const catBadge = sel.categoryName
+                              ? ` [${sel.categoryName}]`
+                              : "";
+                            const statusBadge = sel.kitchenStatus
+                              ? sel.kitchenStatus === "ready"
+                                ? " • ✅ Listo"
+                                : sel.kitchenStatus === "preparing"
+                                  ? " • 👨‍🍳 Preparando"
+                                  : sel.kitchenStatus === "delivered"
+                                    ? " • 📦 Entregado"
+                                    : " • ⏳ Pendiente"
+                              : "";
+                            return (
+                              <Typography
+                                key={selIdx}
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ display: "block" }}
+                              >
+                                • {sel.quantity}x {sel.productName}
+                                {sel.size && sel.size !== "único"
+                                  ? ` (${sel.size})`
+                                  : ""}
+                                {catBadge}
+                                {selKitchenName && ` (📍 ${selKitchenName})`}
+                                {statusBadge}
+                              </Typography>
+                            );
+                          })}
+                        </Box>
+                      )}
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontWeight: 600 }}
+                    >
                       📍 {displayKitchenHeader}
                     </Typography>
                   </Box>
@@ -309,7 +364,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                             undefined,
                             undefined,
                             sentAtTimestampMs,
-                            item.kitchenId
+                            item.kitchenId,
                           )
                         }
                         sx={{
@@ -333,10 +388,12 @@ const OrderCard: React.FC<OrderCardProps> = ({
                             undefined,
                             undefined,
                             sentAtTimestampMs,
-                            item.kitchenId
+                            item.kitchenId,
                           )
                         }
-                        startIcon={<CheckCircleIcon sx={{ fontSize: "1rem" }} />}
+                        startIcon={
+                          <CheckCircleIcon sx={{ fontSize: "1rem" }} />
+                        }
                         sx={{ minWidth: "80px" }}
                       >
                         Listo
@@ -353,7 +410,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                             undefined,
                             undefined,
                             sentAtTimestampMs,
-                            item.kitchenId
+                            item.kitchenId,
                           )
                         }
                         sx={{ minWidth: "80px" }}
@@ -363,6 +420,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     )}
                   </Box>
                 </Box>
+                <KitchenModifierChips
+                  modifiers={item.kitchenModifiers}
+                  compact
+                />
                 {item.note && (
                   <Typography
                     variant="caption"

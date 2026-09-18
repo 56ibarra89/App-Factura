@@ -2,6 +2,7 @@ import type {
   OrderType,
   PaymentMethod,
   SplitPaymentAmounts,
+  OrderPaymentDetail,
 } from "../../orders";
 
 export interface PackagingItem {
@@ -13,6 +14,7 @@ export interface PackagingItem {
 export interface CheckoutFormValues {
   paymentMethod: PaymentMethod;
   splitAmounts?: SplitPaymentAmounts;
+  payments: OrderPaymentDetail[];
   customerId?: string;
   customerName?: string;
   customerPhone?: string;

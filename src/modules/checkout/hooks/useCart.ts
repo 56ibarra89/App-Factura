@@ -15,6 +15,7 @@ function useCart() {
     removeItem,
     changeQuantity,
     changeGiftQuantity,
+    changeKitchenInstructions,
     clearCart,
     setCart,
     applyPromotion,
@@ -25,7 +26,7 @@ function useCart() {
     (item: Parameters<typeof addItem>[0]) => {
       addItem(item);
     },
-    [addItem]
+    [addItem],
   );
 
   const {
@@ -58,6 +59,7 @@ function useCart() {
 
     handleChangeQuantity: changeQuantity,
     handleChangeGiftQuantity: changeGiftQuantity,
+    handleChangeKitchenInstructions: changeKitchenInstructions,
     handleAddToCartItem: addItem,
     handleAddToCart: startSelection,
     handleSelectSize: selectSize,

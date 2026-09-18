@@ -30,10 +30,24 @@ export interface Shift {
   authorizedByName?: string;
   authorizedByRole?: string;
   denominationBreakdown?: CashDenominationCount[];
+  paymentBreakdown?: ShiftPaymentBreakdown[];
+  totalPaymentCommission?: number;
+  netSales?: number;
   expenses?: CashExpense[];
-  status: 'open' | 'closed';
+  status: "open" | "closed";
   notes?: string;
   cashRegisterName?: string;
+}
+
+export interface ShiftPaymentBreakdown {
+  methodId: string;
+  name: string;
+  type: string;
+  currency: string;
+  transactionCount: number;
+  grossAmount: number;
+  commissionAmount: number;
+  netAmount: number;
 }
 
 export interface OpenShiftData {
@@ -50,7 +64,7 @@ export interface CloseShiftData {
   discrepancyReason?: string;
   authorizationPin?: string;
   denominationBreakdown?: CashDenominationCount[];
-  closeType?: 'HANDOVER' | 'END_OF_DAY';
+  closeType?: "HANDOVER" | "END_OF_DAY";
 }
 
 export interface CashDenominationCount {
@@ -78,5 +92,5 @@ export interface ShiftClosePreview {
   blockingTables: ShiftCloseBlockingTable[];
   canClose: boolean;
   requiresAuthorization?: boolean;
-  closeType?: 'HANDOVER' | 'END_OF_DAY';
+  closeType?: "HANDOVER" | "END_OF_DAY";
 }

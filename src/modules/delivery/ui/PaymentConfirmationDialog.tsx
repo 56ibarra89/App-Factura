@@ -1,310 +1,270 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Grid,
   InputAdornment,
+  MenuItem,
+  Select,
   TextField,
   Typography,
-  Chip,
-  Alert,
-  CircularProgress,
 } from "@mui/material";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
-import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
-import type { Order } from "../../orders";
+import type { Order, OrderPaymentDetail } from "../../orders";
+import { paymentMethodsGateway } from "../../settings/api/paymentMethodsGateway";
+import {
+  DEFAULT_PAYMENT_METHODS_CONFIG,
+  toLegacyPaymentMethod,
+  type ConfiguredPaymentMethod,
+} from "../../settings/model/paymentMethods.types";
 
-interface PaymentConfirmationDialogProps {
+interface Props {
   open: boolean;
   order: Order | null;
-  onClose: () => void;
-  onConfirm: (
-    payments: { method: string; amount: number }[],
+  onClose(): void;
+  onConfirm(
+    payments: OrderPaymentDetail[],
     paymentMethodLabel: string,
-  ) => Promise<void>;
+  ): Promise<void>;
 }
 
-type SelectedMethod = "EFECTIVO" | "TARJETA" | "APP" | "MIXTO";
-
-export const PaymentConfirmationDialog: React.FC<
-  PaymentConfirmationDialogProps
-> = ({ open, order, onClose, onConfirm }) => {
-  const [selectedMethod, setSelectedMethod] =
-    useState<SelectedMethod>("EFECTIVO");
+export function PaymentConfirmationDialog({
+  open,
+  order,
+  onClose,
+  onConfirm,
+}: Props) {
+  const [methods, setMethods] = useState<ConfiguredPaymentMethod[]>(
+    DEFAULT_PAYMENT_METHODS_CONFIG.methods,
+  );
+  const [selectedId, setSelectedId] = useState("cash-nio");
+  const [otherId, setOtherId] = useState("card-generic");
+  const [mixed, setMixed] = useState(false);
   const [cashAmount, setCashAmount] = useState("");
-  const [otherAmount, setOtherAmount] = useState("");
-  const [otherMethod, setOtherMethod] = useState<"TARJETA" | "APP">("TARJETA");
+  const [reference, setReference] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const total = order?.total || 0;
+  const total = order?.total ?? 0;
 
   useEffect(() => {
-    if (!order) return;
-    const initialMethod = (
-      order.paymentMethod || "EFECTIVO"
-    ).toUpperCase() as SelectedMethod;
-
-    if (["EFECTIVO", "TARJETA", "APP", "MIXTO"].includes(initialMethod)) {
-      setSelectedMethod(initialMethod);
-    } else {
-      setSelectedMethod("EFECTIVO");
-    }
-
-    if (initialMethod === "MIXTO" && order.splitAmounts) {
-      setCashAmount(String(order.splitAmounts.efectivo || ""));
-      setOtherAmount(String(order.splitAmounts.tarjeta || ""));
-      setOtherMethod("TARJETA");
-    } else {
-      setCashAmount("");
-      setOtherAmount("");
-    }
+    if (!open) return;
+    void paymentMethodsGateway.load().then((config) => {
+      const active = config.methods.filter((method) => method.isActive);
+      if (!active.length) return;
+      const cash =
+        active.find(
+          (method) => method.type === "CASH" && method.currency === "NIO",
+        ) ?? active[0];
+      const electronic =
+        active.find((method) => method.type !== "CASH") ?? active[0];
+      setMethods(active);
+      setSelectedId(cash.id);
+      setOtherId(electronic.id);
+    });
+    setMixed(false);
+    setCashAmount("");
+    setReference("");
     setError("");
-    setLoading(false);
-  }, [order, open]);
+  }, [open]);
 
-  const handleCashChange = (val: string) => {
-    setCashAmount(val);
-    const num = parseFloat(val);
-    if (!isNaN(num) && num <= total) {
-      setOtherAmount((total - num).toFixed(2));
-    }
-  };
+  const selected = methods.find((method) => method.id === selectedId);
+  const cash =
+    methods.find(
+      (method) => method.type === "CASH" && method.currency === "NIO",
+    ) ?? methods.find((method) => method.type === "CASH");
+  const other = methods.find((method) => method.id === otherId);
+  const otherAmount = Math.max(0, total - (Number(cashAmount) || 0));
+  const referenceRequired = mixed
+    ? other?.requiresReference
+    : selected?.requiresReference;
+  const validReference = !referenceRequired || reference.trim().length >= 4;
+
+  const buildPayment = (
+    method: ConfiguredPaymentMethod,
+    amount: number,
+    paymentReference?: string,
+  ): OrderPaymentDetail => ({
+    method: toLegacyPaymentMethod(method),
+    amount,
+    methodConfigId: method.id,
+    reference: paymentReference?.trim() || undefined,
+    originalAmount: amount,
+    exchangeRate: 1,
+  });
 
   const handleConfirm = async () => {
-    if (!order) return;
-    setError("");
+    if (!order || !validReference) return;
     setLoading(true);
-
+    setError("");
     try {
-      let payments: { method: string; amount: number }[] = [];
-
-      if (selectedMethod === "MIXTO") {
-        const cash = parseFloat(cashAmount) || 0;
-        const other = parseFloat(otherAmount) || 0;
-
-        if (Math.abs(cash + other - total) > 0.01) {
-          setError(
-            `La suma de efectivo (C$${cash.toFixed(2)}) y ${otherMethod} (C$${other.toFixed(2)}) debe coincidir con el total de C$${total.toFixed(2)}`,
-          );
-          setLoading(false);
-          return;
+      let payments: OrderPaymentDetail[];
+      let label: string;
+      if (mixed) {
+        const cashValue = Number(cashAmount) || 0;
+        if (!cash || !other || cashValue <= 0 || otherAmount <= 0) {
+          throw new Error("Ingresa dos montos válidos para el pago mixto.");
         }
-
         payments = [
-          { method: "EFECTIVO", amount: cash },
-          { method: otherMethod, amount: other },
-        ].filter((p) => p.amount > 0);
+          buildPayment(cash, cashValue),
+          buildPayment(other, otherAmount, reference),
+        ];
+        label = `${cash.name} + ${other.name}`;
       } else {
-        payments = [{ method: selectedMethod, amount: total }];
+        if (!selected) throw new Error("Selecciona un método de pago.");
+        payments = [buildPayment(selected, total, reference)];
+        label = selected.name;
       }
-
-      await onConfirm(payments, selectedMethod);
+      await onConfirm(payments, label);
       onClose();
-    } catch (err: unknown) {
+    } catch (caught: unknown) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Error al registrar el cobro del pedido.",
+        caught instanceof Error
+          ? caught.message
+          : "No se pudo registrar el cobro.",
       );
     } finally {
       setLoading(false);
     }
   };
 
-  if (!order) return null;
+  const electronicMethods = useMemo(
+    () => methods.filter((method) => method.id !== cash?.id),
+    [cash?.id, methods],
+  );
 
+  if (!order) return null;
   return (
-    <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ pb: 1 }}>
+    <Dialog
+      open={open}
+      onClose={loading ? undefined : onClose}
+      maxWidth="sm"
+      fullWidth
+    >
+      <DialogTitle>
         <Typography variant="h6" fontWeight="bold">
           Confirmar Liquidación de Pedido
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Pedido #{order.invoiceNumber || order.id.slice(-6)} • {order.customerName || "Cliente"}
+          Pedido #{order.invoiceNumber || order.id.slice(-6)}
         </Typography>
       </DialogTitle>
-
       <DialogContent dividers>
-        <Box sx={{ bgcolor: "action.hover", p: 2, borderRadius: 2, mb: 3 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="body2" color="text.secondary">
-              Total a Cobrar:
-            </Typography>
-            <Typography variant="h5" fontWeight="bold" color="primary.main">
-              C${total.toFixed(2)}
-            </Typography>
-          </Box>
-          {order.paymentMethod && (
-            <Box mt={1} display="flex" alignItems="center" gap={1}>
-              <Typography variant="caption" color="text.secondary">
-                Método registrado originalmente:
-              </Typography>
-              <Chip
-                label={order.paymentMethod.toUpperCase()}
-                size="small"
-                variant="outlined"
-                color="info"
-              />
-            </Box>
-          )}
+        <Box bgcolor="action.hover" p={2} borderRadius={2} mb={2}>
+          <Typography variant="body2" color="text.secondary">
+            Total a cobrar
+          </Typography>
+          <Typography variant="h5" fontWeight="bold">
+            C${total.toFixed(2)}
+          </Typography>
         </Box>
-
-        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-          Selecciona el método de cobro real:
-        </Typography>
-
-        <Grid container spacing={1.5} mb={3}>
-          <Grid size={{ xs: 6, sm: 3 }}>
-            <Button
-              variant={selectedMethod === "EFECTIVO" ? "contained" : "outlined"}
-              fullWidth
-              onClick={() => setSelectedMethod("EFECTIVO")}
-              startIcon={<AttachMoneyIcon />}
-              sx={{ py: 1.5, textTransform: "none" }}
-            >
-              Efectivo
-            </Button>
-          </Grid>
-          <Grid size={{ xs: 6, sm: 3 }}>
-            <Button
-              variant={selectedMethod === "TARJETA" ? "contained" : "outlined"}
-              fullWidth
-              onClick={() => setSelectedMethod("TARJETA")}
-              startIcon={<CreditCardIcon />}
-              sx={{ py: 1.5, textTransform: "none" }}
-            >
-              Tarjeta
-            </Button>
-          </Grid>
-          <Grid size={{ xs: 6, sm: 3 }}>
-            <Button
-              variant={selectedMethod === "APP" ? "contained" : "outlined"}
-              fullWidth
-              onClick={() => setSelectedMethod("APP")}
-              startIcon={<PhoneAndroidIcon />}
-              sx={{ py: 1.5, textTransform: "none" }}
-            >
-              App / Transf.
-            </Button>
-          </Grid>
-          <Grid size={{ xs: 6, sm: 3 }}>
-            <Button
-              variant={selectedMethod === "MIXTO" ? "contained" : "outlined"}
-              fullWidth
-              onClick={() => setSelectedMethod("MIXTO")}
-              startIcon={<CallSplitIcon />}
-              sx={{ py: 1.5, textTransform: "none" }}
-            >
-              Mixto
-            </Button>
-          </Grid>
+        <Grid container spacing={1} mb={2}>
+          {methods.map((method) => (
+            <Grid key={method.id} size={{ xs: 6, sm: 4 }}>
+              <Button
+                fullWidth
+                variant={
+                  !mixed && selectedId === method.id ? "contained" : "outlined"
+                }
+                onClick={() => {
+                  setMixed(false);
+                  setSelectedId(method.id);
+                  setReference("");
+                }}
+                sx={{ minHeight: 58, textTransform: "none" }}
+              >
+                {method.name}
+              </Button>
+            </Grid>
+          ))}
+          {cash && electronicMethods.length > 0 && (
+            <Grid size={{ xs: 6, sm: 4 }}>
+              <Button
+                fullWidth
+                variant={mixed ? "contained" : "outlined"}
+                startIcon={<CallSplitIcon />}
+                onClick={() => setMixed(true)}
+                sx={{ minHeight: 58, textTransform: "none" }}
+              >
+                Mixto
+              </Button>
+            </Grid>
+          )}
         </Grid>
 
-        {selectedMethod === "MIXTO" && (
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              border: "1px solid",
-              borderColor: "divider",
-              mb: 2,
-              bgcolor: "background.paper",
-            }}
-          >
-            <Typography variant="body2" fontWeight="bold" mb={1.5}>
-              Desglose de Pago Mixto:
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label="Monto en Efectivo"
-                  type="number"
-                  fullWidth
-                  size="small"
-                  value={cashAmount}
-                  onChange={(e) => handleCashChange(e.target.value)}
-                  inputProps={{ min: 0, max: total, step: "0.01" }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">C$</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  label={`Monto en ${otherMethod === "TARJETA" ? "Tarjeta" : "App / Transf."}`}
-                  type="number"
-                  fullWidth
-                  size="small"
-                  value={otherAmount}
-                  onChange={(e) => setOtherAmount(e.target.value)}
-                  inputProps={{ min: 0, max: total, step: "0.01" }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">C$</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Box display="flex" gap={1} alignItems="center">
-                  <Typography variant="caption" color="text.secondary">
-                    Método electrónico complementario:
-                  </Typography>
-                  <Button
-                    size="small"
-                    variant={otherMethod === "TARJETA" ? "contained" : "outlined"}
-                    onClick={() => setOtherMethod("TARJETA")}
-                    sx={{ textTransform: "none", py: 0.2 }}
-                  >
-                    Tarjeta
-                  </Button>
-                  <Button
-                    size="small"
-                    variant={otherMethod === "APP" ? "contained" : "outlined"}
-                    onClick={() => setOtherMethod("APP")}
-                    sx={{ textTransform: "none", py: 0.2 }}
-                  >
-                    App / Transf.
-                  </Button>
-                </Box>
-              </Grid>
+        {mixed && cash && (
+          <Grid container spacing={2} mb={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                label={cash.name}
+                value={cashAmount}
+                onChange={(event) => setCashAmount(event.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">C$</InputAdornment>
+                  ),
+                }}
+              />
             </Grid>
-          </Box>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Select
+                fullWidth
+                size="small"
+                value={otherId}
+                onChange={(event) => {
+                  setOtherId(event.target.value);
+                  setReference("");
+                }}
+              >
+                {electronicMethods.map((method) => (
+                  <MenuItem key={method.id} value={method.id}>
+                    {method.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              <Typography variant="caption" color="text.secondary">
+                Monto restante: C${otherAmount.toFixed(2)}
+              </Typography>
+            </Grid>
+          </Grid>
         )}
 
+        {referenceRequired && (
+          <TextField
+            fullWidth
+            required
+            label="Número de referencia / aprobación"
+            value={reference}
+            onChange={(event) => setReference(event.target.value)}
+            helperText="Ingresa al menos los últimos 4 caracteres del voucher."
+          />
+        )}
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
           </Alert>
         )}
       </DialogContent>
-
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} disabled={loading} color="inherit">
+        <Button onClick={onClose} disabled={loading}>
           Cancelar
         </Button>
         <Button
-          onClick={handleConfirm}
           variant="contained"
-          color="primary"
-          disabled={loading}
+          onClick={() => void handleConfirm()}
+          disabled={loading || !validReference}
         >
-          {loading ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : (
-            "Confirmar y Liquidar"
-          )}
+          {loading ? <CircularProgress size={22} /> : "Confirmar y liquidar"}
         </Button>
       </DialogActions>
     </Dialog>
   );
-};
+}

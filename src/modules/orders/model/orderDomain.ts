@@ -1,10 +1,6 @@
 import type { OrderItem } from "./order.types";
 import { requiresKitchenPreparation } from "./orderItemDomain";
-import {
-  KitchenStatus,
-  Order,
-  OrderStatus,
-} from "./order.types";
+import { KitchenStatus, Order, OrderStatus } from "./order.types";
 import type {
   CreateOrderCommand,
   FinalizeOrderCommand,
@@ -61,6 +57,7 @@ export function createOrder(
     tableId,
     paymentMethod,
     splitAmounts,
+    payments,
     subTotal,
     taxAmount,
     discountAmount,
@@ -107,6 +104,7 @@ export function createOrder(
     tableId,
     paymentMethod,
     splitAmounts,
+    payments,
     cashierName: username || "Sistema",
     isSentToKitchen: !tableId,
   };
@@ -149,9 +147,14 @@ export const orderMutations = {
         if (sentAt) {
           const kitchenStatus = status as KitchenStatus;
           const updatedItems = order.items.map((item) => {
-            const matchItemId = itemId !== undefined ? item.id === itemId : true;
+            const matchItemId =
+              itemId !== undefined ? item.id === itemId : true;
 
-            if (item.isCombo && Array.isArray(item.comboSelections) && matchItemId) {
+            if (
+              item.isCombo &&
+              Array.isArray(item.comboSelections) &&
+              matchItemId
+            ) {
               const updatedSelections = item.comboSelections.map((sel) => {
                 if (!kitchenId || sel.kitchenId === kitchenId) {
                   return { ...sel, kitchenStatus };
@@ -163,10 +166,14 @@ export const orderMutations = {
                 (s) => s.kitchenStatus === "delivered",
               );
               const allReadyOrDelivered = updatedSelections.every(
-                (s) => s.kitchenStatus === "ready" || s.kitchenStatus === "delivered",
+                (s) =>
+                  s.kitchenStatus === "ready" ||
+                  s.kitchenStatus === "delivered",
               );
               const anyPreparingOrReady = updatedSelections.some(
-                (s) => s.kitchenStatus === "preparing" || s.kitchenStatus === "ready",
+                (s) =>
+                  s.kitchenStatus === "preparing" ||
+                  s.kitchenStatus === "ready",
               );
 
               let overallStatus: KitchenStatus = "pending";
@@ -181,7 +188,9 @@ export const orderMutations = {
               };
             }
 
-            const matchKitchenId = kitchenId ? item.kitchenId === kitchenId : true;
+            const matchKitchenId = kitchenId
+              ? item.kitchenId === kitchenId
+              : true;
 
             if (
               requiresKitchenPreparation(item) &&
@@ -195,12 +204,23 @@ export const orderMutations = {
 
           const isDelivery = order.orderType === "delivery";
           const sentItems = updatedItems.filter(
-            (item) =>
-              requiresKitchenPreparation(item) && item.isSentToKitchen,
+            (item) => requiresKitchenPreparation(item) && item.isSentToKitchen,
           );
-          const allDelivered = sentItems.length > 0 && sentItems.every((item) => item.kitchenStatus === "delivered");
-          const allReadyOrDelivered = sentItems.length > 0 && sentItems.every((item) => item.kitchenStatus === "ready" || item.kitchenStatus === "delivered");
-          const anyPreparingOrReady = sentItems.some((item) => item.kitchenStatus === "preparing" || item.kitchenStatus === "ready");
+          const allDelivered =
+            sentItems.length > 0 &&
+            sentItems.every((item) => item.kitchenStatus === "delivered");
+          const allReadyOrDelivered =
+            sentItems.length > 0 &&
+            sentItems.every(
+              (item) =>
+                item.kitchenStatus === "ready" ||
+                item.kitchenStatus === "delivered",
+            );
+          const anyPreparingOrReady = sentItems.some(
+            (item) =>
+              item.kitchenStatus === "preparing" ||
+              item.kitchenStatus === "ready",
+          );
 
           let globalStatus = order.status;
           if (globalStatus !== "paid" && globalStatus !== "cancelled") {
@@ -216,7 +236,9 @@ export const orderMutations = {
         const kitchenStatus = status as KitchenStatus;
 
         const nextStatus =
-          order.status === "paid" || order.status === "cancelled" ? order.status : status;
+          order.status === "paid" || order.status === "cancelled"
+            ? order.status
+            : status;
 
         return {
           ...order,
@@ -242,13 +264,11 @@ export const orderMutations = {
       (order) => order.id === orderId,
       (order) => {
         const hasNewItems = items.some(
-          (item) =>
-            requiresKitchenPreparation(item) && !item.isSentToKitchen,
+          (item) => requiresKitchenPreparation(item) && !item.isSentToKitchen,
         );
 
         const sentItems = items.filter(
-          (item) =>
-            requiresKitchenPreparation(item) && item.isSentToKitchen,
+          (item) => requiresKitchenPreparation(item) && item.isSentToKitchen,
         );
         const allDelivered =
           sentItems.length > 0 &&
@@ -256,7 +276,9 @@ export const orderMutations = {
         const anyPreparing = sentItems.some(
           (item) => item.kitchenStatus === "preparing",
         );
-        const anyReady = sentItems.some((item) => item.kitchenStatus === "ready");
+        const anyReady = sentItems.some(
+          (item) => item.kitchenStatus === "ready",
+        );
 
         const isDelivery = order.orderType === "delivery";
         let newStatus = order.status;
@@ -278,6 +300,7 @@ export const orderMutations = {
     const {
       paymentMethod,
       splitAmounts,
+      payments,
       customerId,
       customerName,
       customerPhone,
@@ -326,6 +349,7 @@ export const orderMutations = {
           status: "paid" as OrderStatus,
           paymentMethod,
           splitAmounts,
+          payments,
           customerId: customerId || order.customerId,
           customerName: customerName || order.customerName,
           customerPhone: customerPhone || order.customerPhone,
@@ -356,12 +380,15 @@ export const orderMutations = {
               : promotionSource
                 ? undefined
                 : order.happyHourId,
-          certificateSerials:
-            certificateSerials ?? order.certificateSerials,
+          certificateSerials: certificateSerials ?? order.certificateSerials,
           total,
           subTotal: typeof subTotal === "number" ? subTotal : order.subTotal,
-          discountAmount: typeof discountAmount === "number" ? discountAmount : order.discountAmount,
-          taxAmount: typeof taxAmount === "number" ? taxAmount : order.taxAmount,
+          discountAmount:
+            typeof discountAmount === "number"
+              ? discountAmount
+              : order.discountAmount,
+          taxAmount:
+            typeof taxAmount === "number" ? taxAmount : order.taxAmount,
           isSentToKitchen: true,
           items: updatedItems,
         };
@@ -369,7 +396,11 @@ export const orderMutations = {
     );
   },
 
-  markAsSentToKitchen(prev: Order[], orderId: string, nowMs: number): UpdateResult {
+  markAsSentToKitchen(
+    prev: Order[],
+    orderId: string,
+    nowMs: number,
+  ): UpdateResult {
     return updateOne(
       prev,
       (order) => order.id === orderId,
@@ -441,7 +472,9 @@ export const orderMutations = {
       prev,
       (order) =>
         (order.tableId === sourceTableId ||
-          !!(order.linkedTables && order.linkedTables.includes(sourceTableId))) &&
+          !!(
+            order.linkedTables && order.linkedTables.includes(sourceTableId)
+          )) &&
         order.status !== "paid" &&
         order.status !== "cancelled",
       (order) => {
@@ -470,12 +503,16 @@ export const orderMutations = {
       prev,
       (order) =>
         (order.tableId === sourceTableId ||
-          !!(order.linkedTables && order.linkedTables.includes(sourceTableId))) &&
+          !!(
+            order.linkedTables && order.linkedTables.includes(sourceTableId)
+          )) &&
         order.status !== "paid" &&
         order.status !== "cancelled",
       (order) => {
         const linkedTables = order.linkedTables || [];
-        const newTables = Array.isArray(destTableId) ? destTableId : [destTableId];
+        const newTables = Array.isArray(destTableId)
+          ? destTableId
+          : [destTableId];
 
         const updatedLinkedTables = [...linkedTables];
         newTables.forEach((tableId) => {

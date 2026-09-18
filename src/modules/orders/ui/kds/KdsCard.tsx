@@ -16,11 +16,7 @@ import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import TakeoutDiningIcon from "@mui/icons-material/TakeoutDining";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import type {
-  Order,
-  OrderStatus,
-  SelectedComboOptionItem,
-} from "../../model/order.types";
+import type { Order, OrderStatus } from "../../model/order.types";
 import {
   isPackagingOrderItem,
   requiresKitchenPreparation,
@@ -30,6 +26,7 @@ import { useCatalog } from "../../../catalog";
 import { getTicketUrgency } from "../../utils/timeUrgency";
 import { formatItemName, formatTableName } from "../../../../shared/format";
 import { LOGIN_COLORS } from "../../../../shared/theme";
+import KitchenModifierChips from "../KitchenModifierChips";
 
 interface KdsCardProps {
   order: Order;
@@ -509,6 +506,9 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                           })}
                         </Stack>
 
+                        <KitchenModifierChips
+                          modifiers={item.kitchenModifiers}
+                        />
                         {item.note && (
                           <Box
                             sx={{
@@ -839,6 +839,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                         })}
                       </Stack>
 
+                      <KitchenModifierChips modifiers={item.kitchenModifiers} />
                       {item.note && (
                         <Box
                           sx={{
@@ -1166,6 +1167,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                   </Box>
                 </Box>
 
+                <KitchenModifierChips modifiers={item.kitchenModifiers} />
                 {item.note && (
                   <Box
                     sx={{

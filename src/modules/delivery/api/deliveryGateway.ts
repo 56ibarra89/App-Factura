@@ -1,9 +1,6 @@
 import { apiClient } from "../../../shared/api";
-import type {
-  DeliveryDriver,
-  DeliveryStat,
-} from "../model/delivery.types";
-import type { Order } from "../../orders";
+import type { DeliveryDriver, DeliveryStat } from "../model/delivery.types";
+import type { Order, OrderPaymentDetail } from "../../orders";
 
 const WEEK_DAYS = [
   "SUNDAY",
@@ -29,7 +26,7 @@ function isDriverAvailable(user: DeliveryDriver, date: Date): boolean {
   const day = WEEK_DAYS[date.getDay()];
   return Boolean(
     user.workDays?.includes(day) ||
-      user.extraDays?.some((extraDay) => extraDay.date.startsWith(dateKey)),
+    user.extraDays?.some((extraDay) => extraDay.date.startsWith(dateKey)),
   );
 }
 
@@ -42,7 +39,7 @@ export interface DeliveryGateway {
     paymentMethod: string,
     total: number,
     splitAmounts?: { efectivo: number; tarjeta?: number; app?: number },
-    customPayments?: { method: string; amount: number }[],
+    customPayments?: OrderPaymentDetail[],
   ): Promise<void>;
 }
 
@@ -61,18 +58,29 @@ export const deliveryGateway: DeliveryGateway = {
   getDriverOrdersToday: (driverId) =>
     apiClient(`/orders/driver/${driverId}/today`),
 
-  async finalizeOrder(orderId, paymentMethod, total, splitAmounts, customPayments) {
-    let payments: { method: string; amount: number }[] = [];
+  async finalizeOrder(
+    orderId,
+    paymentMethod,
+    total,
+    splitAmounts,
+    customPayments,
+  ) {
+    let payments: OrderPaymentDetail[] = [];
     if (customPayments && customPayments.length > 0) {
       payments = customPayments.filter((p) => p.amount > 0);
     } else if (paymentMethod === "MIXTO" && splitAmounts) {
       payments = [
-        { method: "EFECTIVO", amount: splitAmounts.efectivo },
-        { method: "TARJETA", amount: splitAmounts.tarjeta || 0 },
-        { method: "APP", amount: splitAmounts.app || 0 },
+        { method: "EFECTIVO" as const, amount: splitAmounts.efectivo },
+        { method: "TARJETA" as const, amount: splitAmounts.tarjeta || 0 },
+        { method: "APP" as const, amount: splitAmounts.app || 0 },
       ].filter((p) => p.amount > 0);
     } else {
-      payments = [{ method: paymentMethod, amount: total }];
+      payments = [
+        {
+          method: paymentMethod as OrderPaymentDetail["method"],
+          amount: total,
+        },
+      ];
     }
 
     await apiClient(`/orders/${orderId}/finalize`, {
