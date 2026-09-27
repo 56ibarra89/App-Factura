@@ -56,7 +56,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
   };
 
   const generateRandomPin = () => {
-    const randomPin = Math.floor(1000 + Math.random() * 9000).toString();
+    const randomPin = Math.floor(100000 + Math.random() * 900000).toString();
     handleChange("pin", randomPin);
   };
 
@@ -90,6 +90,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
 
   const hasPasswordInput = !!formData.password && formData.password.length > 0;
   const isPasswordValid = !hasPasswordInput || requirements.every(r => r.regex.test(formData.password!));
+  const isPinInvalid = Boolean(formData.pin && formData.pin.length > 0 && formData.pin.length !== 6);
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, pb: 1 }}>
@@ -167,12 +168,19 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
               label="PIN Numérico"
               type="text"
               value={formData.pin || ""}
-              onChange={e => handleChange("pin", e.target.value.replace(/\D/g, '').substring(0,6))}
+              onChange={e => handleChange("pin", e.target.value.replace(/\D/g, '').substring(0, 6))}
               inputProps={{ maxLength: 6 }}
               required={!isEditing}
               variant="filled"
+              error={isPinInvalid}
               placeholder={isEditing ? (formData.hasPin ? "●●●●●● (dejar en blanco para conservar)" : "Ingresar nuevo PIN") : "6 dígitos"}
-              helperText={isEditing ? "Dejar en blanco para conservar el PIN actual." : "6 dígitos para acciones rápidas."}
+              helperText={
+                isPinInvalid
+                  ? "El PIN debe tener exactamente 6 dígitos."
+                  : isEditing
+                  ? "Dejar en blanco para conservar el PIN actual."
+                  : "6 dígitos para acciones rápidas."
+              }
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
