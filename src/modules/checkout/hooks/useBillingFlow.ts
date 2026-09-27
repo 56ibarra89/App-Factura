@@ -1,11 +1,7 @@
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CheckoutFormValues } from "../model/checkout.types";
-import {
-  requiresKitchenPreparation,
-  type Order,
-  type OrderItem,
-} from "../../orders";
+import type { Order, OrderItem } from "../../orders";
 import { receiptPrinter, type ReceiptPrinter } from "../../../shared/printing";
 import { printerDispatcherService } from "../../devices";
 import type { RunExclusiveAction } from "./useExclusiveAction";
@@ -108,35 +104,6 @@ export function useBillingFlow({
 
         await completeAndPrint(invoiceNumber, isCash);
 
-        // Si es comanda directa (Llevar o Delivery), enviar automáticamente los ítems a cocina
-        if (cart && cart.length > 0) {
-          const kitchenItems = cart.filter(
-            (item) => requiresKitchenPreparation(item) && !item.isSentToKitchen,
-          );
-          if (kitchenItems.length > 0) {
-            void printerDispatcherService.printKitchenComanda({
-              orderId: invoiceNumber,
-              orderType:
-                form.orderType === "delivery"
-                  ? "DELIVERY"
-                  : form.orderType === "local"
-                    ? "LOCAL"
-                    : "LLEVAR",
-              items: kitchenItems.map((k) => ({
-                name: k.name,
-                quantity: k.quantity,
-                size: k.size,
-                note: k.note,
-                kitchenModifiers: k.kitchenModifiers,
-                extras: k.extras,
-                isCombo: k.isCombo,
-                comboSelections: k.comboSelections,
-              })),
-              timestamp: Date.now(),
-            });
-          }
-        }
-
         resetDelivery();
         if (fromDeliveryPage) {
           navigate("/delivery");
@@ -147,7 +114,6 @@ export function useBillingFlow({
     },
     [
       activeOrder,
-      cart,
       clearCart,
       closePreview,
       completeAndPrint,

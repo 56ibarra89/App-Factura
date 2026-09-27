@@ -316,21 +316,11 @@ class PrinterDispatcherService {
 
     const kitchenPrinter = await this.getKitchenPrinter();
 
-    // Si no hay impresora de cocina configurada, usar caja como fallback directo
+    // Si no hay impresora de cocina configurada, finalizar de forma segura sin imprimir pantallas de la app
     if (!kitchenPrinter) {
-      const cashierPrinter = await this.getCashierPrinter();
-      if (cashierPrinter) {
-        this.printToCashierPrinter(data, cashierPrinter);
-        return {
-          success: true,
-          redirected: true,
-          originalPrinter: "Ninguna (No configurada)",
-          fallbackPrinter: cashierPrinter.name,
-        };
-      }
       return {
-        success: false,
-        error: "No hay impresoras activas configuradas en el sistema.",
+        success: true,
+        originalPrinter: "Ninguna (No configurada)",
       };
     }
 
@@ -382,15 +372,10 @@ class PrinterDispatcherService {
       }
     }
 
-    // Si la impresora de cocina es USB / Windows
-    if (window.printAPI?.printSilent) {
-      window.printAPI.printSilent({
-        deviceName: kitchenPrinter.windowsDeviceName,
-      });
-      return { success: true, originalPrinter: kitchenPrinter.name };
-    }
-
-    window.print();
+    // Si la impresora de cocina es USB / Windows, no invocar printSilent para no imprimir el DOM visible
+    console.warn(
+      `[PrinterDispatcher] Impresión directa de comanda en impresora USB/Windows (${kitchenPrinter.windowsDeviceName || kitchenPrinter.name}) requiere conexión de red RAW 9100. Se omite para no imprimir la interfaz gráfica.`,
+    );
     return { success: true, originalPrinter: kitchenPrinter.name };
   }
 
@@ -473,14 +458,12 @@ class PrinterDispatcherService {
    * Envía la comanda a la impresora de caja mediante la API de Electron
    */
   private printToCashierPrinter(
-    data: KitchenComandaData,
+    _data: KitchenComandaData,
     printer: PrinterConfig,
   ) {
-    if (window.printAPI?.printSilent) {
-      window.printAPI.printSilent({ deviceName: printer.windowsDeviceName });
-    } else {
-      window.print();
-    }
+    console.warn(
+      `[PrinterDispatcher] Omitiendo impresión de comanda en impresora ${printer.name}: se evita captura de pantalla (printSilent) al no disponer de conexión RAW o plantilla DOM.`,
+    );
   }
 
   /**
