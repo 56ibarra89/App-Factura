@@ -36,6 +36,7 @@ class ShiftRepository implements IShiftRepository {
           ? Number(backendShift.closingAmount)
           : undefined,
       status: backendShift.status === "CLOSED" ? "closed" : "open",
+      closeType: backendShift.closeType,
       notes: backendShift.notes,
       cashRegisterName: backendShift.cashRegisterSnapshotName,
       totalSales: {
@@ -249,6 +250,7 @@ interface BackendShift {
   netSales?: number | string | null;
   expenses?: CashExpense[];
   status: "OPEN" | "CLOSED";
+  closeType?: "HANDOVER" | "END_OF_DAY";
   notes?: string;
   cashRegisterSnapshotName?: string;
 }

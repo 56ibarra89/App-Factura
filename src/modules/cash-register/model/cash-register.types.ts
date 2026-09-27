@@ -35,6 +35,7 @@ export interface Shift {
   netSales?: number;
   expenses?: CashExpense[];
   status: "open" | "closed";
+  closeType?: "HANDOVER" | "END_OF_DAY";
   notes?: string;
   cashRegisterName?: string;
 }
