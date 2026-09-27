@@ -1,14 +1,1 @@
-"use strict";
-const electron = require("electron");
-electron.contextBridge.exposeInMainWorld("printAPI", {
-  printSilent: (options) => electron.ipcRenderer.send("print-silent", options),
-  getSystemPrinters: () => electron.ipcRenderer.invoke("get-system-printers"),
-  testNetworkPrinter: (options) => electron.ipcRenderer.invoke("test-network-printer", options),
-  printNetworkRaw: (options) => electron.ipcRenderer.invoke("print-network-raw", options),
-  openCashDrawer: (options) => electron.ipcRenderer.invoke("open-cash-drawer", options)
-});
-electron.contextBridge.exposeInMainWorld("authAPI", {
-  setToken: (token, apiUrl) => electron.ipcRenderer.invoke("set-secure-token", token, apiUrl),
-  clearToken: () => electron.ipcRenderer.invoke("clear-secure-token"),
-  hasToken: () => electron.ipcRenderer.invoke("has-secure-token")
-});
+"use strict";const e=require("electron");e.contextBridge.exposeInMainWorld("printAPI",{printSilent:r=>e.ipcRenderer.send("print-silent",r),getSystemPrinters:()=>e.ipcRenderer.invoke("get-system-printers"),testNetworkPrinter:r=>e.ipcRenderer.invoke("test-network-printer",r),printNetworkRaw:r=>e.ipcRenderer.invoke("print-network-raw",r),openCashDrawer:r=>e.ipcRenderer.invoke("open-cash-drawer",r)});e.contextBridge.exposeInMainWorld("authAPI",{setToken:(r,n)=>e.ipcRenderer.invoke("set-secure-token",r,n),clearToken:()=>e.ipcRenderer.invoke("clear-secure-token"),hasToken:()=>e.ipcRenderer.invoke("has-secure-token")});

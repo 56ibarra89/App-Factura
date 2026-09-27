@@ -44,4 +44,6 @@ export interface IAuthService {
   resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message?: string }>;
   logout(): Promise<LogoutResult>;
   logoutAllDevices(): Promise<LogoutResult>;
+  refreshToken(): Promise<string | null>;
 }
+

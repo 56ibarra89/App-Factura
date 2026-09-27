@@ -5,7 +5,8 @@ import type { AuthSessionGateway } from "../api/authSessionGateway";
 import { authSessionGateway } from "../api/authSessionGateway";
 import type { LogoutResult } from "../model/auth-service.types";
 
-const INACTIVITY_LIMIT_MS = 10 * 60 * 1000;
+// Tiempo límite de inactividad: 30 minutos
+const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
 const CHECK_INTERVAL_MS = 30_000;
 const ACTIVITY_EVENTS = [
   "mousedown",
@@ -13,6 +14,9 @@ const ACTIVITY_EVENTS = [
   "keydown",
   "scroll",
   "touchstart",
+  "pointerdown",
+  "pointermove",
+  "click",
 ] as const;
 
 interface UseInactivityTimerOptions {
@@ -37,6 +41,11 @@ gateway: AuthSessionGateway = authSessionGateway): void {
   useEffect(() => {
     if (!isLoggedIn) return;
 
+    // Los cocineros y la pantalla KDS de preparación operan de forma continua
+    // en cocina sin interacción constante de ratón/teclado, por lo que se eximen del auto-logout.
+    const isKitchenDisplay = role === "cocinero" || window.location.hash.includes("kds");
+    if (isKitchenDisplay) return;
+
     const checkInactivity = () => {
       const last = gateway.getLastActivity() ?? Date.now();
       if (Date.now() - last > INACTIVITY_LIMIT_MS) {
@@ -58,7 +67,7 @@ gateway: AuthSessionGateway = authSessionGateway): void {
     const handleActivity = () => resetTimer();
 
     ACTIVITY_EVENTS.forEach((event) =>
-      window.addEventListener(event, handleActivity)
+      window.addEventListener(event, handleActivity, { passive: true })
     );
     const interval = setInterval(checkInactivity, CHECK_INTERVAL_MS);
 
@@ -77,4 +86,3 @@ gateway: AuthSessionGateway = authSessionGateway): void {
     resetTimer,
   ]);
 }
-

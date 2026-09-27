@@ -33,6 +33,7 @@ const AUTH_KEYS = [
 
 let isHandlingUnauthorized = false;
 let unauthorizedTimeout: ReturnType<typeof setTimeout> | null = null;
+let refreshPromise: Promise<string | null> | null = null;
 
 function handleUnauthorizedSession() {
   if (isHandlingUnauthorized) return;
@@ -62,11 +63,57 @@ function isAuthEndpoint(endpoint: string): boolean {
   return (
     endpoint.includes("/auth/login") ||
     endpoint.includes("/auth/pin") ||
+    endpoint.includes("/auth/refresh") ||
     endpoint.includes("/auth/forgot-password") ||
     endpoint.includes("/auth/reset-password") ||
     endpoint.includes("/users/login") ||
     endpoint.includes("/users/login-pin")
   );
+}
+
+async function attemptTokenRefresh(): Promise<string | null> {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const baseUrl = API_BASE_URL || "";
+      const url = `${baseUrl}/auth/refresh`;
+      const currentToken = accessTokenStore.get();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(currentToken ? { Authorization: `Bearer ${currentToken}` } : {}),
+      };
+
+      const response = await fetch(url, {
+        method: "POST",
+        cache: "no-store",
+        headers,
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json();
+      const newToken = data?.access_token;
+      if (typeof newToken === "string" && newToken) {
+        accessTokenStore.set(newToken);
+        if (window.authAPI) {
+          await window.authAPI.setToken(newToken, baseUrl);
+        }
+        return newToken;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 }
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}) => {
@@ -81,47 +128,66 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
     ...(options.headers as Record<string, string>),
   };
 
-  const response = await fetch(url, {
+  let response = await fetch(url, {
     cache: "no-store",
     ...options,
     headers,
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
-      if (!isAuthEndpoint(endpoint)) {
+    if (response.status === 401 && !isAuthEndpoint(endpoint)) {
+      // Intentar renovación silenciosa antes de dar por expirada la sesión
+      const refreshedToken = await attemptTokenRefresh();
+      if (refreshedToken) {
+        const retryHeaders: Record<string, string> = {
+          ...headers,
+          Authorization: `Bearer ${refreshedToken}`,
+        };
+        response = await fetch(url, {
+          cache: "no-store",
+          ...options,
+          headers: retryHeaders,
+        });
+      }
+
+      if (!response.ok && response.status === 401) {
         handleUnauthorizedSession();
         throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
       }
     }
 
-    let errorMessage = "Ocurrió un error en la petición al servidor";
-    let retryAfterSeconds: number | undefined;
-    try {
-      const errorData = await response.json();
-      if (Array.isArray(errorData.message)) {
-        errorMessage = errorData.message.join(", ");
-      } else if (typeof errorData.message === "string") {
-        errorMessage = errorData.message;
+    if (!response.ok) {
+      let errorMessage = "Ocurrió un error en la petición al servidor";
+      let retryAfterSeconds: number | undefined;
+      try {
+        const errorData = await response.json();
+        if (Array.isArray(errorData.message)) {
+          errorMessage = errorData.message.join(", ");
+        } else if (typeof errorData.message === "string") {
+          errorMessage = errorData.message;
+        }
+        if (
+          typeof errorData.retryAfterSeconds === "number" &&
+          Number.isFinite(errorData.retryAfterSeconds)
+        ) {
+          retryAfterSeconds = Math.max(
+            1,
+            Math.ceil(errorData.retryAfterSeconds),
+          );
+        }
+      } catch {
+        errorMessage = response.statusText || errorMessage;
       }
-      if (
-        typeof errorData.retryAfterSeconds === "number" &&
-        Number.isFinite(errorData.retryAfterSeconds)
-      ) {
-        retryAfterSeconds = Math.max(
-          1,
-          Math.ceil(errorData.retryAfterSeconds),
-        );
-      }
-    } catch {
-      errorMessage = response.statusText || errorMessage;
+      throw new ApiClientError(
+        errorMessage,
+        response.status,
+        retryAfterSeconds,
+      );
     }
-    throw new ApiClientError(
-      errorMessage,
-      response.status,
-      retryAfterSeconds,
-    );
   }
+
+  // Actualizar marca de actividad en almacenamiento local
+  localStore.setItem("lastActivity", Date.now().toString());
 
   if (response.status === 204) {
     return null;

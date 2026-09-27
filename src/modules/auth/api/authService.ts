@@ -4,6 +4,7 @@ import type {
 } from "../model/auth-service.types";
 import { ApiClientError, apiClient } from "../../../shared/api";
 import type { UserRole } from "../model/user.types";
+import { secureTokenGateway } from "./secureTokenGateway";
 
 interface AuthResponse {
   success?: boolean;
@@ -146,6 +147,22 @@ export const authService: IAuthService = {
         success: false,
         message: getErrorMessage(error, "Error al cerrar sesiones."),
       };
+    }
+  },
+
+  refreshToken: async (): Promise<string | null> => {
+    try {
+      const result: { access_token?: string } | null = await apiClient("/auth/refresh", {
+        method: "POST",
+      });
+      if (result?.access_token) {
+        await secureTokenGateway.store(result.access_token);
+        return result.access_token;
+      }
+      return null;
+    } catch (error: unknown) {
+      console.warn("No fue posible renovar el token de sesión:", error);
+      return null;
     }
   },
 };
