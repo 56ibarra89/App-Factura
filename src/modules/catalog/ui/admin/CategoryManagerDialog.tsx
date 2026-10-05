@@ -17,9 +17,11 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { useCatalog } from "../../hooks/useCatalog";
 import { CATEGORY_ICONS } from "../categoryIcons";
 import { useKitchens } from "../../../kitchens";
+import CategoryExtrasDialog from "./CategoryExtrasDialog";
 
 interface CategoryManagerDialogProps {
   open: boolean;
@@ -36,6 +38,8 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
   const [editingIcon, setEditingIcon] = useState("Restaurant");
   const [editingKitchenId, setEditingKitchenId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [extrasCategoryId, setExtrasCategoryId] = useState<string | null>(null);
+  const extrasCategory = categories.find((category) => category.id === extrasCategoryId) ?? null;
   const { kitchens } = useKitchens();
 
   const handleAdd = () => {
@@ -146,6 +150,14 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                 <Box>
                   <IconButton
                     edge="end"
+                    aria-label={`Gestionar extras de ${cat.label}`}
+                    color="primary"
+                    onClick={() => setExtrasCategoryId(cat.id ?? null)}
+                  >
+                    <AddCircleOutlineIcon />
+                  </IconButton>
+                  <IconButton
+                    edge="end"
                     aria-label="edit"
                     onClick={() => {
                       setEditingCategory(cat.label);
@@ -229,7 +241,7 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                     primary={cat.label}
                     secondary={
                       <>
-                        {cat.items.length} productos
+                        {cat.items.length} productos • {cat.extras.length} extras
                         {cat.kitchenId && ` • Cocina: ${kitchens.find(k => k.id === cat.kitchenId)?.name || 'Desconocida'}`}
                       </>
                     }
@@ -245,6 +257,7 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
           Cerrar
         </Button>
       </Box>
+      <CategoryExtrasDialog category={extrasCategory} onClose={() => setExtrasCategoryId(null)} />
     </Dialog>
   );
 };

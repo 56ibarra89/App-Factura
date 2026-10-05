@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import type { Category, Product } from "./catalog.types";
+import type { Category, ExtraIngredientDef, Product } from "./catalog.types";
 
 export interface CatalogContextValue {
   categories: Category[];
@@ -22,6 +22,8 @@ export interface CatalogContextValue {
     kitchenId?: string,
   ): Promise<void>;
   deleteCategory(categoryName: string): Promise<void>;
+  saveCategoryExtra(categoryId: string, extra: ExtraIngredientDef): Promise<void>;
+  deleteCategoryExtra(categoryId: string, extraId: string): Promise<void>;
   refreshCategories(): Promise<void>;
 }
 

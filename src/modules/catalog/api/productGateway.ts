@@ -1,5 +1,5 @@
 import { apiClient } from "../../../shared/api";
-import type { Category, Product } from "../model/catalog.types";
+import type { Category, ExtraIngredientDef, Product } from "../model/catalog.types";
 
 export interface ProductPayload {
   categoryId: string;
@@ -8,7 +8,6 @@ export interface ProductPayload {
   isActive: boolean;
   hasMultipleSizes: boolean;
   prices: Product["prices"];
-  extras: NonNullable<Product["extras"]>;
   isCombo?: boolean;
   comboPrice?: number;
   comboGroups?: Product["comboGroups"];
@@ -20,6 +19,13 @@ export interface CategoryPayload {
   kitchenId?: string;
 }
 
+export interface CategoryExtraPayload {
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+  prices: ExtraIngredientDef["prices"];
+}
+
 export interface ProductGateway {
   listCategories(): Promise<Category[]>;
   createProduct(payload: ProductPayload): Promise<void>;
@@ -28,6 +34,9 @@ export interface ProductGateway {
   createCategory(payload: CategoryPayload): Promise<void>;
   updateCategory(id: string, payload: CategoryPayload): Promise<void>;
   deleteCategory(id: string): Promise<void>;
+  createCategoryExtra(categoryId: string, payload: CategoryExtraPayload): Promise<void>;
+  updateCategoryExtra(categoryId: string, extraId: string, payload: CategoryExtraPayload): Promise<void>;
+  deleteCategoryExtra(categoryId: string, extraId: string): Promise<void>;
 }
 
 export const productGateway: ProductGateway = {
@@ -67,5 +76,23 @@ export const productGateway: ProductGateway = {
 
   async deleteCategory(id) {
     await apiClient(`/products/categories/${id}`, { method: "DELETE" });
+  },
+
+  async createCategoryExtra(categoryId, payload) {
+    await apiClient(`/products/categories/${categoryId}/extras`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async updateCategoryExtra(categoryId, extraId, payload) {
+    await apiClient(`/products/categories/${categoryId}/extras/${extraId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async deleteCategoryExtra(categoryId, extraId) {
+    await apiClient(`/products/categories/${categoryId}/extras/${extraId}`, { method: "DELETE" });
   },
 };

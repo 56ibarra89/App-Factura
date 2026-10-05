@@ -7,7 +7,10 @@ export interface ExtraPrice {
 }
 
 export interface ExtraIngredientDef {
+  id?: string;
   name: string;
+  isActive?: boolean;
+  sortOrder?: number;
   prices: ExtraPrice[];
 }
 
@@ -59,6 +62,7 @@ export interface Category {
   label: string;
   icon?: string;
   kitchenId?: string;
+  extras: ExtraIngredientDef[];
   items: Product[];
 }
 
@@ -75,4 +79,3 @@ export interface ProductFormState {
   prices: { size: string; price: string }[];
   singlePrice: string;
 }
-

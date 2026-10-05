@@ -1,6 +1,4 @@
 import type {
-  ExtraFormItem,
-  ExtraIngredientDef,
   Product,
   ProductFormState,
   ProductSize,
@@ -37,35 +35,8 @@ export const productMapper = {
     };
   },
 
-  toFormExtras: (extras: ExtraIngredientDef[] | undefined, hasMultipleSizes: boolean, dynamicSizes: string[]): ExtraFormItem[] => {
-    if (!extras?.length) return [];
-
-    return extras.map((ext) => ({
-      name: ext.name,
-      prices: hasMultipleSizes
-        ? dynamicSizes.map((s) => {
-            const found = ext.prices.find((p) => p.size === s);
-            return { size: s, price: found ? found.price.toString() : "" };
-          })
-        : [{ size: "único", price: ext.prices[0]?.price.toString() || "" }],
-    }));
-  },
-
-  toDomainProduct: (form: ProductFormState, extras: ExtraFormItem[]): Product => {
+  toDomainProduct: (form: ProductFormState): Product => {
     const hasMultipleSizes = form.hasMultipleSizes;
-
-    const productExtras: ExtraIngredientDef[] = extras
-      .filter((ext) => ext.name.trim() !== "")
-      .map((ext: ExtraFormItem) => ({
-        name: ext.name.trim(),
-        prices: ext.prices
-          .filter((p: { price: string }) => p.price !== "" && parseFloat(p.price) > 0)
-          .map((p: { size: string; price: string }) => ({
-            size: p.size as ProductSize,
-            price: parseFloat(p.price),
-          })),
-      }))
-      .filter((ext) => ext.prices.length > 0);
 
     return {
       name: form.name,
@@ -84,8 +55,6 @@ export const productMapper = {
               price: parseFloat(form.singlePrice),
             },
           ],
-      extras: productExtras.length > 0 ? productExtras : undefined,
     };
   },
 };
-

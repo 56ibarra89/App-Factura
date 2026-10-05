@@ -6,7 +6,6 @@ import {
   MenuItem,
   Button,
   Stack,
-  Divider,
   FormControl,
   InputLabel,
   Select,
@@ -18,7 +17,6 @@ import { useEffect, useRef } from "react";
 import type { Product } from "../../model/catalog.types";
 import { useProductForm } from "../../hooks/useProductForm";
 import { useCatalog } from "../../hooks/useCatalog";
-import ExtrasFormSection from "./ExtrasFormSection";
 import { blockInvalidChar } from "../../../../shared/forms";
 
 const ProductFormDialog = ({
@@ -48,13 +46,8 @@ const ProductFormDialog = ({
   const {
     form,
     setForm,
-    extras,
     handleCategoryChange,
     handleMultipleSizesToggle,
-    handleAddExtra,
-    handleRemoveExtra,
-    handleExtraNameChange,
-    handleExtraPriceChange,
     handleSubmit,
     isFormValid,
   } = useProductForm({ editing, onSubmit, open });
@@ -165,17 +158,9 @@ const ProductFormDialog = ({
               />
             )}
 
-          {/* Sección de extras (disponible para todos los productos) */}
-          <>
-            <Divider sx={{ my: 2 }} />
-            <ExtrasFormSection
-              extras={extras}
-              onAdd={handleAddExtra}
-              onRemove={handleRemoveExtra}
-              onNameChange={handleExtraNameChange}
-              onPriceChange={handleExtraPriceChange}
-            />
-          </>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Los extras se administran desde la categoría y se aplican automáticamente a todos sus productos.
+          </Typography>
 
           <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
             <Button

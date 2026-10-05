@@ -1,5 +1,5 @@
 import { useState, useEffect, ReactNode, useCallback } from "react";
-import type { Category, Product } from "./catalog.types";
+import type { Category, ExtraIngredientDef, Product } from "./catalog.types";
 import { useAuth } from "../../auth";
 import { CatalogContext } from "./CatalogContext";
 import {
@@ -25,6 +25,7 @@ export const CatalogProvider = ({
       setCategories(
         data.map((category) => ({
           ...category,
+          extras: category.extras ?? [],
           items: category.items.map((product) => ({
             ...product,
             categoryId: product.categoryId ?? category.id,
@@ -56,7 +57,6 @@ export const CatalogProvider = ({
         isActive: true,
         hasMultipleSizes: product.hasMultipleSizes ?? false,
         prices: product.prices,
-        extras: product.extras || [],
         isCombo: product.isCombo ?? false,
         comboPrice: product.comboPrice,
         comboGroups: product.comboGroups,
@@ -71,7 +71,9 @@ export const CatalogProvider = ({
   const updateProduct = async (categoryName: string, oldName: string, updatedProduct: Product) => {
     try {
       const cat = categories.find(c => c.label === categoryName);
-      const prod = cat?.items.find(p => p.name === oldName);
+      const prod = updatedProduct.id
+        ? categories.flatMap((category) => category.items).find((product) => product.id === updatedProduct.id)
+        : categories.flatMap((category) => category.items).find((product) => product.name === oldName);
       if (!cat?.id || !prod?.id) throw new Error("Categoría o Producto no encontrado");
 
       await gateway.updateProduct(prod.id, {
@@ -81,7 +83,6 @@ export const CatalogProvider = ({
         isActive: true,
         hasMultipleSizes: updatedProduct.hasMultipleSizes ?? false,
         prices: updatedProduct.prices,
-        extras: updatedProduct.extras || [],
         isCombo: updatedProduct.isCombo ?? false,
         comboPrice: updatedProduct.comboPrice,
         comboGroups: updatedProduct.comboGroups,
@@ -148,9 +149,29 @@ export const CatalogProvider = ({
     }
   };
 
+  const saveCategoryExtra = async (categoryId: string, extra: ExtraIngredientDef) => {
+    const payload = {
+      name: extra.name,
+      isActive: extra.isActive ?? true,
+      sortOrder: extra.sortOrder ?? 0,
+      prices: extra.prices,
+    };
+    if (extra.id) {
+      await gateway.updateCategoryExtra(categoryId, extra.id, payload);
+    } else {
+      await gateway.createCategoryExtra(categoryId, payload);
+    }
+    await loadCategories();
+  };
+
+  const deleteCategoryExtra = async (categoryId: string, extraId: string) => {
+    await gateway.deleteCategoryExtra(categoryId, extraId);
+    await loadCategories();
+  };
+
   return (
     <CatalogContext.Provider
-      value={{ categories, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory, refreshCategories: loadCategories }}
+      value={{ categories, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory, saveCategoryExtra, deleteCategoryExtra, refreshCategories: loadCategories }}
     >
       {children}
     </CatalogContext.Provider>

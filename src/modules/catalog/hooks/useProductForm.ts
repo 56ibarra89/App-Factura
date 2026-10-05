@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Product, ProductFormState } from "../model/catalog.types";
 import { productMapper } from "../model/productMapper";
-import { useProductExtras } from "./useProductExtras";
 
 interface UseProductFormArgs {
   editing: null | { product: Product; category: string };
@@ -15,15 +14,6 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     productMapper.toFormState(null, ""),
   );
 
-  const {
-    extras,
-    setExtras,
-    addExtra,
-    removeExtra,
-    changeExtraName,
-    changeExtraPrice,
-  } = useProductExtras();
-
   useEffect(() => {
     if (open) {
       const sizes = ["familiar", "mediana", "personal"];
@@ -32,13 +22,11 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
         setForm(
           productMapper.toFormState(editing.product, editing.category),
         );
-        setExtras(productMapper.toFormExtras(editing.product.extras, editing.product.hasMultipleSizes ?? false, sizes));
       } else {
         setForm(productMapper.toFormState(null, ""));
-        setExtras([]);
       }
     }
-  }, [open, editing, setExtras]);
+  }, [open, editing]);
 
   const handleCategoryChange = (cat: string) => {
     setForm((prev) => ({
@@ -56,7 +44,6 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
         : [{ size: "único", price: "" }],
       singlePrice: "",
     }));
-    setExtras([]);
   };
 
   const isFormValid =
@@ -79,7 +66,8 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     };
 
     const sanitizedProduct = {
-      ...productMapper.toDomainProduct(form, extras),
+      ...productMapper.toDomainProduct(form),
+      id: editing?.product.id,
       name: sanitize(form.name, 100),
       description: sanitize(form.description, 300)
     };
@@ -95,16 +83,9 @@ export function useProductForm({ editing, onSubmit, open }: UseProductFormArgs) 
     dynamicSizes,
     form,
     setForm,
-    extras,
-
     handleCategoryChange,
     handleMultipleSizesToggle,
-    handleAddExtra: () => addExtra(form.hasMultipleSizes, dynamicSizes),
-    handleRemoveExtra: removeExtra,
-    handleExtraNameChange: changeExtraName,
-    handleExtraPriceChange: changeExtraPrice,
     handleSubmit,
     isFormValid,
   };
 }
-

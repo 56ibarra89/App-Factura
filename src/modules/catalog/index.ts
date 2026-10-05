@@ -5,6 +5,7 @@ export { packagingConfigGateway } from "./api/packagingConfigGateway";
 export type { PackagingConfigGateway } from "./api/packagingConfigGateway";
 export type {
   CategoryPayload,
+  CategoryExtraPayload,
   ProductGateway,
   ProductPayload,
 } from "./api/productGateway";
