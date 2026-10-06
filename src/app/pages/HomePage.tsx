@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Typography, Fab, Tooltip } from "@mui/material";
+import { Box, Fab, Tooltip } from "@mui/material";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { AccountMenu } from "../../modules/accounts";
 import MenuCard from "../ui/MenuCard";
@@ -61,6 +61,19 @@ const HomePage = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [pendingDeliveredCount, setPendingDeliveredCount] = useState(0);
+  const navigationStartedRef = useRef(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  const navigateOnce = useCallback(
+    (route: string) => {
+      if (navigationStartedRef.current) return;
+
+      navigationStartedRef.current = true;
+      setIsNavigating(true);
+      navigate(route);
+    },
+    [navigate],
+  );
 
   const canManageDrivers =
     role === "admin" ||
@@ -158,10 +171,10 @@ const HomePage = () => {
               icon={item.icon}
               onClick={
                 item.route
-                  ? () => navigate(item.route!)
+                  ? () => navigateOnce(item.route!)
                   : item.action ?? (() => {})
               }
-              disabled={isDisabled}
+              disabled={isDisabled || isNavigating}
             />
           );
         })}

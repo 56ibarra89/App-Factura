@@ -2,6 +2,11 @@ import { localStore, sessionStore } from "../storage/storage";
 import { accessTokenStore } from "./accessTokenStore";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const DEFAULT_REQUEST_TIMEOUT_MS = 20_000;
+
+export interface ApiRequestOptions extends RequestInit {
+  timeoutMs?: number;
+}
 
 export class ApiClientError extends Error {
   constructor(
@@ -34,6 +39,42 @@ const AUTH_KEYS = [
 let isHandlingUnauthorized = false;
 let unauthorizedTimeout: ReturnType<typeof setTimeout> | null = null;
 let refreshPromise: Promise<string | null> | null = null;
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  let timedOut = false;
+
+  const forwardAbort = () => controller.abort(options.signal?.reason);
+  if (options.signal?.aborted) {
+    forwardAbort();
+  } else {
+    options.signal?.addEventListener("abort", forwardAbort, { once: true });
+  }
+
+  const timeoutId = window.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error: unknown) {
+    if (timedOut) {
+      throw new ApiClientError(
+        "El servidor tardó demasiado en responder. Intenta nuevamente.",
+        408,
+      );
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+    options.signal?.removeEventListener("abort", forwardAbort);
+  }
+}
 
 function handleUnauthorizedSession() {
   if (isHandlingUnauthorized) return;
@@ -86,7 +127,7 @@ async function attemptTokenRefresh(): Promise<string | null> {
         ...(currentToken ? { Authorization: `Bearer ${currentToken}` } : {}),
       };
 
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         method: "POST",
         cache: "no-store",
         headers,
@@ -116,23 +157,27 @@ async function attemptTokenRefresh(): Promise<string | null> {
   return refreshPromise;
 }
 
-export const apiClient = async (endpoint: string, options: RequestInit = {}) => {
+export const apiClient = async (
+  endpoint: string,
+  options: ApiRequestOptions = {},
+) => {
   const baseUrl = API_BASE_URL || "";
   const url = `${baseUrl}${endpoint}`;
-  const hasMultipartBody = options.body instanceof FormData;
+  const { timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS, ...requestOptions } = options;
+  const hasMultipartBody = requestOptions.body instanceof FormData;
   const accessToken = accessTokenStore.get();
   
   const headers: Record<string, string> = {
     ...(hasMultipartBody ? {} : { "Content-Type": "application/json" }),
     ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    ...(options.headers as Record<string, string>),
+    ...(requestOptions.headers as Record<string, string>),
   };
 
-  let response = await fetch(url, {
+  let response = await fetchWithTimeout(url, {
     cache: "no-store",
-    ...options,
+    ...requestOptions,
     headers,
-  });
+  }, timeoutMs);
 
   if (!response.ok) {
     if (response.status === 401 && !isAuthEndpoint(endpoint)) {
@@ -143,11 +188,11 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}) => 
           ...headers,
           Authorization: `Bearer ${refreshedToken}`,
         };
-        response = await fetch(url, {
+        response = await fetchWithTimeout(url, {
           cache: "no-store",
-          ...options,
+          ...requestOptions,
           headers: retryHeaders,
-        });
+        }, timeoutMs);
       }
 
       if (!response.ok && response.status === 401) {

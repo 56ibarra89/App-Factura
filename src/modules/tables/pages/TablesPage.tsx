@@ -27,7 +27,7 @@ import type { Order, OrderItem } from "../../orders";
 
 export default function TablesPage() {
   const { floorsConfig, isLoading: isLoadingConfig, error, retryFetch } = useMesasConfig();
-  const { assignedFloorId, loadingZone } = useMyTodayZone();
+  const { assignedFloorId, loadingZone, zoneError, retryZone } = useMyTodayZone();
   const { username, role } = useAuth();
   const { taxes, isExonerated } = useTaxConfig();
 
@@ -41,6 +41,11 @@ export default function TablesPage() {
 
   const navigate = useNavigate();
   const handleSalir = () => navigate("/home");
+
+  const retryInitialLoad = useCallback(() => {
+    void retryFetch();
+    retryZone();
+  }, [retryFetch, retryZone]);
 
   const [isDividirCuentaOpen, setIsDividirCuentaOpen] = useState(false);
 
@@ -116,7 +121,22 @@ export default function TablesPage() {
   const currentOrder = useMemo(() => logic.activeOrder ? logic.activeOrder.items : [], [logic.activeOrder]);
 
   if (isLoading) {
-    return <MesasLoadingState onRetry={retryFetch} />;
+    return (
+      <MesasLoadingState
+        onRetry={retryInitialLoad}
+        onBack={handleSalir}
+      />
+    );
+  }
+
+  if (zoneError) {
+    return (
+      <MesasLoadingState
+        error={zoneError}
+        onRetry={retryInitialLoad}
+        onBack={handleSalir}
+      />
+    );
   }
 
   if (role === "mesero" && !assignedFloorId) {
@@ -124,7 +144,13 @@ export default function TablesPage() {
   }
 
   if (!isLoadingConfig && (error || logic.activeFloors.length === 0)) {
-    return <MesasLoadingState error={error} onRetry={retryFetch} />;
+    return (
+      <MesasLoadingState
+        error={error}
+        onRetry={retryInitialLoad}
+        onBack={handleSalir}
+      />
+    );
   }
 
   return (
@@ -256,4 +282,3 @@ export default function TablesPage() {
     </Box>
   );
 }
-
