@@ -8,6 +8,7 @@ import ReservationDialog from "../ui/ReservationDialog";
 import TableSelectDialog from "../ui/TableSelectDialog";
 import MesasLoadingState from "../ui/MesasLoadingState";
 import MesasRestrictedAccess from "../ui/MesasRestrictedAccess";
+import MesasSetupRequired from "../ui/MesasSetupRequired";
 import {
   FacturaPreviewDialog,
   SplitBillDialog,
@@ -41,6 +42,7 @@ export default function TablesPage() {
 
   const navigate = useNavigate();
   const handleSalir = () => navigate("/home");
+  const handleConfigureTables = () => navigate("/admin/mesas");
 
   const retryInitialLoad = useCallback(() => {
     void retryFetch();
@@ -114,6 +116,9 @@ export default function TablesPage() {
   }, [logic.activeOrder, checkout, isExonerated, taxes]);
 
   const isLoading = isLoadingConfig || loadingZone;
+  const hasConfiguredTables = floorsConfig.some(
+    (floor) => floor.tableCount > 0,
+  );
   const canCheckoutOrder =
     !!logic.activeOrder && logic.activeOrder.items.length > 0;
 
@@ -139,16 +144,37 @@ export default function TablesPage() {
     );
   }
 
-  if (role === "mesero" && !assignedFloorId) {
-    return <MesasRestrictedAccess />;
-  }
-
-  if (!isLoadingConfig && (error || logic.activeFloors.length === 0)) {
+  if (error) {
     return (
       <MesasLoadingState
         error={error}
         onRetry={retryInitialLoad}
         onBack={handleSalir}
+      />
+    );
+  }
+
+  if (!hasConfiguredTables) {
+    return (
+      <MesasSetupRequired
+        canConfigure={role === "admin"}
+        onBack={handleSalir}
+        onConfigure={handleConfigureTables}
+      />
+    );
+  }
+
+  if (role === "mesero" && !assignedFloorId) {
+    return <MesasRestrictedAccess />;
+  }
+
+  if (logic.activeFloors.length === 0) {
+    return (
+      <MesasSetupRequired
+        canConfigure={role === "admin"}
+        assignedZoneWithoutTables
+        onBack={handleSalir}
+        onConfigure={handleConfigureTables}
       />
     );
   }
