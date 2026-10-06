@@ -53,11 +53,11 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
   const productMetaMap = useMemo(() => {
     const byId = new Map<
       string,
-      { categoryId?: string; categoryName?: string; kitchenId?: string }
+      { categoryId?: string; categoryName?: string; kitchenId?: string; product: Product }
     >();
     const byName = new Map<
       string,
-      { categoryId?: string; categoryName?: string; kitchenId?: string }
+      { categoryId?: string; categoryName?: string; kitchenId?: string; product: Product }
     >();
 
     categories.forEach((cat) => {
@@ -66,6 +66,7 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
           categoryId: cat.id || prod.categoryId,
           categoryName: cat.label,
           kitchenId: cat.kitchenId,
+          product: prod,
         };
         if (prod.id) byId.set(prod.id, meta);
         if (prod.name) byName.set(prod.name.toLowerCase().trim(), meta);
@@ -136,6 +137,7 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
           size,
           quantity: 1,
           extraPrice,
+          extras: [],
           kitchenId: meta?.kitchenId || kitchenId,
           categoryId: meta?.categoryId,
           categoryName: meta?.categoryName,
@@ -182,6 +184,7 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
           size,
           quantity: 1,
           extraPrice,
+          extras: [],
           kitchenId: meta?.kitchenId || kitchenId,
           categoryId: meta?.categoryId,
           categoryName: meta?.categoryName,
@@ -211,6 +214,37 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
       };
       return updated;
     });
+  };
+
+  const handleToggleExtra = (
+    groupId: string,
+    productId: string,
+    size: string | undefined,
+    extraName: string,
+    price: number,
+  ) => {
+    setSelections((current) =>
+      current.map((selection) => {
+        if (
+          selection.groupId !== groupId ||
+          selection.productId !== productId ||
+          selection.size !== size
+        ) {
+          return selection;
+        }
+
+        const currentExtras = selection.extras ?? [];
+        const alreadySelected = currentExtras.some(
+          (extra) => extra.name === extraName,
+        );
+        return {
+          ...selection,
+          extras: alreadySelected
+            ? currentExtras.filter((extra) => extra.name !== extraName)
+            : [...currentExtras, { name: extraName, price }],
+        };
+      }),
+    );
   };
 
   const handleConfirmOrder = () => {
@@ -369,6 +403,23 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
                       );
                       const optionQty = existingSelection?.quantity || 0;
                       const isSelected = optionQty > 0;
+                      const optionProduct = productMetaMap.byId.get(
+                        option.itemProductId,
+                      )?.product;
+                      const selectedSize =
+                        option.size || optionProduct?.prices[0]?.size || "único";
+                      const availableExtras = (optionProduct?.extras ?? []).flatMap(
+                        (extra) => {
+                          const price = extra.prices.find(
+                            (candidate) =>
+                              candidate.size.toLowerCase() ===
+                              selectedSize.toLowerCase(),
+                          );
+                          return price && price.price > 0
+                            ? [{ name: extra.name, price: price.price }]
+                            : [];
+                        },
+                      );
 
                       return (
                         <Paper
@@ -382,12 +433,10 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
                             bgcolor: isSelected
                               ? "rgba(207, 31, 46, 0.04)"
                               : "background.paper",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
                             transition: "all 0.15s ease",
                           }}
                         >
+                          <Box display="flex" alignItems="center" justifyContent="space-between">
                           <Box sx={{ minWidth: 0, flex: 1, pr: 1 }}>
                             <Typography
                               variant="body2"
@@ -491,6 +540,52 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
                               >
                                 <AddIcon fontSize="small" />
                               </IconButton>
+                            </Box>
+                          )}
+                          </Box>
+
+                          {isSelected && availableExtras.length > 0 && (
+                            <Box
+                              mt={1}
+                              pt={1}
+                              display="flex"
+                              flexWrap="wrap"
+                              gap={0.75}
+                              borderTop="1px solid"
+                              borderColor="divider"
+                            >
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ width: "100%" }}
+                              >
+                                Extras para {optionProductName}
+                                {optionQty > 1 ? ` (aplican a las ${optionQty} unidades)` : ""}:
+                              </Typography>
+                              {availableExtras.map((extra) => {
+                                const selected = existingSelection?.extras?.some(
+                                  (item) => item.name === extra.name,
+                                );
+                                return (
+                                  <Chip
+                                    key={extra.name}
+                                    size="small"
+                                    clickable
+                                    color={selected ? "primary" : "default"}
+                                    variant={selected ? "filled" : "outlined"}
+                                    label={`${extra.name} +C$ ${extra.price.toFixed(2)}`}
+                                    onClick={() =>
+                                      handleToggleExtra(
+                                        group.id || "",
+                                        option.itemProductId,
+                                        option.size,
+                                        extra.name,
+                                        extra.price,
+                                      )
+                                    }
+                                  />
+                                );
+                              })}
                             </Box>
                           )}
                         </Paper>

@@ -66,6 +66,9 @@ export default function OrderItemRow({ item }: Props) {
                 >
                   • {sel.quantity}x {sel.productName}
                   {sel.size && sel.size !== "único" ? ` (${sel.size})` : ""}
+                  {sel.extras?.length
+                    ? ` — Extras: ${sel.extras.map((extra) => extra.name).join(", ")}`
+                    : ""}
                 </Typography>
               ))}
             </Box>

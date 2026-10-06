@@ -501,6 +501,16 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                                     />
                                   )}
                                 </Box>
+                                {(sel.extras?.length ?? 0) > 0 && (
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight="800"
+                                    color="primary.main"
+                                    sx={{ pl: 2.5, mt: 0.25 }}
+                                  >
+                                    + Extras: {sel.extras?.map((extra) => extra.name).join(", ")}
+                                  </Typography>
+                                )}
                               </Box>
                             );
                           })}
@@ -774,6 +784,14 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                                       border:
                                         "1px solid rgba(211, 47, 47, 0.2)",
                                     }}
+                                  />
+                                )}
+                                {(sel.extras?.length ?? 0) > 0 && (
+                                  <Chip
+                                    label={`+ ${sel.extras?.map((extra) => extra.name).join(", ")}`}
+                                    size="small"
+                                    color="primary"
+                                    sx={{ height: 20, fontSize: "0.68rem", fontWeight: 800 }}
                                   />
                                 )}
                                 <Chip

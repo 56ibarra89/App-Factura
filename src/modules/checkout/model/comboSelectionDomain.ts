@@ -56,8 +56,12 @@ export function calculateComboTotalPrice(
 ): number {
   const basePrice = Number(combo.comboPrice || 0);
   const extraTotal = selections.reduce((sum, s) => {
-    const extra = Number(s.extraPrice || 0);
-    return sum + extra * (s.quantity || 1);
+    const optionExtra = Number(s.extraPrice || 0);
+    const ingredientExtras = (s.extras ?? []).reduce(
+      (extrasSum, extra) => extrasSum + Number(extra.price || 0),
+      0,
+    );
+    return sum + (optionExtra + ingredientExtras) * (s.quantity || 1);
   }, 0);
 
   return basePrice + extraTotal;
@@ -75,8 +79,18 @@ export function formatComboSelectionsSummary(
   return selections
     .map((s) => {
       const sizeText = s.size && s.size !== "único" ? ` (${s.size})` : "";
-      const extraText = s.extraPrice && s.extraPrice > 0 ? ` (+C$${s.extraPrice.toFixed(2)})` : "";
-      return `${s.quantity}x ${s.productName}${sizeText}${extraText}`;
+      const surcharge =
+        Number(s.extraPrice || 0) +
+        (s.extras ?? []).reduce(
+          (sum, extra) => sum + Number(extra.price || 0),
+          0,
+        );
+      const extraText =
+        surcharge > 0 ? ` (+C$${surcharge.toFixed(2)})` : "";
+      const extrasNames = s.extras?.length
+        ? ` [${s.extras.map((extra) => extra.name).join(", ")}]`
+        : "";
+      return `${s.quantity}x ${s.productName}${sizeText}${extrasNames}${extraText}`;
     })
     .join(", ");
 }

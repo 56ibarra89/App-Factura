@@ -34,6 +34,7 @@ export interface SelectedComboOptionItem {
   size?: string;
   quantity: number;
   extraPrice: number;
+  extras?: SelectedExtra[];
   kitchenId?: string;
   categoryId?: string;
   categoryName?: string;

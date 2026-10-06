@@ -339,6 +339,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
                                 {catBadge}
                                 {selKitchenName && ` (📍 ${selKitchenName})`}
                                 {statusBadge}
+                                {sel.extras?.length
+                                  ? ` • Extras: ${sel.extras.map((extra) => extra.name).join(", ")}`
+                                  : ""}
                               </Typography>
                             );
                           })}

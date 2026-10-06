@@ -21,6 +21,9 @@ const modifiersKey = (modifiers?: KitchenModifierSelection[]) =>
     .sort()
     .join("|");
 
+const comboSelectionsKey = (item: OrderItemInput | OrderItem) =>
+  JSON.stringify(item.comboSelections ?? []);
+
 export function useCartStore() {
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [manualPromotion, setPromotion] = useState<AppliedPromotion | null>(
@@ -120,6 +123,7 @@ export function useCartStore() {
           extrasKey(item.extras) === extrasKey(newItem.extras) &&
           modifiersKey(item.kitchenModifiers) ===
             modifiersKey(newItem.kitchenModifiers) &&
+          comboSelectionsKey(item) === comboSelectionsKey(newItem) &&
           item.note === sanitizedNote &&
           !item.isSentToKitchen, // No fusionar si ya se envió a cocina
       );

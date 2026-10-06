@@ -111,10 +111,11 @@ const CartItem = ({
               {comboSelections.map((s, sIdx) => {
                 const sizeText =
                   s.size && s.size !== "único" ? ` (${s.size})` : "";
+                const surcharge =
+                  Number(s.extraPrice || 0) +
+                  (s.extras ?? []).reduce((sum, extra) => sum + extra.price, 0);
                 const extraText =
-                  s.extraPrice && s.extraPrice > 0
-                    ? ` (+C$${s.extraPrice.toFixed(2)})`
-                    : "";
+                  surcharge > 0 ? ` (+C$${surcharge.toFixed(2)})` : "";
                 return (
                   <Typography
                     key={sIdx}
@@ -129,6 +130,9 @@ const CartItem = ({
                     • {s.quantity}x {s.productName}
                     {sizeText}
                     {extraText}
+                    {s.extras?.length
+                      ? ` — ${s.extras.map((extra) => extra.name).join(", ")}`
+                      : ""}
                   </Typography>
                 );
               })}

@@ -227,10 +227,14 @@ const TicketPrint = ({
                     selection.size && selection.size !== "único"
                       ? ` (${selection.size})`
                       : "";
+                  const surcharge =
+                    Number(selection.extraPrice || 0) +
+                    (selection.extras ?? []).reduce(
+                      (sum, extra) => sum + extra.price,
+                      0,
+                    );
                   const extraText =
-                    selection.extraPrice && selection.extraPrice > 0
-                      ? ` (+${selection.extraPrice.toFixed(2)})`
-                      : "";
+                    surcharge > 0 ? ` (+${surcharge.toFixed(2)})` : "";
                   return (
                     <Box
                       display="flex"
@@ -251,6 +255,9 @@ const TicketPrint = ({
                         - {selection.quantity}x {selection.productName}
                         {sizeText}
                         {extraText}
+                        {selection.extras?.length
+                          ? ` — Extras: ${selection.extras.map((extra) => extra.name).join(", ")}`
+                          : ""}
                       </Typography>
                     </Box>
                   );

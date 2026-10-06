@@ -19,6 +19,7 @@ export interface KitchenOrderItem {
     extraPrice?: number;
     categoryName?: string;
     kitchenId?: string;
+    extras?: Array<{ name: string }>;
   }>;
 }
 
@@ -272,6 +273,9 @@ class PrinterDispatcherService {
           builder.line(
             `   > ${sel.quantity}x ${sel.productName.toUpperCase()}${selSize}${catTag}`,
           );
+          sel.extras?.forEach((extra) => {
+            builder.line(`      + ${extra.name.toUpperCase()}`);
+          });
         });
       }
 
