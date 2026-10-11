@@ -33,6 +33,7 @@ const InvoicesPage = ({
     setSearchQuery,
     selectedPaymentMethod,
     setSelectedPaymentMethod,
+    paymentMethodOptions,
     loading,
     filteredOrders,
     handleSearchClick
@@ -111,6 +112,7 @@ const InvoicesPage = ({
         setSearchQuery={setSearchQuery}
         selectedPaymentMethod={selectedPaymentMethod}
         onPaymentMethodChange={setSelectedPaymentMethod}
+        paymentMethodOptions={paymentMethodOptions}
         onSearchClick={handleSearchClick}
       />
 

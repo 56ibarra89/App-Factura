@@ -149,42 +149,36 @@ const SalesReportsPage = () => {
               masked={privacyMode}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              title="Total Efectivo"
-              value={`C$${data.cashSales.toFixed(2)}`}
-              icon={<AttachMoneyIcon fontSize="large" />}
-              subtitle="Directo + porción mixto"
-              color="#2e7d32"
-              iconColor="#2e7d32"
-              iconBg="rgba(46, 125, 50, 0.1)"
-              masked={privacyMode}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              title="Total Tarjeta / POS"
-              value={`C$${data.cardSales.toFixed(2)}`}
-              icon={<CreditCardIcon fontSize="large" />}
-              subtitle="Datáfono + porción mixto"
-              color="#0288d1"
-              iconColor="#0288d1"
-              iconBg="rgba(2, 136, 209, 0.1)"
-              masked={privacyMode}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              title="Total App / Transf."
-              value={`C$${data.appSales.toFixed(2)}`}
-              icon={<PhoneAndroidIcon fontSize="large" />}
-              subtitle="Banca en línea + porción mixto"
-              color="#ed6c02"
-              iconColor="#ed6c02"
-              iconBg="rgba(237, 108, 2, 0.1)"
-              masked={privacyMode}
-            />
-          </Grid>
+          {data.paymentBreakdown.map((payment) => {
+            const isCash = payment.type === "CASH";
+            const isCard = payment.type === "CARD_POS";
+            const color = isCash ? "#2e7d32" : isCard ? "#0288d1" : "#ed6c02";
+            const icon = isCash ? (
+              <AttachMoneyIcon fontSize="large" />
+            ) : isCard ? (
+              <CreditCardIcon fontSize="large" />
+            ) : (
+              <PhoneAndroidIcon fontSize="large" />
+            );
+            const originalAmount =
+              payment.currency === "USD" && payment.originalAmount !== undefined
+                ? ` · US$${payment.originalAmount.toFixed(2)} recibidos`
+                : "";
+            return (
+              <Grid key={payment.id} size={{ xs: 12, sm: 6, md: 3 }}>
+                <StatCard
+                  title={payment.name}
+                  value={`C$${payment.amount.toFixed(2)}`}
+                  icon={icon}
+                  subtitle={`${payment.transactionCount} pago${payment.transactionCount === 1 ? "" : "s"}${originalAmount}`}
+                  color={color}
+                  iconColor={color}
+                  iconBg="action.hover"
+                  masked={privacyMode}
+                />
+              </Grid>
+            );
+          })}
 
           {/* Gráfico de Ventas */}
           <Grid size={{ xs: 12, lg: 8 }}>

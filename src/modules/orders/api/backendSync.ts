@@ -185,20 +185,15 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
     linkedTables: backendOrder.linkedTables,
     splitAmounts: hasMultiplePayments
       ? {
-          efectivo: Number(
-            backendOrder.payments?.find(
-              (p) => p.method.toUpperCase() === "EFECTIVO",
-            )?.amount || 0,
-          ),
-          tarjeta: Number(
-            backendOrder.payments?.find(
-              (p) => p.method.toUpperCase() === "TARJETA",
-            )?.amount || 0,
-          ),
-          app: Number(
-            backendOrder.payments?.find((p) => p.method.toUpperCase() === "APP")
-              ?.amount || 0,
-          ),
+          efectivo: (backendOrder.payments ?? [])
+            .filter((p) => p.method.toUpperCase() === "EFECTIVO")
+            .reduce((sum, p) => sum + Number(p.amount), 0),
+          tarjeta: (backendOrder.payments ?? [])
+            .filter((p) => p.method.toUpperCase() === "TARJETA")
+            .reduce((sum, p) => sum + Number(p.amount), 0),
+          app: (backendOrder.payments ?? [])
+            .filter((p) => p.method.toUpperCase() === "APP")
+            .reduce((sum, p) => sum + Number(p.amount), 0),
         }
       : undefined,
     payments: backendOrder.payments?.map((p) => ({

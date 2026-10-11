@@ -28,6 +28,13 @@ export type {
   PaymentMethod,
 } from "./model/order.types";
 export {
+  aggregateOrderPayments,
+  getOrderPaymentDetails,
+  getPaymentDisplayName,
+  getPaymentFilterId,
+} from "./model/paymentReporting";
+export type { PaymentBreakdownRow } from "./model/paymentReporting";
+export {
   isDeliveryChargeOrderItem,
   isPackagingOrderItem,
   isSupplementalOrderItem,

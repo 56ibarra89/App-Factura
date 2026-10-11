@@ -32,6 +32,9 @@ export const TopProductsList: React.FC<TopProductsListProps> = ({ products }) =>
         <Typography variant="h6" fontWeight={700} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
           <LocalPizzaIcon color="primary" /> Productos Más Vendidos
         </Typography>
+        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+          Ingreso neto después de descuentos; las unidades de regalo no generan ingreso.
+        </Typography>
         
         {products.length === 0 ? (
           <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 4 }}>

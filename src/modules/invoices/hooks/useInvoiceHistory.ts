@@ -2,6 +2,16 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import type { InvoiceGateway } from "../api/invoiceGateway";
 import { invoiceGateway } from "../api/invoiceGateway";
 import type { Invoice } from "../model/invoice.types";
+import {
+  getOrderPaymentDetails,
+  getPaymentDisplayName,
+  getPaymentFilterId,
+} from "../../orders";
+
+export interface PaymentFilterOption {
+  id: string;
+  name: string;
+}
 
 export interface InvoiceSummaryTotals {
   total: number;
@@ -79,8 +89,11 @@ export const useInvoiceHistory = (
 
     if (selectedPaymentMethod && selectedPaymentMethod !== "ALL") {
       result = result.filter((o) => {
-        const method = (o.paymentMethod || "EFECTIVO").toUpperCase();
-        return method === selectedPaymentMethod;
+        const payments = getOrderPaymentDetails(o);
+        if (selectedPaymentMethod === "MIXTO") return payments.length > 1;
+        return payments.some(
+          (payment) => getPaymentFilterId(payment) === selectedPaymentMethod,
+        );
       });
     }
 
@@ -100,6 +113,21 @@ export const useInvoiceHistory = (
     return result;
   }, [orders, searchQuery, selectedPaymentMethod]);
 
+  const paymentMethodOptions = useMemo<PaymentFilterOption[]>(() => {
+    const options = new Map<string, string>();
+    orders.forEach((order) => {
+      getOrderPaymentDetails(order).forEach((payment) => {
+        options.set(
+          getPaymentFilterId(payment),
+          getPaymentDisplayName(payment),
+        );
+      });
+    });
+    return [...options.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [orders]);
+
   const summaryTotals = useMemo<InvoiceSummaryTotals>(() => {
     const validOrders = filteredOrders.filter(
       (o) => o.status === "paid" || o.status === "delivered",
@@ -111,20 +139,19 @@ export const useInvoiceHistory = (
 
     validOrders.forEach((order) => {
       total += order.total;
-      const method = (order.paymentMethod || "EFECTIVO").toUpperCase();
-
-      if (method === "MIXTO" && order.splitAmounts) {
-        cash += order.splitAmounts.efectivo || 0;
-        card += order.splitAmounts.tarjeta || 0;
-        app += order.splitAmounts.app || 0;
-      } else if (method === "TARJETA") {
-        card += order.total;
-      } else if (method === "APP") {
-        app += order.total;
-      } else {
-        // Asume Efectivo si no se especificó o es EFECTIVO
-        cash += order.total;
-      }
+      getOrderPaymentDetails(order).forEach((payment) => {
+        const type = payment.methodType;
+        if (type === "CASH" || (!type && payment.method === "EFECTIVO")) {
+          cash += payment.amount;
+        } else if (
+          type === "CARD_POS" ||
+          (!type && payment.method === "TARJETA")
+        ) {
+          card += payment.amount;
+        } else {
+          app += payment.amount;
+        }
+      });
     });
 
     return {
@@ -145,6 +172,7 @@ export const useInvoiceHistory = (
     setSearchQuery,
     selectedPaymentMethod,
     setSelectedPaymentMethod,
+    paymentMethodOptions,
     summaryTotals,
     loading,
     error,

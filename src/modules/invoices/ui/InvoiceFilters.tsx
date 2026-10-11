@@ -18,6 +18,7 @@ interface InvoiceFiltersProps {
   setSearchQuery: (val: string) => void;
   selectedPaymentMethod: string;
   onPaymentMethodChange: (val: string) => void;
+  paymentMethodOptions: Array<{ id: string; name: string }>;
   onSearchClick: () => void;
 }
 
@@ -30,6 +31,7 @@ const InvoiceFilters = ({
   setSearchQuery,
   selectedPaymentMethod,
   onPaymentMethodChange,
+  paymentMethodOptions,
   onSearchClick,
 }: InvoiceFiltersProps) => {
   return (
@@ -79,9 +81,11 @@ const InvoiceFilters = ({
             size="small"
           >
             <MenuItem value="ALL">Todos los métodos</MenuItem>
-            <MenuItem value="EFECTIVO">💵 Efectivo</MenuItem>
-            <MenuItem value="TARJETA">💳 Tarjeta</MenuItem>
-            <MenuItem value="APP">📱 App / Transf.</MenuItem>
+            {paymentMethodOptions.map((method) => (
+              <MenuItem key={method.id} value={method.id}>
+                {method.name}
+              </MenuItem>
+            ))}
             <MenuItem value="MIXTO">🔀 Mixto</MenuItem>
           </TextField>
         </Box>

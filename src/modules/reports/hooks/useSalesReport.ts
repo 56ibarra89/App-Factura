@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { ordersGateway } from "../../orders";
+import {
+  aggregateOrderPayments,
+  getOrderPaymentDetails,
+  isSupplementalOrderItem,
+  ordersGateway,
+  type PaymentBreakdownRow,
+} from "../../orders";
 import { differenceInDays, format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -19,6 +25,7 @@ export interface SalesReportData {
   cashSales: number;
   cardSales: number;
   appSales: number;
+  paymentBreakdown: PaymentBreakdownRow[];
   totalOrders: number;
   topProducts: TopProduct[];
   salesByTime: SalesByTime[];
@@ -52,19 +59,19 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
 
       deliveredOrders.forEach((order) => {
         totalSales += order.total;
-        const method = (order.paymentMethod || "EFECTIVO").toUpperCase();
-
-        if (method === "MIXTO" && order.splitAmounts) {
-          cashSales += order.splitAmounts.efectivo || 0;
-          cardSales += order.splitAmounts.tarjeta || 0;
-          appSales += order.splitAmounts.app || 0;
-        } else if (method === "TARJETA") {
-          cardSales += order.total;
-        } else if (method === "APP") {
-          appSales += order.total;
-        } else {
-          cashSales += order.total;
-        }
+        getOrderPaymentDetails(order).forEach((payment) => {
+          const type = payment.methodType;
+          if (type === "CASH" || (!type && payment.method === "EFECTIVO")) {
+            cashSales += payment.amount;
+          } else if (
+            type === "CARD_POS" ||
+            (!type && payment.method === "TARJETA")
+          ) {
+            cardSales += payment.amount;
+          } else {
+            appSales += payment.amount;
+          }
+        });
 
         const orderDate = new Date(order.timestamp);
         let timeKey = "";
@@ -78,17 +85,36 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
 
         timeMap.set(timeKey, (timeMap.get(timeKey) || 0) + order.total);
 
-        // Agrupar productos
-        order.items.forEach((item) => {
+        const reportableItems = order.items.filter(
+          (item) => item.productId && !isSupplementalOrderItem(item),
+        );
+        const productGross = reportableItems.reduce(
+          (sum, item) =>
+            sum +
+            item.price * Math.max(0, item.quantity - (item.giftQuantity ?? 0)),
+          0,
+        );
+
+        reportableItems.forEach((item) => {
+          const billableQuantity = Math.max(
+            0,
+            item.quantity - (item.giftQuantity ?? 0),
+          );
+          const grossRevenue = item.price * billableQuantity;
+          const allocatedDiscount =
+            productGross > 0
+              ? (order.discountAmount ?? 0) * (grossRevenue / productGross)
+              : 0;
+          const netRevenue = Math.max(0, grossRevenue - allocatedDiscount);
           if (productMap.has(item.name)) {
             const existing = productMap.get(item.name)!;
             existing.quantity += item.quantity;
-            existing.totalRevenue += item.price * item.quantity;
+            existing.totalRevenue += netRevenue;
           } else {
             productMap.set(item.name, {
               name: item.name,
               quantity: item.quantity,
-              totalRevenue: item.price * item.quantity,
+              totalRevenue: netRevenue,
             });
           }
         });
@@ -126,6 +152,7 @@ export const useSalesReport = (startDate: Date, endDate: Date) => {
         cashSales,
         cardSales,
         appSales,
+        paymentBreakdown: aggregateOrderPayments(deliveredOrders),
         totalOrders: deliveredOrders.length,
         topProducts,
         salesByTime,
