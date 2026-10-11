@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react";
-import { Box, Grid, CircularProgress, Typography, IconButton, Select, MenuItem, TextField } from "@mui/material";
+import { Box, Grid, CircularProgress, Typography, IconButton, Select, MenuItem, Stack, TextField } from "@mui/material";
 import { BackButton, PageHeader } from "../../../shared/ui";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
@@ -12,6 +14,7 @@ import { useSalesReport } from "../hooks/useSalesReport";
 import { StatCard } from "../ui/StatCard";
 import { TopProductsList } from "../ui/TopProductsList";
 import { SalesChart } from "../ui/SalesChart";
+import { SalesChannelsCard } from "../ui/SalesChannelsCard";
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, format } from "date-fns";
 
 type FilterType = "today" | "week" | "month" | "custom";
@@ -43,6 +46,8 @@ const SalesReportsPage = () => {
   }, [filterType, customStart, customEnd]);
 
   const { data, isLoading, error } = useSalesReport(startDate, endDate);
+  const averageTicket =
+    data && data.totalOrders > 0 ? data.totalSales / data.totalOrders : 0;
 
   const daysDiff = differenceInDays(endDate, startDate);
   const groupByDay = daysDiff >= 1;
@@ -136,58 +141,116 @@ const SalesReportsPage = () => {
         </Box>
       ) : data ? (
         <Grid container spacing={3} sx={{ mt: 1 }}>
-          {/* Tarjetas KPI de Métodos de Pago */}
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <StatCard
-              title="Total Facturado"
-              value={`C$${data.totalSales.toFixed(2)}`}
-              icon={<PointOfSaleIcon fontSize="large" />}
-              subtitle={`${data.totalOrders} factura${data.totalOrders === 1 ? "" : "s"} cobrada${data.totalOrders === 1 ? "" : "s"}`}
-              color="#d32f2f"
-              iconColor="#d32f2f"
-              iconBg="rgba(211, 47, 47, 0.1)"
-              masked={privacyMode}
-            />
-          </Grid>
-          {data.paymentBreakdown.map((payment) => {
-            const isCash = payment.type === "CASH";
-            const isCard = payment.type === "CARD_POS";
-            const color = isCash ? "#2e7d32" : isCard ? "#0288d1" : "#ed6c02";
-            const icon = isCash ? (
-              <AttachMoneyIcon fontSize="large" />
-            ) : isCard ? (
-              <CreditCardIcon fontSize="large" />
-            ) : (
-              <PhoneAndroidIcon fontSize="large" />
-            );
-            const originalAmount =
-              payment.currency === "USD" && payment.originalAmount !== undefined
-                ? ` · US$${payment.originalAmount.toFixed(2)} recibidos`
-                : "";
-            return (
-              <Grid key={payment.id} size={{ xs: 12, sm: 6, md: 3 }}>
+          {/* Fila 1: métricas superiores */}
+          <Grid size={{ xs: 12 }}>
+            <Grid container spacing={3} alignItems="stretch">
+              <Grid
+                size={{ xs: 12, sm: 6, md: 4, lg: 2 }}
+                display="flex"
+              >
                 <StatCard
-                  title={payment.name}
-                  value={`C$${payment.amount.toFixed(2)}`}
-                  icon={icon}
-                  subtitle={`${payment.transactionCount} pago${payment.transactionCount === 1 ? "" : "s"}${originalAmount}`}
-                  color={color}
-                  iconColor={color}
+                  title="Total Facturado"
+                  value={`C$${data.totalSales.toFixed(2)}`}
+                  icon={<PointOfSaleIcon fontSize="large" />}
+                  subtitle={`${data.totalOrders} factura${data.totalOrders === 1 ? "" : "s"} cobrada${data.totalOrders === 1 ? "" : "s"}`}
+                  color="#d32f2f"
+                  iconColor="#d32f2f"
+                  iconBg="rgba(211, 47, 47, 0.1)"
+                  masked={privacyMode}
+                />
+              </Grid>
+              <Grid
+                size={{ xs: 12, sm: 6, md: 4, lg: 2 }}
+                display="flex"
+              >
+                <StatCard
+                  title="Ticket Promedio"
+                  value={`C$${averageTicket.toFixed(2)}`}
+                  icon={<ReceiptLongIcon fontSize="large" />}
+                  subtitle="Consumo promedio por orden"
+                  color="secondary.main"
+                  iconColor="secondary.main"
                   iconBg="action.hover"
                   masked={privacyMode}
                 />
               </Grid>
-            );
-          })}
-
-          {/* Gráfico de Ventas */}
-          <Grid size={{ xs: 12, lg: 8 }}>
-            <SalesChart data={data.salesByTime} groupByDay={groupByDay} />
+              <Grid
+                size={{ xs: 12, sm: 6, md: 4, lg: 2 }}
+                display="flex"
+              >
+                <StatCard
+                  title="Descuentos Aplicados"
+                  value={`C$${data.totalDiscounts.toFixed(2)}`}
+                  icon={<LocalOfferIcon fontSize="large" />}
+                  subtitle={
+                    data.discountedOrdersCount === 0
+                      ? "Sin descuentos aplicados"
+                      : `${data.discountedOrdersCount} orden${data.discountedOrdersCount === 1 ? "" : "es"} con descuento`
+                  }
+                  color="#e65100"
+                  iconColor="#e65100"
+                  iconBg="rgba(230, 81, 0, 0.1)"
+                  masked={privacyMode}
+                />
+              </Grid>
+              {data.paymentBreakdown.map((payment) => {
+                const isCash = payment.type === "CASH";
+                const isCard = payment.type === "CARD_POS";
+                const color = isCash
+                  ? "#2e7d32"
+                  : isCard
+                    ? "#0288d1"
+                    : "#ed6c02";
+                const icon = isCash ? (
+                  <AttachMoneyIcon fontSize="large" />
+                ) : isCard ? (
+                  <CreditCardIcon fontSize="large" />
+                ) : (
+                  <PhoneAndroidIcon fontSize="large" />
+                );
+                const originalAmount =
+                  payment.currency === "USD" &&
+                  payment.originalAmount !== undefined
+                    ? ` · US$${payment.originalAmount.toFixed(2)} recibidos`
+                    : "";
+                return (
+                  <Grid
+                    key={payment.id}
+                    size={{ xs: 12, sm: 6, md: 4, lg: 2 }}
+                    display="flex"
+                  >
+                    <StatCard
+                      title={payment.name}
+                      value={`C$${payment.amount.toFixed(2)}`}
+                      icon={icon}
+                      subtitle={`${payment.transactionCount} pago${payment.transactionCount === 1 ? "" : "s"}${originalAmount}`}
+                      color={color}
+                      iconColor={color}
+                      iconBg="action.hover"
+                      masked={privacyMode}
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
           </Grid>
 
-          {/* Lista de Productos Top */}
-          <Grid size={{ xs: 12, lg: 4 }}>
-            <TopProductsList products={data.topProducts} />
+          {/* Fila 2: gráfica y resúmenes laterales */}
+          <Grid size={{ xs: 12 }}>
+            <Grid container spacing={3} alignItems="flex-start">
+              <Grid size={{ xs: 12, lg: 8 }}>
+                <SalesChart data={data.salesByTime} groupByDay={groupByDay} />
+              </Grid>
+              <Grid size={{ xs: 12, lg: 4 }}>
+                <Stack spacing={3}>
+                  <TopProductsList products={data.topProducts} />
+                  <SalesChannelsCard
+                    channels={data.channelsSummary}
+                    masked={privacyMode}
+                  />
+                </Stack>
+              </Grid>
+            </Grid>
           </Grid>
         </Grid>
       ) : null}

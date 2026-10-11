@@ -51,6 +51,33 @@ import { customerRepository, type Customer } from "../../customers";
 import { usersGateway, type UserAccount } from "../../accounts";
 import { useServiceSlaConfig } from "../../settings";
 
+type DeliveryTab = "pending" | "in_transit" | "delivered" | "all";
+type DeliveryStage = Exclude<DeliveryTab, "all">;
+
+function isOrderReadyForDelivery(order: Order): boolean {
+  const sentItems = order.items.filter(
+    (item) => requiresKitchenPreparation(item) && item.isSentToKitchen,
+  );
+  if (sentItems.length === 0) return true;
+  return (
+    order.status === "ready" ||
+    order.status === "delivered" ||
+    order.status === "paid" ||
+    sentItems.every(
+      (item) =>
+        item.kitchenStatus === "ready" || item.kitchenStatus === "delivered",
+    )
+  );
+}
+
+function getDeliveryStage(order: Order): DeliveryStage | null {
+  if (order.status === "paid") return "delivered";
+  if (order.status === "delivered" || order.deliveryStartedAt) {
+    return "in_transit";
+  }
+  return isOrderReadyForDelivery(order) ? "pending" : null;
+}
+
 export default function DriverDeliveriesPage() {
   const { role, username } = useAuth();
   const { config: serviceSlas } = useServiceSlaConfig();
@@ -63,9 +90,7 @@ export default function DriverDeliveriesPage() {
   const [allUsers, setAllUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [tabFilter, setTabFilter] = useState<"pending" | "delivered" | "all">(
-    "pending",
-  );
+  const [tabFilter, setTabFilter] = useState<DeliveryTab>("pending");
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -84,26 +109,17 @@ export default function DriverDeliveriesPage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const isOrderReadyForDelivery = (order: Order) => {
-    const sentItems = order.items.filter(
-      (item) => requiresKitchenPreparation(item) && item.isSentToKitchen,
-    );
-    if (sentItems.length === 0) return true;
-    return (
-      order.status === "ready" ||
-      order.status === "delivered" ||
-      order.status === "paid" ||
-      sentItems.every(
-        (i) => i.kitchenStatus === "ready" || i.kitchenStatus === "delivered",
-      )
-    );
-  };
-
   const loadInitialData = useCallback(async () => {
     setLoading(true);
     try {
+      const usersRequest =
+        isMotorizado && username
+          ? usersGateway
+              .findByUsername(username)
+              .then((currentUser) => [currentUser])
+          : usersGateway.list();
       const [usersList, customersList] = await Promise.all([
-        usersGateway.list().catch(() => [] as UserAccount[]),
+        usersRequest,
         customerRepository.getAll().catch(() => [] as Customer[]),
       ]);
 
@@ -140,11 +156,11 @@ export default function DriverDeliveriesPage() {
   const fetchAllDeliveryOrders = useCallback(async () => {
     try {
       const [allCurrentOrders, driverOrders] = await Promise.all([
-        ordersGateway.listCurrent().catch(() => [] as Order[]),
+        isMotorizado
+          ? Promise.resolve([] as Order[])
+          : ordersGateway.listCurrent().catch(() => [] as Order[]),
         selectedDriverId
-          ? deliveryGateway
-              .getDriverOrdersToday(selectedDriverId)
-              .catch(() => [] as Order[])
+          ? deliveryGateway.getDriverOrdersToday(selectedDriverId)
           : Promise.resolve([] as Order[]),
       ]);
 
@@ -176,7 +192,7 @@ export default function DriverDeliveriesPage() {
         severity: "error",
       });
     }
-  }, [selectedDriverId]);
+  }, [isMotorizado, selectedDriverId]);
 
   useEffect(() => {
     void loadInitialData();
@@ -367,18 +383,17 @@ export default function DriverDeliveriesPage() {
     });
   }, [orders, isMotorizado, selectedDriverUser, username, selectedDriverId]);
 
-  // Filtrado final de órdenes por pestañas (Pendientes / Entregados) y búsqueda por texto
+  const stagedOrders = useMemo(
+    () => driverOrders.filter((order) => getDeliveryStage(order) !== null),
+    [driverOrders],
+  );
+
+  // Filtrado final de órdenes por etapa de entrega y búsqueda por texto
   const filteredOrders = useMemo(() => {
-    return driverOrders.filter((order) => {
-      // Filtro por Pestaña / Estado
-      if (tabFilter === "pending") {
-        if (order.status === "delivered" || order.status === "paid") {
-          return false;
-        }
-      } else if (tabFilter === "delivered") {
-        if (order.status !== "delivered" && order.status !== "paid") {
-          return false;
-        }
+    return stagedOrders.filter((order) => {
+      const stage = getDeliveryStage(order);
+      if (tabFilter !== "all" && stage !== tabFilter) {
+        return false;
       }
 
       // Filtro por Texto de Búsqueda
@@ -415,22 +430,25 @@ export default function DriverDeliveriesPage() {
 
       return true;
     });
-  }, [driverOrders, tabFilter, searchTerm, getCustomerPhone]);
+  }, [stagedOrders, tabFilter, searchTerm, getCustomerPhone]);
 
   // Cálculos de liquidación del motorizado
   const completedOrders = useMemo(
-    () =>
-      driverOrders.filter(
-        (o) => o.status === "delivered" || o.status === "paid",
-      ),
-    [driverOrders],
+    () => stagedOrders.filter((order) => getDeliveryStage(order) === "delivered"),
+    [stagedOrders],
   );
   const pendingOrdersCount = useMemo(
     () =>
-      driverOrders.filter(
-        (o) => o.status !== "delivered" && o.status !== "paid",
+      stagedOrders.filter((order) => getDeliveryStage(order) === "pending")
+        .length,
+    [stagedOrders],
+  );
+  const inTransitOrdersCount = useMemo(
+    () =>
+      stagedOrders.filter(
+        (order) => getDeliveryStage(order) === "in_transit",
       ).length,
-    [driverOrders],
+    [stagedOrders],
   );
   const overdueOrdersCount = useMemo(
     () =>
@@ -552,8 +570,12 @@ export default function DriverDeliveriesPage() {
         <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
           <Chip
             icon={<DirectionsBikeIcon />}
-            label={`${pendingOrdersCount} Por Entregar`}
-            color={pendingOrdersCount > 0 ? "warning" : "default"}
+            label={`${pendingOrdersCount + inTransitOrdersCount} Por Entregar`}
+            color={
+              pendingOrdersCount + inTransitOrdersCount > 0
+                ? "warning"
+                : "default"
+            }
             sx={{ fontWeight: "bold" }}
           />
           {overdueOrdersCount > 0 && (
@@ -605,13 +627,18 @@ export default function DriverDeliveriesPage() {
             sx={{ fontWeight: "bold", textTransform: "none", minHeight: 40 }}
           />
           <Tab
+            value="in_transit"
+            label={`En camino (${inTransitOrdersCount})`}
+            sx={{ fontWeight: "bold", textTransform: "none", minHeight: 40 }}
+          />
+          <Tab
             value="delivered"
             label={`Entregados (${completedOrders.length})`}
             sx={{ fontWeight: "bold", textTransform: "none", minHeight: 40 }}
           />
           <Tab
             value="all"
-            label={`Todos (${driverOrders.length})`}
+            label={`Todos (${stagedOrders.length})`}
             sx={{ fontWeight: "bold", textTransform: "none", minHeight: 40 }}
           />
         </Tabs>
@@ -664,8 +691,7 @@ export default function DriverDeliveriesPage() {
           {filteredOrders.map((order) => {
             const customerPhone =
               order.customerPhone || getCustomerPhone(order.customerName);
-            const isCompleted =
-              order.status === "delivered" || order.status === "paid";
+            const isCompleted = order.status === "paid";
             const routeMinutes = order.deliveryStartedAt
               ? Math.max(
                   0,
@@ -677,6 +703,7 @@ export default function DriverDeliveriesPage() {
               : null;
             const isOverdue =
               !isCompleted &&
+              order.status !== "delivered" &&
               routeMinutes !== null &&
               routeMinutes >= serviceSlas.deliveryMaxMinutes;
 
@@ -748,14 +775,24 @@ export default function DriverDeliveriesPage() {
                   </Box>
 
                   <Chip
-                    label={statusLabels[order.status] || order.status}
-                    color={statusColors[order.status] || "default"}
+                    label={
+                      order.status === "delivered"
+                        ? "Pendiente de cobro"
+                        : statusLabels[order.status] || order.status
+                    }
+                    color={
+                      order.status === "delivered"
+                        ? "warning"
+                        : statusColors[order.status] || "default"
+                    }
                     size="small"
                     sx={{ fontWeight: "bold" }}
                   />
                 </Box>
 
-                {routeMinutes !== null && !isCompleted && (
+                {routeMinutes !== null &&
+                  !isCompleted &&
+                  order.status !== "delivered" && (
                   <Alert
                     severity={isOverdue ? "error" : "info"}
                     icon={isOverdue ? <WarningAmberIcon /> : <TwoWheelerIcon />}

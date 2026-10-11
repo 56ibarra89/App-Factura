@@ -31,48 +31,84 @@ export const StatCard: React.FC<StatCardProps> = ({
         bgcolor: "background.default",
         display: "flex",
         flexDirection: "column",
-        p: 2,
+        width: "100%",
+        height: "100%",
+        minHeight: 150,
+        boxSizing: "border-box",
         transition: "transform 0.2s ease-in-out",
         "&:hover": {
           transform: "translateY(-4px)",
         },
       }}
     >
-      <CardContent sx={{ pb: "16px !important" }}>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-          <Box>
+      <CardContent
+        sx={{
+          p: "16px !important",
+          flex: 1,
+          display: "flex",
+          position: "relative",
+        }}
+      >
+        <Box width="100%" minWidth={0}>
             <Typography
               variant="subtitle2"
               color="text.secondary"
               fontWeight={600}
               textTransform="uppercase"
+              sx={{
+                minHeight: 34,
+                fontSize: { lg: "0.72rem", xl: "0.8rem" },
+                lineHeight: 1.35,
+                pr: icon ? 5 : 0,
+              }}
             >
               {title}
             </Typography>
             <Typography
               variant="h4"
               fontWeight={800}
-              sx={{ mt: 1, mb: 0.5, color: color || "text.primary" }}
+              sx={{
+                mt: 1,
+                mb: 0.5,
+                color: color || "text.primary",
+                whiteSpace: "nowrap",
+                fontSize: { lg: "1.55rem", xl: "1.8rem" },
+                letterSpacing: "-0.02em",
+              }}
             >
               {masked ? "********" : value}
             </Typography>
             {subtitle && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  display: "block",
+                  width: "100%",
+                  lineHeight: 1.45,
+                  overflowWrap: "break-word",
+                }}
+              >
                 {subtitle}
               </Typography>
             )}
-          </Box>
           {icon && (
             <Box
               sx={{
-                width: 48,
-                height: 48,
+                position: "absolute",
+                top: 16,
+                right: 16,
+                width: 38,
+                height: 38,
                 borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 background: iconBg || "rgba(211, 47, 47, 0.1)",
                 color: iconColor || color || "#d32f2f",
+                "& .MuiSvgIcon-root": {
+                  fontSize: "1.65rem",
+                },
               }}
             >
               {icon}
