@@ -4,6 +4,7 @@ import type {
 } from "../model/auth-service.types";
 import { ApiClientError, apiClient } from "../../../shared/api";
 import type { UserRole } from "../model/user.types";
+import type { PermissionCode } from "../model/permission.types";
 import { secureTokenGateway } from "./secureTokenGateway";
 
 interface AuthResponse {
@@ -15,6 +16,9 @@ interface AuthResponse {
   lastName: string;
   access_token: string;
   themePreference: string;
+  accessRoleId?: string;
+  accessRoleName?: string;
+  permissions: PermissionCode[];
 }
 
 interface MessageResponse {
@@ -45,7 +49,10 @@ export const authService: IAuthService = {
         firstName: result.firstName,
         lastName: result.lastName,
         access_token: result.access_token,
-        themePreference: result.themePreference
+        themePreference: result.themePreference,
+        accessRoleId: result.accessRoleId,
+        accessRoleName: result.accessRoleName,
+        permissions: result.permissions || [],
       };
     } catch (error: unknown) {
       console.error("Login fallido:", error);

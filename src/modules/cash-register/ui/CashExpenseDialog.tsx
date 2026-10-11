@@ -31,7 +31,7 @@ import {
 import { cashExpenseGateway } from "../api/cashExpenseGateway";
 import CashExpenseVoucherPrint from "./CashExpenseVoucherPrint";
 import { usePettyCashPolicy } from "../hooks/usePettyCashPolicy";
-import { PinValidationDialog, useAuth } from "../../auth";
+import { PERMISSIONS, PinValidationDialog, useAuth } from "../../auth";
 import { logService } from "../../audit";
 
 interface CashExpenseDialogProps {
@@ -462,6 +462,7 @@ export default function CashExpenseDialog({
         onClose={() => setPinDialogOpen(false)}
         onSuccess={handlePinSuccess}
         title="Autorizar Salida de Efectivo"
+        requiredPermission={PERMISSIONS.CASH_EXPENSES_AUTHORIZE}
       />
 
       {/* Comprobante Térmico Oculto para Impresión */}

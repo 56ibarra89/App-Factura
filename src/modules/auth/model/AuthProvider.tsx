@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, type ReactNode } from "react";
 import { useAuthOperations } from "../hooks/useAuthOperations";
 import { useAuthSession } from "../hooks/useAuthSession";
 import { useInactivityTimer } from "../hooks/useInactivityTimer";
@@ -14,6 +14,8 @@ import { authService as defaultAuthService } from "../api/authService";
 import type { IAuthService } from "./auth-service.types";
 import { AuthContext } from "./AuthContext";
 import { accessTokenStore } from "../../../shared/api/accessTokenStore";
+import { apiClient } from "../../../shared/api";
+import type { PermissionCode } from "./permission.types";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -43,6 +45,15 @@ export const AuthProvider = ({
   });
   const isLoggedIn = session.state.isLoggedIn;
   const signOut = session.signOut;
+  const updateAuthorization = session.updateAuthorization;
+
+  const hasPermission = useCallback(
+    (...required: PermissionCode[]) =>
+      required.every((permission) =>
+        session.state.permissions.includes(permission),
+      ),
+    [session.state.permissions],
+  );
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -58,6 +69,17 @@ export const AuthProvider = ({
     if (!token) signOut();
   }, [isLoggedIn, signOut]);
 
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    void apiClient("/access-control/me")
+      .then((authorization) => {
+        updateAuthorization(authorization);
+      })
+      .catch((error: unknown) => {
+        console.warn("No se pudieron actualizar los permisos de la sesión.", error);
+      });
+  }, [isLoggedIn, updateAuthorization]);
+
   useInactivityTimer(
     {
       isLoggedIn: session.state.isLoggedIn,
@@ -72,6 +94,7 @@ export const AuthProvider = ({
     <AuthContext.Provider
       value={{
         ...session.state,
+        hasPermission,
         loading: authentication.loading,
         error: authentication.error,
         login: authentication.login,

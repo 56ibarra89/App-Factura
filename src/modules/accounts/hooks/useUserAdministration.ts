@@ -28,6 +28,7 @@ export function useUserAdministration(
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
+          accessRoleId: user.accessRoleId,
           isActive: user.isActive,
           workDays: user.workDays,
         };

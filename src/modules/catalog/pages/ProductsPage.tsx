@@ -16,7 +16,7 @@ import ComboFormDialog from "../ui/admin/ComboFormDialog";
 import CategoryManagerDialog from "../ui/admin/CategoryManagerDialog";
 import { DeliveryPricesDialog } from "../../delivery";
 import PackagingSizesDialog from "../ui/admin/PackagingSizesDialog";
-import { RoleGuard, useAuth } from "../../auth";
+import { PERMISSIONS, PermissionGuard, useAuth } from "../../auth";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { logService } from "../../audit";
 import { LOGIN_COLORS } from "../../../shared/theme";
@@ -101,11 +101,11 @@ const ProductsPage = () => {
         message: `"${deleteConfirm.name}" eliminado correctamente`,
         severity: "success",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al eliminar:", error);
       setSnackbar({
         open: true,
-        message: error?.message || "Error al eliminar el producto",
+        message: error instanceof Error ? error.message : "Error al eliminar el producto",
         severity: "error",
       });
     } finally {
@@ -135,11 +135,11 @@ const ProductsPage = () => {
       setShowForm(false);
       setShowComboForm(false);
       setEditing(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al guardar producto/combo:", error);
       setSnackbar({
         open: true,
-        message: error?.message || "Error al guardar el producto o combo",
+        message: error instanceof Error ? error.message : "Error al guardar el producto o combo",
         severity: "error",
       });
     }
@@ -158,7 +158,7 @@ const ProductsPage = () => {
         title="Inventario de Productos"
         startContent={<BackButton to="/home" />}
         actions={
-          <RoleGuard allowedRoles={["admin"]}>
+          <PermissionGuard permissions={[PERMISSIONS.PRODUCTS_MANAGE]}>
             <Stack direction="row" spacing={2}>
               <Button
                 variant="outlined"
@@ -245,7 +245,7 @@ const ProductsPage = () => {
                 Agregar Producto
               </Button>
             </Stack>
-          </RoleGuard>
+          </PermissionGuard>
         }
       />
 

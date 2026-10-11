@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type { UserRole } from "./user.types";
 import type { LogoutResult } from "./auth-service.types";
+import type { PermissionCode } from "./permission.types";
 
 export interface AuthContextValue {
   isLoggedIn: boolean;
@@ -9,6 +10,10 @@ export interface AuthContextValue {
   email: string;
   firstName: string;
   lastName: string;
+  accessRoleId?: string;
+  accessRoleName?: string;
+  permissions: PermissionCode[];
+  hasPermission(...required: PermissionCode[]): boolean;
   loading: boolean;
   error: string;
   login(
@@ -22,6 +27,7 @@ export interface AuthContextValue {
   clearError(): void;
   validatePinForAction(
     pin: string,
+    requiredPermission?: PermissionCode,
   ): Promise<{ success: boolean; error?: string }>;
   lockoutTime: number;
   loginLockoutTime: number;

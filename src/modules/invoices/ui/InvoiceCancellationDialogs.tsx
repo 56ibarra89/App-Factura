@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { PinValidationDialog } from "../../auth";
+import { PERMISSIONS, PinValidationDialog } from "../../auth";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import type { CancellationReasonPolicy } from "../../settings/model/voidWastePolicy.types";
 
@@ -108,6 +108,7 @@ export function InvoiceCancellationDialogs({
         onClose={onClosePin}
         onSuccess={onConfirm}
         title="Anular Factura"
+        requiredPermission={PERMISSIONS.ORDERS_CANCEL_AUTHORIZE}
       />
     </>
   );

@@ -8,12 +8,13 @@ import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import BadgeIcon from "@mui/icons-material/Badge";
 import CasinoIcon from "@mui/icons-material/Casino";
 import {
+  PERMISSIONS,
   ROLE_LABELS,
   useAuth,
-  type UserRole,
 } from "../../../auth";
 import type { UserAccount } from "../../model/account.types";
 import { LOGIN_COLORS } from "../../../../shared/theme";
+import { accessControlGateway, type AccessRole } from "../../../access-control";
 
 interface UserFormProps {
   user: UserAccount | null;
@@ -28,14 +29,44 @@ const DEFAULT_USER: Partial<UserAccount> = {
 };
 
 export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: UserFormProps) {
-  const { role: currentRole } = useAuth();
+  const { hasPermission } = useAuth();
+  const canManageUsers = hasPermission(PERMISSIONS.USERS_MANAGE);
   const [formData, setFormData] = useState<Partial<UserAccount>>(DEFAULT_USER);
+  const [accessRoles, setAccessRoles] = useState<AccessRole[]>([]);
   const isEditing = !!user;
 
   useEffect(() => {
     if (user) setFormData(user);
     else setFormData(DEFAULT_USER);
   }, [user]);
+
+  useEffect(() => {
+    let active = true;
+    void accessControlGateway.listRoles()
+      .then((roles) => {
+        if (active) setAccessRoles(roles.filter((role) => role.isActive));
+      })
+      .catch((error: unknown) => {
+        console.warn("No se pudieron cargar los roles configurables.", error);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (accessRoles.length === 0 || formData.accessRoleId) return;
+    const matchingRole = accessRoles.find(
+      (accessRole) => accessRole.baseRole === (formData.role || "cajero"),
+    );
+    if (!matchingRole) return;
+    setFormData((current) => ({
+      ...current,
+      accessRoleId: matchingRole.id,
+      accessRoleName: matchingRole.name,
+      role: matchingRole.baseRole,
+    }));
+  }, [accessRoles, formData.accessRoleId, formData.role]);
 
   const handleChange = (field: keyof UserAccount, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -44,6 +75,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.username || !formData.firstName) return;
+    if (!formData.accessRoleId) return;
     if (!isEditing && !formData.pin) return;
     if (formData.pin && !/^\d{6}$/.test(formData.pin)) return;
     if (hasPasswordInput && !isPasswordValid) return;
@@ -135,7 +167,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
             <TextField id="user-lastname" fullWidth size="small" label="Apellido(s)" value={formData.lastName || ""} onChange={e => handleChange("lastName", e.target.value)} variant="filled" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField id="user-username" fullWidth size="small" label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing && currentRole !== "admin"} required variant="filled" helperText={isEditing && currentRole !== "admin" ? "Solo administradores pueden editar el nombre de usuario." : "Usado para iniciar sesión."} />
+            <TextField id="user-username" fullWidth size="small" label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing && !canManageUsers} required variant="filled" helperText={isEditing && !canManageUsers ? "No tienes permiso para editar el nombre de usuario." : "Usado para iniciar sesión."} />
           </Grid>
           {formData.role === "admin" && (
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -143,9 +175,32 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
             </Grid>
           )}
           <Grid size={{ xs: 12, sm: 12 }}>
-            <TextField id="user-role" fullWidth size="small" select label="Rol en la Empresa" value={formData.role || "cajero"} onChange={e => handleChange("role", e.target.value)} variant="filled" SelectProps={{ native: true }}>
-              {(Object.keys(ROLE_LABELS) as UserRole[]).map(role => (
-                <option key={role} value={role}>{ROLE_LABELS[role]}</option>
+            <TextField
+              id="user-role"
+              fullWidth
+              size="small"
+              select
+              label="Rol y permisos"
+              value={formData.accessRoleId || ""}
+              onChange={(event) => {
+                const selected = accessRoles.find((role) => role.id === event.target.value);
+                if (!selected) return;
+                setFormData((current) => ({
+                  ...current,
+                  accessRoleId: selected.id,
+                  accessRoleName: selected.name,
+                  role: selected.baseRole,
+                }));
+              }}
+              variant="filled"
+              SelectProps={{ native: true }}
+              helperText="Los permisos se administran desde Administración → Roles y permisos."
+            >
+              <option value="" disabled>Selecciona un rol</option>
+              {accessRoles.map((accessRole) => (
+                <option key={accessRole.id} value={accessRole.id}>
+                  {accessRole.name} ({ROLE_LABELS[accessRole.baseRole]})
+                </option>
               ))}
             </TextField>
           </Grid>

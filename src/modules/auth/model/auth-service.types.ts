@@ -1,4 +1,5 @@
 import type { UserRole } from "./user.types";
+import type { PermissionCode } from "./permission.types";
 
 export interface AuthLoginResult {
   success: boolean;
@@ -10,6 +11,9 @@ export interface AuthLoginResult {
   access_token?: string;
   themePreference?: string;
   errorMessage?: string;
+  accessRoleId?: string;
+  accessRoleName?: string;
+  permissions?: PermissionCode[];
 }
 
 export interface LogoutResult {
@@ -25,6 +29,9 @@ export interface AuthPinLoginSuccess {
   lastName: string;
   access_token: string;
   themePreference: string;
+  accessRoleId?: string;
+  accessRoleName?: string;
+  permissions: PermissionCode[];
 }
 
 export interface AuthPinLoginFailure {

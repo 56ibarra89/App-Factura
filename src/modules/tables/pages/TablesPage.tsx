@@ -19,7 +19,7 @@ import {
 import { useTaxConfig } from "../../settings";
 import { useMesasConfig } from "../hooks/useMesasConfig";
 import { useMyTodayZone } from "../hooks/useMyTodayZone";
-import { useAuth } from "../../auth";
+import { PERMISSIONS, useAuth } from "../../auth";
 
 import { useMesaDialogs } from "../hooks/useMesaDialogs";
 import { useMesaCheckout } from "../hooks/useMesaCheckout";
@@ -29,7 +29,7 @@ import type { Order, OrderItem } from "../../orders";
 export default function TablesPage() {
   const { floorsConfig, isLoading: isLoadingConfig, error, retryFetch } = useMesasConfig();
   const { assignedFloorId, loadingZone, zoneError, retryZone } = useMyTodayZone();
-  const { username, role } = useAuth();
+  const { username, role, hasPermission } = useAuth();
   const { taxes, isExonerated } = useTaxConfig();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -157,7 +157,7 @@ export default function TablesPage() {
   if (!hasConfiguredTables) {
     return (
       <MesasSetupRequired
-        canConfigure={role === "admin"}
+        canConfigure={hasPermission(PERMISSIONS.TABLES_CONFIGURE)}
         onBack={handleSalir}
         onConfigure={handleConfigureTables}
       />
@@ -171,7 +171,7 @@ export default function TablesPage() {
   if (logic.activeFloors.length === 0) {
     return (
       <MesasSetupRequired
-        canConfigure={role === "admin"}
+        canConfigure={hasPermission(PERMISSIONS.TABLES_CONFIGURE)}
         assignedZoneWithoutTables
         onBack={handleSalir}
         onConfigure={handleConfigureTables}

@@ -7,6 +7,10 @@ import type { LoginLockoutState } from "./useLoginLockout";
 import type { PinLockoutState } from "./usePinLockout";
 import type { AuthSessionController } from "./useAuthSession";
 import type { LogoutResult } from "../model/auth-service.types";
+import {
+  PERMISSIONS,
+  type PermissionCode,
+} from "../model/permission.types";
 
 export interface PinValidationResult {
   success: boolean;
@@ -131,6 +135,9 @@ export function useAuthOperations({
             email: result.email || "",
             firstName: result.firstName || "",
             lastName: result.lastName || "",
+            accessRoleId: result.accessRoleId,
+            accessRoleName: result.accessRoleName,
+            permissions: result.permissions || [],
           });
 
           logService.log(
@@ -202,6 +209,9 @@ export function useAuthOperations({
             email: "",
             firstName: result.firstName,
             lastName: result.lastName,
+            accessRoleId: result.accessRoleId,
+            accessRoleName: result.accessRoleName,
+            permissions: result.permissions || [],
           });
 
           logService.log(
@@ -241,7 +251,10 @@ export function useAuthOperations({
   );
 
   const validatePinForAction = useCallback(
-    async (pin: string): Promise<PinValidationResult> => {
+    async (
+      pin: string,
+      requiredPermission: PermissionCode = PERMISSIONS.AUTHORIZATIONS_APPROVE,
+    ): Promise<PinValidationResult> => {
       if (isPinLocked) {
         return {
           success: false,
@@ -253,7 +266,7 @@ export function useAuthOperations({
         const result = await service.loginWithPin(pin);
         if (
           result.success &&
-          (result.role === "admin" || result.username === "admin")
+          result.permissions.includes(requiredPermission)
         ) {
           resetPinAttempts();
           return { success: true };
@@ -270,7 +283,7 @@ export function useAuthOperations({
         return {
           success: false,
           error: result.success
-            ? "Este usuario no tiene permisos de administrador."
+            ? "Este usuario no tiene permiso para autorizar esta acción."
             : result.errorMessage || "No fue posible validar el PIN.",
         };
       } catch {

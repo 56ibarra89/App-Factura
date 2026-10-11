@@ -7,6 +7,7 @@ import { useInvoiceHistory } from "../hooks/useInvoiceHistory";
 import InvoiceFilters from "../ui/InvoiceFilters";
 import InvoiceTable from "../ui/InvoiceTable";
 import {
+  PERMISSIONS,
   PinValidationDialog,
   useAuth,
 } from "../../auth";
@@ -150,6 +151,7 @@ const InvoicesPage = ({
         }}
         onSuccess={handlePinSuccess}
         title="Autorización de Reimpresión"
+        requiredPermission={PERMISSIONS.AUTHORIZATIONS_APPROVE}
       />
     </Box>
   );

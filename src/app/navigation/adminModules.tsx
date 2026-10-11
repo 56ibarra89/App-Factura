@@ -19,6 +19,8 @@ import SpeedIcon from "@mui/icons-material/Speed";
 import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import TuneIcon from "@mui/icons-material/Tune";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import { PERMISSIONS, type PermissionCode } from "../../modules/auth";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -32,6 +34,7 @@ export interface AdminModuleItem {
   action?: () => void;
   actionId?: string;
   disabled?: boolean;
+  permission: PermissionCode;
 }
 
 export const adminModules: AdminModuleItem[] = [
@@ -43,6 +46,7 @@ export const adminModules: AdminModuleItem[] = [
       "Personaliza el logotipo, nombre de negocio, dirección, teléfono y pie de página de los tickets.",
     icon: <BusinessIcon fontSize="large" />,
     path: "/admin/empresa",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
   },
   {
     id: "configuracion",
@@ -52,6 +56,7 @@ export const adminModules: AdminModuleItem[] = [
       "Ajusta las preferencias del sistema, moneda local y comportamiento en la apertura de caja.",
     icon: <SettingsIcon fontSize="large" />,
     path: "/admin/configuracion",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
   },
   {
     id: "impuestos",
@@ -61,6 +66,7 @@ export const adminModules: AdminModuleItem[] = [
       "Gestiona múltiples tasas impositivas y reglas especiales aisladas de la configuración habitual.",
     icon: <PercentIcon fontSize="large" />,
     path: "/admin/impuestos",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
   },
   {
     id: "metodos-pago",
@@ -70,6 +76,7 @@ export const adminModules: AdminModuleItem[] = [
       "Configura cuentas, terminales POS, referencias obligatorias y comisiones bancarias.",
     icon: <AccountBalanceIcon fontSize="large" />,
     path: "/admin/metodos-pago",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
   },
 
   {
@@ -80,6 +87,7 @@ export const adminModules: AdminModuleItem[] = [
       "Gestiona los días de trabajo de cada empleado. Útil para habilitar la lista de motorizados por día.",
     icon: <CalendarMonthIcon fontSize="large" />,
     path: "/admin/horarios",
+    permission: PERMISSIONS.USERS_MANAGE,
   },
   {
     id: "zonas-meseros",
@@ -89,15 +97,27 @@ export const adminModules: AdminModuleItem[] = [
       "Asigna en qué planta o área trabajará cada mesero dependiendo del día de la semana.",
     icon: <LocationOnIcon fontSize="large" />,
     path: "/admin/zonas-meseros",
+    permission: PERMISSIONS.TABLES_ASSIGN_ZONES,
   },
   {
     id: "usuarios",
     category: "Operativa",
-    title: "Usuarios y Roles",
+    title: "Usuarios",
     description:
-      "Administra el acceso al sistema, crea empleados y asigna permisos específicos por rol.",
+      "Crea empleados, actualiza sus datos y asigna a cada cuenta un rol de acceso.",
     icon: <PeopleIcon fontSize="large" />,
     path: "/admin/cuentas",
+    permission: PERMISSIONS.USERS_MANAGE,
+  },
+  {
+    id: "roles-permisos",
+    category: "Operativa",
+    title: "Roles y Permisos",
+    description:
+      "Crea roles personalizados y define qué módulos y acciones puede utilizar cada uno.",
+    icon: <ManageAccountsIcon fontSize="large" />,
+    path: "/admin/roles-permisos",
+    permission: PERMISSIONS.ROLES_READ,
   },
   {
     id: "clientes",
@@ -107,6 +127,7 @@ export const adminModules: AdminModuleItem[] = [
       "Consulta, crea, edita y elimina la información de tus clientes: nombre, teléfono y direcciones.",
     icon: <PeopleAltIcon fontSize="large" />,
     path: "/admin/clientes",
+    permission: PERMISSIONS.CUSTOMERS_MANAGE,
   },
   {
     id: "promociones",
@@ -116,6 +137,7 @@ export const adminModules: AdminModuleItem[] = [
       "Configura reglas automáticas de descuento, horas felices (Happy Hour) o cupones manuales.",
     icon: <LocalOfferIcon fontSize="large" />,
     path: "/admin/promociones",
+    permission: PERMISSIONS.PROMOTIONS_MANAGE,
   },
   {
     id: "turnos",
@@ -125,6 +147,7 @@ export const adminModules: AdminModuleItem[] = [
       "Define perfiles de turnos laborales y fija los montos de apertura en efectivo predeterminados.",
     icon: <AccessTimeIcon fontSize="large" />,
     path: "/admin/cajas",
+    permission: PERMISSIONS.CASH_CONFIGURE,
   },
   {
     id: "mesas",
@@ -134,6 +157,7 @@ export const adminModules: AdminModuleItem[] = [
       "Edita visualmente el diseño del restaurante, acomodando identificadores y salas libremente.",
     icon: <DashboardCustomizeIcon fontSize="large" />,
     path: "/admin/mesas",
+    permission: PERMISSIONS.TABLES_CONFIGURE,
   },
   {
     id: "cocinas",
@@ -143,6 +167,7 @@ export const adminModules: AdminModuleItem[] = [
       "Crea y administra diferentes áreas de preparación (Cocina Principal, Bar, etc.) para enrutar los tickets correctamente.",
     icon: <SoupKitchenIcon fontSize="large" />,
     path: "/admin/cocinas",
+    permission: PERMISSIONS.KITCHEN_CONFIGURE,
   },
   {
     id: "tarifas-delivery",
@@ -152,6 +177,7 @@ export const adminModules: AdminModuleItem[] = [
       "Configura las tarifas y precios rápidos de envío a domicilio para los repartidores.",
     icon: <TwoWheelerIcon fontSize="large" />,
     actionId: "OPEN_DELIVERY_PRICES",
+    permission: PERMISSIONS.DELIVERY_MANAGE,
   },
   {
     id: "politicas-gastos",
@@ -161,6 +187,7 @@ export const adminModules: AdminModuleItem[] = [
       "Establece topes máximos de egreso, comprobantes obligatorios y requerimiento de PIN supervisor.",
     icon: <AccountBalanceWalletIcon fontSize="large" />,
     path: "/admin/politicas-gastos",
+    permission: PERMISSIONS.CASH_CONFIGURE,
   },
   {
     id: "tiempos-servicio",
@@ -170,6 +197,7 @@ export const adminModules: AdminModuleItem[] = [
       "Configura el semáforo del KDS, el límite de delivery y consulta métricas de cumplimiento.",
     icon: <SpeedIcon fontSize="large" />,
     path: "/admin/tiempos-servicio",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
   },
   {
     id: "politicas-anulacion",
@@ -179,6 +207,7 @@ export const adminModules: AdminModuleItem[] = [
       "Define motivos oficiales, reglas de PIN supervisor y consulta las pérdidas operativas.",
     icon: <ReportProblemIcon fontSize="large" />,
     path: "/admin/politicas-anulacion",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
   },
   {
     id: "modificadores-cocina",
@@ -188,6 +217,7 @@ export const adminModules: AdminModuleItem[] = [
       "Crea instrucciones rápidas, asígnalas por categoría y estandariza su lectura en KDS y comandas.",
     icon: <TuneIcon fontSize="large" />,
     path: "/admin/modificadores-cocina",
+    permission: PERMISSIONS.KITCHEN_CONFIGURE,
   },
 
   {
@@ -198,6 +228,7 @@ export const adminModules: AdminModuleItem[] = [
       "Administra impresoras térmicas (Múltiples) y gavetas de dinero conectadas al sistema.",
     icon: <PrintIcon fontSize="large" />,
     path: "/admin/perifericos",
+    permission: PERMISSIONS.DEVICES_MANAGE,
   },
   {
     id: "auditoria",
@@ -207,6 +238,7 @@ export const adminModules: AdminModuleItem[] = [
       "Revisa el registro de auditoría de arqueos, cancelaciones de factura y movimientos sensibles.",
     icon: <SecurityIcon fontSize="large" />,
     path: "/admin/bitacora",
+    permission: PERMISSIONS.AUDIT_READ,
   },
   {
     id: "facturacion_electronica",
@@ -216,6 +248,7 @@ export const adminModules: AdminModuleItem[] = [
       "Gestiona los números de comprobante, rangos de folio autorizados y secuencias de facturación.",
     icon: <ReceiptLongIcon fontSize="large" />,
     path: "/admin/correlativos",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
   },
   {
     id: "respaldos",
@@ -225,5 +258,10 @@ export const adminModules: AdminModuleItem[] = [
       "Exporta la configuración, menú e histórico. Crea y restaura copias de seguridad totales.",
     icon: <SaveIcon fontSize="large" />,
     path: "/admin/respaldos",
+    permission: PERMISSIONS.BACKUPS_MANAGE,
   },
+];
+
+export const ADMIN_PANEL_PERMISSIONS = [
+  ...new Set(adminModules.map((module) => module.permission)),
 ];

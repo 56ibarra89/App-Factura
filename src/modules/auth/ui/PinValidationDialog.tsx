@@ -10,19 +10,25 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { useAuth } from "../model/AuthContext";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import { logService } from "../../audit";
+import {
+  PERMISSIONS,
+  type PermissionCode,
+} from "../model/permission.types";
 
 interface PinValidationDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: (pin?: string) => void;
   title?: string;
+  requiredPermission?: PermissionCode;
 }
 
 const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
   open,
   onClose,
   onSuccess,
-  title = "Autorización Requerida"
+  title = "Autorización Requerida",
+  requiredPermission = PERMISSIONS.AUTHORIZATIONS_APPROVE,
 }) => {
   const { validatePinForAction, lockoutTime, username, role } = useAuth();
   const [pin, setPin] = useState("");
@@ -39,7 +45,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
     setError("");
 
     try {
-      const result = await validatePinForAction(pin);
+      const result = await validatePinForAction(pin, requiredPermission);
 
       if (result.success) {
         const validPin = pin;
@@ -77,7 +83,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
       </DialogTitle>
       <DialogContent>
         <Typography variant="body2" color="text.secondary" mb={3} mt={1}>
-          Ingresa el PIN de administrador para continuar.
+          Ingresa el PIN de un usuario autorizado para continuar.
         </Typography>
 
         <Box display="flex" flexDirection="column" gap={2}>

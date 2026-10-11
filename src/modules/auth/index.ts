@@ -5,6 +5,7 @@ export {
   useAuth,
 } from "./model/AuthContext";
 export { ROLE_LABELS } from "./model/user.types";
+export { PERMISSIONS } from "./model/permission.types";
 export type {
   AuthContextValue,
 } from "./model/AuthContext";
@@ -17,7 +18,9 @@ export type {
 export type {
   UserRole,
 } from "./model/user.types";
+export type { PermissionCode } from "./model/permission.types";
 export { AuthLayout } from "./ui/AuthLayout";
 export { BrandingPanel } from "./ui/BrandingPanel";
 export { default as PinValidationDialog } from "./ui/PinValidationDialog";
 export { default as RoleGuard } from "./ui/RoleGuard";
+export { default as PermissionGuard } from "./ui/PermissionGuard";

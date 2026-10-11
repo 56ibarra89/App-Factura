@@ -15,13 +15,18 @@ import {
   type AdminCategory,
 } from "../navigation/adminModules";
 import { DeliveryPricesDialog } from "../../modules/delivery";
+import { useAuth } from "../../modules/auth";
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
   const [openDeliveryDialog, setOpenDeliveryDialog] = useState(false);
+  const { hasPermission } = useAuth();
 
   const renderCategory = (categoryName: AdminCategory) => {
-    const modules = adminModules.filter((m) => m.category === categoryName);
+    const modules = adminModules.filter(
+      (module) =>
+        module.category === categoryName && hasPermission(module.permission),
+    );
     if (modules.length === 0) return null;
 
     return (

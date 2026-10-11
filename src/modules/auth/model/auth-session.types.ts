@@ -1,4 +1,5 @@
 import type { UserRole } from "./user.types";
+import type { PermissionCode } from "./permission.types";
 
 export interface AuthenticatedUser {
   username: string;
@@ -6,6 +7,9 @@ export interface AuthenticatedUser {
   email: string;
   firstName: string;
   lastName: string;
+  accessRoleId?: string;
+  accessRoleName?: string;
+  permissions: PermissionCode[];
 }
 
 export interface AuthSessionState {
@@ -15,6 +19,9 @@ export interface AuthSessionState {
   email: string;
   firstName: string;
   lastName: string;
+  accessRoleId?: string;
+  accessRoleName?: string;
+  permissions: PermissionCode[];
 }
 
 export const EMPTY_AUTH_SESSION: AuthSessionState = {
@@ -24,4 +31,7 @@ export const EMPTY_AUTH_SESSION: AuthSessionState = {
   email: "",
   firstName: "",
   lastName: "",
+  accessRoleId: undefined,
+  accessRoleName: undefined,
+  permissions: [],
 };

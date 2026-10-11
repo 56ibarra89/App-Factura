@@ -18,6 +18,7 @@ export type UserMutationPayload = Partial<
     | "pin"
     | "password"
     | "role"
+    | "accessRoleId"
     | "isActive"
     | "workDays"
     | "themePreference"
@@ -27,6 +28,7 @@ export type UserMutationPayload = Partial<
 
 export interface UserDirectoryGateway {
   list(): Promise<UserProfile[]>;
+  listDirectory?(): Promise<UserProfile[]>;
 }
 
 export interface UserAdministrationGateway {
@@ -53,6 +55,7 @@ type UsersHttpAdapter = UserDirectoryGateway &
 
 export const usersGateway: UsersHttpAdapter = {
   list: () => apiClient("/users"),
+  listDirectory: () => apiClient("/users/directory"),
   findByUsername: (username) =>
     apiClient(`/users/username/${encodeURIComponent(username)}`),
 

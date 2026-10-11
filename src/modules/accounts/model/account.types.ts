@@ -11,6 +11,8 @@ export interface UserAccount {
   password?: string;
   currentPassword?: string;
   role: UserRole;
+  accessRoleId?: string;
+  accessRoleName?: string;
   isActive: boolean;
   createdAt: string;
   lastVisit?: string;

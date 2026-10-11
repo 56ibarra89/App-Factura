@@ -34,7 +34,7 @@ export const CajaProvider = ({
   repository = defaultShiftRepository,
   expenseGateway = defaultExpenseGateway,
 }: CajaProviderProps) => {
-  const { username, role } = useAuth();
+  const { username, hasPermission } = useAuth();
   const { orders } = useOrderQueries();
 
   const [currentShift, setCurrentShift] = useState<Shift | null>(null);
@@ -65,7 +65,7 @@ export const CajaProvider = ({
 
   useEffect(() => {
     let isMounted = true;
-    if (username && role !== "motorizado") {
+    if (username && hasPermission("cash.status")) {
       repository
         .getActiveShift()
         .then((shift) => {
@@ -84,7 +84,7 @@ export const CajaProvider = ({
     return () => {
       isMounted = false;
     };
-  }, [username, repository, role]);
+  }, [hasPermission, username, repository]);
 
   useEffect(() => {
     if (currentShift?.id) {

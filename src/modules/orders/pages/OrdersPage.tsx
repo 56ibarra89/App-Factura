@@ -14,7 +14,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 import OrderGrid from "../ui/OrderGrid";
 import OrderEmptyState from "../ui/OrderEmptyState";
-import { RoleGuard, useAuth } from "../../auth";
+import { PERMISSIONS, PermissionGuard, useAuth } from "../../auth";
 
 import { useOrderManagement } from "../hooks/useOrderManagement";
 import { useAccessibleKitchens } from "../../kitchens";
@@ -225,7 +225,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
                   {visibleActiveOrders.length} activas
                 </Typography>
               </Stack>
-              <RoleGuard allowedRoles={["admin"]}>
+              <PermissionGuard permissions={[PERMISSIONS.ORDERS_MANAGE]}>
                 <Button
                   variant="outlined"
                   size="small"
@@ -245,7 +245,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
                 >
                   Limpiar Historial
                 </Button>
-              </RoleGuard>
+              </PermissionGuard>
             </Stack>
           ) : undefined
         }

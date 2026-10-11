@@ -25,7 +25,7 @@ export function UserDirectoryProvider({
   children,
   gateway = usersGateway,
 }: UserDirectoryProviderProps) {
-  const { isLoggedIn, role } = useAuth();
+  const { isLoggedIn, hasPermission } = useAuth();
   const [users, setUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,11 @@ export function UserDirectoryProvider({
     setLoading(true);
     setError(null);
     try {
-      setUsers(await gateway.list());
+      setUsers(
+        await (hasPermission("users.read") || !gateway.listDirectory
+          ? gateway.list()
+          : gateway.listDirectory()),
+      );
     } catch (cause: unknown) {
       const message =
         cause instanceof Error
@@ -45,17 +49,17 @@ export function UserDirectoryProvider({
     } finally {
       setLoading(false);
     }
-  }, [gateway]);
+  }, [gateway, hasPermission]);
 
   useEffect(() => {
-    if (!isLoggedIn || role === "motorizado") {
+    if (!isLoggedIn || !hasPermission("users.directory")) {
       setUsers([]);
       setError(null);
       setLoading(false);
       return;
     }
     void refreshUsers();
-  }, [isLoggedIn, refreshUsers, role]);
+  }, [hasPermission, isLoggedIn, refreshUsers]);
 
   const updateUsers = useCallback(
     (updater: UserDirectoryUpdater) => {

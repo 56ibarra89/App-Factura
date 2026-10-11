@@ -6,12 +6,18 @@ import type {
 import { EMPTY_AUTH_SESSION } from "../model/auth-session.types";
 import type { AuthSessionGateway } from "../api/authSessionGateway";
 import { authSessionGateway, SESSION_KEYS } from "../api/authSessionGateway";
+import type { PermissionCode } from "../model/permission.types";
 
 export interface AuthSessionController {
   state: AuthSessionState;
   signIn(user: AuthenticatedUser): void;
   signOut(): void;
   updateUsername(username: string): void;
+  updateAuthorization(authorization: {
+    accessRoleId?: string;
+    accessRoleName?: string;
+    permissions: PermissionCode[];
+  }): void;
 }
 
 export function useAuthSession(
@@ -48,13 +54,26 @@ export function useAuthSession(
     [gateway],
   );
 
+  const updateAuthorization = useCallback(
+    (authorization: {
+      accessRoleId?: string;
+      accessRoleName?: string;
+      permissions: PermissionCode[];
+    }) => {
+      gateway.updateAuthorization(authorization);
+      setState((current) => ({ ...current, ...authorization }));
+    },
+    [gateway],
+  );
+
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
       if (
         !event.key ||
         event.key === SESSION_KEYS.loggedIn ||
         event.key === SESSION_KEYS.username ||
-        event.key === SESSION_KEYS.role
+        event.key === SESSION_KEYS.role ||
+        event.key === SESSION_KEYS.permissions
       ) {
         setState(gateway.load());
       }
@@ -77,5 +96,6 @@ export function useAuthSession(
     signIn,
     signOut,
     updateUsername,
+    updateAuthorization,
   };
 }

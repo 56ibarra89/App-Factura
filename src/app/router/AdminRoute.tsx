@@ -1,15 +1,26 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../../modules/auth";
+import { useAuth, type PermissionCode } from "../../modules/auth";
 
 interface AdminRouteProps {
   element: JSX.Element;
+  requiredPermissions: PermissionCode[];
+  matchAny?: boolean;
 }
 
-const AdminRoute = ({ element }: AdminRouteProps) => {
-  const { isLoggedIn, role } = useAuth();
+const AdminRoute = ({
+  element,
+  requiredPermissions,
+  matchAny = false,
+}: AdminRouteProps) => {
+  const { isLoggedIn, hasPermission } = useAuth();
 
   if (!isLoggedIn) return <Navigate to="/" replace />;
-  if (role !== "admin") return <Navigate to="/home" replace />;
+  const allowed = matchAny
+    ? requiredPermissions.some((permission) => hasPermission(permission))
+    : hasPermission(...requiredPermissions);
+  if (!allowed) {
+    return <Navigate to="/home" replace />;
+  }
 
   return element;
 };

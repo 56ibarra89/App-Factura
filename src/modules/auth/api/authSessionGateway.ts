@@ -5,6 +5,7 @@ import type {
 import { EMPTY_AUTH_SESSION } from "../model/auth-session.types";
 import type { IKeyValueStorage } from "../../../shared/storage";
 import type { UserRole } from "../model/user.types";
+import type { PermissionCode } from "../model/permission.types";
 import { localStore } from "../../../shared/storage";
 
 export const SESSION_KEYS = {
@@ -15,12 +16,20 @@ export const SESSION_KEYS = {
   firstName: "firstName",
   lastName: "lastName",
   lastActivity: "lastActivity",
+  accessRoleId: "accessRoleId",
+  accessRoleName: "accessRoleName",
+  permissions: "permissions",
 } as const;
 
 export interface AuthSessionGateway {
   load(): AuthSessionState;
   save(user: AuthenticatedUser): void;
   updateUsername(username: string): void;
+  updateAuthorization(authorization: {
+    accessRoleId?: string;
+    accessRoleName?: string;
+    permissions: PermissionCode[];
+  }): void;
   clear(): void;
   getLastActivity(): number | null;
   touch(): void;
@@ -35,6 +44,16 @@ export function createAuthSessionGateway(
         return EMPTY_AUTH_SESSION;
       }
 
+      let permissions: PermissionCode[] = [];
+      try {
+        const stored = JSON.parse(
+          storage.getItem(SESSION_KEYS.permissions) || "[]",
+        );
+        if (Array.isArray(stored)) permissions = stored;
+      } catch {
+        permissions = [];
+      }
+
       return {
         isLoggedIn: true,
         username:
@@ -47,6 +66,11 @@ export function createAuthSessionGateway(
           storage.getItem(SESSION_KEYS.firstName) || "",
         lastName:
           storage.getItem(SESSION_KEYS.lastName) || "",
+        accessRoleId:
+          storage.getItem(SESSION_KEYS.accessRoleId) || undefined,
+        accessRoleName:
+          storage.getItem(SESSION_KEYS.accessRoleName) || undefined,
+        permissions,
       };
     },
 
@@ -60,6 +84,16 @@ export function createAuthSessionGateway(
         user.firstName,
       );
       storage.setItem(SESSION_KEYS.lastName, user.lastName);
+      if (user.accessRoleId) {
+        storage.setItem(SESSION_KEYS.accessRoleId, user.accessRoleId);
+      }
+      if (user.accessRoleName) {
+        storage.setItem(SESSION_KEYS.accessRoleName, user.accessRoleName);
+      }
+      storage.setItem(
+        SESSION_KEYS.permissions,
+        JSON.stringify(user.permissions),
+      );
       storage.setItem(
         SESSION_KEYS.lastActivity,
         Date.now().toString(),
@@ -68,6 +102,23 @@ export function createAuthSessionGateway(
 
     updateUsername(username) {
       storage.setItem(SESSION_KEYS.username, username);
+    },
+
+    updateAuthorization(authorization) {
+      if (authorization.accessRoleId) {
+        storage.setItem(SESSION_KEYS.accessRoleId, authorization.accessRoleId);
+      } else {
+        storage.removeItem(SESSION_KEYS.accessRoleId);
+      }
+      if (authorization.accessRoleName) {
+        storage.setItem(SESSION_KEYS.accessRoleName, authorization.accessRoleName);
+      } else {
+        storage.removeItem(SESSION_KEYS.accessRoleName);
+      }
+      storage.setItem(
+        SESSION_KEYS.permissions,
+        JSON.stringify(authorization.permissions),
+      );
     },
 
     clear() {

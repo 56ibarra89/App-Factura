@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuditLogPage } from "../../modules/audit";
-import { PinValidationDialog } from "../../modules/auth";
+import { PERMISSIONS, PinValidationDialog } from "../../modules/auth";
 
 export default function AuditLogRoutePage() {
   const navigate = useNavigate();
@@ -14,7 +14,8 @@ export default function AuditLogRoutePage() {
         open={!authorized}
         onClose={() => navigate("/admin")}
         onSuccess={() => setAuthorized(true)}
-        title="Acceso a Bitácora (Admin)"
+        title="Acceso protegido a Bitácora"
+        requiredPermission={PERMISSIONS.AUDIT_READ}
       />
     </>
   );

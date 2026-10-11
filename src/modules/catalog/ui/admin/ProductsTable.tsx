@@ -4,7 +4,7 @@ import { Paper, IconButton, Typography, Box, Chip } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { Category, Product } from "../../model/catalog.types";
-import { RoleGuard } from "../../../auth";
+import { PERMISSIONS, PermissionGuard } from "../../../auth";
 import { LOGIN_COLORS } from "../../../../shared/theme";
 import React from 'react';
 
@@ -76,7 +76,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
       width: 150,
       renderCell: (params) => (
         <>
-        <RoleGuard allowedRoles={["admin"]}>
+        <PermissionGuard permissions={[PERMISSIONS.PRODUCTS_MANAGE]}>
           <IconButton
             color="primary"
             onClick={(e) => {
@@ -96,7 +96,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
           >
             <DeleteIcon />
           </IconButton>
-        </RoleGuard>
+        </PermissionGuard>
         </>
       ),
     },

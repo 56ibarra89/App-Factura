@@ -5,6 +5,8 @@ import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
 import Login from "../../modules/auth/pages/LoginPage";
 import { CajaProvider } from "../../modules/cash-register";
+import { PERMISSIONS } from "../../modules/auth";
+import { ADMIN_PANEL_PERMISSIONS } from "../navigation/adminModules";
 
 const Home = lazy(() => import("../pages/HomePage"));
 const Facturacion = lazy(
@@ -110,6 +112,9 @@ const AdminMetodosPago = lazy(
 const AdminModificadoresCocina = lazy(
   () => import("../../modules/settings/pages/KitchenModifiersSettingsPage"),
 );
+const RolesPermissionsPage = lazy(
+  () => import("../../modules/access-control/pages/RolesPermissionsPage"),
+);
 
 const RouteFallback = () => (
   <Box
@@ -142,7 +147,10 @@ const AppRoutes = () => (
         <Route
           path="/producto"
           element={
-            <PrivateRoute element={<Producto />} allowedRoles={["admin"]} />
+            <PrivateRoute
+              element={<Producto />}
+              requiredPermissions={[PERMISSIONS.PRODUCTS_MANAGE]}
+            />
           }
         />
         <Route
@@ -157,6 +165,7 @@ const AppRoutes = () => (
                 "mesero",
                 "despachador",
               ]}
+              requiredPermissions={[PERMISSIONS.BILLING_CREATE]}
             />
           }
         />
@@ -166,6 +175,7 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<DeliveryPage />}
               allowedRoles={["admin", "despachador"]}
+              requiredPermissions={[PERMISSIONS.DELIVERY_MANAGE]}
             />
           }
         />
@@ -176,6 +186,7 @@ const AppRoutes = () => (
               element={<MisEntregas />}
               allowMotorizado
               allowedRoles={["admin", "despachador", "motorizado"]}
+              requiredPermissions={[PERMISSIONS.DELIVERY_READ]}
             />
           }
         />
@@ -185,6 +196,7 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<AbrirCajaPage />}
               allowedRoles={["admin", "cajero_principal"]}
+              requiredPermissions={[PERMISSIONS.CASH_OPEN]}
             />
           }
         />
@@ -194,6 +206,7 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<CerrarCajaPage />}
               allowedRoles={["admin", "cajero_principal"]}
+              requiredPermissions={[PERMISSIONS.CASH_CLOSE]}
             />
           }
         />
@@ -203,6 +216,7 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<ConsultarTurnos />}
               allowedRoles={["admin", "cajero_principal"]}
+              requiredPermissions={[PERMISSIONS.CASH_READ]}
             />
           }
         />
@@ -212,6 +226,7 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<CashExpensesPage />}
               allowedRoles={["admin", "cajero", "cajero_principal"]}
+              requiredPermissions={[PERMISSIONS.CASH_EXPENSES]}
             />
           }
         />
@@ -221,6 +236,7 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<Mesa />}
               allowedRoles={["admin", "mesero"]}
+              requiredPermissions={[PERMISSIONS.TABLES_READ]}
             />
           }
         />
@@ -230,6 +246,7 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<Ordenes />}
               allowedRoles={["admin", "cocinero"]}
+              requiredPermissions={[PERMISSIONS.ORDERS_READ]}
             />
           }
         />
@@ -239,6 +256,7 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<KdsPage />}
               allowedRoles={["admin", "cocinero"]}
+              requiredPermissions={[PERMISSIONS.KITCHEN_READ]}
             />
           }
         />
@@ -248,6 +266,7 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<AnularFactura />}
               allowedRoles={["admin", "cajero", "cajero_principal"]}
+              requiredPermissions={[PERMISSIONS.INVOICES_CANCEL]}
             />
           }
         />
@@ -257,13 +276,17 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<ConsultarFacturas />}
               allowedRoles={["admin", "cajero", "cajero_principal"]}
+              requiredPermissions={[PERMISSIONS.INVOICES_READ]}
             />
           }
         />
         <Route
           path="/reporte"
           element={
-            <PrivateRoute element={<Reportes />} allowedRoles={["admin"]} />
+            <PrivateRoute
+              element={<Reportes />}
+              requiredPermissions={[PERMISSIONS.REPORTS_READ]}
+            />
           }
         />
         <Route
@@ -274,87 +297,91 @@ const AppRoutes = () => (
         {}
         <Route
           path="/admin"
-          element={<AdminRoute element={<Administracion />} />}
+          element={<AdminRoute element={<Administracion />} requiredPermissions={ADMIN_PANEL_PERMISSIONS} matchAny />}
         />
         <Route
           path="/admin/cuentas"
-          element={<AdminRoute element={<Cuentas />} />}
+          element={<AdminRoute element={<Cuentas />} requiredPermissions={[PERMISSIONS.USERS_MANAGE]} />}
+        />
+        <Route
+          path="/admin/roles-permisos"
+          element={<AdminRoute element={<RolesPermissionsPage />} requiredPermissions={[PERMISSIONS.ROLES_READ]} />}
         />
         <Route
           path="/admin/horarios"
-          element={<AdminRoute element={<AdminHorarios />} />}
+          element={<AdminRoute element={<AdminHorarios />} requiredPermissions={[PERMISSIONS.USERS_MANAGE]} />}
         />
         <Route
           path="/admin/zonas-meseros"
-          element={<AdminRoute element={<AdminZonasMeseros />} />}
+          element={<AdminRoute element={<AdminZonasMeseros />} requiredPermissions={[PERMISSIONS.TABLES_ASSIGN_ZONES]} />}
         />
         <Route
           path="/admin/mesas"
-          element={<AdminRoute element={<ConfigurarMesas />} />}
+          element={<AdminRoute element={<ConfigurarMesas />} requiredPermissions={[PERMISSIONS.TABLES_CONFIGURE]} />}
         />
         <Route
           path="/admin/cajas"
-          element={<AdminRoute element={<AdminCajas />} />}
+          element={<AdminRoute element={<AdminCajas />} requiredPermissions={[PERMISSIONS.CASH_CONFIGURE]} />}
         />
         <Route
           path="/admin/politicas-gastos"
-          element={<AdminRoute element={<AdminPoliticasGastos />} />}
+          element={<AdminRoute element={<AdminPoliticasGastos />} requiredPermissions={[PERMISSIONS.CASH_CONFIGURE]} />}
         />
         <Route
           path="/admin/tiempos-servicio"
-          element={<AdminRoute element={<AdminTiemposServicio />} />}
+          element={<AdminRoute element={<AdminTiemposServicio />} requiredPermissions={[PERMISSIONS.SETTINGS_MANAGE]} />}
         />
         <Route
           path="/admin/politicas-anulacion"
-          element={<AdminRoute element={<AdminPoliticasAnulacion />} />}
+          element={<AdminRoute element={<AdminPoliticasAnulacion />} requiredPermissions={[PERMISSIONS.SETTINGS_MANAGE]} />}
         />
         <Route
           path="/admin/impuestos"
-          element={<AdminRoute element={<AdminImpuestos />} />}
+          element={<AdminRoute element={<AdminImpuestos />} requiredPermissions={[PERMISSIONS.SETTINGS_MANAGE]} />}
         />
         <Route
           path="/admin/metodos-pago"
-          element={<AdminRoute element={<AdminMetodosPago />} />}
+          element={<AdminRoute element={<AdminMetodosPago />} requiredPermissions={[PERMISSIONS.SETTINGS_MANAGE]} />}
         />
         <Route
           path="/admin/modificadores-cocina"
-          element={<AdminRoute element={<AdminModificadoresCocina />} />}
+          element={<AdminRoute element={<AdminModificadoresCocina />} requiredPermissions={[PERMISSIONS.KITCHEN_CONFIGURE]} />}
         />
         <Route
           path="/admin/configuracion"
-          element={<AdminRoute element={<AdminConfiguracion />} />}
+          element={<AdminRoute element={<AdminConfiguracion />} requiredPermissions={[PERMISSIONS.SETTINGS_MANAGE]} />}
         />
         <Route
           path="/admin/empresa"
-          element={<AdminRoute element={<AdminEmpresa />} />}
+          element={<AdminRoute element={<AdminEmpresa />} requiredPermissions={[PERMISSIONS.SETTINGS_MANAGE]} />}
         />
         <Route
           path="/admin/bitacora"
-          element={<AdminRoute element={<Bitacora />} />}
+          element={<AdminRoute element={<Bitacora />} requiredPermissions={[PERMISSIONS.AUDIT_READ]} />}
         />
         <Route
           path="/admin/cocinas"
-          element={<AdminRoute element={<AdminCocinas />} />}
+          element={<AdminRoute element={<AdminCocinas />} requiredPermissions={[PERMISSIONS.KITCHEN_CONFIGURE]} />}
         />
         <Route
           path="/admin/perifericos"
-          element={<AdminRoute element={<Perifericos />} />}
+          element={<AdminRoute element={<Perifericos />} requiredPermissions={[PERMISSIONS.DEVICES_MANAGE]} />}
         />
         <Route
           path="/admin/promociones"
-          element={<AdminRoute element={<AdminPromociones />} />}
+          element={<AdminRoute element={<AdminPromociones />} requiredPermissions={[PERMISSIONS.PROMOTIONS_MANAGE]} />}
         />
         <Route
           path="/admin/correlativos"
-          element={<AdminRoute element={<AdminCorrelativos />} />}
+          element={<AdminRoute element={<AdminCorrelativos />} requiredPermissions={[PERMISSIONS.SETTINGS_MANAGE]} />}
         />
         <Route
           path="/admin/respaldos"
-          element={<AdminRoute element={<AdminRespaldos />} />}
+          element={<AdminRoute element={<AdminRespaldos />} requiredPermissions={[PERMISSIONS.BACKUPS_MANAGE]} />}
         />
         <Route
           path="/admin/clientes"
-          element={<AdminRoute element={<AdminClientes />} />}
+          element={<AdminRoute element={<AdminClientes />} requiredPermissions={[PERMISSIONS.CUSTOMERS_MANAGE]} />}
         />
       </Routes>
     </Suspense>

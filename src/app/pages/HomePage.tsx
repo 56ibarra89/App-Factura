@@ -6,58 +6,26 @@ import { AccountMenu } from "../../modules/accounts";
 import MenuCard from "../ui/MenuCard";
 import { PageHeader } from "../../shared/ui";
 import { getMenuItems } from "../navigation/menuItems";
+import { ADMIN_PANEL_PERMISSIONS } from "../navigation/adminModules";
 import logoImg from "../../assets/images/logo.png";
-import { useAuth } from "../../modules/auth";
+import { PERMISSIONS, useAuth } from "../../modules/auth";
 import { useCaja } from "../../modules/cash-register";
 import { DriverDeliveriesModal } from "../../modules/delivery";
 import { ordersGateway } from "../../modules/orders";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { username, role } = useAuth();
+  const { username, hasPermission } = useAuth();
   const { currentShift } = useCaja();
   const allMenuItems = getMenuItems();
 
   const menuItems = React.useMemo(() => {
-    if (role === "cajero") {
-      return allMenuItems.filter(
-        (item) =>
-          item.label === "Facturar" ||
-          item.label === "Consultar Facturas" ||
-          item.label === "Anular Factura" ||
-          item.label === "Gastos de Caja"
-      );
-    }
-    if (role === "cajero_principal") {
-      return allMenuItems.filter(
-        (item) =>
-          item.label === "Facturar" ||
-          item.label === "Consultar Facturas" ||
-          item.label === "Anular Factura" ||
-          item.label === "Abrir Caja" ||
-          item.label === "Cerrar Caja" ||
-          item.label === "Consultar Turnos" ||
-          item.label === "Gastos de Caja"
-      );
-    }
-    if (role === "despachador") {
-      return allMenuItems.filter(
-        (item) => item.label === "Delivery" || item.label === "Entregas Motorizado"
-      );
-    }
-    if (role === "mesero") {
-      return allMenuItems.filter((item) => item.label === "Mesas");
-    }
-    if (role === "cocinero") {
-      return allMenuItems.filter(
-        (item) => item.label === "Pantalla de Cocina" || item.label === "Órdenes"
-      );
-    }
-    if (role === "motorizado") {
-      return allMenuItems.filter((item) => item.label === "Entregas Motorizado");
-    }
-    return allMenuItems;
-  }, [role, allMenuItems]);
+    return allMenuItems.filter((item) =>
+      item.route === "/admin"
+        ? ADMIN_PANEL_PERMISSIONS.some((permission) => hasPermission(permission))
+        : hasPermission(item.permission),
+    );
+  }, [allMenuItems, hasPermission]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [pendingDeliveredCount, setPendingDeliveredCount] = useState(0);
@@ -75,11 +43,7 @@ const HomePage = () => {
     [navigate],
   );
 
-  const canManageDrivers =
-    role === "admin" ||
-    role === "cajero_principal" ||
-    role === "cajero" ||
-    role === "despachador";
+  const canManageDrivers = hasPermission(PERMISSIONS.DELIVERY_MANAGE);
 
   // Monitoreo de entregas pendientes de liquidar (status === 'delivered')
   useEffect(() => {
