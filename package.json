@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
     "build:web": "vite build",
+    "audit:prod": "npm audit --omit=dev",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview"
   },
@@ -20,7 +21,7 @@
     "date-fns": "^4.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.13.2",
+    "react-router-dom": "^7.18.4",
     "recharts": "^3.8.1",
     "socket.io-client": "^4.8.1"
   },
@@ -32,8 +33,8 @@
     "@typescript-eslint/parser": "^8.24.1",
     "@vitejs/plugin-react": "^4.3.4",
     "cross-env": "^10.1.0",
-    "electron": "^33.2.1",
-    "electron-builder": "^26.8.1",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
