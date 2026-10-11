@@ -1,8 +1,9 @@
-import type { SystemLog, LogLevel, AuditQueryParams } from "../model/audit.types";
-import {
-  apiClient,
-  hasAccessToken,
-} from "../../../shared/api";
+import type {
+  SystemLog,
+  LogLevel,
+  AuditQueryParams,
+} from "../model/audit.types";
+import { apiClient, hasAccessToken } from "../../../shared/api";
 
 export interface ILogRepository {
   add(
@@ -21,7 +22,7 @@ class LogRepository implements ILogRepository {
     role: string | null,
     action: string,
     details?: string,
-    level: LogLevel = "info"
+    level: LogLevel = "info",
   ): Promise<void> {
     if (!hasAccessToken()) {
       return;
@@ -50,19 +51,31 @@ class LogRepository implements ILogRepository {
         searchParams.set("limit", String(params));
       } else if (params) {
         if (params.limit) searchParams.set("limit", String(params.limit));
-        if (params.user && params.user !== "ALL") searchParams.set("user", params.user);
-        if (params.role && params.role !== "ALL") searchParams.set("role", params.role);
-        if (params.action && params.action !== "ALL") searchParams.set("action", params.action);
-        if (params.level && params.level !== "ALL") searchParams.set("level", params.level);
+        if (params.user && params.user !== "ALL")
+          searchParams.set("user", params.user);
+        if (params.role && params.role !== "ALL")
+          searchParams.set("role", params.role);
+        if (params.action && params.action !== "ALL")
+          searchParams.set("action", params.action);
+        if (params.level && params.level !== "ALL")
+          searchParams.set("level", params.level);
         if (params.startDate) searchParams.set("startDate", params.startDate);
         if (params.endDate) searchParams.set("endDate", params.endDate);
         if (params.search) searchParams.set("search", params.search);
+        if (params.module && params.module !== "ALL")
+          searchParams.set("module", params.module);
+        if (params.operation && params.operation !== "ALL")
+          searchParams.set("operation", params.operation);
+        if (params.success !== undefined)
+          searchParams.set("success", String(params.success));
       } else {
         searchParams.set("limit", "500");
       }
 
       const queryString = searchParams.toString();
-      const endpoint = queryString ? `/system-logs?${queryString}` : "/system-logs";
+      const endpoint = queryString
+        ? `/system-logs?${queryString}`
+        : "/system-logs";
       const logs = await apiClient(endpoint);
       return Array.isArray(logs) ? logs : [];
     } catch (error) {

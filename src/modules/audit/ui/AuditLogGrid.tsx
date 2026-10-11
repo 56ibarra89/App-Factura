@@ -37,9 +37,13 @@ export default function AuditLogGrid({
         field: "timestamp",
         headerName: "Fecha y Hora",
         width: 180,
-        renderCell: (params: GridRenderCellParams<SystemLog, string | number | Date>) => (
+        renderCell: (
+          params: GridRenderCellParams<SystemLog, string | number | Date>,
+        ) => (
           <Typography variant="body2" fontWeight={500}>
-            {format(new Date(params.value ?? 0), "dd MMM yyyy, HH:mm:ss", { locale: es })}
+            {format(new Date(params.value ?? 0), "dd MMM yyyy, HH:mm:ss", {
+              locale: es,
+            })}
           </Typography>
         ),
       },
@@ -60,7 +64,9 @@ export default function AuditLogGrid({
         field: "role",
         headerName: "Rol",
         width: 120,
-        renderCell: (params: GridRenderCellParams<SystemLog, string | null>) => {
+        renderCell: (
+          params: GridRenderCellParams<SystemLog, string | null>,
+        ) => {
           const role = params.value || "N/A";
           return (
             <Chip
@@ -77,6 +83,20 @@ export default function AuditLogGrid({
         },
       },
       {
+        field: "module",
+        headerName: "Módulo",
+        width: 125,
+        renderCell: (params: GridRenderCellParams<SystemLog, string>) => (
+          <Typography
+            variant="body2"
+            fontWeight={600}
+            textTransform="capitalize"
+          >
+            {params.value || "—"}
+          </Typography>
+        ),
+      },
+      {
         field: "action",
         headerName: "Acción",
         width: 200,
@@ -91,6 +111,20 @@ export default function AuditLogGrid({
             />
           );
         },
+      },
+      {
+        field: "success",
+        headerName: "Resultado",
+        width: 105,
+        renderCell: (params: GridRenderCellParams<SystemLog, boolean>) => (
+          <Chip
+            label={params.value === false ? "Fallido" : "Exitoso"}
+            size="small"
+            color={params.value === false ? "error" : "success"}
+            variant="outlined"
+            sx={{ fontWeight: 700 }}
+          />
+        ),
       },
       {
         field: "details",
@@ -114,16 +148,10 @@ export default function AuditLogGrid({
         field: "level",
         headerName: "Nivel",
         width: 100,
-        renderCell: (
-          params: GridRenderCellParams<SystemLog, LogLevel>,
-        ) => {
+        renderCell: (params: GridRenderCellParams<SystemLog, LogLevel>) => {
           const level = params.value ?? "info";
           const color =
-            level === "warn"
-              ? "warning"
-              : level === "error"
-                ? "error"
-                : "info";
+            level === "warn" ? "warning" : level === "error" ? "error" : "info";
           return (
             <Chip
               label={level}
@@ -185,7 +213,8 @@ export default function AuditLogGrid({
         disableRowSelectionOnClick
         onRowDoubleClick={(params) => onViewDetails?.(params.row)}
         localeText={{
-          noRowsLabel: "No se encontraron eventos en la bitácora con los filtros aplicados.",
+          noRowsLabel:
+            "No se encontraron eventos en la bitácora con los filtros aplicados.",
         }}
         sx={{
           border: 0,

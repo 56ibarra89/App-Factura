@@ -22,7 +22,7 @@ export class ApiClientError extends Error {
 if (!API_BASE_URL) {
   console.error(
     "⚠️ [API Client] La variable de entorno VITE_API_BASE_URL no está definida en el archivo .env. " +
-    "Asegúrate de crear el archivo .env en la raíz del proyecto con: VITE_API_BASE_URL=http://localhost:3000"
+      "Asegúrate de crear el archivo .env en la raíz del proyecto con: VITE_API_BASE_URL=http://localhost:3000",
   );
 }
 
@@ -166,18 +166,23 @@ export const apiClient = async (
   const { timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS, ...requestOptions } = options;
   const hasMultipartBody = requestOptions.body instanceof FormData;
   const accessToken = accessTokenStore.get();
-  
+
   const headers: Record<string, string> = {
     ...(hasMultipartBody ? {} : { "Content-Type": "application/json" }),
+    "X-Audit-Source": "INTERFACE",
     ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     ...(requestOptions.headers as Record<string, string>),
   };
 
-  let response = await fetchWithTimeout(url, {
-    cache: "no-store",
-    ...requestOptions,
-    headers,
-  }, timeoutMs);
+  let response = await fetchWithTimeout(
+    url,
+    {
+      cache: "no-store",
+      ...requestOptions,
+      headers,
+    },
+    timeoutMs,
+  );
 
   if (!response.ok) {
     if (response.status === 401 && !isAuthEndpoint(endpoint)) {
@@ -188,16 +193,22 @@ export const apiClient = async (
           ...headers,
           Authorization: `Bearer ${refreshedToken}`,
         };
-        response = await fetchWithTimeout(url, {
-          cache: "no-store",
-          ...requestOptions,
-          headers: retryHeaders,
-        }, timeoutMs);
+        response = await fetchWithTimeout(
+          url,
+          {
+            cache: "no-store",
+            ...requestOptions,
+            headers: retryHeaders,
+          },
+          timeoutMs,
+        );
       }
 
       if (!response.ok && response.status === 401) {
         handleUnauthorizedSession();
-        throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
+        throw new Error(
+          "Sesión expirada. Por favor, inicia sesión nuevamente.",
+        );
       }
     }
 

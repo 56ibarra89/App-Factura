@@ -9,6 +9,22 @@ export interface SystemLog {
   action: string;
   details?: string;
   level: LogLevel;
+  module?: string;
+  operation?: string;
+  entity?: string;
+  entityId?: string;
+  source?: string;
+  requestId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  httpMethod?: string;
+  route?: string;
+  statusCode?: number;
+  success?: boolean;
+  durationMs?: number;
+  before?: unknown;
+  after?: unknown;
+  metadata?: unknown;
 }
 
 export interface AuditFiltersState {
@@ -17,6 +33,8 @@ export interface AuditFiltersState {
   role: string;
   level: string;
   category: string;
+  module: string;
+  result: string;
   startDate: string;
   endDate: string;
 }
@@ -38,5 +56,7 @@ export interface AuditQueryParams {
   startDate?: string;
   endDate?: string;
   search?: string;
+  module?: string;
+  operation?: string;
+  success?: boolean;
 }
-

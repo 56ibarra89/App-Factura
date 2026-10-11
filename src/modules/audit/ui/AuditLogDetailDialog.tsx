@@ -36,6 +36,36 @@ interface AuditLogDetailDialogProps {
   onClose: () => void;
 }
 
+function AuditJsonBlock({ title, value }: { title: string; value: unknown }) {
+  if (value === undefined || value === null) return null;
+
+  return (
+    <Box sx={{ mt: 2 }}>
+      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+        {title}
+      </Typography>
+      <Box
+        component="pre"
+        sx={{
+          p: 1.5,
+          mt: 0.5,
+          borderRadius: 2,
+          bgcolor: "grey.900",
+          color: "grey.100",
+          fontSize: "0.75rem",
+          fontFamily: "monospace",
+          overflowX: "auto",
+          maxHeight: 220,
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+        }}
+      >
+        {JSON.stringify(value, null, 2)}
+      </Box>
+    </Box>
+  );
+}
+
 export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
   log,
   open,
@@ -57,18 +87,57 @@ export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
   };
 
   const levelColor = isError ? "error" : isWarn ? "warning" : "info";
+  const isAutomatic = Boolean(log.requestId || log.module || log.operation);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-      <DialogTitle sx={{ m: 0, p: 2.5, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{ sx: { borderRadius: 3 } }}
+    >
+      <DialogTitle
+        sx={{
+          m: 0,
+          p: 2.5,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Box display="flex" alignItems="center" gap={1.5}>
-          <Chip label={meta.label} color={meta.color} sx={{ fontWeight: 700, borderRadius: 1.5 }} />
-          <Chip label={log.level.toUpperCase()} color={levelColor} size="small" sx={{ fontWeight: 800 }} />
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+          <Chip
+            label={meta.label}
+            color={meta.color}
+            sx={{ fontWeight: 700, borderRadius: 1.5 }}
+          />
+          <Chip
+            label={log.level.toUpperCase()}
+            color={levelColor}
+            size="small"
+            sx={{ fontWeight: 800 }}
+          />
+          <Chip
+            label={log.success === false ? "Fallido" : "Exitoso"}
+            color={log.success === false ? "error" : "success"}
+            variant="outlined"
+            size="small"
+            sx={{ fontWeight: 700 }}
+          />
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontWeight: 600 }}
+          >
             Categoría: {meta.category}
           </Typography>
         </Box>
-        <IconButton aria-label="close" onClick={onClose} sx={{ color: (theme) => theme.palette.grey[500] }}>
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{ color: (theme) => theme.palette.grey[500] }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -88,25 +157,47 @@ export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
         >
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={600}
+                textTransform="uppercase"
+              >
                 Fecha y Hora
               </Typography>
               <Typography variant="body2" fontWeight={600} sx={{ mt: 0.5 }}>
-                {format(log.timestamp, "dd MMMM yyyy, HH:mm:ss", { locale: es })}
+                {format(log.timestamp, "dd MMMM yyyy, HH:mm:ss", {
+                  locale: es,
+                })}
               </Typography>
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={600}
+                textTransform="uppercase"
+              >
                 Usuario Responsable
               </Typography>
-              <Typography variant="body2" fontWeight={700} color="primary" sx={{ mt: 0.5 }}>
+              <Typography
+                variant="body2"
+                fontWeight={700}
+                color="primary"
+                sx={{ mt: 0.5 }}
+              >
                 {log.user}
               </Typography>
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={600}
+                textTransform="uppercase"
+              >
                 Rol
               </Typography>
               <Box sx={{ mt: 0.5 }}>
@@ -114,21 +205,93 @@ export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
                   label={log.role || "N/A"}
                   size="small"
                   variant="outlined"
-                  sx={{ fontWeight: 600, textTransform: "uppercase", fontSize: "0.7rem" }}
+                  sx={{
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    fontSize: "0.7rem",
+                  }}
                 />
               </Box>
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={600}
+                textTransform="uppercase"
+              >
                 Identificador de Registro
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontFamily: "monospace" }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mt: 0.5, fontFamily: "monospace" }}
+              >
                 #{log.id ?? "N/A"}
               </Typography>
             </Grid>
           </Grid>
         </Paper>
+
+        {isAutomatic && (
+          <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+              Trazabilidad automática
+            </Typography>
+            <Grid container spacing={2}>
+              {[
+                ["Módulo", log.module],
+                ["Operación", log.operation],
+                ["Entidad", log.entity],
+                ["ID de entidad", log.entityId],
+                ["Origen", log.source],
+                [
+                  "Método y ruta",
+                  [log.httpMethod, log.route].filter(Boolean).join(" "),
+                ],
+                ["Estado HTTP", log.statusCode],
+                [
+                  "Duración",
+                  log.durationMs !== undefined
+                    ? `${log.durationMs} ms`
+                    : undefined,
+                ],
+                ["Dirección IP", log.ipAddress],
+                ["ID de solicitud", log.requestId],
+              ].map(([label, value]) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={String(label)}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={600}
+                    textTransform="uppercase"
+                  >
+                    {label}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    sx={{ mt: 0.4, wordBreak: "break-word" }}
+                  >
+                    {value === undefined || value === ""
+                      ? "N/A"
+                      : String(value)}
+                  </Typography>
+                </Grid>
+              ))}
+            </Grid>
+            <AuditJsonBlock title="Datos anteriores" value={log.before} />
+            <AuditJsonBlock
+              title="Solicitud y cambios requeridos (datos sensibles protegidos)"
+              value={log.metadata}
+            />
+            <AuditJsonBlock
+              title="Resultado posterior de la operación"
+              value={log.after}
+            />
+          </Paper>
+        )}
 
         {/* Sección Especializada: Error / Fallo Crítico */}
         {isError && (
@@ -139,7 +302,13 @@ export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
                 <Button
                   color="inherit"
                   size="small"
-                  startIcon={copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+                  startIcon={
+                    copied ? (
+                      <CheckIcon fontSize="small" />
+                    ) : (
+                      <ContentCopyIcon fontSize="small" />
+                    )
+                  }
                   onClick={() => handleCopyText(log.details || "")}
                 >
                   {copied ? "Copiado" : "Copiar Error"}
@@ -219,14 +388,21 @@ export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
 
               {parsed.orderInfo.finalTotal !== undefined && (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                  <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2, bgcolor: "success.subtle" }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 1.5, borderRadius: 2, bgcolor: "success.subtle" }}
+                  >
                     <Box display="flex" alignItems="center" gap={1}>
                       <AttachMoneyIcon color="success" />
                       <Box>
                         <Typography variant="caption" color="text.secondary">
                           Total Cobrado
                         </Typography>
-                        <Typography variant="body2" fontWeight={800} color="success.main">
+                        <Typography
+                          variant="body2"
+                          fontWeight={800}
+                          color="success.main"
+                        >
                           {formatCurrency(parsed.orderInfo.finalTotal)}
                         </Typography>
                       </Box>
@@ -237,25 +413,30 @@ export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
             </Grid>
 
             {/* Pagos desglosados */}
-            {parsed.orderInfo.payments && parsed.orderInfo.payments.length > 0 && (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                  Métodos de Pago Utilizados:
-                </Typography>
-                <Box display="flex" gap={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
-                  {parsed.orderInfo.payments.map((p, idx) => (
-                    <Chip
-                      key={idx}
-                      icon={<PaymentIcon />}
-                      label={`${p.method}: ${formatCurrency(p.amount)}`}
-                      size="small"
-                      variant="filled"
-                      sx={{ fontWeight: 600 }}
-                    />
-                  ))}
+            {parsed.orderInfo.payments &&
+              parsed.orderInfo.payments.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={600}
+                  >
+                    Métodos de Pago Utilizados:
+                  </Typography>
+                  <Box display="flex" gap={1} flexWrap="wrap" sx={{ mt: 0.5 }}>
+                    {parsed.orderInfo.payments.map((p, idx) => (
+                      <Chip
+                        key={idx}
+                        icon={<PaymentIcon />}
+                        label={`${p.method}: ${formatCurrency(p.amount)}`}
+                        size="small"
+                        variant="filled"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    ))}
+                  </Box>
                 </Box>
-              </Box>
-            )}
+              )}
 
             {parsed.orderInfo.promotionCode && (
               <Box sx={{ mt: 1.5 }}>
@@ -273,78 +454,106 @@ export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
         )}
 
         {/* Claves adicionales estructuradas o texto simple */}
-        {!isError && !parsed.orderInfo && parsed.keyValuePairs && parsed.keyValuePairs.length > 0 && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
-              Parámetros y Métricas del Evento
-            </Typography>
-            <Grid container spacing={1.5}>
-              {parsed.keyValuePairs.map((kv) => {
-                const isDiscrepancy =
-                  kv.key.toLowerCase().includes("diff") ||
-                  kv.key.toLowerCase().includes("discrepanc");
-                const hasValue = kv.value !== "0" && kv.value !== "0.00";
-                const isAlert = isDiscrepancy && hasValue;
-
-                return (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kv.key}>
-                    <Paper
-                      variant="outlined"
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 2,
-                        bgcolor: isAlert ? "rgba(211, 47, 47, 0.05)" : "background.paper",
-                        borderColor: isAlert ? "rgba(211, 47, 47, 0.3)" : "divider",
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        color={isAlert ? "error.main" : "text.secondary"}
-                        fontWeight={600}
-                        sx={{ display: "block" }}
-                      >
-                        {kv.label}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        color={isAlert ? "error.main" : "text.primary"}
-                        sx={{ mt: 0.3 }}
-                      >
-                        {kv.value}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          </Box>
-        )}
-
-        {!isError && !parsed.orderInfo && (!parsed.keyValuePairs || parsed.keyValuePairs.length === 0) && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
-              Detalles del Registro
-            </Typography>
-            <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-                {parsed.raw || "Sin información adicional registrada."}
+        {!isError &&
+          !parsed.orderInfo &&
+          parsed.keyValuePairs &&
+          parsed.keyValuePairs.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+                Parámetros y Métricas del Evento
               </Typography>
-            </Paper>
-          </Box>
-        )}
+              <Grid container spacing={1.5}>
+                {parsed.keyValuePairs.map((kv) => {
+                  const isDiscrepancy =
+                    kv.key.toLowerCase().includes("diff") ||
+                    kv.key.toLowerCase().includes("discrepanc");
+                  const hasValue = kv.value !== "0" && kv.value !== "0.00";
+                  const isAlert = isDiscrepancy && hasValue;
+
+                  return (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={kv.key}>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 2,
+                          bgcolor: isAlert
+                            ? "rgba(211, 47, 47, 0.05)"
+                            : "background.paper",
+                          borderColor: isAlert
+                            ? "rgba(211, 47, 47, 0.3)"
+                            : "divider",
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          color={isAlert ? "error.main" : "text.secondary"}
+                          fontWeight={600}
+                          sx={{ display: "block" }}
+                        >
+                          {kv.label}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight={700}
+                          color={isAlert ? "error.main" : "text.primary"}
+                          sx={{ mt: 0.3 }}
+                        >
+                          {kv.value}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </Box>
+          )}
+
+        {!isError &&
+          !parsed.orderInfo &&
+          (!parsed.keyValuePairs || parsed.keyValuePairs.length === 0) && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                Detalles del Registro
+              </Typography>
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+                  {parsed.raw || "Sin información adicional registrada."}
+                </Typography>
+              </Paper>
+            </Box>
+          )}
 
         {/* Visor de Payload Técnico JSON (si aplica) */}
         {parsed.isJson && (
           <Box sx={{ mt: 2 }}>
             <Divider sx={{ mb: 2 }} />
-            <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={700} display="flex" alignItems="center" gap={0.5}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ mb: 1 }}
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={700}
+                display="flex"
+                alignItems="center"
+                gap={0.5}
+              >
                 <CodeIcon fontSize="small" /> Payload JSON Estructurado
               </Typography>
               <Tooltip title={copied ? "Copiado" : "Copiar JSON"}>
-                <IconButton size="small" onClick={() => handleCopyText(parsed.raw)}>
-                  {copied ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
+                <IconButton
+                  size="small"
+                  onClick={() => handleCopyText(parsed.raw)}
+                >
+                  {copied ? (
+                    <CheckIcon fontSize="small" color="success" />
+                  ) : (
+                    <ContentCopyIcon fontSize="small" />
+                  )}
                 </IconButton>
               </Tooltip>
             </Box>
@@ -369,7 +578,11 @@ export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
       </DialogContent>
 
       <DialogActions sx={{ p: 2, px: 3 }}>
-        <Button onClick={onClose} variant="contained" sx={{ textTransform: "none", fontWeight: 700, borderRadius: 2 }}>
+        <Button
+          onClick={onClose}
+          variant="contained"
+          sx={{ textTransform: "none", fontWeight: 700, borderRadius: 2 }}
+        >
           Cerrar
         </Button>
       </DialogActions>

@@ -17,10 +17,16 @@ import type { AuditFiltersState } from "../model/audit.types";
 
 interface AuditLogFiltersProps {
   filters: AuditFiltersState;
-  onFilterChange: <K extends keyof AuditFiltersState>(key: K, value: AuditFiltersState[K]) => void;
+  onFilterChange: <K extends keyof AuditFiltersState>(
+    key: K,
+    value: AuditFiltersState[K],
+  ) => void;
   onResetFilters: () => void;
-  onDatePreset?: (preset: "today" | "yesterday" | "7days" | "month" | "all") => void;
+  onDatePreset?: (
+    preset: "today" | "yesterday" | "7days" | "month" | "all",
+  ) => void;
   availableUsers: string[];
+  availableModules: string[];
   totalFiltered: number;
   totalLogs: number;
 }
@@ -60,6 +66,7 @@ export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
   onResetFilters,
   onDatePreset,
   availableUsers,
+  availableModules,
   totalFiltered,
   totalLogs,
 }) => {
@@ -69,6 +76,8 @@ export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
     filters.role !== "ALL" ||
     filters.level !== "ALL" ||
     filters.category !== "ALL" ||
+    filters.module !== "ALL" ||
+    filters.result !== "ALL" ||
     Boolean(filters.startDate) ||
     Boolean(filters.endDate);
 
@@ -103,7 +112,10 @@ export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
               ),
               endAdornment: filters.search ? (
                 <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => onFilterChange("search", "")}>
+                  <IconButton
+                    size="small"
+                    onClick={() => onFilterChange("search", "")}
+                  >
                     <ClearIcon fontSize="small" />
                   </IconButton>
                 </InputAdornment>
@@ -168,8 +180,14 @@ export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
         </Box>
       </Box>
 
-      {/* Segunda fila: Categoría, Fechas y Botón Limpiar */}
-      <Box display="flex" flexWrap="wrap" gap={2} alignItems="center" sx={{ mt: 2 }}>
+      {/* Segunda fila: trazabilidad, fechas y botón limpiar */}
+      <Box
+        display="flex"
+        flexWrap="wrap"
+        gap={2}
+        alignItems="center"
+        sx={{ mt: 2 }}
+      >
         {/* Selector de Categoría */}
         <Box flex={{ xs: "1 1 calc(50% - 8px)", sm: "1 1 calc(22% - 16px)" }}>
           <TextField
@@ -185,6 +203,39 @@ export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
                 {cat.label}
               </MenuItem>
             ))}
+          </TextField>
+        </Box>
+
+        <Box flex={{ xs: "1 1 calc(50% - 8px)", sm: "1 1 calc(18% - 16px)" }}>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Módulo"
+            value={filters.module}
+            onChange={(e) => onFilterChange("module", e.target.value)}
+          >
+            <MenuItem value="ALL">Todos los módulos</MenuItem>
+            {availableModules.map((module) => (
+              <MenuItem key={module} value={module}>
+                {module}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Box>
+
+        <Box flex={{ xs: "1 1 calc(50% - 8px)", sm: "1 1 calc(18% - 16px)" }}>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Resultado"
+            value={filters.result}
+            onChange={(e) => onFilterChange("result", e.target.value)}
+          >
+            <MenuItem value="ALL">Todos</MenuItem>
+            <MenuItem value="SUCCESS">Exitosos</MenuItem>
+            <MenuItem value="FAILED">Fallidos</MenuItem>
           </TextField>
         </Box>
 
@@ -248,7 +299,18 @@ export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
       </Box>
 
       {/* Tercera fila: Atajos Rápidos de Fecha */}
-      <Box display="flex" gap={1} alignItems="center" flexWrap="wrap" sx={{ mt: 1.5, pt: 1.5, borderTop: "1px dashed", borderColor: "divider" }}>
+      <Box
+        display="flex"
+        gap={1}
+        alignItems="center"
+        flexWrap="wrap"
+        sx={{
+          mt: 1.5,
+          pt: 1.5,
+          borderTop: "1px dashed",
+          borderColor: "divider",
+        }}
+      >
         <Typography variant="caption" color="text.secondary" fontWeight={700}>
           Atajos de Fecha:
         </Typography>

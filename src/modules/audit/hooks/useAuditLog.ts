@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { logService } from "../api/logService";
-import type { SystemLog, AuditFiltersState, AuditStats } from "../model/audit.types";
+import type {
+  SystemLog,
+  AuditFiltersState,
+  AuditStats,
+} from "../model/audit.types";
 import { getActionMetadata } from "../utils/logFormatter";
 
 const INITIAL_FILTERS: AuditFiltersState = {
@@ -10,11 +14,16 @@ const INITIAL_FILTERS: AuditFiltersState = {
   role: "ALL",
   level: "ALL",
   category: "ALL",
+  module: "ALL",
+  result: "ALL",
   startDate: "",
   endDate: "",
 };
 
-function parseDateBoundary(dateStr: string, isEndOfDay: boolean): number | null {
+function parseDateBoundary(
+  dateStr: string,
+  isEndOfDay: boolean,
+): number | null {
   if (!dateStr || !dateStr.trim()) return null;
   const trimmed = dateStr.trim();
 
@@ -53,21 +62,49 @@ function getLogEpoch(ts: string | number | Date | undefined | null): number {
 }
 
 function downloadAuditCsv(logs: SystemLog[], isFiltered = false) {
-  const headers = ["Fecha y Hora", "Usuario", "Rol", "Accion", "Detalles", "Nivel"];
+  const headers = [
+    "Fecha y Hora",
+    "Usuario",
+    "Rol",
+    "Modulo",
+    "Operacion",
+    "Entidad",
+    "ID Entidad",
+    "Accion",
+    "Resultado",
+    "Origen",
+    "Ruta",
+    "Solicitud",
+    "Respuesta",
+    "Detalles",
+    "Nivel",
+    "ID Solicitud",
+  ];
   const rows = logs.map((log) => [
     format(new Date(log.timestamp), "yyyy-MM-dd HH:mm:ss"),
     log.user,
     log.role || "N/A",
+    log.module || "N/A",
+    log.operation || "N/A",
+    log.entity || "N/A",
+    log.entityId || "N/A",
     log.action,
+    log.success === false ? "FALLIDO" : "EXITOSO",
+    log.source || "N/A",
+    log.route || "N/A",
+    `"${JSON.stringify(log.metadata ?? "").replace(/"/g, '""')}"`,
+    `"${JSON.stringify(log.after ?? "").replace(/"/g, '""')}"`,
     `"${(log.details || "").replace(/"/g, '""')}"`,
     log.level.toUpperCase(),
+    log.requestId || "N/A",
   ]);
-  const content = [
-    headers.join(","),
-    ...rows.map((row) => row.join(",")),
-  ].join("\n");
+  const content = [headers.join(","), ...rows.map((row) => row.join(","))].join(
+    "\n",
+  );
 
-  const blob = new Blob(["\uFEFF" + content], { type: "text/csv;charset=utf-8;" });
+  const blob = new Blob(["\uFEFF" + content], {
+    type: "text/csv;charset=utf-8;",
+  });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -101,7 +138,10 @@ export function useAuditLog() {
   }, [refresh]);
 
   const updateFilter = useCallback(
-    <K extends keyof AuditFiltersState>(key: K, value: AuditFiltersState[K]) => {
+    <K extends keyof AuditFiltersState>(
+      key: K,
+      value: AuditFiltersState[K],
+    ) => {
       setFilters((prev) => ({ ...prev, [key]: value }));
     },
     [],
@@ -111,35 +151,42 @@ export function useAuditLog() {
     setFilters(INITIAL_FILTERS);
   }, []);
 
-  const setDatePreset = useCallback((preset: "today" | "yesterday" | "7days" | "month" | "all") => {
-    const now = new Date();
-    if (preset === "today") {
-      const todayStr = format(now, "yyyy-MM-dd");
-      setFilters((prev) => ({ ...prev, startDate: todayStr, endDate: todayStr }));
-    } else if (preset === "yesterday") {
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yStr = format(yesterday, "yyyy-MM-dd");
-      setFilters((prev) => ({ ...prev, startDate: yStr, endDate: yStr }));
-    } else if (preset === "7days") {
-      const d = new Date(now);
-      d.setDate(d.getDate() - 7);
-      setFilters((prev) => ({
-        ...prev,
-        startDate: format(d, "yyyy-MM-dd"),
-        endDate: format(now, "yyyy-MM-dd"),
-      }));
-    } else if (preset === "month") {
-      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-      setFilters((prev) => ({
-        ...prev,
-        startDate: format(firstDay, "yyyy-MM-dd"),
-        endDate: format(now, "yyyy-MM-dd"),
-      }));
-    } else if (preset === "all") {
-      setFilters((prev) => ({ ...prev, startDate: "", endDate: "" }));
-    }
-  }, []);
+  const setDatePreset = useCallback(
+    (preset: "today" | "yesterday" | "7days" | "month" | "all") => {
+      const now = new Date();
+      if (preset === "today") {
+        const todayStr = format(now, "yyyy-MM-dd");
+        setFilters((prev) => ({
+          ...prev,
+          startDate: todayStr,
+          endDate: todayStr,
+        }));
+      } else if (preset === "yesterday") {
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yStr = format(yesterday, "yyyy-MM-dd");
+        setFilters((prev) => ({ ...prev, startDate: yStr, endDate: yStr }));
+      } else if (preset === "7days") {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 7);
+        setFilters((prev) => ({
+          ...prev,
+          startDate: format(d, "yyyy-MM-dd"),
+          endDate: format(now, "yyyy-MM-dd"),
+        }));
+      } else if (preset === "month") {
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        setFilters((prev) => ({
+          ...prev,
+          startDate: format(firstDay, "yyyy-MM-dd"),
+          endDate: format(now, "yyyy-MM-dd"),
+        }));
+      } else if (preset === "all") {
+        setFilters((prev) => ({ ...prev, startDate: "", endDate: "" }));
+      }
+    },
+    [],
+  );
 
   // Lista de usuarios únicos presentes en los registros cargados
   const availableUsers = useMemo(() => {
@@ -148,6 +195,14 @@ export function useAuditLog() {
       if (log.user) usersSet.add(log.user);
     });
     return Array.from(usersSet).sort((a, b) => a.localeCompare(b));
+  }, [logs]);
+
+  const availableModules = useMemo(() => {
+    const modules = new Set<string>();
+    logs.forEach((log) => {
+      if (log.module) modules.add(log.module);
+    });
+    return Array.from(modules).sort((a, b) => a.localeCompare(b));
   }, [logs]);
 
   // Filtrado reactivo en memoria
@@ -162,29 +217,54 @@ export function useAuditLog() {
       if (searchLower) {
         const userMatch = log.user.toLowerCase().includes(searchLower);
         const actionMatch = log.action.toLowerCase().includes(searchLower);
-        const detailsMatch = (log.details || "").toLowerCase().includes(searchLower);
+        const detailsMatch = (log.details || "")
+          .toLowerCase()
+          .includes(searchLower);
+        const traceMatch = [
+          log.module,
+          log.operation,
+          log.entity,
+          log.entityId,
+          log.route,
+          log.requestId,
+        ].some((value) => value?.toLowerCase().includes(searchLower));
         const meta = getActionMetadata(log.action);
         const metaMatch =
           meta.label.toLowerCase().includes(searchLower) ||
           meta.category.toLowerCase().includes(searchLower);
 
-        if (!userMatch && !actionMatch && !detailsMatch && !metaMatch) {
+        if (
+          !userMatch &&
+          !actionMatch &&
+          !detailsMatch &&
+          !metaMatch &&
+          !traceMatch
+        ) {
           return false;
         }
       }
 
       // 2. Filtro de Usuario
-      if (filters.user !== "ALL" && log.user.toLowerCase() !== filters.user.toLowerCase()) {
+      if (
+        filters.user !== "ALL" &&
+        log.user.toLowerCase() !== filters.user.toLowerCase()
+      ) {
         return false;
       }
 
       // 3. Filtro de Rol
-      if (filters.role !== "ALL" && (log.role || "").toUpperCase() !== filters.role.toUpperCase()) {
+      if (
+        filters.role !== "ALL" &&
+        (log.role || "").toUpperCase() !== filters.role.toUpperCase()
+      ) {
         return false;
       }
 
       // 4. Filtro de Nivel
-      if (filters.level !== "ALL" && log.level.toUpperCase() !== filters.level.toUpperCase()) {
+      if (
+        filters.level !== "ALL" &&
+        log.level.toUpperCase() !== filters.level.toUpperCase()
+      ) {
         return false;
       }
 
@@ -194,6 +274,18 @@ export function useAuditLog() {
         if (meta.category !== filters.category) {
           return false;
         }
+      }
+
+      if (filters.module !== "ALL" && log.module !== filters.module) {
+        return false;
+      }
+
+      if (filters.result === "SUCCESS" && log.success === false) {
+        return false;
+      }
+
+      if (filters.result === "FAILED" && log.success !== false) {
+        return false;
       }
 
       // 6. Rango de Fechas (Robusto con conversión a Epoch)
@@ -262,6 +354,8 @@ export function useAuditLog() {
       filters.role !== "ALL" ||
       filters.level !== "ALL" ||
       filters.category !== "ALL" ||
+      filters.module !== "ALL" ||
+      filters.result !== "ALL" ||
       Boolean(filters.startDate) ||
       Boolean(filters.endDate);
 
@@ -280,6 +374,7 @@ export function useAuditLog() {
     resetFilters,
     setDatePreset,
     availableUsers,
+    availableModules,
     stats,
     selectedLog,
     detailOpen,

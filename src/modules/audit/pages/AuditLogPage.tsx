@@ -62,7 +62,7 @@ const AuditLogPage = () => {
       />
 
       <Box sx={{ mt: 2 }}>
-        {/* Banner de Seguridad y Trazabilidad ISO 27001 */}
+        {/* Banner de Seguridad y Trazabilidad */}
         <Paper
           elevation={0}
           sx={{
@@ -96,13 +96,23 @@ const AuditLogPage = () => {
           </Box>
 
           <Box flex={1}>
-            <Box display="flex" alignItems="center" gap={1} flexWrap="wrap" mb={0.4}>
-              <Typography variant="subtitle2" fontWeight={800} color="text.primary">
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={1}
+              flexWrap="wrap"
+              mb={0.4}
+            >
+              <Typography
+                variant="subtitle2"
+                fontWeight={800}
+                color="text.primary"
+              >
                 Trazabilidad Inmutable y Auditoría Interna
               </Typography>
               <Chip
                 icon={<LockOutlinedIcon sx={{ fontSize: "14px !important" }} />}
-                label="ISO/IEC 27001"
+                label="Auditoría central"
                 size="small"
                 color="primary"
                 variant="outlined"
@@ -114,7 +124,7 @@ const AuditLogPage = () => {
                 }}
               />
               <Chip
-                label="Solo Lectura"
+                label="Solo lectura desde la aplicación"
                 size="small"
                 variant="filled"
                 sx={{
@@ -125,9 +135,15 @@ const AuditLogPage = () => {
                 }}
               />
             </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.82rem", lineHeight: 1.45 }}>
-              Este registro es <b>estrictamente inmutable y cronológico</b> según los estándares de seguridad ISO 27001.
-              Monitorea con precisión accesos de personal, operaciones de facturación, arqueos de caja y excepciones críticas del sistema para garantizar la total transparencia operativa.
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: "0.82rem", lineHeight: 1.45 }}
+            >
+              La bitácora registra automáticamente al responsable de cada
+              operación de escritura, su origen, entidad afectada, resultado y
+              datos técnicos saneados. Los usuarios operativos no pueden
+              modificar ni eliminar estos registros desde la aplicación.
             </Typography>
           </Box>
         </Paper>
@@ -142,6 +158,7 @@ const AuditLogPage = () => {
           onResetFilters={audit.resetFilters}
           onDatePreset={audit.setDatePreset}
           availableUsers={audit.availableUsers}
+          availableModules={audit.availableModules}
           totalFiltered={audit.filteredCount}
           totalLogs={audit.totalCount}
         />
