@@ -11,7 +11,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { LOGIN_SHADOWS, LOGIN_COLORS } from "../../../shared/theme";
-import type { SalesByTime } from "../hooks/useSalesReport";
+import type { SalesByTime } from "../model/salesReport.types";
 
 interface SalesChartProps {
   data: SalesByTime[];

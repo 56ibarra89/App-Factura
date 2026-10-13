@@ -6,24 +6,14 @@ import InvoiceDetailsDialog from "../ui/InvoiceDetailsDialog";
 import { useInvoiceHistory } from "../hooks/useInvoiceHistory";
 import InvoiceFilters from "../ui/InvoiceFilters";
 import InvoiceTable from "../ui/InvoiceTable";
-import {
-  PERMISSIONS,
-  PinValidationDialog,
-  useAuth,
-} from "../../auth";
-import {
-  receiptPrinter,
-  type ReceiptPrinter,
-} from "../../../shared/printing";
+import { PERMISSIONS, PinValidationDialog, useAuth } from "../../auth";
+import { receiptPrinter, type ReceiptPrinter } from "../../../shared/printing";
 
 interface InvoicesPageProps {
   printer?: ReceiptPrinter;
 }
 
-const InvoicesPage = ({
-  printer = receiptPrinter,
-}: InvoicesPageProps) => {
-
+const InvoicesPage = ({ printer = receiptPrinter }: InvoicesPageProps) => {
   const {
     startDate,
     setStartDate,
@@ -35,8 +25,13 @@ const InvoicesPage = ({
     setSelectedPaymentMethod,
     paymentMethodOptions,
     loading,
-    filteredOrders,
-    handleSearchClick
+    orders,
+    totalRows,
+    page,
+    rowsPerPage,
+    changePage,
+    changeRowsPerPage,
+    handleSearchClick,
   } = useInvoiceHistory();
 
   const { role } = useAuth();
@@ -53,7 +48,6 @@ const InvoicesPage = ({
       setSelectedOrder(order);
       setPreviewOpen(true);
     } else {
-
       setOrderToPrint(order);
       setPinDialogOpen(true);
     }
@@ -88,7 +82,7 @@ const InvoicesPage = ({
     <Box
       minHeight="100vh"
       sx={{
-        bgcolor: 'background.default',
+        bgcolor: "background.default",
         pt: 4,
         pb: 4,
         px: { xs: 2, md: 6 },
@@ -100,7 +94,8 @@ const InvoicesPage = ({
       />
 
       <Typography variant="body1" color="text.secondary" mb={3} mt={2}>
-        Consulta el registro histórico de ventas. Filtra por rango de fechas, método de pago o busca por cliente/cajero/ID.
+        Consulta el registro histórico de ventas. Filtra por rango de fechas,
+        método de pago o busca por cliente/cajero/ID.
       </Typography>
 
       <InvoiceFilters
@@ -117,10 +112,15 @@ const InvoicesPage = ({
       />
 
       <InvoiceTable
-        orders={filteredOrders}
+        orders={orders}
+        totalRows={totalRows}
+        page={page}
+        rowsPerPage={rowsPerPage}
         loading={loading}
         onPrintClick={handlePrint}
         onViewClick={handleView}
+        onPageChange={changePage}
+        onRowsPerPageChange={changeRowsPerPage}
       />
 
       {selectedOrder && (
@@ -160,4 +160,3 @@ const InvoicesPage = ({
 };
 
 export default InvoicesPage;
-

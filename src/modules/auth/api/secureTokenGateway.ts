@@ -5,7 +5,7 @@ import {
 
 interface AuthRuntime {
   authAPI?: {
-    setToken(token: string, apiUrl: string): Promise<boolean>;
+    setToken(token: string): Promise<boolean>;
     clearToken(): Promise<void>;
   };
 }
@@ -17,14 +17,13 @@ export interface SecureTokenGateway {
 
 export function createSecureTokenGateway(
   runtime: AuthRuntime = window,
-  apiUrl: string = import.meta.env.VITE_API_BASE_URL || "",
   tokenStore: AccessTokenStore = accessTokenStore,
 ): SecureTokenGateway {
   return {
     async store(token) {
       if (runtime.authAPI) {
         tokenStore.clear();
-        const stored = await runtime.authAPI.setToken(token, apiUrl);
+        const stored = await runtime.authAPI.setToken(token);
         if (!stored) throw new Error("No fue posible proteger la sesión.");
         return;
       }

@@ -4,7 +4,11 @@ import {
   type BackupItem,
   type BackupConfig,
   type BackupGateway,
+  getBackupFileValidationError,
 } from "../api/backupGateway";
+
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error && error.message ? error.message : fallback;
 
 export const useBackups = (gateway: BackupGateway = backupGateway) => {
   const [backups, setBackups] = useState<BackupItem[]>([]);
@@ -74,9 +78,9 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
       if (configData) {
         setConfig(configData);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       showNotification(
-        err?.message || "Error al cargar la información de respaldos",
+        getErrorMessage(err, "Error al cargar la información de respaldos"),
         "error"
       );
     } finally {
@@ -99,9 +103,9 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
         `¡Respaldo ${newItem.filename} generado exitosamente (${newItem.sizeMb} MB)!`,
         "success"
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       showNotification(
-        err?.message || "No se pudo generar el respaldo",
+        getErrorMessage(err, "No se pudo generar el respaldo"),
         "error"
       );
     } finally {
@@ -116,9 +120,9 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
       const updated = await gateway.updateConfig(newConfig);
       setConfig(updated);
       showNotification("Configuración de respaldos guardada correctamente", "success");
-    } catch (err: any) {
+    } catch (err: unknown) {
       showNotification(
-        err?.message || "Error al actualizar la configuración",
+        getErrorMessage(err, "Error al actualizar la configuración"),
         "error"
       );
     } finally {
@@ -132,9 +136,9 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
       showNotification(`Iniciando descarga de ${filename}...`, "info");
       await gateway.download(filename);
       showNotification("Archivo descargado exitosamente", "success");
-    } catch (err: any) {
+    } catch (err: unknown) {
       showNotification(
-        err?.message || "Error al descargar el archivo",
+        getErrorMessage(err, "Error al descargar el archivo"),
         "error"
       );
     }
@@ -147,6 +151,11 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
 
   // Abrir Modal de Restauración para un archivo externo
   const handleOpenRestoreFile = (file: File) => {
+    const validationError = getBackupFileValidationError(file);
+    if (validationError) {
+      showNotification(validationError, "error");
+      return;
+    }
     setRestoreModal({ open: true, item: null, file });
   };
 
@@ -179,9 +188,9 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
       );
       handleCloseRestoreDialog();
       await loadAll();
-    } catch (err: any) {
+    } catch (err: unknown) {
       showNotification(
-        err?.message || "Error crítico al restaurar la base de datos",
+        getErrorMessage(err, "Error crítico al restaurar la base de datos"),
         "error"
       );
     } finally {
@@ -209,9 +218,9 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
       setBackups((prev) => prev.filter((b) => b.filename !== targetFilename));
       showNotification(`Respaldo ${targetFilename} eliminado correctamente`, "success");
       handleCloseDeleteDialog();
-    } catch (err: any) {
+    } catch (err: unknown) {
       showNotification(
-        err?.message || "No se pudo eliminar el archivo",
+        getErrorMessage(err, "No se pudo eliminar el archivo"),
         "error"
       );
     } finally {

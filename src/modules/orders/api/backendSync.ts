@@ -217,8 +217,7 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
           : Number(p.commissionAmount),
     })),
     paymentMethod: (hasMultiplePayments ? "MIXTO" : rawPaymentMethod) as
-      | PaymentMethod
-      | undefined,
+      PaymentMethod | undefined,
     cashierName: backendOrder.cashierSnapshotName || undefined,
     isSentToKitchen: backendOrder.isSentToKitchen,
     invoiceNumber:
@@ -233,14 +232,50 @@ export async function fetchOrdersFromBackend(): Promise<Order[]> {
   return data.map(mapBackendOrderToFrontend);
 }
 
-export async function fetchOrdersByDateRange(
-  startDate: Date,
-  endDate: Date,
-): Promise<Order[]> {
-  const start = startDate.toISOString();
-  const end = endDate.toISOString();
-  const data = await apiClient(`/orders?startDate=${start}&endDate=${end}`);
-  return data.map(mapBackendOrderToFrontend);
+export async function fetchOrderHistory(query: {
+  startDate: Date;
+  endDate: Date;
+  page: number;
+  pageSize: number;
+  search?: string;
+  paymentMethodId?: string;
+  view?: "all" | "invoices";
+  statuses?: OrderStatus[];
+}): Promise<{
+  items: Order[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  paymentMethodOptions: Array<{ id: string; name: string }>;
+}> {
+  const params = new URLSearchParams({
+    startDate: query.startDate.toISOString(),
+    endDate: query.endDate.toISOString(),
+    page: String(query.page),
+    pageSize: String(query.pageSize),
+  });
+  if (query.search?.trim()) params.set("search", query.search.trim());
+  if (query.paymentMethodId && query.paymentMethodId !== "ALL") {
+    params.set("paymentMethodId", query.paymentMethodId);
+  }
+  if (query.view) params.set("view", query.view);
+  if (query.statuses?.length) {
+    params.set("statuses", query.statuses.join(","));
+  }
+
+  const response: {
+    items: BackendOrder[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    paymentMethodOptions: Array<{ id: string; name: string }>;
+  } = await apiClient(`/orders/history?${params.toString()}`);
+  return {
+    ...response,
+    items: response.items.map(mapBackendOrderToFrontend),
+  };
 }
 
 export async function syncAddOrderToBackend(order: Order): Promise<Order> {

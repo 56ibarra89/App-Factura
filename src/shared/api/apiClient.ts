@@ -142,7 +142,7 @@ async function attemptTokenRefresh(): Promise<string | null> {
       if (typeof newToken === "string" && newToken) {
         accessTokenStore.set(newToken);
         if (window.authAPI) {
-          await window.authAPI.setToken(newToken, baseUrl);
+          await window.authAPI.setToken(newToken);
         }
         return newToken;
       }

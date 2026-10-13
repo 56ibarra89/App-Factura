@@ -1,83 +1,83 @@
-import { app as w, BrowserWindow as E, ipcMain as c, safeStorage as p, session as b } from "electron";
-import { fileURLToPath as A } from "node:url";
+import { app as y, BrowserWindow as R, ipcMain as l, safeStorage as m, session as D } from "electron";
+import { fileURLToPath as O } from "node:url";
 import d from "node:path";
-import y from "node:net";
-function S(s, a = 9100, r = 3e3) {
-  return new Promise((e) => {
-    const l = Date.now(), t = new y.Socket();
-    let n = !1;
+import A, { isIP as U } from "node:net";
+function M(e, n = 9100, r = 3e3) {
+  return new Promise((t) => {
+    const s = Date.now(), i = new A.Socket();
+    let o = !1;
     const f = () => {
-      t.removeAllListeners(), t.destroy();
+      i.removeAllListeners(), i.destroy();
     };
-    t.setTimeout(r), t.on("connect", () => {
-      if (n) return;
-      n = !0;
-      const u = Date.now() - l;
-      f(), e({ success: !0, latencyMs: u });
-    }), t.on("timeout", () => {
-      n || (n = !0, f(), e({
+    i.setTimeout(r), i.on("connect", () => {
+      if (o) return;
+      o = !0;
+      const c = Date.now() - s;
+      f(), t({ success: !0, latencyMs: c });
+    }), i.on("timeout", () => {
+      o || (o = !0, f(), t({
         success: !1,
-        error: `Tiempo de espera agotado (${r}ms) conectando a ${s}:${a}`
+        error: `Tiempo de espera agotado (${r}ms) conectando a ${e}:${n}`
       }));
-    }), t.on("error", (u) => {
-      if (n) return;
-      n = !0, f();
-      let i = u.message;
-      u.code === "ECONNREFUSED" ? i = `Conexión rechazada en ${s}:${a} (¿Impresora encendida o puerto incorrecto?)` : u.code === "EHOSTUNREACH" ? i = `Host inalcanzable ${s} (Verifica cable de red o Wi-Fi)` : u.code === "ETIMEDOUT" && (i = `Timeout de conexión con ${s}:${a}`), e({ success: !1, error: i });
+    }), i.on("error", (c) => {
+      if (o) return;
+      o = !0, f();
+      let a = c.message;
+      c.code === "ECONNREFUSED" ? a = `Conexión rechazada en ${e}:${n} (¿Impresora encendida o puerto incorrecto?)` : c.code === "EHOSTUNREACH" ? a = `Host inalcanzable ${e} (Verifica cable de red o Wi-Fi)` : c.code === "ETIMEDOUT" && (a = `Timeout de conexión con ${e}:${n}`), t({ success: !1, error: a });
     });
     try {
-      t.connect(a, s);
-    } catch (u) {
-      if (n) return;
-      n = !0, f(), e({
+      i.connect(n, e);
+    } catch (c) {
+      if (o) return;
+      o = !0, f(), t({
         success: !1,
-        error: u instanceof Error ? u.message : String(u)
+        error: c instanceof Error ? c.message : String(c)
       });
     }
   });
 }
-function R(s, a = 9100, r, e = 3e3) {
-  return new Promise((l) => {
-    const t = new y.Socket();
-    let n = !1;
+function I(e, n = 9100, r, t = 3e3) {
+  return new Promise((s) => {
+    const i = new A.Socket();
+    let o = !1;
     const f = () => {
-      t.removeAllListeners(), t.destroy();
+      i.removeAllListeners(), i.destroy();
     };
-    t.setTimeout(e);
-    const u = typeof r == "string" ? Buffer.from(r, "binary") : Buffer.isBuffer(r) ? r : (Array.isArray(r), Buffer.from(r));
-    t.on("connect", () => {
-      t.write(u, (i) => {
-        if (i) {
-          n || (n = !0, f(), l({ success: !1, error: `Error enviando datos: ${i.message}` }));
+    i.setTimeout(t);
+    const c = typeof r == "string" ? Buffer.from(r, "binary") : Buffer.isBuffer(r) ? r : (Array.isArray(r), Buffer.from(r));
+    i.on("connect", () => {
+      i.write(c, (a) => {
+        if (a) {
+          o || (o = !0, f(), s({ success: !1, error: `Error enviando datos: ${a.message}` }));
           return;
         }
-        t.end(() => {
-          n || (n = !0, f(), l({ success: !0 }));
+        i.end(() => {
+          o || (o = !0, f(), s({ success: !0 }));
         });
       });
-    }), t.on("timeout", () => {
-      n || (n = !0, f(), l({
+    }), i.on("timeout", () => {
+      o || (o = !0, f(), s({
         success: !1,
-        error: `Timeout de socket (${e}ms) al enviar datos a ${s}:${a}`
+        error: `Timeout de socket (${t}ms) al enviar datos a ${e}:${n}`
       }));
-    }), t.on("error", (i) => {
-      if (n) return;
-      n = !0, f();
-      let m = i.message;
-      i.code === "ECONNREFUSED" ? m = `Conexión rechazada en ${s}:${a}` : i.code === "EHOSTUNREACH" ? m = `Impresora no alcanzable en ${s}:${a}` : i.code === "ETIMEDOUT" && (m = `Tiempo de conexión agotado con ${s}:${a}`), l({ success: !1, error: m });
+    }), i.on("error", (a) => {
+      if (o) return;
+      o = !0, f();
+      let p = a.message;
+      a.code === "ECONNREFUSED" ? p = `Conexión rechazada en ${e}:${n}` : a.code === "EHOSTUNREACH" ? p = `Impresora no alcanzable en ${e}:${n}` : a.code === "ETIMEDOUT" && (p = `Tiempo de conexión agotado con ${e}:${n}`), s({ success: !1, error: p });
     });
     try {
-      t.connect(a, s);
-    } catch (i) {
-      if (n) return;
-      n = !0, f(), l({
+      i.connect(n, e);
+    } catch (a) {
+      if (o) return;
+      o = !0, f(), s({
         success: !1,
-        error: i instanceof Error ? i.message : String(i)
+        error: a instanceof Error ? a.message : String(a)
       });
     }
   });
 }
-const _ = Buffer.from([
+const k = Buffer.from([
   27,
   112,
   0,
@@ -89,120 +89,186 @@ const _ = Buffer.from([
   25,
   250
 ]);
-function $(s, a = 9100, r = 3e3) {
-  return R(s, a, _, r);
+function v(e, n = 9100, r = 3e3) {
+  return I(e, n, k, r);
 }
-const h = d.dirname(A(import.meta.url));
-process.env.APP_ROOT = d.join(h, "..");
-const g = process.env.VITE_DEV_SERVER_URL, H = d.join(process.env.APP_ROOT, "dist-electron"), T = d.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = g ? d.join(process.env.APP_ROOT, "public") : T;
-let o;
-function v() {
-  o = new E({
+const L = 9100, $ = 3e3, C = 500, H = 1e4, B = 256 * 1024;
+function P(e) {
+  return typeof e == "object" && e !== null && !Array.isArray(e);
+}
+function j(e) {
+  if (U(e) !== 4) return !1;
+  const [n, r] = e.split(".").map(Number);
+  return n === 10 || n === 172 && r >= 16 && r <= 31 || n === 192 && r === 168;
+}
+function V(e) {
+  return Number.isInteger(e) && e >= 9100 && e <= 9109;
+}
+function E(e) {
+  if (!P(e) || typeof e.host != "string") return null;
+  const n = e.host.trim(), r = e.port === void 0 ? L : e.port, t = e.timeoutMs === void 0 ? $ : e.timeoutMs;
+  return !j(n) || typeof r != "number" || !V(r) || typeof t != "number" || !Number.isInteger(t) || t < C || t > H ? null : { host: n, port: r, timeoutMs: t };
+}
+function F(e) {
+  let n;
+  if (Array.isArray(e)) {
+    if (!e.every(
+      (r) => Number.isInteger(r) && r >= 0 && r <= 255
+    ))
+      return null;
+    n = Buffer.from(e);
+  } else if (e instanceof Uint8Array)
+    n = Buffer.from(e.buffer, e.byteOffset, e.byteLength);
+  else
+    return null;
+  return n.byteLength === 0 || n.byteLength > B ? null : n;
+}
+function x(e) {
+  if (e === void 0) return;
+  if (!P(e) || e.deviceName === void 0 || typeof e.deviceName != "string") return null;
+  const n = e.deviceName.trim();
+  return n.length === 0 || n.length > 256 ? null : n;
+}
+function W(e) {
+  try {
+    const n = new URL(e);
+    return n.protocol !== "http:" && n.protocol !== "https:" ? null : n.origin;
+  } catch {
+    return null;
+  }
+}
+const N = d.dirname(O(import.meta.url));
+process.env.APP_ROOT = d.join(N, "..");
+const T = process.env.VITE_DEV_SERVER_URL, G = d.join(process.env.APP_ROOT, "dist-electron"), _ = d.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = T ? d.join(process.env.APP_ROOT, "public") : _;
+let u;
+const h = W("http://localhost:3000");
+function g(e) {
+  return !!(u && !u.isDestroyed() && e.sender === u.webContents && e.senderFrame === u.webContents.mainFrame);
+}
+const w = {
+  success: !1,
+  error: "Operación nativa no autorizada."
+};
+function S() {
+  u = new R({
     icon: d.join(process.env.VITE_PUBLIC || "", "icon.png"),
     webPreferences: {
-      preload: d.join(h, "preload.mjs"),
+      preload: d.join(N, "preload.mjs"),
       sandbox: !0,
       contextIsolation: !0,
       nodeIntegration: !1
     }
-  }), o.setMenu(null), o.webContents.setWindowOpenHandler(() => ({ action: "deny" })), o.webContents.on("will-navigate", (s, a) => {
-    const r = o == null ? void 0 : o.webContents.getURL();
+  }), u.setMenu(null), u.webContents.setWindowOpenHandler(() => ({ action: "deny" })), u.webContents.on("will-navigate", (e, n) => {
+    const r = u == null ? void 0 : u.webContents.getURL();
     if (r)
       try {
-        new URL(a).origin !== new URL(r).origin && s.preventDefault();
+        new URL(n).origin !== new URL(r).origin && e.preventDefault();
       } catch {
-        s.preventDefault();
+        e.preventDefault();
       }
-  }), g ? o.loadURL(g) : o.loadFile(d.join(T, "index.html"));
+  }), T ? u.loadURL(T) : u.loadFile(d.join(_, "index.html"));
 }
-w.on("window-all-closed", () => {
-  process.platform !== "darwin" && (w.quit(), o = null);
+y.on("window-all-closed", () => {
+  process.platform !== "darwin" && (y.quit(), u = null);
 });
-w.on("activate", () => {
-  E.getAllWindows().length === 0 && v();
+y.on("activate", () => {
+  R.getAllWindows().length === 0 && S();
 });
-w.whenReady().then(() => {
-  c.removeAllListeners("print-silent"), c.on("print-silent", (r, e) => {
-    r.sender.print(
-      {
-        silent: !0,
-        printBackground: !0,
-        deviceName: (e == null ? void 0 : e.deviceName) || "",
-        margins: { marginType: "none" }
-      },
-      (l, t) => {
-        l || console.error(
-          "Error al imprimir silencioso en",
-          (e == null ? void 0 : e.deviceName) || "impresora predeterminada:",
-          t
-        );
-      }
-    );
-  }), c.removeHandler("get-system-printers"), c.handle("get-system-printers", async (r) => {
+y.whenReady().then(() => {
+  let e = null;
+  const n = (r) => g(r) && e !== null;
+  l.removeHandler("printer:print-current-page"), l.handle("printer:print-current-page", async (r, t) => {
+    if (!n(r)) return w;
+    const s = x(t);
+    return s === null ? { success: !1, error: "Impresora no válida." } : s && !(await r.sender.getPrintersAsync()).some((o) => o.name === s) ? { success: !1, error: "La impresora indicada no está instalada." } : await new Promise((i) => {
+      r.sender.print(
+        {
+          silent: !0,
+          printBackground: !0,
+          deviceName: s || "",
+          margins: { marginType: "none" }
+        },
+        (o, f) => {
+          i(
+            o ? { success: !0 } : { success: !1, error: f || "No fue posible imprimir." }
+          );
+        }
+      );
+    });
+  }), l.removeHandler("printer:list-system"), l.handle("printer:list-system", async (r) => {
+    if (!n(r)) return [];
     try {
-      return await r.sender.getPrintersAsync();
-    } catch (e) {
-      return console.error("[Main] Error obteniendo impresoras del sistema:", e), [];
+      return (await r.sender.getPrintersAsync()).map(({ name: s, displayName: i, description: o, options: f }) => {
+        const c = f, a = c.status ?? c["printer-status"], p = Number.isFinite(Number(a)) ? Number(a) : 0, b = c.isDefault ?? c["is-default"];
+        return { name: s, displayName: i, description: o, status: p, isDefault: b === !0 || b === "true" };
+      });
+    } catch (t) {
+      return console.error("[Main] Error obteniendo impresoras del sistema:", t), [];
     }
-  }), c.removeHandler("test-network-printer"), c.handle(
-    "test-network-printer",
-    async (r, e) => await S(
-      e.host,
-      e.port,
-      e.timeoutMs
-    )
-  ), c.removeHandler("print-network-raw"), c.handle(
-    "print-network-raw",
-    async (r, e) => await R(
-      e.host,
-      e.port,
-      e.data,
-      e.timeoutMs
-    )
-  ), c.removeHandler("open-cash-drawer"), c.handle(
-    "open-cash-drawer",
-    async (r, e) => e != null && e.host ? await $(e.host, e.port) : { success: !0 }
-  ), v();
-  let s = null, a = null;
-  c.removeHandler("set-secure-token"), c.handle("set-secure-token", (r, e, l) => {
-    if (r.sender !== (o == null ? void 0 : o.webContents) || typeof e != "string" || e.length < 16 || e.length > 8192)
-      return !1;
-    let t;
-    try {
-      const n = new URL(l);
-      if (!["http:", "https:"].includes(n.protocol)) return !1;
-      t = n.origin;
-    } catch {
-      return !1;
+  }), l.removeHandler("printer:test-network"), l.handle(
+    "printer:test-network",
+    async (r, t) => {
+      if (!n(r)) return w;
+      const s = E(t);
+      return s ? await M(
+        s.host,
+        s.port,
+        s.timeoutMs
+      ) : {
+        success: !1,
+        error: "Solo se permiten impresoras IPv4 privadas en puertos 9100-9109."
+      };
     }
-    return p.isEncryptionAvailable() ? s = p.encryptString(e) : s = Buffer.from(e, "utf-8"), a = t, !0;
-  }), c.removeHandler("clear-secure-token"), c.handle("clear-secure-token", (r) => {
-    r.sender === (o == null ? void 0 : o.webContents) && (s = null, a = null);
-  }), c.removeHandler("has-secure-token"), c.handle(
-    "has-secure-token",
-    (r) => r.sender === (o == null ? void 0 : o.webContents) && s !== null
-  ), b.defaultSession.webRequest.onBeforeSendHeaders((r, e) => {
-    const l = r.webContentsId === (o == null ? void 0 : o.webContents.id);
-    let t = !1;
-    if (a)
+  ), l.removeHandler("printer:print-ticket"), l.handle(
+    "printer:print-ticket",
+    async (r, t) => {
+      if (!n(r)) return w;
+      const s = E(t), i = typeof t == "object" && t !== null && "data" in t ? F(t.data) : null;
+      return !s || !i ? { success: !1, error: "Destino o contenido de impresión no válido." } : await I(
+        s.host,
+        s.port,
+        i,
+        s.timeoutMs
+      );
+    }
+  ), l.removeHandler("printer:open-network-drawer"), l.handle(
+    "printer:open-network-drawer",
+    async (r, t) => {
+      if (!n(r)) return w;
+      const s = E(t);
+      return s ? await v(
+        s.host,
+        s.port,
+        s.timeoutMs
+      ) : { success: !1, error: "Destino de gaveta no válido." };
+    }
+  ), S(), l.removeHandler("auth:set-token"), l.handle("auth:set-token", (r, t) => !g(r) || !h || typeof t != "string" || t.length < 16 || t.length > 8192 ? !1 : (m.isEncryptionAvailable() ? e = m.encryptString(t) : e = Buffer.from(t, "utf-8"), !0)), l.removeHandler("auth:clear-token"), l.handle("auth:clear-token", (r) => {
+    g(r) && (e = null);
+  }), l.removeHandler("auth:has-token"), l.handle(
+    "auth:has-token",
+    (r) => g(r) && e !== null
+  ), D.defaultSession.webRequest.onBeforeSendHeaders((r, t) => {
+    const s = r.webContentsId === (u == null ? void 0 : u.webContents.id);
+    let i = !1;
+    if (h)
       try {
-        t = new URL(r.url).origin === a;
+        i = new URL(r.url).origin === h;
       } catch {
-        t = !1;
+        i = !1;
       }
-    if (s && l && t)
+    if (e && s && i)
       try {
-        let n = "";
-        p.isEncryptionAvailable() ? n = p.decryptString(s) : n = s.toString("utf-8"), r.requestHeaders.Authorization = `Bearer ${n}`;
-      } catch (n) {
-        console.error("[Main] Error desencriptando token:", n);
+        let o = "";
+        m.isEncryptionAvailable() ? o = m.decryptString(e) : o = e.toString("utf-8"), r.requestHeaders.Authorization = `Bearer ${o}`;
+      } catch (o) {
+        console.error("[Main] Error desencriptando token:", o);
       }
-    e({ requestHeaders: r.requestHeaders });
+    t({ requestHeaders: r.requestHeaders });
   });
 });
 export {
-  H as MAIN_DIST,
-  T as RENDERER_DIST,
-  g as VITE_DEV_SERVER_URL
+  G as MAIN_DIST,
+  _ as RENDERER_DIST,
+  T as VITE_DEV_SERVER_URL
 };

@@ -1,6 +1,22 @@
 import { apiClient } from "../../../shared/api";
 import { accessTokenStore } from "../../../shared/api/accessTokenStore";
 
+export const MAX_BACKUP_UPLOAD_BYTES = 100 * 1024 * 1024;
+export const MAX_BACKUP_UPLOAD_MB = MAX_BACKUP_UPLOAD_BYTES / (1024 * 1024);
+
+export function getBackupFileValidationError(file: File): string | null {
+  if (!file.name.toLowerCase().endsWith(".sql")) {
+    return "Selecciona un archivo de respaldo con extensión .sql";
+  }
+  if (file.size === 0) {
+    return "El archivo de respaldo está vacío";
+  }
+  if (file.size > MAX_BACKUP_UPLOAD_BYTES) {
+    return `El respaldo supera el límite de ${MAX_BACKUP_UPLOAD_MB} MB`;
+  }
+  return null;
+}
+
 export type BackupType = 'AUTOMATIC' | 'MANUAL' | 'SHIFT_CLOSE' | 'SAFETY_SNAPSHOT';
 export type BackupLocation = 'LOCAL' | 'CLOUD' | 'SYNCED';
 
@@ -95,6 +111,9 @@ export const backupGateway: BackupGateway = {
   },
 
   async restoreFromFile(file: File): Promise<RestoreResult> {
+    const validationError = getBackupFileValidationError(file);
+    if (validationError) throw new Error(validationError);
+
     const formData = new FormData();
     formData.append("file", file);
     return apiClient("/backups/restore", {

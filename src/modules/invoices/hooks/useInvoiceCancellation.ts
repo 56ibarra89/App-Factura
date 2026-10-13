@@ -23,6 +23,7 @@ export function useInvoiceCancellation(
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [orders, setOrders] = useState<Invoice[]>([]);
+  const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQueryState] = useState("");
   const [page, setPage] = useState(0);
@@ -42,17 +43,26 @@ export function useInvoiceCancellation(
     const end = new Date(`${endDate}T23:59:59`);
 
     try {
-      const fetched = await historyGateway.listByDateRange(start, end);
-      setOrders(fetched);
+      const result = await historyGateway.listHistory({
+        startDate: start,
+        endDate: end,
+        page: page + 1,
+        pageSize: rowsPerPage,
+        search: searchQuery.trim(),
+        view: "all",
+      });
+      setOrders(result.items);
+      setTotalRows(result.total);
     } catch (error) {
       console.error("Error al cargar órdenes:", error);
     } finally {
       setLoading(false);
     }
-  }, [endDate, historyGateway, startDate]);
+  }, [endDate, historyGateway, page, rowsPerPage, searchQuery, startDate]);
 
   useEffect(() => {
-    void refresh();
+    const timeout = window.setTimeout(() => void refresh(), 250);
+    return () => window.clearTimeout(timeout);
   }, [refresh]);
 
   useEffect(() => {
@@ -62,33 +72,6 @@ export function useInvoiceCancellation(
       setCancelReasonId((current) => current || firstActive?.id || "");
     });
   }, []);
-
-  const filteredOrders = useMemo(() => {
-    const sorted = [...orders].sort(
-      (first, second) =>
-        new Date(second.timestamp).getTime() -
-        new Date(first.timestamp).getTime(),
-    );
-    if (!searchQuery) return sorted;
-
-    const query = searchQuery.toLowerCase();
-    return sorted.filter(
-      (order) =>
-        order.id.toLowerCase().includes(query) ||
-        order.customerName?.toLowerCase().includes(query) ||
-        (order.tableId &&
-          `mesa ${order.tableId}`.toLowerCase().includes(query)),
-    );
-  }, [orders, searchQuery]);
-
-  const paginatedOrders = useMemo(
-    () =>
-      filteredOrders.slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage,
-      ),
-    [filteredOrders, page, rowsPerPage],
-  );
 
   const setSearchQuery = useCallback((query: string) => {
     setSearchQueryState(query);
@@ -195,8 +178,8 @@ export function useInvoiceCancellation(
     setSearchQuery,
     loading,
     refresh,
-    filteredCount: filteredOrders.length,
-    paginatedOrders,
+    filteredCount: totalRows,
+    paginatedOrders: orders,
     page,
     rowsPerPage,
     changePage,

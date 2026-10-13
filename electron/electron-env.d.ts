@@ -27,33 +27,39 @@ interface ElectronSystemPrinter {
   description: string;
   status: number;
   isDefault: boolean;
-  options?: Record<string, string>;
+}
+
+interface ElectronNativeOperationResult {
+  success: boolean;
+  error?: string;
 }
 
 // Used in Renderer process, expose in `preload.ts`
 interface Window {
   printAPI?: {
-    printSilent: (options?: { deviceName?: string }) => void;
+    printSilent: (
+      options?: { deviceName?: string },
+    ) => Promise<ElectronNativeOperationResult>;
     getSystemPrinters: () => Promise<ElectronSystemPrinter[]>;
     testNetworkPrinter: (options: {
       host: string;
       port?: number;
       timeoutMs?: number;
     }) => Promise<{ success: boolean; latencyMs?: number; error?: string }>;
-    printNetworkRaw: (options: {
+    printNetworkTicket: (options: {
       host: string;
       port?: number;
-      data: string | number[] | Uint8Array;
+      data: number[] | Uint8Array;
       timeoutMs?: number;
-    }) => Promise<{ success: boolean; error?: string }>;
-    openCashDrawer: (options?: {
-      host?: string;
+    }) => Promise<ElectronNativeOperationResult>;
+    openNetworkCashDrawer: (options: {
+      host: string;
       port?: number;
-      deviceName?: string;
-    }) => Promise<{ success: boolean; error?: string }>;
+      timeoutMs?: number;
+    }) => Promise<ElectronNativeOperationResult>;
   };
   authAPI?: {
-    setToken: (token: string, apiUrl: string) => Promise<boolean>;
+    setToken: (token: string) => Promise<boolean>;
     clearToken: () => Promise<void>;
     hasToken: () => Promise<boolean>;
   };

@@ -1,9 +1,5 @@
-export {
-  OrderProvider,
-} from "./model/OrderProvider";
-export type {
-  OrderProviderGateways,
-} from "./model/OrderProvider";
+export { OrderProvider } from "./model/OrderProvider";
+export type { OrderProviderGateways } from "./model/OrderProvider";
 export {
   useOrderCommands,
   useOrderContext,
@@ -46,15 +42,12 @@ export type {
   OrderTotals,
   SplitPaymentAmounts,
 } from "./model/order-command.types";
-export {
-  statusColors,
-  statusLabels,
-} from "./model/orderStatusConfig";
-export {
-  ordersGateway,
-} from "./api/ordersGateway";
+export { statusColors, statusLabels } from "./model/orderStatusConfig";
+export { ordersGateway } from "./api/ordersGateway";
 export type {
   OrderHistoryGateway,
+  OrderHistoryPage,
+  OrderHistoryQuery,
   OrdersGateway,
 } from "./api/ordersGateway";
 export type {
@@ -68,4 +61,3 @@ export { KdsCard } from "./ui/kds/KdsCard";
 export { KdsKanbanBoard } from "./ui/kds/KdsKanbanBoard";
 export { useKdsAudioAlert } from "./hooks/useKdsAudioAlert";
 export { getTicketUrgency } from "./utils/timeUrgency";
-

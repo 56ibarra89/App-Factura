@@ -1,4 +1,11 @@
-import { app, BrowserWindow, ipcMain, safeStorage, session } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  safeStorage,
+  session,
+  type IpcMainInvokeEvent,
+} from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import {
@@ -6,6 +13,12 @@ import {
   printNetworkRaw,
   openDrawerViaNetwork,
 } from './printerNetwork'
+import {
+  configuredApiOrigin,
+  validateDeviceName,
+  validatePrintPayload,
+  validatePrinterTarget,
+} from './ipcSecurity'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -28,6 +41,22 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
 let win: BrowserWindow | null
+
+const apiOrigin = configuredApiOrigin(import.meta.env.VITE_API_BASE_URL)
+
+function isTrustedIpcSender(event: IpcMainInvokeEvent): boolean {
+  return Boolean(
+    win &&
+      !win.isDestroyed() &&
+      event.sender === win.webContents &&
+      event.senderFrame === win.webContents.mainFrame,
+  )
+}
+
+const deniedIpcResult = {
+  success: false,
+  error: 'Operación nativa no autorizada.',
+} as const
 
 function createWindow() {
   win = new BrowserWindow({
@@ -81,143 +110,166 @@ app.on('activate', () => {
 })
 
 app.whenReady().then(() => {
+  let encryptedToken: Buffer | null = null
+
+  const canUsePrinterCapabilities = (event: IpcMainInvokeEvent) =>
+    isTrustedIpcSender(event) && encryptedToken !== null
+
   // 1. Manejador de Impresión Silenciosa (USB / Driver de Windows)
-  ipcMain.removeAllListeners('print-silent');
-  ipcMain.on('print-silent', (event, options?: { deviceName?: string }) => {
-    event.sender.print(
-      {
-        silent: true,
-        printBackground: true,
-        deviceName: options?.deviceName || '',
-        margins: { marginType: 'none' },
-      },
-      (success, failureReason) => {
-        if (!success) {
-          console.error(
-            'Error al imprimir silencioso en',
-            options?.deviceName || 'impresora predeterminada:',
-            failureReason,
+  ipcMain.removeHandler('printer:print-current-page')
+  ipcMain.handle('printer:print-current-page', async (event, options: unknown) => {
+    if (!canUsePrinterCapabilities(event)) return deniedIpcResult
+
+    const deviceName = validateDeviceName(options)
+    if (deviceName === null) {
+      return { success: false, error: 'Impresora no válida.' }
+    }
+
+    if (deviceName) {
+      const printers = await event.sender.getPrintersAsync()
+      if (!printers.some((printer) => printer.name === deviceName)) {
+        return { success: false, error: 'La impresora indicada no está instalada.' }
+      }
+    }
+
+    return await new Promise<{ success: boolean; error?: string }>((resolve) => {
+      event.sender.print(
+        {
+          silent: true,
+          printBackground: true,
+          deviceName: deviceName || '',
+          margins: { marginType: 'none' },
+        },
+        (success, failureReason) => {
+          resolve(
+            success
+              ? { success: true }
+              : { success: false, error: failureReason || 'No fue posible imprimir.' },
           )
-        }
-      },
-    )
+        },
+      )
+    })
   })
 
   // 2. Detección de Impresoras del Sistema (Windows Spooler)
-  ipcMain.removeHandler('get-system-printers');
-  ipcMain.handle('get-system-printers', async (event) => {
+  ipcMain.removeHandler('printer:list-system')
+  ipcMain.handle('printer:list-system', async (event) => {
+    if (!canUsePrinterCapabilities(event)) return []
     try {
-      const printers = await event.sender.getPrintersAsync();
-      return printers;
+      const printers = await event.sender.getPrintersAsync()
+      return printers.map(({ name, displayName, description, options }) => {
+        const safeOptions = options as Record<string, unknown>
+        const rawStatus = safeOptions.status ?? safeOptions['printer-status']
+        const status = Number.isFinite(Number(rawStatus)) ? Number(rawStatus) : 0
+        const rawDefault = safeOptions.isDefault ?? safeOptions['is-default']
+        const isDefault = rawDefault === true || rawDefault === 'true'
+        return { name, displayName, description, status, isDefault }
+      })
     } catch (error) {
-      console.error('[Main] Error obteniendo impresoras del sistema:', error);
-      return [];
+      console.error('[Main] Error obteniendo impresoras del sistema:', error)
+      return []
     }
-  });
+  })
 
   // 3. Prueba de Conexión LAN (Ping TCP al puerto 9100)
-  ipcMain.removeHandler('test-network-printer');
+  ipcMain.removeHandler('printer:test-network')
   ipcMain.handle(
-    'test-network-printer',
-    async (
-      _event,
-      options: { host: string; port?: number; timeoutMs?: number },
-    ) => {
+    'printer:test-network',
+    async (event, options: unknown) => {
+      if (!canUsePrinterCapabilities(event)) return deniedIpcResult
+      const target = validatePrinterTarget(options)
+      if (!target) {
+        return {
+          success: false,
+          error: 'Solo se permiten impresoras IPv4 privadas en puertos 9100-9109.',
+        }
+      }
       return await testNetworkPrinter(
-        options.host,
-        options.port,
-        options.timeoutMs,
-      );
+        target.host,
+        target.port,
+        target.timeoutMs,
+      )
     },
-  );
+  )
 
   // 4. Impresión Directa por Red (Socket TCP RAW 9100)
-  ipcMain.removeHandler('print-network-raw');
+  ipcMain.removeHandler('printer:print-ticket')
   ipcMain.handle(
-    'print-network-raw',
-    async (
-      _event,
-      options: {
-        host: string;
-        port?: number;
-        data: string | number[] | Uint8Array;
-        timeoutMs?: number;
-      },
-    ) => {
+    'printer:print-ticket',
+    async (event, options: unknown) => {
+      if (!canUsePrinterCapabilities(event)) return deniedIpcResult
+      const target = validatePrinterTarget(options)
+      const payload =
+        typeof options === 'object' && options !== null && 'data' in options
+          ? validatePrintPayload(options.data)
+          : null
+      if (!target || !payload) {
+        return { success: false, error: 'Destino o contenido de impresión no válido.' }
+      }
       return await printNetworkRaw(
-        options.host,
-        options.port,
-        options.data,
-        options.timeoutMs,
-      );
+        target.host,
+        target.port,
+        payload,
+        target.timeoutMs,
+      )
     },
-  );
+  )
 
   // 5. Apertura de Gaveta de Dinero (Pulso RJ11)
-  ipcMain.removeHandler('open-cash-drawer');
+  ipcMain.removeHandler('printer:open-network-drawer')
   ipcMain.handle(
-    'open-cash-drawer',
-    async (
-      _event,
-      options?: { host?: string; port?: number; deviceName?: string },
-    ) => {
-      if (options?.host) {
-        return await openDrawerViaNetwork(options.host, options.port);
+    'printer:open-network-drawer',
+    async (event, options: unknown) => {
+      if (!canUsePrinterCapabilities(event)) return deniedIpcResult
+      const target = validatePrinterTarget(options)
+      if (!target) {
+        return { success: false, error: 'Destino de gaveta no válido.' }
       }
-      return { success: true };
+      return await openDrawerViaNetwork(
+        target.host,
+        target.port,
+        target.timeoutMs,
+      )
     },
-  );
+  )
 
-  createWindow();
+  createWindow()
 
-  let encryptedToken: Buffer | null = null;
-  let targetApiOrigin: string | null = null;
-
-  ipcMain.removeHandler('set-secure-token');
-  ipcMain.handle('set-secure-token', (event, token: string, apiUrl: string) => {
-    if (event.sender !== win?.webContents) return false;
+  ipcMain.removeHandler('auth:set-token')
+  ipcMain.handle('auth:set-token', (event, token: string) => {
+    if (!isTrustedIpcSender(event) || !apiOrigin) return false
     if (typeof token !== 'string' || token.length < 16 || token.length > 8192) {
-      return false;
-    }
-    let apiOrigin: string;
-    try {
-      const parsed = new URL(apiUrl);
-      if (!['http:', 'https:'].includes(parsed.protocol)) return false;
-      apiOrigin = parsed.origin;
-    } catch {
-      return false;
+      return false
     }
 
     if (safeStorage.isEncryptionAvailable()) {
-      encryptedToken = safeStorage.encryptString(token);
+      encryptedToken = safeStorage.encryptString(token)
     } else {
-      encryptedToken = Buffer.from(token, 'utf-8');
+      encryptedToken = Buffer.from(token, 'utf-8')
     }
-    targetApiOrigin = apiOrigin;
-    return true;
-  });
+    return true
+  })
 
-  ipcMain.removeHandler('clear-secure-token');
-  ipcMain.handle('clear-secure-token', (event) => {
-    if (event.sender !== win?.webContents) return;
-    encryptedToken = null;
-    targetApiOrigin = null;
-  });
+  ipcMain.removeHandler('auth:clear-token')
+  ipcMain.handle('auth:clear-token', (event) => {
+    if (!isTrustedIpcSender(event)) return
+    encryptedToken = null
+  })
 
-  ipcMain.removeHandler('has-secure-token');
-  ipcMain.handle('has-secure-token', (event) =>
-    event.sender === win?.webContents && encryptedToken !== null,
-  );
+  ipcMain.removeHandler('auth:has-token')
+  ipcMain.handle('auth:has-token', (event) =>
+    isTrustedIpcSender(event) && encryptedToken !== null,
+  )
 
   // Interceptar peticiones para inyectar el token
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
     const belongsToAppWindow = details.webContentsId === win?.webContents.id
     let matchesApiOrigin = false;
-    if (targetApiOrigin) {
+    if (apiOrigin) {
       try {
-        matchesApiOrigin = new URL(details.url).origin === targetApiOrigin;
+        matchesApiOrigin = new URL(details.url).origin === apiOrigin
       } catch {
-        matchesApiOrigin = false;
+        matchesApiOrigin = false
       }
     }
     if (encryptedToken && belongsToAppWindow && matchesApiOrigin) {

@@ -2,23 +2,25 @@ import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("printAPI", {
   printSilent: (options?: { deviceName?: string }) =>
-    ipcRenderer.send("print-silent", options),
-  getSystemPrinters: () => ipcRenderer.invoke("get-system-printers"),
+    ipcRenderer.invoke("printer:print-current-page", options),
+  getSystemPrinters: () => ipcRenderer.invoke("printer:list-system"),
   testNetworkPrinter: (options: { host: string; port?: number; timeoutMs?: number }) =>
-    ipcRenderer.invoke("test-network-printer", options),
-  printNetworkRaw: (options: {
+    ipcRenderer.invoke("printer:test-network", options),
+  printNetworkTicket: (options: {
     host: string;
     port?: number;
-    data: string | number[] | Uint8Array;
+    data: number[] | Uint8Array;
     timeoutMs?: number;
-  }) => ipcRenderer.invoke("print-network-raw", options),
-  openCashDrawer: (options?: { host?: string; port?: number; deviceName?: string }) =>
-    ipcRenderer.invoke("open-cash-drawer", options),
+  }) => ipcRenderer.invoke("printer:print-ticket", options),
+  openNetworkCashDrawer: (options: {
+    host: string;
+    port?: number;
+    timeoutMs?: number;
+  }) => ipcRenderer.invoke("printer:open-network-drawer", options),
 });
 
 contextBridge.exposeInMainWorld("authAPI", {
-  setToken: (token: string, apiUrl: string) =>
-    ipcRenderer.invoke("set-secure-token", token, apiUrl),
-  clearToken: () => ipcRenderer.invoke("clear-secure-token"),
-  hasToken: () => ipcRenderer.invoke("has-secure-token"),
+  setToken: (token: string) => ipcRenderer.invoke("auth:set-token", token),
+  clearToken: () => ipcRenderer.invoke("auth:clear-token"),
+  hasToken: () => ipcRenderer.invoke("auth:has-token"),
 });

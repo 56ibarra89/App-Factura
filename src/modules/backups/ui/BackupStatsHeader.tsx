@@ -13,7 +13,11 @@ import StorageIcon from "@mui/icons-material/Storage";
 import UpdateIcon from "@mui/icons-material/Update";
 import DnsIcon from "@mui/icons-material/Dns";
 import ScheduleIcon from "@mui/icons-material/Schedule";
-import type { BackupItem, BackupConfig } from "../api/backupGateway";
+import {
+  MAX_BACKUP_UPLOAD_MB,
+  type BackupItem,
+  type BackupConfig,
+} from "../api/backupGateway";
 
 interface BackupStatsHeaderProps {
   backups: BackupItem[];
@@ -84,7 +88,8 @@ export const BackupStatsHeader: React.FC<BackupStatsHeaderProps> = ({
           </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+        <Box>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <input
             type="file"
             ref={fileInputRef}
@@ -132,6 +137,14 @@ export const BackupStatsHeader: React.FC<BackupStatsHeaderProps> = ({
           >
             {generating ? "Generando Copia..." : "+ Crear Respaldo Ahora"}
           </Button>
+          </Box>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mt: 0.75 }}
+          >
+            Archivo SQL de hasta {MAX_BACKUP_UPLOAD_MB} MB
+          </Typography>
         </Box>
       </Box>
 

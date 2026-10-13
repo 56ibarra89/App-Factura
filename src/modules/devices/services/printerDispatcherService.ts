@@ -178,14 +178,14 @@ class PrinterDispatcherService {
           error: "La impresora no tiene dirección IP configurada.",
         };
       }
-      if (!window.printAPI?.printNetworkRaw) {
+      if (!window.printAPI?.printNetworkTicket) {
         return {
           success: false,
-          error: "printNetworkRaw no disponible en Electron.",
+          error: "La impresión de tickets por red no está disponible en Electron.",
         };
       }
 
-      const res = await window.printAPI.printNetworkRaw({
+      const res = await window.printAPI.printNetworkTicket({
         host: printer.ipAddress,
         port: printer.port || 9100,
         data: builder.toBytes(),
@@ -197,11 +197,11 @@ class PrinterDispatcherService {
 
     // Impresión por Windows / USB
     if (window.printAPI?.printSilent) {
-      window.printAPI.printSilent({ deviceName: printer.windowsDeviceName });
-      if (printer.openCashDrawer && window.printAPI.openCashDrawer) {
-        await window.printAPI.openCashDrawer({
-          deviceName: printer.windowsDeviceName,
-        });
+      const result = await window.printAPI.printSilent({
+        deviceName: printer.windowsDeviceName,
+      });
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
       return { success: true };
     }
@@ -344,9 +344,9 @@ class PrinterDispatcherService {
         );
       }
 
-      if (window.printAPI?.printNetworkRaw) {
+      if (window.printAPI?.printNetworkTicket) {
         try {
-          const result = await window.printAPI.printNetworkRaw({
+          const result = await window.printAPI.printNetworkTicket({
             host,
             port,
             data: comandaBuffer,
@@ -428,8 +428,8 @@ class PrinterDispatcherService {
       fallbackPrinter.connectionType === "network" &&
       fallbackPrinter.ipAddress
     ) {
-      if (window.printAPI?.printNetworkRaw) {
-        await window.printAPI.printNetworkRaw({
+      if (window.printAPI?.printNetworkTicket) {
+        await window.printAPI.printNetworkTicket({
           host: fallbackPrinter.ipAddress,
           port: fallbackPrinter.port || 9100,
           data: comandaBuffer,
@@ -477,11 +477,15 @@ class PrinterDispatcherService {
     const printer = cashierPrinter || (await this.getCashierPrinter());
     if (!printer || !printer.openCashDrawer) return;
 
-    if (window.printAPI?.openCashDrawer) {
-      await window.printAPI.openCashDrawer({
+    if (
+      printer.connectionType === "network" &&
+      printer.ipAddress &&
+      window.printAPI?.openNetworkCashDrawer
+    ) {
+      await window.printAPI.openNetworkCashDrawer({
         host: printer.ipAddress,
         port: printer.port,
-        deviceName: printer.windowsDeviceName,
+        timeoutMs: 3000,
       });
     }
   }

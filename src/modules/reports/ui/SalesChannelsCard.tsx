@@ -10,7 +10,7 @@ import DeliveryDiningIcon from "@mui/icons-material/DeliveryDining";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import TableRestaurantIcon from "@mui/icons-material/TableRestaurant";
 import { LOGIN_SHADOWS } from "../../../shared/theme";
-import type { ChannelSalesSummary } from "../hooks/useSalesReport";
+import type { ChannelSalesSummary } from "../model/salesReport.types";
 
 interface SalesChannelsCardProps {
   channels: ChannelSalesSummary[];

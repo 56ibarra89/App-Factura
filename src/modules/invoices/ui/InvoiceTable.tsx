@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   TableContainer,
   Paper,
@@ -15,6 +14,7 @@ import {
 import PrintIcon from "@mui/icons-material/Print";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { Invoice } from "../model/invoice.types";
+import type { ChangeEvent } from "react";
 import { statusLabels, statusColors } from "../../orders";
 import { useMesasConfig } from "../../tables";
 import { formatTableName } from "../../../shared/format";
@@ -23,36 +23,28 @@ import PaymentBreakdownCell from "./PaymentBreakdownCell";
 
 interface InvoiceTableProps {
   orders: Invoice[];
+  totalRows: number;
+  page: number;
+  rowsPerPage: number;
   loading: boolean;
   onPrintClick: (order: Invoice) => void;
   onViewClick: (order: Invoice) => void;
+  onPageChange(event: unknown, page: number): void;
+  onRowsPerPageChange(event: ChangeEvent<HTMLInputElement>): void;
 }
 
 const InvoiceTable = ({
   orders,
+  totalRows,
+  page,
+  rowsPerPage,
   loading,
   onPrintClick,
   onViewClick,
+  onPageChange,
+  onRowsPerPageChange,
 }: InvoiceTableProps) => {
   const { floorsConfig } = useMesasConfig();
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
-  const handleChangePage = (_event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const paginatedOrders = orders.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage,
-  );
 
   return (
     <Paper
@@ -75,7 +67,9 @@ const InvoiceTable = ({
               <TableCell sx={{ fontWeight: "bold" }}>Cliente / Mesa</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Cajero</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Método de Pago</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>Desglose de Pago</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>
+                Desglose de Pago
+              </TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Total</TableCell>
               <TableCell align="center" sx={{ fontWeight: "bold" }}>
                 Estado
@@ -109,7 +103,7 @@ const InvoiceTable = ({
               </TableRow>
             )}
             {!loading &&
-              paginatedOrders.map((order) => {
+              orders.map((order) => {
                 const isCancelled = order.status === "cancelled";
                 return (
                   <TableRow
@@ -151,9 +145,7 @@ const InvoiceTable = ({
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <PaymentMethodBadge
-                        paymentMethod={order.paymentMethod}
-                      />
+                      <PaymentMethodBadge paymentMethod={order.paymentMethod} />
                     </TableCell>
                     <TableCell>
                       <PaymentBreakdownCell invoice={order} />
@@ -161,9 +153,7 @@ const InvoiceTable = ({
                     <TableCell
                       sx={{
                         fontWeight: "bold",
-                        textDecoration: isCancelled
-                          ? "line-through"
-                          : "none",
+                        textDecoration: isCancelled ? "line-through" : "none",
                         color: isCancelled ? "text.secondary" : "text.primary",
                       }}
                     >
@@ -205,11 +195,11 @@ const InvoiceTable = ({
       <TablePagination
         rowsPerPageOptions={[10, 25, 50]}
         component="div"
-        count={orders.length}
+        count={totalRows}
         rowsPerPage={rowsPerPage}
         page={page}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
+        onPageChange={onPageChange}
+        onRowsPerPageChange={onRowsPerPageChange}
         labelRowsPerPage="Filas por página:"
         labelDisplayedRows={({ from, to, count }) =>
           `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`

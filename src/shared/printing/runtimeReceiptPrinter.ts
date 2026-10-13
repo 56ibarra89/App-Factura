@@ -5,7 +5,10 @@ import type {
 
 interface PrintRuntime {
   printAPI?: {
-    printSilent(options?: { deviceName?: string }): unknown;
+    printSilent(options?: { deviceName?: string }): Promise<{
+      success: boolean;
+      error?: string;
+    }>;
   };
   print(): void;
 }
@@ -31,9 +34,12 @@ export function createRuntimeReceiptPrinter(
       }
 
       if (runtime.printAPI) {
-        runtime.printAPI.printSilent(
+        const result = await runtime.printAPI.printSilent(
           deviceName ? { deviceName } : undefined,
         );
+        if (!result.success) {
+          throw new Error(result.error || "No fue posible imprimir el comprobante.");
+        }
         if (settleDelayMs > 0) {
           await wait(settleDelayMs);
         }

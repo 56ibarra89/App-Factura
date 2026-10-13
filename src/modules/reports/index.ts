@@ -4,4 +4,4 @@ export type {
   SalesByTime,
   SalesReportData,
   TopProduct,
-} from "./hooks/useSalesReport";
+} from "./model/salesReport.types";

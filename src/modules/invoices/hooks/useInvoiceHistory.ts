@@ -1,167 +1,125 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
 import type { InvoiceGateway } from "../api/invoiceGateway";
 import { invoiceGateway } from "../api/invoiceGateway";
 import type { Invoice } from "../model/invoice.types";
-import {
-  getOrderPaymentDetails,
-  getPaymentDisplayName,
-  getPaymentFilterId,
-} from "../../orders";
 
 export interface PaymentFilterOption {
   id: string;
   name: string;
 }
 
-export interface InvoiceSummaryTotals {
-  total: number;
-  cash: number;
-  card: number;
-  app: number;
-  count: number;
+const toLocalDateInput = (date: Date) =>
+  new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .split("T")[0];
+
+interface AppliedFilters {
+  startDate: string;
+  endDate: string;
+  search: string;
+  paymentMethodId: string;
 }
 
 export const useInvoiceHistory = (
   historyGateway: InvoiceGateway = invoiceGateway,
 ) => {
-  const today = new Date();
-  const getLocalDate = (d: Date) =>
-    new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-      .toISOString()
-      .split("T")[0];
+  const initialFilters = useMemo<AppliedFilters>(() => {
+    const today = new Date();
+    const lastMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() - 1,
+      today.getDate(),
+    );
+    return {
+      startDate: toLocalDateInput(lastMonth),
+      endDate: toLocalDateInput(today),
+      search: "",
+      paymentMethodId: "ALL",
+    };
+  }, []);
 
-  const lastMonth = new Date(
-    today.getFullYear(),
-    today.getMonth() - 1,
-    today.getDate(),
-  );
-
-  const [startDate, setStartDate] = useState<string>(getLocalDate(lastMonth));
-  const [endDate, setEndDate] = useState<string>(getLocalDate(today));
+  const [startDate, setStartDate] = useState(initialFilters.startDate);
+  const [endDate, setEndDate] = useState(initialFilters.endDate);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("ALL");
-
+  const [selectedPaymentMethod, setSelectedPaymentMethodState] =
+    useState("ALL");
+  const [appliedFilters, setAppliedFilters] =
+    useState<AppliedFilters>(initialFilters);
   const [orders, setOrders] = useState<Invoice[]>([]);
+  const [paymentMethodOptions, setPaymentMethodOptions] = useState<
+    PaymentFilterOption[]
+  >([]);
+  const [totalRows, setTotalRows] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
+    const start = new Date(`${appliedFilters.startDate}T00:00:00`);
+    const end = new Date(`${appliedFilters.endDate}T23:59:59.999`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
+
     setLoading(true);
     setError(null);
-    const startObj = new Date(startDate + "T00:00:00");
-    const endObj = new Date(endDate + "T23:59:59");
-
-    if (isNaN(startObj.getTime()) || isNaN(endObj.getTime())) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      const fetched = await historyGateway.listByDateRange(startObj, endObj);
-      const completedOrders = fetched.filter(
-        (o) =>
-          o.status === "paid" ||
-          o.status === "cancelled" ||
-          (o.status === "delivered" && !o.tableId),
-      );
-      setOrders(completedOrders);
-    } catch (e) {
-      console.error("useInvoiceHistory: error al cargar", e);
+      const result = await historyGateway.listHistory({
+        startDate: start,
+        endDate: end,
+        page: page + 1,
+        pageSize: rowsPerPage,
+        search: appliedFilters.search,
+        paymentMethodId: appliedFilters.paymentMethodId,
+        view: "invoices",
+      });
+      setOrders(result.items);
+      setTotalRows(result.total);
+      setPaymentMethodOptions(result.paymentMethodOptions);
+    } catch (cause) {
+      console.error("useInvoiceHistory: error al cargar", cause);
       setError("No se pudo cargar el historial de órdenes.");
       setOrders([]);
+      setTotalRows(0);
     } finally {
       setLoading(false);
     }
-  }, [endDate, historyGateway, startDate]);
-
-  const initialFetchRef = useRef(fetchOrders);
+  }, [appliedFilters, historyGateway, page, rowsPerPage]);
 
   useEffect(() => {
-    void initialFetchRef.current();
+    void fetchOrders();
+  }, [fetchOrders]);
+
+  const handleSearchClick = useCallback(() => {
+    setPage(0);
+    setAppliedFilters({
+      startDate,
+      endDate,
+      search: searchQuery.trim(),
+      paymentMethodId: selectedPaymentMethod,
+    });
+  }, [endDate, searchQuery, selectedPaymentMethod, startDate]);
+
+  const setSelectedPaymentMethod = useCallback((value: string) => {
+    setSelectedPaymentMethodState(value);
+    setPage(0);
+    setAppliedFilters((current) => ({
+      ...current,
+      paymentMethodId: value,
+    }));
   }, []);
 
-  const handleSearchClick = () => {
-    void fetchOrders();
-  };
+  const changePage = useCallback((_event: unknown, newPage: number) => {
+    setPage(newPage);
+  }, []);
 
-  const filteredOrders = useMemo(() => {
-    let result = orders;
-
-    if (selectedPaymentMethod && selectedPaymentMethod !== "ALL") {
-      result = result.filter((o) => {
-        const payments = getOrderPaymentDetails(o);
-        if (selectedPaymentMethod === "MIXTO") return payments.length > 1;
-        return payments.some(
-          (payment) => getPaymentFilterId(payment) === selectedPaymentMethod,
-        );
-      });
-    }
-
-    if (searchQuery.trim() !== "") {
-      const lowerQuery = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (o) =>
-          o.id.toLowerCase().includes(lowerQuery) ||
-          (o.invoiceNumber &&
-            o.invoiceNumber.toLowerCase().includes(lowerQuery)) ||
-          (o.customerName &&
-            o.customerName.toLowerCase().includes(lowerQuery)) ||
-          (o.cashierName && o.cashierName.toLowerCase().includes(lowerQuery)),
-      );
-    }
-
-    return result;
-  }, [orders, searchQuery, selectedPaymentMethod]);
-
-  const paymentMethodOptions = useMemo<PaymentFilterOption[]>(() => {
-    const options = new Map<string, string>();
-    orders.forEach((order) => {
-      getOrderPaymentDetails(order).forEach((payment) => {
-        options.set(
-          getPaymentFilterId(payment),
-          getPaymentDisplayName(payment),
-        );
-      });
-    });
-    return [...options.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [orders]);
-
-  const summaryTotals = useMemo<InvoiceSummaryTotals>(() => {
-    const validOrders = filteredOrders.filter(
-      (o) => o.status === "paid" || o.status === "delivered",
-    );
-    let cash = 0;
-    let card = 0;
-    let app = 0;
-    let total = 0;
-
-    validOrders.forEach((order) => {
-      total += order.total;
-      getOrderPaymentDetails(order).forEach((payment) => {
-        const type = payment.methodType;
-        if (type === "CASH" || (!type && payment.method === "EFECTIVO")) {
-          cash += payment.amount;
-        } else if (
-          type === "CARD_POS" ||
-          (!type && payment.method === "TARJETA")
-        ) {
-          card += payment.amount;
-        } else {
-          app += payment.amount;
-        }
-      });
-    });
-
-    return {
-      total,
-      cash,
-      card,
-      app,
-      count: validOrders.length,
-    };
-  }, [filteredOrders]);
+  const changeRowsPerPage = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setRowsPerPage(Number.parseInt(event.target.value, 10));
+      setPage(0);
+    },
+    [],
+  );
 
   return {
     startDate,
@@ -173,10 +131,14 @@ export const useInvoiceHistory = (
     selectedPaymentMethod,
     setSelectedPaymentMethod,
     paymentMethodOptions,
-    summaryTotals,
     loading,
     error,
-    filteredOrders,
+    orders,
+    totalRows,
+    page,
+    rowsPerPage,
+    changePage,
+    changeRowsPerPage,
     handleSearchClick,
   };
 };

@@ -1,6 +1,6 @@
 import type { Order, OrderStatus } from "../model/order.types";
 import {
-  fetchOrdersByDateRange,
+  fetchOrderHistory,
   fetchOrdersFromBackend,
   syncAddOrderToBackend,
   syncFinalizeOrder,
@@ -26,7 +26,27 @@ export interface CurrentOrdersGateway {
 }
 
 export interface OrderHistoryGateway {
-  listByDateRange(startDate: Date, endDate: Date): Promise<Order[]>;
+  listHistory(query: OrderHistoryQuery): Promise<OrderHistoryPage>;
+}
+
+export interface OrderHistoryQuery {
+  startDate: Date;
+  endDate: Date;
+  page: number;
+  pageSize: number;
+  search?: string;
+  paymentMethodId?: string;
+  view?: "all" | "invoices";
+  statuses?: OrderStatus[];
+}
+
+export interface OrderHistoryPage {
+  items: Order[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  paymentMethodOptions: Array<{ id: string; name: string }>;
 }
 
 export interface OrderCreationGateway {
@@ -60,7 +80,7 @@ export type OrdersGateway = CurrentOrdersGateway &
 
 export const ordersGateway: OrdersGateway = {
   listCurrent: fetchOrdersFromBackend,
-  listByDateRange: fetchOrdersByDateRange,
+  listHistory: fetchOrderHistory,
   create: syncAddOrderToBackend,
   updateStatus: ({
     orderId,

@@ -1,14 +1,16 @@
 import type { Invoice } from "../model/invoice.types";
-import { ordersGateway } from "../../orders";
+import {
+  ordersGateway,
+  type OrderHistoryPage,
+  type OrderHistoryQuery,
+} from "../../orders";
 
 export interface InvoiceGateway {
-  listByDateRange(
-    startDate: Date,
-    endDate: Date,
-  ): Promise<Invoice[]>;
+  listHistory(
+    query: OrderHistoryQuery,
+  ): Promise<Omit<OrderHistoryPage, "items"> & { items: Invoice[] }>;
 }
 
 export const invoiceGateway: InvoiceGateway = {
-  listByDateRange: (startDate, endDate) =>
-    ordersGateway.listByDateRange(startDate, endDate),
+  listHistory: (query) => ordersGateway.listHistory(query),
 };
