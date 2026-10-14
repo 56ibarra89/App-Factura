@@ -3,11 +3,11 @@ import { Box, CircularProgress } from "@mui/material";
 import { Route, Routes } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
-import Login from "../../modules/auth/pages/LoginPage";
 import { CajaProvider } from "../../modules/cash-register";
 import { PERMISSIONS } from "../../modules/auth";
-import { ADMIN_PANEL_PERMISSIONS } from "../navigation/adminModules";
+import { ADMIN_PANEL_PERMISSIONS } from "../navigation/adminPermissions";
 
+const Login = lazy(() => import("../../modules/auth/pages/LoginPage"));
 const Home = lazy(() => import("../pages/HomePage"));
 const Facturacion = lazy(
   () => import("../../modules/checkout/pages/CheckoutPage"),

@@ -6,7 +6,7 @@ import { AccountMenu } from "../../modules/accounts";
 import MenuCard from "../ui/MenuCard";
 import { PageHeader } from "../../shared/ui";
 import { getMenuItems } from "../navigation/menuItems";
-import { ADMIN_PANEL_PERMISSIONS } from "../navigation/adminModules";
+import { ADMIN_PANEL_PERMISSIONS } from "../navigation/adminPermissions";
 import logoImg from "../../assets/images/logo.png";
 import { PERMISSIONS, useAuth } from "../../modules/auth";
 import { useCaja } from "../../modules/cash-register";

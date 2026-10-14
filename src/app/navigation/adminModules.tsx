@@ -261,7 +261,3 @@ export const adminModules: AdminModuleItem[] = [
     permission: PERMISSIONS.BACKUPS_MANAGE,
   },
 ];
-
-export const ADMIN_PANEL_PERMISSIONS = [
-  ...new Set(adminModules.map((module) => module.permission)),
-];
