@@ -60,7 +60,7 @@ export function useOrderStatusCommands({
   );
 
   const markAsSentToKitchen = useCallback<OrderCommands["markAsSentToKitchen"]>(
-    (orderId) => {
+    async (orderId) => {
       let modifiedOrder: Order | undefined;
       updateOrders((current) => {
         const result = orderMutations.markAsSentToKitchen(
@@ -73,11 +73,7 @@ export function useOrderStatusCommands({
       });
 
       if (modifiedOrder) {
-        void itemsGateway
-          .updateItems(modifiedOrder)
-          .catch((error: unknown) =>
-            console.error("Error marking order for kitchen", error),
-          );
+        await itemsGateway.updateItems(modifiedOrder);
       }
     },
     [itemsGateway, updateOrders],

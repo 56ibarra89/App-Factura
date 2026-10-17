@@ -258,6 +258,12 @@ export default function PaymentMethodsSettingsPage() {
                             onChange={(event) =>
                               update(method.id, {
                                 type: event.target.value as PaymentMethodType,
+                                ...(event.target.value === "CARD_POS"
+                                  ? {
+                                      currency: "NIO",
+                                      requiresReference: true,
+                                    }
+                                  : {}),
                               })
                             }
                           >
@@ -272,6 +278,7 @@ export default function PaymentMethodsSettingsPage() {
                           <Select
                             size="small"
                             value={method.currency}
+                            disabled={method.type === "CARD_POS"}
                             onChange={(event) =>
                               update(method.id, {
                                 currency: event.target.value as PaymentCurrency,
@@ -304,6 +311,7 @@ export default function PaymentMethodsSettingsPage() {
                         <TableCell align="center">
                           <Checkbox
                             checked={method.requiresReference}
+                            disabled={method.type === "CARD_POS"}
                             onChange={(_, checked) =>
                               update(method.id, { requiresReference: checked })
                             }

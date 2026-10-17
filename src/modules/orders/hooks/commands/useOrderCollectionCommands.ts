@@ -51,7 +51,10 @@ export function useOrderCollectionCommands({
               : order,
           ),
         );
-        return invoiceNumber;
+        return {
+          orderId: createdOrder.id,
+          invoiceNumber,
+        };
       } catch (error: unknown) {
         updateOrders((current) => {
           if (!persistedOrder) {

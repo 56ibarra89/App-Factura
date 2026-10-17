@@ -39,6 +39,7 @@ export {
 export type {
   CreateOrderCommand,
   FinalizeOrderCommand,
+  OrderCreationResult,
   OrderTotals,
   SplitPaymentAmounts,
 } from "./model/order-command.types";

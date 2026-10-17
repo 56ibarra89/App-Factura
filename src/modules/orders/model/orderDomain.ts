@@ -68,6 +68,7 @@ export function createOrder(
     happyHourId,
     certificateSerials,
     customerTendered,
+    isSentToKitchen,
   } = params;
 
   const nowMs = Date.now();
@@ -106,7 +107,7 @@ export function createOrder(
     splitAmounts,
     payments,
     cashierName: username || "Sistema",
-    isSentToKitchen: !tableId,
+    isSentToKitchen: isSentToKitchen ?? !tableId,
   };
 
   if (!baseOrder.isSentToKitchen) return baseOrder;

@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import BillingDialogs from "../ui/BillingDialogs";
 import Cart from "../ui/Cart";
@@ -70,6 +70,7 @@ const CheckoutPage = () => {
     handleChangeKitchenInstructions,
     handleSaveTableOrder,
     handleFinalizeTableOrder,
+    handleSendToKitchen,
     handleSetCart,
     handleClearCart,
     handleApplyPromotion,
@@ -109,13 +110,13 @@ const CheckoutPage = () => {
       state?.fromDeliveryPage || role === "despachador",
     ),
     confirmInvoice: handleConfirmFactura,
+    sendOrderToKitchen: handleSendToKitchen,
     saveTableOrder: handleSaveTableOrder,
     finalizeTableOrder: handleFinalizeTableOrder,
     clearCart: handleClearCart,
     resetDelivery,
     closePreview,
     runExclusive,
-    cart,
   });
   const kitchen = useKitchenDispatch({
     tableId,
@@ -134,12 +135,21 @@ const CheckoutPage = () => {
     addItem: handleAddToCartItem,
   });
 
-  const currentProducts = categories[selectedTab]?.items || [];
+  const categoriesByRevenue = useMemo(
+    () =>
+      [...categories].sort(
+        (a, b) =>
+          (b.totalRevenue ?? 0) - (a.totalRevenue ?? 0) ||
+          a.label.localeCompare(b.label, "es"),
+      ),
+    [categories],
+  );
+  const currentProducts = categoriesByRevenue[selectedTab]?.items || [];
 
   return (
     <Box display="flex" height="100vh" overflow="hidden">
       <CategoryTabs
-        categories={categories}
+        categories={categoriesByRevenue}
         selectedTab={selectedTab}
         onTabChange={(_, newValue) => setSelectedTab(newValue)}
       />
@@ -147,7 +157,7 @@ const CheckoutPage = () => {
       <ProductGrid
         products={currentProducts}
         onProductClick={(product) =>
-          handleAddToCart(product, categories[selectedTab]?.kitchenId)
+          handleAddToCart(product, categoriesByRevenue[selectedTab]?.kitchenId)
         }
       />
 

@@ -18,6 +18,9 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import type { PaymentMethod } from "../../orders";
 import {
+  isValidPosReference,
+  POS_REFERENCE_MAX_LENGTH,
+  sanitizePosReference,
   toLegacyPaymentMethod,
   type ConfiguredPaymentMethod,
 } from "../../settings/model/paymentMethods.types";
@@ -109,19 +112,48 @@ export default function PaymentMethodSelector({
     });
   };
 
-  const renderReference = (method?: ConfiguredPaymentMethod) =>
-    method?.requiresReference ? (
+  const renderReference = (method?: ConfiguredPaymentMethod) => {
+    if (!method?.requiresReference) return null;
+    const isPos = method.type === "CARD_POS";
+    const value = paymentReferences[method.id] ?? "";
+    const hasInvalidPosReference =
+      isPos && value.length > 0 && !isValidPosReference(value);
+
+    return (
       <TextField
         fullWidth
         size="small"
         required
-        label={`Referencia de ${method.name}`}
-        placeholder="Últimos 4 dígitos o aprobación"
-        value={paymentReferences[method.id] ?? ""}
-        onChange={(event) => setReference(method.id, event.target.value)}
-        helperText="Mínimo 4 caracteres. El backend no permitirá facturar sin ella."
+        label={
+          isPos
+            ? "Código de autorización / referencia POS"
+            : `Referencia de ${method.name}`
+        }
+        placeholder={isPos ? "Ej.: 123456 o A12B34" : "Número de referencia"}
+        value={value}
+        onChange={(event) =>
+          setReference(
+            method.id,
+            isPos
+              ? sanitizePosReference(event.target.value)
+              : event.target.value,
+          )
+        }
+        error={hasInvalidPosReference}
+        helperText={
+          isPos
+            ? "Ingrese del voucher entre 4 y 20 letras, números o guiones; debe contener al menos un número."
+            : "Mínimo 4 caracteres."
+        }
+        slotProps={{
+          htmlInput: {
+            maxLength: isPos ? POS_REFERENCE_MAX_LENGTH : 120,
+            autoCapitalize: isPos ? "characters" : undefined,
+          },
+        }}
       />
-    ) : null;
+    );
+  };
 
   const mixed = mixedMethodIds.map(
     (id) => methods.find((method) => method.id === id) ?? methods[0],

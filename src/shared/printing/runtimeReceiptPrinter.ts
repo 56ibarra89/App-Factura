@@ -11,6 +11,7 @@ interface PrintRuntime {
     }>;
   };
   print(): void;
+  confirm?(message: string): boolean;
 }
 
 const wait = (delayMs: number) =>
@@ -47,6 +48,14 @@ export function createRuntimeReceiptPrinter(
       }
 
       runtime.print();
+      const wasPrinted = runtime.confirm?.(
+        "¿El comprobante se imprimió correctamente? Aceptar enviará el pedido a cocina.",
+      );
+      if (wasPrinted === false) {
+        throw new Error(
+          "Impresión cancelada. El pedido no fue enviado a cocina; puedes reintentar la impresión.",
+        );
+      }
     },
   };
 }

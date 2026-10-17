@@ -9,6 +9,19 @@ export const PAYMENT_CURRENCIES = ["NIO", "USD"] as const;
 export type PaymentMethodType = (typeof PAYMENT_METHOD_TYPES)[number];
 export type PaymentCurrency = (typeof PAYMENT_CURRENCIES)[number];
 
+export const POS_REFERENCE_MIN_LENGTH = 4;
+export const POS_REFERENCE_MAX_LENGTH = 20;
+const POS_REFERENCE_PATTERN = /^(?=.*\d)[A-Z0-9-]{4,20}$/;
+
+export const sanitizePosReference = (value: string) =>
+  value
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, "")
+    .slice(0, POS_REFERENCE_MAX_LENGTH);
+
+export const isValidPosReference = (value: string) =>
+  POS_REFERENCE_PATTERN.test(value.trim().toUpperCase());
+
 export const PAYMENT_METHOD_TYPE_LABELS: Record<PaymentMethodType, string> = {
   CASH: "Efectivo",
   CARD_POS: "POS Tarjeta",
@@ -113,19 +126,28 @@ export function normalizePaymentMethodsConfig(
   const methods = Array.isArray(value?.methods)
     ? value.methods
         .filter((method) => method?.id && method?.name)
-        .map((method) => ({
-          id: String(method.id).slice(0, 80),
-          name: String(method.name).trim().slice(0, 120),
-          type: isType(method.type) ? method.type : "BANK_TRANSFER",
-          currency: isCurrency(method.currency) ? method.currency : "NIO",
-          requiresReference: Boolean(method.requiresReference),
-          commissionRate: Math.min(
-            100,
-            Math.max(0, Number(method.commissionRate) || 0),
-          ),
-          isActive:
-            typeof method.isActive === "boolean" ? method.isActive : true,
-        }))
+        .map((method) => {
+          const type = isType(method.type) ? method.type : "BANK_TRANSFER";
+          return {
+            id: String(method.id).slice(0, 80),
+            name: String(method.name).trim().slice(0, 120),
+            type,
+            currency:
+              type === "CARD_POS"
+                ? "NIO"
+                : isCurrency(method.currency)
+                  ? method.currency
+                  : "NIO",
+            requiresReference:
+              type === "CARD_POS" || Boolean(method.requiresReference),
+            commissionRate: Math.min(
+              100,
+              Math.max(0, Number(method.commissionRate) || 0),
+            ),
+            isActive:
+              typeof method.isActive === "boolean" ? method.isActive : true,
+          };
+        })
     : [];
   return {
     methods: methods.length

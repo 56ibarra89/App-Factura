@@ -2,6 +2,7 @@ import type { OrderItem, OrderPromotionSelection } from "./order.types";
 import type {
   CreateOrderCommand,
   FinalizeOrderCommand,
+  OrderCreationResult,
 } from "./order-command.types";
 import type { Order, OrderStatus } from "./order.types";
 
@@ -11,7 +12,7 @@ export interface OrderQueries {
 }
 
 export interface OrderCommands {
-  addOrder(command: CreateOrderCommand): Promise<string | void>;
+  addOrder(command: CreateOrderCommand): Promise<OrderCreationResult>;
   updateOrderStatus(
     orderId: string,
     status: OrderStatus,
@@ -37,7 +38,7 @@ export interface OrderCommands {
     orderId: string,
     command: FinalizeOrderCommand,
   ): Promise<string | void>;
-  markAsSentToKitchen(orderId: string): void;
+  markAsSentToKitchen(orderId: string): Promise<void>;
   markAsSentToKitchenByTable(tableId: string): void;
   moveOrder(sourceTableId: string, destinationTableId: string | string[]): void;
   unirMesas(sourceTableId: string, destinationTableId: string | string[]): void;

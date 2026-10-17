@@ -1,7 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CheckoutFormValues } from "../model/checkout.types";
-import type { Order, OrderItem } from "../../orders";
+import type { Order, OrderCreationResult } from "../../orders";
 import { receiptPrinter, type ReceiptPrinter } from "../../../shared/printing";
 import { printerDispatcherService } from "../../devices";
 import type { RunExclusiveAction } from "./useExclusiveAction";
@@ -12,8 +12,8 @@ interface UseBillingFlowOptions {
   activeOrder?: Order | null;
   deliveryDriverId?: string;
   fromDeliveryPage?: boolean;
-  cart?: OrderItem[];
-  confirmInvoice(form: CheckoutFormValues): Promise<string | void>;
+  confirmInvoice(form: CheckoutFormValues): Promise<OrderCreationResult>;
+  sendOrderToKitchen(orderId: string): Promise<void>;
   saveTableOrder(orderId?: string, tableId?: string): Promise<unknown>;
   finalizeTableOrder(
     orderId: string,
@@ -26,14 +26,19 @@ interface UseBillingFlowOptions {
   printer?: ReceiptPrinter;
 }
 
+type PendingPrint = OrderCreationResult & {
+  isCash: boolean;
+  printed: boolean;
+};
+
 export function useBillingFlow({
   tableId,
   isCheckoutMode,
   activeOrder,
   deliveryDriverId,
   fromDeliveryPage = false,
-  cart,
   confirmInvoice,
+  sendOrderToKitchen,
   saveTableOrder,
   finalizeTableOrder,
   clearCart,
@@ -46,25 +51,36 @@ export function useBillingFlow({
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<
     string | undefined
   >();
+  const pendingPrintRef = useRef<PendingPrint | null>(null);
 
   const completeAndPrint = useCallback(
-    async (invoiceNumber: string, isCash = false) => {
+    async (pending: PendingPrint) => {
+      const { orderId, invoiceNumber, isCash } = pending;
+      if (!invoiceNumber) {
+        throw new Error("El backend no devolvió un número de factura.");
+      }
       setCreatedInvoiceNumber(invoiceNumber);
       const cashierPrinter = await printerDispatcherService.getCashierPrinter();
+
+      if (!pending.printed) {
+        await printer.print({
+          renderDelayMs: 500,
+          settleDelayMs: 500,
+          deviceName: cashierPrinter?.windowsDeviceName,
+        });
+        pending.printed = true;
+      }
+      await sendOrderToKitchen(orderId);
 
       if (isCash) {
         void printerDispatcherService.openCashDrawer(cashierPrinter);
       }
 
-      await printer.print({
-        renderDelayMs: 500,
-        settleDelayMs: 500,
-        deviceName: cashierPrinter?.windowsDeviceName,
-      });
+      pendingPrintRef.current = null;
       clearCart();
       closePreview();
     },
-    [clearCart, closePreview, printer],
+    [clearCart, closePreview, printer, sendOrderToKitchen],
   );
 
   const handleFinalConfirm = useCallback(
@@ -72,6 +88,17 @@ export function useBillingFlow({
       const isCash = form.paymentMethod === "EFECTIVO";
 
       await runExclusive(async () => {
+        if (pendingPrintRef.current) {
+          await completeAndPrint(pendingPrintRef.current);
+          if (tableId) {
+            navigate("/mesas");
+          } else {
+            resetDelivery();
+            navigate(fromDeliveryPage ? "/delivery" : "/home");
+          }
+          return;
+        }
+
         if (tableId) {
           if (isCheckoutMode && activeOrder) {
             const invoiceNumber = await finalizeTableOrder(
@@ -82,7 +109,13 @@ export function useBillingFlow({
               throw new Error("El backend no devolvió un número de factura.");
             }
 
-            await completeAndPrint(invoiceNumber, isCash);
+            pendingPrintRef.current = {
+              orderId: activeOrder.id,
+              invoiceNumber,
+              isCash,
+              printed: false,
+            };
+            await completeAndPrint(pendingPrintRef.current);
             navigate("/mesas");
             return;
           }
@@ -94,15 +127,20 @@ export function useBillingFlow({
           return;
         }
 
-        const invoiceNumber = await confirmInvoice({
+        const createdOrder = await confirmInvoice({
           ...form,
           driverId: form.driverId || deliveryDriverId,
         });
-        if (!invoiceNumber) {
+        if (!createdOrder.invoiceNumber) {
           throw new Error("El backend no devolvió un número de factura.");
         }
+        pendingPrintRef.current = {
+          ...createdOrder,
+          isCash,
+          printed: false,
+        };
 
-        await completeAndPrint(invoiceNumber, isCash);
+        await completeAndPrint(pendingPrintRef.current);
 
         resetDelivery();
         if (fromDeliveryPage) {

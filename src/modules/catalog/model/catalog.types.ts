@@ -60,6 +60,7 @@ export interface Product {
 export interface Category {
   id?: string;
   label: string;
+  totalRevenue?: number;
   icon?: string;
   kitchenId?: string;
   extras: ExtraIngredientDef[];

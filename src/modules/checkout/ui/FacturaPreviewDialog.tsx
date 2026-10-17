@@ -84,6 +84,7 @@ export default function FacturaPreviewDialog({
   invoiceNumber,
   cashierName,
 }: FacturaPreviewDialogProps) {
+  const isPrintRetry = Boolean(invoiceNumber);
   const checkout = useCheckoutDialog({
     open,
     total,
@@ -119,7 +120,14 @@ export default function FacturaPreviewDialog({
         disableEnforceFocus={disableEnforceFocus}
       >
         <DialogTitle>{title}</DialogTitle>
-        <DialogContent>
+        <DialogContent
+          sx={isPrintRetry ? { pointerEvents: "none", opacity: 0.8 } : undefined}
+        >
+          {isPrintRetry && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              La factura ya fue emitida. Reintenta la impresión para completar el envío a cocina.
+            </Alert>
+          )}
           <InvoiceSummary
             cart={cart}
             subTotal={subTotal}
@@ -220,8 +228,11 @@ export default function FacturaPreviewDialog({
           )}
         </DialogContent>
         <DialogActions sx={{ "@media print": { display: "none" } }}>
-          <Button onClick={onClose} sx={{ color: "error.main" }}>
-            Cancelar
+          <Button
+            onClick={onClose}
+            sx={{ color: "error.main" }}
+          >
+            {isPrintRetry ? "Cerrar" : "Cancelar"}
           </Button>
           <Button
             variant="contained"
@@ -229,7 +240,11 @@ export default function FacturaPreviewDialog({
             onClick={() => void checkout.handleConfirm()}
             disabled={!checkout.canConfirm || checkout.isSubmitting}
           >
-            {checkout.isSubmitting ? "Procesando..." : confirmText}
+            {checkout.isSubmitting
+              ? "Procesando..."
+              : isPrintRetry
+                ? "Reintentar impresión"
+                : confirmText}
           </Button>
         </DialogActions>
       </Dialog>

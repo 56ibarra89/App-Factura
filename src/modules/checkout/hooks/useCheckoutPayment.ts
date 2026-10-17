@@ -7,6 +7,7 @@ import type {
 import { paymentMethodsGateway } from "../../settings/api/paymentMethodsGateway";
 import {
   DEFAULT_PAYMENT_METHODS_CONFIG,
+  isValidPosReference,
   toLegacyPaymentMethod,
   type ConfiguredPaymentMethod,
 } from "../../settings/model/paymentMethods.types";
@@ -87,7 +88,9 @@ export function useCheckoutPayment({
       (method) =>
         method &&
         (!method.requiresReference ||
-          (paymentReferences[method.id]?.trim().length ?? 0) >= 4),
+          (method.type === "CARD_POS"
+            ? isValidPosReference(paymentReferences[method.id] ?? "")
+            : (paymentReferences[method.id]?.trim().length ?? 0) >= 4)),
     );
   }, [mixedMethods, paymentMethod, paymentReferences, selectedMethod]);
 

@@ -40,6 +40,7 @@ export function useCheckout(
       return addOrder({
         items,
         ...totals,
+        isSentToKitchen: false,
         customerId: form.customerId,
         customerName: form.customerName,
         customerPhone: form.customerPhone,

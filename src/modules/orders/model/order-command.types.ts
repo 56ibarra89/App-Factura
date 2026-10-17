@@ -33,6 +33,12 @@ export interface CreateOrderCommand
   certificateSerials?: string[];
   driverId?: string;
   customerTendered?: number;
+  isSentToKitchen?: boolean;
+}
+
+export interface OrderCreationResult {
+  orderId: string;
+  invoiceNumber?: string;
 }
 
 export interface FinalizeOrderCommand
