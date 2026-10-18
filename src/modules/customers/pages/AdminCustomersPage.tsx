@@ -1,10 +1,11 @@
 import {
   Alert,
   Box,
+  Button,
   Snackbar,
 } from "@mui/material";
-import { ConfirmDialog } from "../../../shared/ui";
-import CustomerAdminHeader from "../ui/admin/CustomerAdminHeader";
+import AddIcon from "@mui/icons-material/Add";
+import { BackButton, ConfirmDialog, PageHeader } from "../../../shared/ui";
 import CustomerFormModal from "../ui/CustomerFormModal";
 import CustomerSearchBar from "../ui/admin/CustomerSearchBar";
 import CustomerTable from "../ui/admin/CustomerTable";
@@ -14,8 +15,30 @@ const AdminClientes = () => {
   const customers = useAdminCustomers();
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: "1100px", margin: "0 auto" }}>
-      <CustomerAdminHeader onCreate={customers.openCreate} />
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "background.default",
+        pt: 4,
+        pb: 4,
+        px: { xs: 2, md: 6 },
+      }}
+    >
+      <PageHeader
+        title="Gestión de Clientes"
+        startContent={<BackButton to="/admin" />}
+        actions={
+          <Button
+            id="admin-clientes-new-btn"
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={customers.openCreate}
+            sx={{ borderRadius: 2, textTransform: "none" }}
+          >
+            Nuevo Cliente
+          </Button>
+        }
+      />
 
       {customers.error && (
         <Alert severity="error" sx={{ mb: 3 }}>

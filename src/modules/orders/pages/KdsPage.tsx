@@ -90,6 +90,7 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
     useKdsAudioAlert(filteredOrders);
 
   const criticalCount = useMemo(() => {
+    void clock;
     return filteredOrders.filter((order) => {
       const ticketSentAt =
         order.items.find((item) => item.isSentToKitchen)?.sentAt ??
@@ -214,11 +215,11 @@ const KdsPage = ({ resolveTableName }: KdsPageProps) => {
             width: "100%",
             fontSize: "1.1rem",
             fontWeight: "bold",
-            boxShadow: "0 8px 32px rgba(255, 152, 0, 0.5)",
-            bgcolor: "#ed6c02",
+            border: "1px solid",
+            borderColor: "warning.main",
           }}
         >
-          🔔 ¡NUEVA ORDEN RECIBIDA!{" "}
+          ¡NUEVA ORDEN RECIBIDA!{" "}
           {newOrderAlert?.invoiceNumber
             ? `#${newOrderAlert.invoiceNumber}`
             : ""}

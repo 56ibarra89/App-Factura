@@ -15,14 +15,12 @@ import {
   useTheme,
   Select,
   MenuItem,
-  Chip,
   Tooltip,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import type { Customer } from "../../customers";
@@ -82,7 +80,7 @@ export default function DeliveryInfoPanel({
   return (
     <Box sx={{ flex: 1, height: "100%", display: "flex", flexDirection: "column" }}>
       <Paper
-        elevation={2}
+        elevation={0}
         sx={{
           flex: 1,
           display: "flex",
@@ -95,13 +93,11 @@ export default function DeliveryInfoPanel({
         {/* Encabezado superior */}
         <Box
           sx={{
-            background:
-              theme.palette.mode === "dark"
-                ? "linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)"
-                : `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-            color: "white",
+            bgcolor: "background.paper",
+            color: "text.primary",
             p: 2,
-            boxShadow: "inset 0 -2px 10px rgba(0,0,0,0.1)",
+            borderBottom: "1px solid",
+            borderColor: "divider",
           }}
         >
           <Grid container spacing={2}>
@@ -114,13 +110,7 @@ export default function DeliveryInfoPanel({
                 <Typography sx={{ width: 100 }}>Cliente:</Typography>
                 <Typography
                   fontWeight="bold"
-                  color={
-                    selectedCustomer
-                      ? "#ffd54f"
-                      : phoneInput.length >= 8
-                      ? "#ffb74d"
-                      : "rgba(255,255,255,0.7)"
-                  }
+                  color={selectedCustomer ? "primary.main" : "text.secondary"}
                 >
                   {selectedCustomer
                     ? selectedCustomer.name
@@ -130,15 +120,15 @@ export default function DeliveryInfoPanel({
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                <Typography sx={{ width: 100, color: "rgba(255,255,255,0.8)" }}>
+                <Typography sx={{ width: 100, color: "text.secondary" }}>
                   Dirección:
                 </Typography>
-                <Typography fontWeight="bold" color="#ffd54f">
+                <Typography fontWeight="bold" color="text.primary">
                   {selectedAddress || " "}
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
-                <Typography sx={{ width: 100, color: "rgba(255,255,255,0.8)" }}>
+                <Typography sx={{ width: 100, color: "text.secondary" }}>
                   Motorizado:
                 </Typography>
                 <Select
@@ -148,16 +138,16 @@ export default function DeliveryInfoPanel({
                   displayEmpty
                   sx={{
                     minWidth: 160,
-                    color: selectedDriverId ? "#ffd54f" : "rgba(255,255,255,0.8)",
+                    color: selectedDriverId ? "text.primary" : "text.secondary",
                     fontWeight: "bold",
-                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "transparent" },
+                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "divider" },
                     "&:hover .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "rgba(255,255,255,0.3)",
+                      borderColor: "text.secondary",
                     },
                     "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "#ffd54f",
+                      borderColor: "primary.main",
                     },
-                    "& .MuiSvgIcon-root": { color: "rgba(255,255,255,0.8)" },
+                    "& .MuiSvgIcon-root": { color: "action.active" },
                   }}
                 >
                   <MenuItem value="">
@@ -185,7 +175,7 @@ export default function DeliveryInfoPanel({
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Typography sx={{ mr: 1, color: "rgba(255,255,255,0.8)" }}>
+                <Typography sx={{ mr: 1, color: "text.secondary" }}>
                   Transporte:
                 </Typography>
                 <TextField
@@ -195,17 +185,16 @@ export default function DeliveryInfoPanel({
                   inputProps={{ style: { textAlign: "right" } }}
                   sx={{
                     width: 90,
-                    bgcolor: "rgba(255, 255, 255, 0.1)",
+                    bgcolor: "background.default",
                     borderRadius: 1,
-                    input: { color: "white", fontWeight: "bold" },
-                    "& fieldset": { border: "none" },
+                    input: { color: "text.primary", fontWeight: "bold" },
                   }}
                 />
               </Box>
               {selectedZone && (
                 <Typography
                   variant="caption"
-                  sx={{ color: "rgba(255,255,255,0.8)", mt: 0.5 }}
+                  sx={{ color: "text.secondary", mt: 0.5 }}
                 >
                   Zona: {selectedZone.name}
                 </Typography>
@@ -378,14 +367,11 @@ export default function DeliveryInfoPanel({
                       flex: 1,
                       minWidth: 140,
                       py: 1,
-                      borderRadius: 3,
+                      borderRadius: 2,
                       flexDirection: "column",
                       alignItems: "center",
                       textTransform: "none",
                       borderColor: isSelected ? "primary.main" : theme.palette.divider,
-                      ...(isSelected && {
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                      }),
                     }}
                   >
                     <Typography
@@ -427,15 +413,14 @@ export default function DeliveryInfoPanel({
                   sx={{
                     flex: 1,
                     height: 44,
-                    borderRadius: 6,
+                    borderRadius: 2,
                     fontWeight: "bold",
                     fontSize: "1.1rem",
                     ...(hasVal &&
                       theme.palette.mode === "light" && {
                         bgcolor: "primary.main",
-                        color: "white",
+                        color: "primary.contrastText",
                         border: "none",
-                        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                         "&:hover": { bgcolor: "primary.dark" },
                       }),
                     ...(hasVal &&

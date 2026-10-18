@@ -1,5 +1,4 @@
 import {
-  Alert,
   Box,
   Button,
   CircularProgress,
@@ -11,14 +10,15 @@ import {
   Stack,
   Grid,
   alpha,
+  Divider,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import NightlightRoundIcon from "@mui/icons-material/NightlightRound";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
-import { LOGIN_COLORS } from "../../../shared/theme";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import type { CashDenominationCount } from "../model/cash-register.types";
 import { CashDenominationDialog } from "./CashDenominationDialog";
 
@@ -66,6 +66,23 @@ export function CloseCashRegisterForm({
   onChangeAuthorizationPin,
   loading = false,
 }: Props) {
+  const parseAmount = (value: string) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const cashAmount = parseAmount(amount);
+  const cardAmount = parseAmount(declaredCardAmount);
+  const appAmount = parseAmount(declaredAppAmount);
+  const declaredTotal = cashAmount + cardAmount + appAmount;
+  const financialInputSx = {
+    "& .MuiInputBase-input": {
+      fontSize: "1.1rem",
+      fontWeight: 700,
+      fontVariantNumeric: "tabular-nums",
+      textAlign: "right",
+    },
+  } as const;
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
       <Grid container spacing={3}>
@@ -83,20 +100,18 @@ export function CloseCashRegisterForm({
             <Box
               sx={{
                 p: 2,
-                borderRadius: 3,
+                borderRadius: 2,
                 border: "1px solid",
                 borderColor: "divider",
                 bgcolor: "background.paper",
               }}
             >
-              <Typography
-                variant="subtitle2"
-                fontWeight="800"
-                gutterBottom
-                color="text.primary"
-              >
-                ⚙️ Modalidad de Cierre
-              </Typography>
+              <Stack direction="row" spacing={0.75} alignItems="center" mb={0.5}>
+                <SettingsOutlinedIcon fontSize="small" color="action" />
+                <Typography variant="subtitle2" fontWeight="800" color="text.primary">
+                  Modalidad de Cierre
+                </Typography>
+              </Stack>
               <ToggleButtonGroup
                 value={closeType}
                 exclusive
@@ -111,93 +126,65 @@ export function CloseCashRegisterForm({
                   "& .MuiToggleButtonGroup-grouped": {
                     border: "1px solid !important",
                     borderColor: "divider !important",
-                    borderRadius: "10px !important",
+                    borderRadius: "8px !important",
                     p: 1.2,
                     textTransform: "none",
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "flex-start",
                     "&.Mui-selected": {
-                      bgcolor:
-                        closeType === "HANDOVER"
-                          ? alpha("#0288d1", 0.08)
-                          : alpha("#ed6c02", 0.08),
-                      borderColor:
-                        closeType === "HANDOVER"
-                          ? "#0288d1 !important"
-                          : "#ed6c02 !important",
+                      bgcolor: (theme) =>
+                        alpha(theme.palette.primary.main, 0.08),
+                      borderColor: "primary.main !important",
                     },
                   },
                 }}
               >
                 <ToggleButton value="HANDOVER">
                   <Stack direction="row" spacing={0.8} alignItems="center">
-                    <SyncAltIcon sx={{ color: "#0288d1", fontSize: 18 }} />
+                    <SyncAltIcon sx={{ color: "text.secondary", fontSize: 18 }} />
                     <Typography variant="body2" fontWeight="bold">
                       Relevo de Turno
                     </Typography>
                   </Stack>
                   <Typography variant="caption" color="text.secondary">
-                    Cambio de cajero
+                    Cambio de cajero · Mesas siguen abiertas
                   </Typography>
                 </ToggleButton>
                 <ToggleButton value="END_OF_DAY">
                   <Stack direction="row" spacing={0.8} alignItems="center">
-                    <NightlightRoundIcon sx={{ color: "#ed6c02", fontSize: 18 }} />
+                    <NightlightRoundIcon sx={{ color: "text.secondary", fontSize: 18 }} />
                     <Typography variant="body2" fontWeight="bold">
                       Cierre Final
                     </Typography>
                   </Stack>
                   <Typography variant="caption" color="text.secondary">
-                    Fin de jornada
+                    Fin de jornada · Exige mesas cobradas
                   </Typography>
                 </ToggleButton>
               </ToggleButtonGroup>
-              {closeType === "HANDOVER" ? (
-                <Alert
-                  severity="info"
-                  sx={{ py: 0.5, borderRadius: 2, fontSize: "0.78rem" }}
-                >
-                  <strong>Relevo:</strong> Las mesas ocupadas seguirán abiertas para el siguiente turno.
-                </Alert>
-              ) : (
-                <Alert
-                  severity="warning"
-                  sx={{ py: 0.5, borderRadius: 2, fontSize: "0.78rem" }}
-                >
-                  <strong>Cierre Final:</strong> Se exige que todas las mesas estén cobradas o liberadas.
-                </Alert>
-              )}
             </Box>
-
-            <Alert
-              severity="info"
-              sx={{ py: 0.8, borderRadius: 2, fontSize: "0.8rem" }}
-            >
-              🔒 <strong>Arqueo Ciego:</strong> Las ventas del sistema permanecen ocultas para garantizar un conteo objetivo.
-            </Alert>
 
             {/* Campos de Descuadre con PIN (Si aplica) */}
             {requiresAuthorization && (
               <Box
                 sx={{
                   p: 2,
-                  borderRadius: 3,
+                  borderRadius: 2,
                   border: "1px solid",
                   borderColor: "warning.main",
-                  bgcolor: alpha("#ed6c02", 0.04),
+                  bgcolor: (theme) => alpha(theme.palette.warning.main, 0.04),
                   display: "flex",
                   flexDirection: "column",
                   gap: 1.5,
                 }}
               >
-                <Typography
-                  variant="caption"
-                  fontWeight="bold"
-                  color="warning.main"
-                >
-                  ⚠️ Descuadre detectado: Ingresa justificación y PIN de autorización
-                </Typography>
+                <Stack direction="row" spacing={0.75} alignItems="center">
+                  <WarningAmberOutlinedIcon sx={{ color: "warning.main", fontSize: 18 }} />
+                  <Typography variant="caption" fontWeight="bold" color="warning.main">
+                    Descuadre detectado: Ingresa justificación y PIN de autorización
+                  </Typography>
+                </Stack>
                 <TextField
                   label="Justificación del descuadre"
                   size="small"
@@ -222,20 +209,61 @@ export function CloseCashRegisterForm({
                 />
               </Box>
             )}
+
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "divider",
+                bgcolor: "background.paper",
+                mt: "auto",
+              }}
+            >
+              <Typography variant="subtitle2" fontWeight={800} mb={1.5}>
+                Resumen en vivo de lo declarado
+              </Typography>
+              <Stack spacing={0.75}>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">Efectivo</Typography>
+                  <Typography variant="body2" fontWeight={700}>C${cashAmount.toFixed(2)}</Typography>
+                </Stack>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">Vouchers</Typography>
+                  <Typography variant="body2" fontWeight={700}>C${cardAmount.toFixed(2)}</Typography>
+                </Stack>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">Transferencias / Apps</Typography>
+                  <Typography variant="body2" fontWeight={700}>C${appAmount.toFixed(2)}</Typography>
+                </Stack>
+                <Divider />
+                <Stack direction="row" justifyContent="space-between" alignItems="baseline">
+                  <Typography variant="subtitle2" fontWeight={800}>Total declarado</Typography>
+                  <Typography
+                    variant="h5"
+                    fontWeight={900}
+                    color="primary.main"
+                    sx={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    C${declaredTotal.toFixed(2)}
+                  </Typography>
+                </Stack>
+              </Stack>
+            </Box>
           </Box>
         </Grid>
 
         {/* COLUMNA DERECHA: Los 3 Canales de Conteo */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Stack spacing={1.8}>
+          <Stack spacing={1.8} height="100%">
             {/* 1. Efectivo Físico */}
             <Box
               sx={{
                 p: 1.8,
-                borderRadius: 3,
+                borderRadius: 2,
                 border: "1px solid",
-                borderColor: alpha("#2e7d32", 0.2),
-                bgcolor: alpha("#2e7d32", 0.02),
+                borderColor: "divider",
+                bgcolor: "background.paper",
               }}
             >
               <Stack
@@ -245,7 +273,9 @@ export function CloseCashRegisterForm({
                 mb={1}
               >
                 <Stack direction="row" spacing={0.8} alignItems="center">
-                  <AttachMoneyIcon sx={{ color: "#2e7d32", fontSize: 18 }} />
+                  <Box sx={{ display: "flex", p: 0.5, borderRadius: 1, bgcolor: "action.hover", color: "text.secondary" }}>
+                    <AttachMoneyIcon sx={{ fontSize: 18 }} />
+                  </Box>
                   <Typography variant="subtitle2" fontWeight="bold">
                     1. Efectivo en Cajón
                   </Typography>
@@ -264,6 +294,7 @@ export function CloseCashRegisterForm({
                 onChange={(e) => onChangeAmount(e.target.value)}
                 fullWidth
                 disabled={loading}
+                sx={financialInputSx}
                 inputProps={{ min: 0, step: "0.01" }}
                 InputProps={{
                   startAdornment: (
@@ -281,10 +312,10 @@ export function CloseCashRegisterForm({
             <Box
               sx={{
                 p: 1.8,
-                borderRadius: 3,
+                borderRadius: 2,
                 border: "1px solid",
-                borderColor: alpha("#0288d1", 0.2),
-                bgcolor: alpha("#0288d1", 0.02),
+                borderColor: "divider",
+                bgcolor: "background.paper",
               }}
             >
               <Stack
@@ -293,7 +324,9 @@ export function CloseCashRegisterForm({
                 alignItems="center"
                 mb={1}
               >
-                <CreditCardIcon sx={{ color: "#0288d1", fontSize: 18 }} />
+                <Box sx={{ display: "flex", p: 0.5, borderRadius: 1, bgcolor: "action.hover", color: "text.secondary" }}>
+                  <CreditCardIcon sx={{ fontSize: 18 }} />
+                </Box>
                 <Typography variant="subtitle2" fontWeight="bold">
                   2. Vouchers de Tarjeta (POS)
                 </Typography>
@@ -306,6 +339,7 @@ export function CloseCashRegisterForm({
                 onChange={(e) => onChangeDeclaredCardAmount(e.target.value)}
                 fullWidth
                 disabled={loading}
+                sx={financialInputSx}
                 inputProps={{ min: 0, step: "0.01" }}
                 InputProps={{
                   startAdornment: (
@@ -323,10 +357,10 @@ export function CloseCashRegisterForm({
             <Box
               sx={{
                 p: 1.8,
-                borderRadius: 3,
+                borderRadius: 2,
                 border: "1px solid",
-                borderColor: alpha("#ed6c02", 0.2),
-                bgcolor: alpha("#ed6c02", 0.02),
+                borderColor: "divider",
+                bgcolor: "background.paper",
               }}
             >
               <Stack
@@ -335,7 +369,9 @@ export function CloseCashRegisterForm({
                 alignItems="center"
                 mb={1}
               >
-                <PhoneAndroidIcon sx={{ color: "#ed6c02", fontSize: 18 }} />
+                <Box sx={{ display: "flex", p: 0.5, borderRadius: 1, bgcolor: "action.hover", color: "text.secondary" }}>
+                  <PhoneAndroidIcon sx={{ fontSize: 18 }} />
+                </Box>
                 <Typography variant="subtitle2" fontWeight="bold">
                   3. Transferencias / Apps
                 </Typography>
@@ -348,6 +384,7 @@ export function CloseCashRegisterForm({
                 onChange={(e) => onChangeDeclaredAppAmount(e.target.value)}
                 fullWidth
                 disabled={loading}
+                sx={financialInputSx}
                 inputProps={{ min: 0, step: "0.01" }}
                 InputProps={{
                   startAdornment: (
@@ -367,6 +404,7 @@ export function CloseCashRegisterForm({
       {/* ACCIONES INFERIORES */}
       <Box
         display="flex"
+        justifyContent="flex-end"
         gap={2}
         mt={1}
         pt={2}
@@ -374,25 +412,22 @@ export function CloseCashRegisterForm({
         borderColor="divider"
       >
         <Button
-          variant="outlined"
-          fullWidth
+          variant="text"
+          color="inherit"
           onClick={onCancel}
           disabled={loading}
-          startIcon={<ArrowBackIcon />}
-          sx={{ borderRadius: 2.5, py: 1.2, fontWeight: "bold" }}
+          sx={{ borderRadius: 2, px: 2.5, py: 1.2, fontWeight: "bold" }}
         >
-          Volver
+          Cancelar
         </Button>
         <Button
           variant="contained"
-          fullWidth
           onClick={onSubmit}
           disabled={!canSubmit || loading}
           sx={{
-            borderRadius: 2.5,
+            borderRadius: 2,
             py: 1.2,
-            bgcolor: LOGIN_COLORS.primary,
-            "&:hover": { bgcolor: LOGIN_COLORS.primaryDark },
+            minWidth: 240,
             fontWeight: "bold",
           }}
         >

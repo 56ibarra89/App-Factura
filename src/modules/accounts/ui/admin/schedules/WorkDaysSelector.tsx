@@ -41,7 +41,7 @@ export default function WorkDaysSelector({
             <Paper
               key={day.value}
               onClick={() => onToggle(day.value)}
-              elevation={selected ? 2 : 0}
+              elevation={0}
               sx={{
                 width: { xs: "calc(50% - 8px)", sm: "120px" },
                 height: "100px",
@@ -50,17 +50,16 @@ export default function WorkDaysSelector({
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                borderRadius: 4,
-                border: `2px solid ${selected ? LOGIN_COLORS.primary : "rgba(0,0,0,0.08)"}`,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: selected ? "primary.main" : "divider",
                 bgcolor: selected ? LOGIN_COLORS.primary : "transparent",
                 color: selected ? "white" : "text.secondary",
-                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                transition: "background-color 120ms ease-out, border-color 120ms ease-out",
                 "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
                   borderColor: selected
                     ? LOGIN_COLORS.primary
-                    : "rgba(0,0,0,0.2)",
+                    : "primary.main",
                 },
                 position: "relative",
                 overflow: "hidden",

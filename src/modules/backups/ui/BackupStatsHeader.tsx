@@ -6,6 +6,7 @@ import {
   CardContent,
   Button,
   CircularProgress,
+  alpha,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -132,7 +133,6 @@ export const BackupStatsHeader: React.FC<BackupStatsHeaderProps> = ({
               fontWeight: 700,
               px: 3,
               py: 1,
-              boxShadow: "0 4px 14px rgba(25, 118, 210, 0.35)",
             }}
           >
             {generating ? "Generando Copia..." : "+ Crear Respaldo Ahora"}
@@ -175,7 +175,7 @@ export const BackupStatsHeader: React.FC<BackupStatsHeaderProps> = ({
               sx={{
                 p: 1.5,
                 borderRadius: 2.5,
-                bgcolor: "primary.50",
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
                 color: "primary.main",
                 display: "flex",
               }}
@@ -208,7 +208,7 @@ export const BackupStatsHeader: React.FC<BackupStatsHeaderProps> = ({
               sx={{
                 p: 1.5,
                 borderRadius: 2.5,
-                bgcolor: "success.50",
+                bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
                 color: "success.main",
                 display: "flex",
               }}
@@ -241,7 +241,7 @@ export const BackupStatsHeader: React.FC<BackupStatsHeaderProps> = ({
               sx={{
                 p: 1.5,
                 borderRadius: 2.5,
-                bgcolor: "info.50",
+                bgcolor: (theme) => alpha(theme.palette.info.main, 0.08),
                 color: "info.main",
                 display: "flex",
               }}
@@ -274,7 +274,10 @@ export const BackupStatsHeader: React.FC<BackupStatsHeaderProps> = ({
               sx={{
                 p: 1.5,
                 borderRadius: 2.5,
-                bgcolor: config.enabled ? "warning.50" : "grey.100",
+                bgcolor: (theme) =>
+                  config.enabled
+                    ? alpha(theme.palette.warning.main, 0.08)
+                    : theme.palette.action.hover,
                 color: config.enabled ? "warning.main" : "text.disabled",
                 display: "flex",
               }}

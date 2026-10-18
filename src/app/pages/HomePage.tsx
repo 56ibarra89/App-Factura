@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, Fab, Tooltip } from "@mui/material";
+import { Badge, Box, Fab, Tooltip } from "@mui/material";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { AccountMenu } from "../../modules/accounts";
 import MenuCard from "../ui/MenuCard";
@@ -144,7 +144,7 @@ const HomePage = () => {
         })}
       </Box>
 
-      {/* FAB Control Motorizados con Animación Bounce */}
+      {/* Acceso fijo al control de motorizados */}
       {canManageDrivers && (
         <Tooltip
           title={
@@ -164,40 +164,22 @@ const HomePage = () => {
               bottom: 32,
               right: 32,
               zIndex: 1000,
-              "@keyframes bounceFab": {
-                "0%, 20%, 50%, 80%, 100%": {
-                  transform: "translateY(0)",
-                },
-                "40%": {
-                  transform: "translateY(-12px)",
-                },
-                "60%": {
-                  transform: "translateY(-6px)",
-                },
-              },
-              animation:
-                pendingDeliveredCount > 0
-                  ? "bounceFab 2s infinite ease-in-out"
-                  : "none",
             }}
           >
-            <Fab
-              color="secondary"
-              aria-label="motorizados"
-              onClick={() => setModalOpen(true)}
-              sx={{
-                boxShadow:
-                  pendingDeliveredCount > 0
-                    ? "0 0 24px rgba(156, 39, 176, 0.75)"
-                    : "0 4px 12px rgba(0,0,0,0.3)",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "scale(1.08)",
-                },
-              }}
-            >
-              <TwoWheelerIcon />
-            </Fab>
+            <Badge badgeContent={pendingDeliveredCount} color="error" max={99}>
+              <Fab
+                color="secondary"
+                aria-label="motorizados"
+                onClick={() => setModalOpen(true)}
+                sx={{
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                  transition: "box-shadow 120ms ease-out",
+                  "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.24)" },
+                }}
+              >
+                <TwoWheelerIcon />
+              </Fab>
+            </Badge>
           </Box>
         </Tooltip>
       )}

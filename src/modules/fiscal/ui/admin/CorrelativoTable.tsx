@@ -46,7 +46,7 @@ const CorrelativoTable: React.FC<CorrelativoTableProps> = ({
   };
 
   return (
-    <Card elevation={0} sx={{ borderRadius: 4, border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
+    <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider", overflow: "hidden" }}>
       <TableContainer component={Paper} elevation={0}>
         <Table>
           <TableHead sx={{ bgcolor: "action.hover" }}>

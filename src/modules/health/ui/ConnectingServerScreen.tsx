@@ -11,11 +11,6 @@ import {
 import WifiOffIcon from "@mui/icons-material/WifiOff";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import logoImg from "../../../assets/images/logo.png";
-import {
-  LOGIN_COLORS,
-  LOGIN_GRADIENTS,
-  LOGIN_SHADOWS,
-} from "../../../shared/theme";
 import type { BackendConnectionStatus } from "../model/health.types";
 
 interface ConnectingServerScreenProps {
@@ -41,30 +36,29 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: LOGIN_GRADIENTS.pageBackground,
+        bgcolor: "background.default",
         p: 2,
         boxSizing: "border-box",
       }}
     >
       <Fade in timeout={600}>
         <Paper
-          elevation={12}
+          elevation={0}
           sx={{
             width: "100%",
             maxWidth: 480,
-            borderRadius: 4,
+            borderRadius: 2,
             overflow: "hidden",
-            boxShadow: LOGIN_SHADOWS.card,
-            background: LOGIN_GRADIENTS.brandingPanel,
-            backgroundImage: LOGIN_GRADIENTS.brandingPanelRadial,
-            color: "white",
+            bgcolor: "background.paper",
+            color: "text.primary",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             p: { xs: 4, sm: 6 },
             textAlign: "center",
             position: "relative",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
+            border: "1px solid",
+            borderColor: "divider",
           }}
         >
           {}
@@ -84,17 +78,11 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
               sx={{
                 width: 100,
                 height: 100,
-                borderRadius: "25%",
-                boxShadow: LOGIN_SHADOWS.logo,
+                borderRadius: 2,
                 objectFit: "cover",
-                border: "3px solid rgba(255, 255, 255, 0.25)",
-                bgcolor: "white",
-                animation: isChecking ? "pulse 2s infinite ease-in-out" : "none",
-                "@keyframes pulse": {
-                  "0%": { transform: "scale(1)" },
-                  "50%": { transform: "scale(1.05)", boxShadow: "0 0 25px rgba(211, 47, 47, 0.6)" },
-                  "100%": { transform: "scale(1)" },
-                },
+                border: "1px solid",
+                borderColor: "divider",
+                bgcolor: "background.paper",
               }}
               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                 e.currentTarget.style.display = "none";
@@ -108,7 +96,6 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
             sx={{
               mb: 1,
               letterSpacing: "-0.5px",
-              textShadow: LOGIN_SHADOWS.title,
             }}
           >
             Pizza To Go
@@ -116,28 +103,27 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
 
           <Typography
             variant="subtitle1"
-            sx={{ opacity: 0.8, mb: 3, fontWeight: 500 }}
+            sx={{ color: "text.secondary", mb: 3, fontWeight: 500 }}
           >
             Sistema de Facturación
           </Typography>
 
           {}
           <Chip
-            icon={isDisconnected ? <WifiOffIcon style={{ color: "#ff8a80" }} /> : <CircularProgress size={16} color="inherit" />}
+            icon={isDisconnected ? <WifiOffIcon /> : <CircularProgress size={16} color="inherit" />}
             label={
               isDisconnected
                 ? "Esperando conexión..."
                 : "Conectando al servidor..."
             }
             sx={{
-              bgcolor: isDisconnected ? "rgba(211, 47, 47, 0.2)" : "rgba(25, 118, 210, 0.2)",
-              color: isDisconnected ? "#ff8a80" : "#80d8ff",
-              border: `1px solid ${isDisconnected ? "rgba(211, 47, 47, 0.4)" : "rgba(25, 118, 210, 0.4)"}`,
+              bgcolor: isDisconnected ? "error.main" : "info.main",
+              color: isDisconnected ? "error.contrastText" : "info.contrastText",
               fontWeight: 600,
               mb: 4,
               px: 1.5,
               py: 2.2,
-              borderRadius: 3,
+              borderRadius: 2,
               fontSize: "0.9rem",
             }}
           />
@@ -148,7 +134,7 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
               size={64}
               thickness={4.5}
               sx={{
-                color: isDisconnected ? LOGIN_COLORS.primary : "#90caf9",
+                color: isDisconnected ? "error.main" : "primary.main",
               }}
             />
           </Box>
@@ -159,7 +145,7 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
             sx={{
               fontWeight: 600,
               mb: 1,
-              color: "white",
+              color: "text.primary",
             }}
           >
             {isDisconnected
@@ -170,7 +156,7 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
           <Typography
             variant="body2"
             sx={{
-              opacity: 0.75,
+              color: "text.secondary",
               maxWidth: 380,
               lineHeight: 1.6,
               mb: 4,
@@ -194,16 +180,10 @@ export const ConnectingServerScreen: React.FC<ConnectingServerScreenProps> = ({
               )
             }
             sx={{
-              bgcolor: LOGIN_COLORS.primary,
-              "&:hover": {
-                bgcolor: LOGIN_COLORS.primaryDark,
-              },
-              color: "white",
               fontWeight: 700,
               px: 4,
               py: 1.2,
-              borderRadius: 3,
-              boxShadow: LOGIN_SHADOWS.logo,
+              borderRadius: 2,
               textTransform: "none",
               fontSize: "1rem",
             }}

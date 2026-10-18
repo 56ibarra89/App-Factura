@@ -87,8 +87,8 @@ export default function TableSelectDialog({
       disableEnforceFocus={disableEnforceFocus}
       PaperProps={{
         sx: {
-          borderRadius: 4,
-          boxShadow: "0 24px 48px rgba(0,0,0,0.1)",
+          borderRadius: 2,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
         }
       }}
     >
@@ -154,21 +154,20 @@ export default function TableSelectDialog({
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center',
-                      borderRadius: 3,
-                      borderWidth: 2,
+                      borderRadius: 2,
+                      borderWidth: 1,
                       borderColor: isSelected ? LOGIN_COLORS.primary : "divider",
                       color: isSelected ? "white" : "text.primary",
                       bgcolor: isSelected ? LOGIN_COLORS.primary : "background.paper",
-                      boxShadow: isSelected ? `0 8px 16px ${alpha(LOGIN_COLORS.primary, 0.4)}` : "none",
+                      boxShadow: "none",
                       "&:hover": {
-                        borderWidth: 2,
+                        borderWidth: 1,
                         borderColor: isSelected ? LOGIN_COLORS.primary : LOGIN_COLORS.primary,
                         bgcolor: isSelected ? LOGIN_COLORS.primary : alpha(LOGIN_COLORS.primary, 0.05),
                         color: isSelected ? "white" : LOGIN_COLORS.primary,
-                        transform: "translateY(-2px)",
-                        boxShadow: `0 4px 12px ${alpha(LOGIN_COLORS.primary, 0.15)}`
+                        boxShadow: "none",
                       },
-                      transition: "all 0.2s"
+                      transition: "background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out",
                     }}
                   >
                     <EventSeatIcon sx={{ mb: 1, fontSize: 28, opacity: isSelected ? 1 : 0.7 }} />

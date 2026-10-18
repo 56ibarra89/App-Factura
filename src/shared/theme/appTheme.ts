@@ -9,7 +9,7 @@ export const getAppTheme = (mode: PaletteMode) => createTheme({
       contrastText: "#ffffff",
     },
     background: {
-      default: mode === 'dark' ? "#121212" : "#fdfbfb",
+      default: mode === "dark" ? "#121212" : "#f8fafc",
       paper: mode === 'dark' ? "#1e1e1e" : "#ffffff",
     },
   },
@@ -17,14 +17,54 @@ export const getAppTheme = (mode: PaletteMode) => createTheme({
     borderRadius: 8,
   },
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   },
   components: {
     MuiButton: {
+      defaultProps: {
+        disableElevation: true,
+      },
       styleOverrides: {
         root: {
+          borderRadius: 8,
           textTransform: "none",
         },
+      },
+    },
+    MuiCard: {
+      defaultProps: {
+        elevation: 0,
+      },
+      styleOverrides: {
+        root: ({ theme }) => ({
+          borderRadius: 16,
+          border: `1px solid ${theme.palette.divider}`,
+          backgroundImage: "none",
+        }),
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: ({ theme }) => ({
+          borderRadius: 16,
+          border: `1px solid ${theme.palette.divider}`,
+          backgroundImage: "none",
+        }),
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        head: ({ theme }) => ({
+          backgroundColor: theme.palette.action.hover,
+          fontWeight: 700,
+        }),
       },
     },
     MuiModal: {

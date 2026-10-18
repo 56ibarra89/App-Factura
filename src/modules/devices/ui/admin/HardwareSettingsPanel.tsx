@@ -4,9 +4,7 @@ import {
   Paper,
   TextField,
   Typography,
-  alpha,
 } from "@mui/material";
-import { LOGIN_COLORS } from "../../../../shared/theme";
 
 export default function HardwareSettingsPanel() {
   return (
@@ -14,11 +12,11 @@ export default function HardwareSettingsPanel() {
       elevation={0}
       sx={{
         p: 4,
-        borderRadius: 6,
+        borderRadius: 2,
         border: "1px solid",
         borderColor: "divider",
-        bgcolor: alpha(LOGIN_COLORS.primary, 0.02),
-        boxShadow: "0 4px 20px rgba(0,0,0,0.02)",
+        bgcolor: "background.paper",
+        boxShadow: "none",
       }}
     >
       <Typography variant="h6" fontWeight="900" mb={3}>

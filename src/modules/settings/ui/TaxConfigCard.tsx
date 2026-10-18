@@ -31,9 +31,9 @@ export const TaxConfigCard: React.FC<Props> = ({ tax, onUpdate, disabled = false
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 4,
+        borderRadius: 2,
         bgcolor: "background.paper",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+        boxShadow: "none",
         border: "1px solid",
         borderColor: "divider",
         opacity: disabled ? 0.6 : 1,

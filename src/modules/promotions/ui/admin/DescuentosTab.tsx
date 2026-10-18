@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  alpha,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -81,7 +82,8 @@ const DescuentosTab = ({ rules, onAdd, onEdit, onDelete }: DescuentosTabProps) =
                       sx={{
                         p: 1,
                         borderRadius: 1,
-                        bgcolor: "primary.50",
+                        bgcolor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.08),
                         color: "primary.main",
                         display: "flex",
                       }}

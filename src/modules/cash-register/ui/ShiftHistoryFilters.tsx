@@ -20,6 +20,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import NightlightRoundIcon from "@mui/icons-material/NightlightRound";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
 import { ROLE_LABELS } from "../../auth";
 
 interface Props {
@@ -113,20 +114,20 @@ export function ShiftHistoryFilters({
               <MenuItem value="all">Todas las modalidades</MenuItem>
               <MenuItem value="HANDOVER">
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <SyncAltIcon sx={{ color: "#0288d1", fontSize: 18 }} />
-                  <Typography variant="body2">⇄ Relevo de Turno</Typography>
+                  <SyncAltIcon sx={{ color: "info.main", fontSize: 18 }} />
+                  <Typography variant="body2">Relevo de turno</Typography>
                 </Stack>
               </MenuItem>
               <MenuItem value="END_OF_DAY">
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <NightlightRoundIcon sx={{ color: "#ed6c02", fontSize: 18 }} />
-                  <Typography variant="body2">🌙 Cierre Final</Typography>
+                  <NightlightRoundIcon sx={{ color: "warning.main", fontSize: 18 }} />
+                  <Typography variant="body2">Cierre final</Typography>
                 </Stack>
               </MenuItem>
               <MenuItem value="OPEN">
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <AccessTimeIcon sx={{ color: "#2e7d32", fontSize: 18 }} />
-                  <Typography variant="body2">🟢 En Curso (Abiertos)</Typography>
+                  <AccessTimeIcon sx={{ color: "success.main", fontSize: 18 }} />
+                  <Typography variant="body2">En curso (abiertos)</Typography>
                 </Stack>
               </MenuItem>
             </Select>
@@ -146,7 +147,12 @@ export function ShiftHistoryFilters({
               <MenuItem value="all">Todos los cuadres</MenuItem>
               <MenuItem value="balanced">Exactos (C$0.00)</MenuItem>
               <MenuItem value="discrepant">Con Descuadre</MenuItem>
-              <MenuItem value="authorized">🛡️ Autorizados con PIN</MenuItem>
+              <MenuItem value="authorized">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <ShieldOutlinedIcon sx={{ color: "action.active", fontSize: 18 }} />
+                  <Typography variant="body2">Autorizados con PIN</Typography>
+                </Stack>
+              </MenuItem>
             </Select>
           </FormControl>
         </Grid>

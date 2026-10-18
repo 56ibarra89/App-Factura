@@ -19,15 +19,17 @@ export const AuthLayout = ({ children, error = "", onClearError = () => {} }: Au
     }}
   >
     <Paper
-      elevation={24}
+      elevation={0}
       sx={{
         m: "auto",
         width: { xs: "100%", sm: "95%", md: 950 },
         minHeight: { xs: "auto", md: 650 },
-        borderRadius: 6,
+        borderRadius: 3,
         display: "flex",
         overflow: "hidden",
         boxShadow: LOGIN_SHADOWS.card,
+        border: "1px solid",
+        borderColor: "divider",
         flexDirection: { xs: "column", md: "row" },
       }}
     >

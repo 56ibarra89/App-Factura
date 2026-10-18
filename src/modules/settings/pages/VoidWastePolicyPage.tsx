@@ -135,7 +135,11 @@ export default function VoidWastePolicyPage() {
   };
 
   return (
-    <Box minHeight="100vh" bgcolor="background.default" p={{ xs: 2, md: 4 }}>
+    <Box
+      minHeight="100vh"
+      bgcolor="background.default"
+      sx={{ pt: 4, pb: 4, px: { xs: 2, md: 6 } }}
+    >
       <PageHeader
         title="Anulaciones, Mermas y Cortesías"
         startContent={<BackButton to="/admin" />}
@@ -168,7 +172,7 @@ export default function VoidWastePolicyPage() {
         </Box>
       ) : (
         <Stack spacing={3}>
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
             <CardContent>
               <Typography variant="h6" fontWeight={900} mb={1}>
                 Protección con PIN supervisor
@@ -212,7 +216,7 @@ export default function VoidWastePolicyPage() {
             </CardContent>
           </Card>
 
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
             <CardContent>
               <Typography variant="h6" fontWeight={900} mb={2}>
                 Catálogo de motivos oficiales
@@ -346,7 +350,7 @@ export default function VoidWastePolicyPage() {
             </CardContent>
           </Card>
 
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
             <CardContent>
               <Stack
                 direction={{ xs: "column", md: "row" }}

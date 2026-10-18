@@ -8,10 +8,6 @@ import {
   Typography,
 } from "@mui/material";
 import type { UserAccount } from "../../model/account.types";
-import {
-  LOGIN_COLORS,
-  LOGIN_SHADOWS,
-} from "../../../../shared/theme";
 import { UserList } from "./UserList";
 
 interface AccountsSidebarProps {
@@ -63,10 +59,11 @@ export function AccountsSidebar({
           startIcon={<PersonAddIcon />}
           onClick={onCreate}
           sx={{
-            borderRadius: 4,
-            bgcolor: LOGIN_COLORS.primary,
+            borderRadius: 2,
+            bgcolor: "primary.main",
             fontWeight: "bold",
-            boxShadow: LOGIN_SHADOWS.title,
+            boxShadow: "none",
+            transition: "background-color 120ms ease-out",
           }}
         >
           Nuevo
@@ -98,7 +95,7 @@ export function AccountsSidebar({
 
       <Box
         sx={{
-          borderRadius: 4,
+          borderRadius: 2,
           flex: 1,
           minHeight: 0,
           overflowY: "auto",

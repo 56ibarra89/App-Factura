@@ -13,6 +13,7 @@ import {
   TextField,
   Chip,
   Alert,
+  alpha,
 } from "@mui/material";
 import SettingsBackupRestoreIcon from "@mui/icons-material/SettingsBackupRestore";
 import SaveIcon from "@mui/icons-material/Save";
@@ -85,7 +86,7 @@ export const BackupConfigCard: React.FC<BackupConfigCardProps> = ({
             sx={{
               p: 1,
               borderRadius: 2,
-              bgcolor: "primary.50",
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
               color: "primary.main",
               display: "flex",
             }}
@@ -131,7 +132,7 @@ export const BackupConfigCard: React.FC<BackupConfigCardProps> = ({
             </Typography>
 
             {enabled && (
-              <Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 1, bgcolor: "grey.50", p: 1.5, borderRadius: 2 }}>
+              <Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 1, bgcolor: "action.hover", p: 1.5, borderRadius: 2 }}>
                 <TextField
                   select
                   size="small"

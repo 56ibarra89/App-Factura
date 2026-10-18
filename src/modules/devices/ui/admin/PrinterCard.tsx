@@ -20,7 +20,6 @@ import LanIcon from "@mui/icons-material/Lan";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import SettingsIcon from "@mui/icons-material/Settings";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import WifiTetheringIcon from "@mui/icons-material/WifiTethering";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ReplyIcon from "@mui/icons-material/Reply";
@@ -83,14 +82,13 @@ export default function PrinterCard({
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 4,
-        border: "1.5px solid",
+        borderRadius: 2,
+        border: "1px solid",
         borderColor: printer.isActive ? `${roleColor}.light` : "divider",
         bgcolor: "background.paper",
-        transition: "all 0.2s ease-in-out",
+        transition: "border-color 120ms ease-out, box-shadow 120ms ease-out",
         "&:hover": {
-          boxShadow: 4,
-          transform: "translateY(-2px)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         },
         display: "flex",
         flexDirection: "column",
@@ -108,7 +106,7 @@ export default function PrinterCard({
                 color: `${roleColor}.main`,
                 width: 50,
                 height: 50,
-                borderRadius: 3,
+                borderRadius: 2,
               }}
             >
               {isKitchen ? <SoupKitchenIcon /> : <PrintIcon />}

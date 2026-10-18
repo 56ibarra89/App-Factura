@@ -65,13 +65,16 @@ const CartItem = ({
   return (
     <>
       <Paper
-        elevation={1}
+        elevation={0}
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           p: 1,
           mb: 1,
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 1.5,
         }}
       >
         <Box sx={{ minWidth: 0, flex: 1, mr: 1 }}>
@@ -190,8 +193,8 @@ const CartItem = ({
           gap={1}
           alignItems="flex-end"
         >
-          <Box display="flex" alignItems="center" gap={1}>
-            <IconButton onClick={onRemove} size="small">
+          <Box display="flex" alignItems="center" gap={0.25}>
+            <IconButton onClick={onRemove} size="small" sx={{ width: 32, height: 32 }}>
               <RemoveIcon fontSize="small" />
             </IconButton>
 
@@ -212,7 +215,9 @@ const CartItem = ({
               }}
               size="small"
               sx={{
-                width: 60,
+                width: 36,
+                "& .MuiOutlinedInput-root": { height: 32 },
+                "& input": { p: 0, textAlign: "center", fontVariantNumeric: "tabular-nums" },
                 "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
                   {
                     WebkitAppearance: "none",
@@ -221,7 +226,7 @@ const CartItem = ({
               }}
             />
 
-            <IconButton onClick={onAdd} size="small">
+            <IconButton onClick={onAdd} size="small" sx={{ width: 32, height: 32 }}>
               <AddIcon fontSize="small" />
             </IconButton>
           </Box>

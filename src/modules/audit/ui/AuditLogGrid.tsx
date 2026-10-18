@@ -198,9 +198,10 @@ export default function AuditLogGrid({
       sx={{
         height: 650,
         width: "100%",
-        borderRadius: 4,
+        borderRadius: 2,
         overflow: "hidden",
-        boxShadow: "0 10px 40px rgba(0,0,0,0.04)",
+        border: "1px solid",
+        borderColor: "divider",
       }}
     >
       <DataGrid

@@ -16,16 +16,17 @@ const numpadButtonSx = {
   height: 90,
   fontSize: 42,
   fontWeight: 600,
-  borderRadius: 4,
+  borderRadius: 2,
   color: "text.primary",
   borderColor: "divider",
   "&:hover": {
     borderColor: LOGIN_COLORS.primary,
     bgcolor: LOGIN_COLORS.primarySubtle,
-    transform: "scale(1.05)",
-    boxShadow: `0 10px 20px ${LOGIN_COLORS.numpadHoverShadow}`,
   },
-  transition: "all 0.15s ease",
+  "&:active": {
+    transform: "scale(0.98)",
+  },
+  transition: "background-color 120ms ease-out, border-color 120ms ease-out, transform 80ms ease-out",
 };
 
 const LoginPin = () => {
@@ -93,9 +94,8 @@ const LoginPin = () => {
               mt: { xs: 4, md: 0 },
               "&:hover": {
                 bgcolor: "rgba(255,255,255,0.2)",
-                transform: "translateX(-4px)",
               },
-              transition: "all 0.2s ease",
+              transition: "background-color 120ms ease-out",
             }}
           >
             Volver al login clásico
@@ -170,14 +170,14 @@ const LoginPin = () => {
             disabled={pinEntryDisabled || pin.length === 0}
             sx={{
               height: 90,
-              borderRadius: 4,
+              borderRadius: 2,
               color: "text.secondary",
               "&:hover": {
                 color: "error.main",
                 bgcolor: "error.light",
-                transform: "scale(1.05)",
               },
-              transition: "all 0.15s ease",
+              "&:active": { transform: "scale(0.98)" },
+              transition: "background-color 120ms ease-out, color 120ms ease-out, transform 80ms ease-out",
             }}
           >
             <Backspace sx={{ fontSize: 48 }} />

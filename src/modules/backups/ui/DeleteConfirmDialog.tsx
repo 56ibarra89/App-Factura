@@ -8,6 +8,7 @@ import {
   Typography,
   Box,
   CircularProgress,
+  alpha,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import type { BackupItem } from "../api/backupGateway";
@@ -42,7 +43,7 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           sx={{
             p: 1,
             borderRadius: 2,
-            bgcolor: "error.50",
+            bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
             color: "error.main",
             display: "flex",
           }}
@@ -59,7 +60,7 @@ export const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
           ¿Estás seguro de que deseas eliminar permanentemente este archivo de copia de seguridad?
         </Typography>
 
-        <Box sx={{ bgcolor: "grey.50", p: 1.5, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+        <Box sx={{ bgcolor: "action.hover", p: 1.5, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
           <Typography
             variant="body2"
             fontWeight={700}

@@ -15,13 +15,14 @@ export const BackButton = ({ to = "/home", sx, ...props }: BackButtonProps) => {
       onClick={() => navigate(to)}
       sx={{
         bgcolor: "background.paper",
-        boxShadow: 1,
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: 2,
         mr: 2,
-        transition: "all 0.2s",
+        transition: "background-color 120ms ease-out, border-color 120ms ease-out",
         "&:hover": {
           bgcolor: "action.hover",
-          transform: "scale(1.1)",
-          boxShadow: 2,
+          borderColor: "text.secondary",
         },
         ...sx,
       }}

@@ -37,9 +37,11 @@ export default function TableConfigurationPage() {
         elevation={0}
         sx={{
           mt: 4,
-          borderRadius: 5,
+          borderRadius: 2,
           p: { xs: 3, md: 5 },
-          boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
+          boxShadow: "none",
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
         <Box mb={4}>

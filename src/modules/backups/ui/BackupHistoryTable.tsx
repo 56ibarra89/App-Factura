@@ -15,6 +15,7 @@ import {
   IconButton,
   Tooltip,
   Divider,
+  alpha,
 } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -35,7 +36,6 @@ interface BackupHistoryTableProps {
 
 export const BackupHistoryTable: React.FC<BackupHistoryTableProps> = ({
   backups,
-  loading: _loading,
   onDownload,
   onRestore,
   onDelete,
@@ -152,7 +152,7 @@ export const BackupHistoryTable: React.FC<BackupHistoryTableProps> = ({
               sx={{
                 p: 1,
                 borderRadius: 2,
-                bgcolor: "primary.50",
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
                 color: "primary.main",
                 display: "flex",
               }}
@@ -196,24 +196,24 @@ export const BackupHistoryTable: React.FC<BackupHistoryTableProps> = ({
               <Table stickyHeader size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700, bgcolor: "grey.50" }}>
+                    <TableCell sx={{ fontWeight: 700, bgcolor: "action.hover" }}>
                       Archivo
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700, bgcolor: "grey.50" }}>
+                    <TableCell sx={{ fontWeight: 700, bgcolor: "action.hover" }}>
                       Fecha y Hora
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700, bgcolor: "grey.50" }}>
+                    <TableCell sx={{ fontWeight: 700, bgcolor: "action.hover" }}>
                       Tipo
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700, bgcolor: "grey.50" }}>
+                    <TableCell sx={{ fontWeight: 700, bgcolor: "action.hover" }}>
                       Tamaño
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700, bgcolor: "grey.50" }}>
+                    <TableCell sx={{ fontWeight: 700, bgcolor: "action.hover" }}>
                       Ubicación
                     </TableCell>
                     <TableCell
                       align="right"
-                      sx={{ fontWeight: 700, bgcolor: "grey.50" }}
+                      sx={{ fontWeight: 700, bgcolor: "action.hover" }}
                     >
                       Acciones
                     </TableCell>

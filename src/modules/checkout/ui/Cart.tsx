@@ -41,14 +41,14 @@ const Cart = ({
 }: CartProps) => {
   return (
     <Box
-      width="300px"
+      width="350px"
       p={2}
       bgcolor="background.paper"
-      borderRadius={2}
       display="flex"
       flexDirection="column"
       maxHeight="100%"
-      boxShadow={2}
+      borderLeft="1px solid"
+      borderColor="divider"
     >
       <Typography variant="h6" fontWeight="bold" mb={1}>
         Tu pedido
@@ -101,15 +101,15 @@ const Cart = ({
           <Typography variant="body2" color="text.secondary">
             Subtotal:
           </Typography>
-          <Typography variant="body2">C${subTotal.toFixed(2)}</Typography>
+          <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>C${subTotal.toFixed(2)}</Typography>
         </Box>
         <Box display="flex" justifyContent="space-between" mb={1}>
           <Typography variant="body2" color="text.secondary">
             Impuestos:
           </Typography>
-          <Typography variant="body2">C${taxAmount.toFixed(2)}</Typography>
+          <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>C${taxAmount.toFixed(2)}</Typography>
         </Box>
-        <Typography fontWeight="bold" mb={1} textAlign="right" variant="h6">
+        <Typography fontWeight="bold" mb={1} textAlign="right" variant="h6" sx={{ fontVariantNumeric: "tabular-nums" }}>
           Total: C${total.toFixed(2)}
         </Typography>
         <Button
@@ -118,7 +118,7 @@ const Cart = ({
           fullWidth
           disabled={cartItems.length === 0}
           onClick={onPreviewClick}
-          sx={{ mb: 1 }}
+          sx={{ mb: 1, py: 1.25, fontWeight: 700 }}
         >
           Vista previa
         </Button>
@@ -129,7 +129,7 @@ const Cart = ({
             color="secondary"
             fullWidth
             onClick={onOpenCertificado}
-            sx={{ mb: 1 }}
+            sx={{ mb: 1, py: 0.75 }}
           >
             Canjear Vale
           </Button>
@@ -142,6 +142,7 @@ const Cart = ({
             fullWidth
             disabled={cartItems.length === 0}
             onClick={onSendToKitchen}
+          sx={{ py: 1.25, fontWeight: 700 }}
           >
             Enviar a Cocina
           </Button>

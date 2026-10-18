@@ -128,7 +128,11 @@ export default function KitchenModifiersSettingsPage() {
   };
 
   return (
-    <Box minHeight="100vh" bgcolor="background.default" p={{ xs: 2, md: 4 }}>
+    <Box
+      minHeight="100vh"
+      bgcolor="background.default"
+      sx={{ pt: 4, pb: 4, px: { xs: 2, md: 6 } }}
+    >
       <PageHeader
         title="Modificadores de Cocina"
         startContent={<BackButton to="/admin" />}
@@ -155,7 +159,7 @@ export default function KitchenModifiersSettingsPage() {
         </Box>
       ) : (
         <Stack spacing={3}>
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
             <CardContent>
               <Typography variant="h6" fontWeight={900} mb={2}>
                 Nuevo modificador
@@ -207,7 +211,9 @@ export default function KitchenModifiersSettingsPage() {
                   variant="outlined"
                   sx={{
                     height: "100%",
-                    borderRadius: 3,
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor: "divider",
                     opacity: modifier.isActive ? 1 : 0.6,
                   }}
                 >

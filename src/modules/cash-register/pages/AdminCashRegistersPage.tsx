@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { BackButton, PageHeader } from "../../../shared/ui";
-import { LOGIN_COLORS } from "../../../shared/theme";
 import { useCashRegisterDashboard } from "../hooks/useCashRegisterDashboard";
 import { CashRegisterStatusCard } from "../ui/admin/CashRegisterStatusCard";
 import { WaiterPerformanceList } from "../ui/admin/WaiterPerformanceList";
@@ -38,22 +37,7 @@ const AdminCashRegistersPage = () => {
         overflowX: "hidden",
       }}
     >
-      {/* Glow background */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: -200,
-          right: -200,
-          width: 600,
-          height: 600,
-          background: `radial-gradient(circle, ${LOGIN_COLORS.primarySubtle} 0%, rgba(255,255,255,0) 70%)`,
-          borderRadius: "50%",
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      />
-
-      <Box position="relative" zIndex={1}>
+      <Box>
         <PageHeader
           title="Monitoreo de Cajas en Vivo"
           startContent={<BackButton to="/admin" />}
@@ -91,14 +75,7 @@ const AdminCashRegistersPage = () => {
           }
         />
 
-        <Box sx={{ mt: 2, mb: 4, pl: 1 }}>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 700 }}>
-            Visualiza en tiempo real las cajas abiertas, el flujo de ingresos en efectivo, tarjeta
-            y app, así como el rendimiento del personal en sala.
-          </Typography>
-        </Box>
-
-        <Container maxWidth={false} disableGutters>
+        <Container maxWidth={false} disableGutters sx={{ mt: 3 }}>
           {/* Barra superior de KPIs Globales */}
           <LiveKpiCards kpis={liveKpis} loading={loading} />
 

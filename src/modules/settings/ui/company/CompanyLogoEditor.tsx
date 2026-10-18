@@ -29,10 +29,10 @@ export default function CompanyLogoEditor({
     <Box
       sx={{
         display: "flex",
-        flexDirection: "column",
+        flexDirection: { xs: "column", sm: "row" },
         alignItems: "center",
-        mt: -7,
-        mb: 4,
+        gap: 2,
+        mb: 3,
       }}
     >
       <input
@@ -47,21 +47,21 @@ export default function CompanyLogoEditor({
           elevation={3}
           onClick={() => fileInputRef.current?.click()}
           sx={{
-            width: 140,
-            height: 140,
-            borderRadius: "50%",
+            width: 96,
+            height: 96,
+            borderRadius: 2,
             position: "relative",
             cursor: "pointer",
             overflow: "hidden",
-            border: "4px solid",
-            borderColor: "background.paper",
+            border: "1px solid",
+            borderColor: "divider",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             bgcolor: "background.default",
-            transition: "all 0.2s",
+            transition: "border-color 120ms ease-out",
             "&:hover": {
-              boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+              borderColor: "primary.main",
               "& .upload-overlay": { opacity: 1 },
             },
           }}
@@ -122,12 +122,14 @@ export default function CompanyLogoEditor({
           </Tooltip>
         )}
       </Box>
-      <Typography variant="h6" fontWeight={700} sx={{ mt: 2 }}>
-        {businessName || "Tu Empresa"}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Haz clic en el círculo para cambiar el logotipo
-      </Typography>
+      <Box sx={{ textAlign: { xs: "center", sm: "left" } }}>
+        <Typography variant="h6" fontWeight={700}>
+          {businessName || "Tu Empresa"}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Haz clic en el logotipo para reemplazarlo
+        </Typography>
+      </Box>
     </Box>
   );
 }

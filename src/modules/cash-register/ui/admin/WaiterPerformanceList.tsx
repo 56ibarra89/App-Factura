@@ -17,9 +17,8 @@ export const WaiterPerformanceList = ({ waiters, loading = false }: Props) => {
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 4,
+        borderRadius: 2,
         bgcolor: "background.paper",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
         border: "1px solid",
         borderColor: "divider",
         height: "100%",
@@ -72,11 +71,11 @@ export const WaiterPerformanceList = ({ waiters, loading = false }: Props) => {
             const isPodium = idx === 0;
             const medal =
               idx === 0
-                ? "👑 1° Lugar"
+                ? "1° Lugar"
                 : idx === 1
-                  ? "🥈 2° Lugar"
+                  ? "2° Lugar"
                   : idx === 2
-                    ? "🥉 3° Lugar"
+                    ? "3° Lugar"
                     : `${idx + 1}°`;
 
             return (
@@ -103,7 +102,6 @@ export const WaiterPerformanceList = ({ waiters, loading = false }: Props) => {
                       height: 42,
                       fontWeight: 800,
                       fontSize: "0.95rem",
-                      boxShadow: `0 4px 10px ${waiter.avatarColor || "#757575"}35`,
                     }}
                   >
                     {waiter.name.charAt(0).toUpperCase()}

@@ -2,7 +2,6 @@ import { Component, ErrorInfo, ReactNode } from "react";
 import { Box, Typography, Button, Paper } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { LOGIN_COLORS } from "../theme";
 
 interface Props {
   children: ReactNode;
@@ -51,24 +50,24 @@ class ErrorBoundary extends Component<Props, State> {
           }}
         >
           <Paper
-            elevation={10}
+            elevation={0}
             sx={{
               p: { xs: 4, md: 6 },
               maxWidth: 500,
               textAlign: "center",
-              borderRadius: 6,
-              boxShadow: "0 20px 60px rgba(0,0,0,0.15)"
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider"
             }}
           >
-            <ErrorOutlineIcon sx={{ fontSize: 80, color: LOGIN_COLORS.primary, mb: 2 }} />
+            <ErrorOutlineIcon sx={{ fontSize: 64, color: "error.main", mb: 2 }} />
 
             <Typography variant="h4" fontWeight={900} gutterBottom color="text.primary">
-              ¡Ups! Algo salió mal
+              Error de ejecución en la aplicación
             </Typography>
 
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-              Se ha detectado un error inesperado. Por seguridad y para garantizar la integridad de tus datos,
-              hemos pausado la ejecución y registrado el incidente en la bitácora de auditoría.
+              Se produjo un error inesperado. Reinicia la aplicación para continuar.
             </Typography>
 
             <Box
@@ -94,13 +93,11 @@ class ErrorBoundary extends Component<Props, State> {
               startIcon={<RefreshIcon />}
               onClick={this.handleReset}
               sx={{
-                borderRadius: 3,
+                borderRadius: 2,
                 px: 4,
                 py: 1.5,
                 fontWeight: "bold",
                 textTransform: "none",
-                bgcolor: LOGIN_COLORS.primary,
-                "&:hover": { bgcolor: LOGIN_COLORS.primaryDark }
               }}
             >
               Reiniciar Aplicación

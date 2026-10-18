@@ -9,7 +9,6 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import type { EmpresaConfigState } from "../../model/settings.types";
-import { LOGIN_COLORS } from "../../../../shared/theme";
 import CompanyDetailsForm from "./CompanyDetailsForm";
 import CompanyLogoEditor from "./CompanyLogoEditor";
 
@@ -38,22 +37,15 @@ export default function CompanyIdentityCard({
     <Card
       elevation={0}
       sx={{
-        borderRadius: 4,
+        borderRadius: 2,
         border: "1px solid",
-        borderColor: "grey.200",
-        boxShadow: "0 12px 40px rgba(0,0,0,0.04)",
+        borderColor: "divider",
+        boxShadow: "none",
         overflow: "hidden",
         bgcolor: "background.paper",
       }}
     >
-      <Box
-        sx={{
-          height: 120,
-          background: `linear-gradient(135deg, #ef5350 0%, ${LOGIN_COLORS.primary} 100%)`,
-        }}
-      />
-
-      <CardContent sx={{ p: { xs: 3, sm: 5 }, pt: 0, position: "relative" }}>
+      <CardContent sx={{ p: { xs: 3, sm: 4 }, position: "relative" }}>
         <CompanyLogoEditor
           businessName={config.businessName}
           logoUrl={config.logoUrl}
@@ -62,13 +54,13 @@ export default function CompanyIdentityCard({
           onRemoveLogo={onRemoveLogo}
         />
 
-        <Divider sx={{ mb: 5 }} />
+        <Divider sx={{ mb: 4 }} />
 
         <CompanyDetailsForm config={config} onChange={onChange} />
 
         <Box
           sx={{
-            mt: 6,
+            mt: 4,
             display: "flex",
             justifyContent: "flex-end",
             alignItems: "center",
@@ -107,11 +99,10 @@ export default function CompanyIdentityCard({
               textTransform: "none",
               fontSize: "1rem",
               fontWeight: 700,
-              boxShadow: "0 6px 20px 0 rgba(229, 57, 53, 0.35)",
-              transition: "all 0.2s",
+              boxShadow: "none",
+              transition: "background-color 120ms ease-out",
               "&:hover": {
-                transform: "translateY(-2px)",
-                boxShadow: "0 8px 25px rgba(229, 57, 53, 0.45)",
+                boxShadow: "none",
               },
             }}
           >

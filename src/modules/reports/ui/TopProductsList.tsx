@@ -11,7 +11,6 @@ import {
   Chip
 } from "@mui/material";
 import LocalPizzaIcon from "@mui/icons-material/LocalPizza";
-import { LOGIN_SHADOWS } from "../../../shared/theme";
 import type { TopProduct } from "../model/salesReport.types";
 
 interface TopProductsListProps {
@@ -42,9 +41,11 @@ export const TopProductsList: React.FC<TopProductsListProps> = ({ products }) =>
   return (
     <Card
       sx={{
-        borderRadius: 4,
-        boxShadow: LOGIN_SHADOWS.card,
-        bgcolor: 'background.default',
+        borderRadius: 2,
+        boxShadow: "none",
+        bgcolor: 'background.paper',
+        border: "1px solid",
+        borderColor: "divider",
         height: '100%'
       }}
     >
@@ -111,7 +112,7 @@ export const TopProductsList: React.FC<TopProductsListProps> = ({ products }) =>
                   />
                   <Box display="flex" flexDirection="column" alignItems="flex-end" gap={0.5}>
                     <Chip size="small" label={`${product.quantity} uds`} color="primary" variant={index < 3 ? "filled" : "outlined"} />
-                    <Typography variant="caption" fontWeight={600} color="text.secondary">
+                    <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ fontVariantNumeric: "tabular-nums" }}>
                       C${product.totalRevenue.toFixed(2)}
                     </Typography>
                   </Box>

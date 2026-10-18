@@ -4,13 +4,6 @@ import {
 } from "../../../auth";
 import type { UserAccount } from "../../model/account.types";
 
-const ROLE_GRADIENTS: Record<string, string> = {
-  admin: "linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)",
-  cajero: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
-  mesero: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-  cocinero: "linear-gradient(135deg, #f6d365 0%, #fda085 100%)"
-};
-
 interface UserListProps {
   users: UserAccount[];
   selectedUserId: string | null;
@@ -30,16 +23,18 @@ export function UserList({ users, selectedUserId, onSelectUser }: UserListProps)
             sx={{
               py: 1,
               px: 1.5,
-              borderRadius: 2,
+              borderRadius: 1.5,
               display: 'flex',
               alignItems: 'center',
               gap: 1.5,
-              transition: 'all 0.2s ease-in-out',
-              bgcolor: isSelected ? alpha('#1976d2', 0.08) : 'transparent',
-              borderLeft: '4px solid',
-              borderColor: isSelected ? 'primary.main' : 'transparent',
+              transition: 'background-color 120ms ease-out, border-color 120ms ease-out',
+              bgcolor: isSelected
+                ? (theme) => alpha(theme.palette.primary.main, 0.08)
+                : 'transparent',
+              borderLeft: '3px solid',
+              borderLeftColor: isSelected ? 'primary.main' : 'transparent',
               '&:hover': {
-                bgcolor: isSelected ? alpha('#1976d2', 0.12) : alpha('#000000', 0.04),
+                bgcolor: (theme) => alpha(theme.palette.primary.main, isSelected ? 0.12 : 0.04),
               }
             }}
           >
@@ -47,11 +42,12 @@ export function UserList({ users, selectedUserId, onSelectUser }: UserListProps)
               sx={{
                 width: 40,
                 height: 40,
-                background: !user.isActive ? 'linear-gradient(135deg, #9e9e9e 0%, #616161 100%)' : ROLE_GRADIENTS[user.role],
-                color: "white",
+                bgcolor: (theme) => !user.isActive
+                  ? theme.palette.action.disabledBackground
+                  : alpha(theme.palette.primary.main, 0.12),
+                color: !user.isActive ? "text.disabled" : "primary.main",
                 fontSize: '1.2rem',
-                fontWeight: 'bold',
-                boxShadow: isSelected ? '0 2px 8px rgba(0,0,0,0.15)' : 'none'
+                fontWeight: 700,
               }}
             >
               {user.firstName.charAt(0).toUpperCase()}
@@ -80,7 +76,7 @@ export function UserList({ users, selectedUserId, onSelectUser }: UserListProps)
                     fontWeight: "bold",
                     fontSize: "0.65rem",
                     height: 20,
-                    background: alpha('#000000', 0.05),
+                    bgcolor: "action.hover",
                     color: 'text.secondary',
                     border: '1px solid',
                     borderColor: 'divider'

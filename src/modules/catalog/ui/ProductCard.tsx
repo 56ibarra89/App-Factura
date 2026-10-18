@@ -7,7 +7,6 @@ import IconButton from "@mui/material/IconButton";
 import Chip from "@mui/material/Chip";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
-import { LOGIN_COLORS } from "../../../shared/theme";
 
 interface ProductCardProps {
   name: string;
@@ -34,19 +33,17 @@ const ProductCard: FC<ProductCardProps> = ({
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer",
-        bgcolor: (theme) =>
-          theme.palette.mode === "dark"
-            ? "background.paper"
-            : isCombo
-            ? "#fff5f5"
-            : "#fff2e6",
-        borderRadius: 3,
-        border: isCombo ? `1.5px solid ${LOGIN_COLORS.primary}` : undefined,
-        boxShadow: 3,
+        bgcolor: "background.paper",
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: isCombo ? "primary.main" : "divider",
+        boxShadow: "none",
         position: "relative",
+        transition: "border-color 120ms ease-out, box-shadow 120ms ease-out, background-color 120ms ease-out",
         "&:hover": {
-          transform: "scale(1.05)",
-          boxShadow: 6,
+          bgcolor: "action.hover",
+          borderColor: "primary.main",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
         },
       }}
     >
@@ -59,8 +56,8 @@ const ProductCard: FC<ProductCardProps> = ({
             position: "absolute",
             top: 6,
             left: 6,
-            bgcolor: LOGIN_COLORS.primary,
-            color: "#fff",
+            bgcolor: "primary.main",
+            color: "primary.contrastText",
             fontWeight: "bold",
             fontSize: "0.65rem",
             height: 20,

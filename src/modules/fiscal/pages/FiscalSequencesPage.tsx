@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { BackButton, ConfirmDialog } from "../../../shared/ui";
+import { BackButton, ConfirmDialog, PageHeader } from "../../../shared/ui";
 import { useCorrelativos } from "../hooks/useCorrelativos";
 import CorrelativoTable from "../ui/admin/CorrelativoTable";
 import CorrelativoFormModal from "../ui/admin/CorrelativoFormModal";
@@ -37,30 +37,30 @@ const FiscalSequencesPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: "1200px", margin: "0 auto" }}>
-      {}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <BackButton to="/admin" />
-          <Box>
-            <Typography variant="h4" fontWeight={700} gutterBottom>
-              Control Fiscal y Resoluciones
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Gestiona los datos de resolución DGI y revisa el historial de talonarios generados.
-            </Typography>
-          </Box>
-        </Box>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenModal()}
-          sx={{ borderRadius: 2, textTransform: "none", boxShadow: 2, px: 3, py: 1.2 }}
-        >
-          Nuevo
-        </Button>
-      </Box>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "background.default",
+        pt: 4,
+        pb: 4,
+        px: { xs: 2, md: 6 },
+      }}
+    >
+      <PageHeader
+        title="Control Fiscal y Resoluciones"
+        startContent={<BackButton to="/admin" />}
+        actions={
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenModal()}
+            sx={{ borderRadius: 2, textTransform: "none" }}
+          >
+            Nuevo
+          </Button>
+        }
+      />
 
       {}
       <Box sx={{ mt: 5 }}>

@@ -9,7 +9,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { BackButton, PageHeader } from "../../shared/ui";
 import { AdminModuleCard } from "../ui/AdminModuleCard";
-import { LOGIN_COLORS } from "../../shared/theme";
 import {
   adminModules,
   type AdminCategory,
@@ -30,7 +29,7 @@ const AdminDashboardPage = () => {
     if (modules.length === 0) return null;
 
     return (
-      <Box key={categoryName} sx={{ mb: 6 }}>
+      <Box key={categoryName} sx={{ mb: 4 }}>
         <Typography
           variant="h5"
           fontWeight={800}
@@ -80,47 +79,13 @@ const AdminDashboardPage = () => {
         overflowX: "hidden",
       }}
     >
-      {}
-      <Box
-        sx={{
-          position: "absolute",
-          top: -200,
-          right: -200,
-          width: 600,
-          height: 600,
-          background: `radial-gradient(circle, ${LOGIN_COLORS.primarySubtle} 0%, rgba(255,255,255,0) 70%)`,
-          borderRadius: "50%",
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      />
-
-      <Box position="relative" zIndex={1}>
+      <Box>
         <PageHeader
           title="Centro de Control"
           startContent={<BackButton to="/home" />}
         />
 
-        {/* Hero Section */}
-        <Box sx={{ mt: 2, mb: 6, pl: 1 }}>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{
-              maxWidth: "100%",
-              lineHeight: 1.8,
-              fontSize: "1.1rem",
-              "& b": { color: LOGIN_COLORS.primary, fontWeight: 800 },
-            }}
-          >
-            Bienvenido al panel de administración avanzado. Agrupamos todas las
-            herramientas necesarias para que tengas el <b>control absoluto</b>{" "}
-            sobre la configuración, escalabilidad y hardware de tu negocio, con
-            un diseño intuitivo.
-          </Typography>
-        </Box>
-
-        <Container maxWidth="xl" disableGutters>
+        <Container maxWidth="xl" disableGutters sx={{ mt: 3 }}>
           {renderCategory("General")}
           {renderCategory("Operativa")}
           {renderCategory("Hardware y Sistema")}

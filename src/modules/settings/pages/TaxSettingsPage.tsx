@@ -1,6 +1,5 @@
 import { Box, Container, Typography, Grid } from "@mui/material";
 import { BackButton, PageHeader } from "../../../shared/ui";
-import { LOGIN_COLORS } from "../../../shared/theme";
 import { useTaxConfig } from "../hooks/useTaxConfig";
 import { TaxConfigCard } from "../ui/TaxConfigCard";
 import { TaxExemptionToggle } from "../ui/TaxExemptionToggle";
@@ -20,35 +19,13 @@ const TaxSettingsPage = () => {
         overflowX: 'hidden'
       }}
     >
-      {}
-      <Box
-        sx={{
-          position: "absolute",
-          top: -200,
-          right: -200,
-          width: 600,
-          height: 600,
-          background: `radial-gradient(circle, ${LOGIN_COLORS.primarySubtle} 0%, rgba(255,255,255,0) 70%)`,
-          borderRadius: "50%",
-          zIndex: 0,
-          pointerEvents: "none"
-        }}
-      />
-
-      <Box position="relative" zIndex={1}>
+      <Box>
         <PageHeader
           title="Administración de Impuestos"
           startContent={<BackButton to="/admin" />}
         />
 
-        <Box sx={{ mt: 2, mb: 5, pl: 1 }}>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 650 }}>
-            Administra las tasas de impuestos aplicadas a tu sistema de facturación.
-            Puedes realizar ajustes y activar planes de exoneración temporales en cumplimiento con la normativa.
-          </Typography>
-        </Box>
-
-        <Container maxWidth={false} disableGutters>
+        <Container maxWidth={false} disableGutters sx={{ mt: 3 }}>
           <Grid container spacing={4}>
             {/* Left Column: Lista de impuestos */}
             <Grid size={{ xs: 12, lg: 7 }}>

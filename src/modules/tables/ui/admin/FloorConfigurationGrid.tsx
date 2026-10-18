@@ -37,7 +37,7 @@ export default function FloorConfigurationGrid({
             elevation={0}
             sx={{
               p: 3,
-              borderRadius: 4,
+              borderRadius: 2,
               border: "1px solid",
               borderColor:
                 floor.tableCount > 0
@@ -51,7 +51,7 @@ export default function FloorConfigurationGrid({
               position: "relative",
               "&:hover": {
                 borderColor: LOGIN_COLORS.primary,
-                boxShadow: "0 8px 24px rgba(0,0,0,0.05)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               },
             }}
           >
@@ -126,7 +126,7 @@ export default function FloorConfigurationGrid({
           sx={{
             height: "100%",
             minHeight: 140,
-            borderRadius: 4,
+            borderRadius: 2,
             borderStyle: "dashed",
             borderWidth: 2,
             color: "text.secondary",

@@ -6,7 +6,8 @@ import {
 } from "../../../shared/ui";
 import CategoryIcon from "@mui/icons-material/Category";
 import AddIcon from "@mui/icons-material/Add";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { useState, useRef } from "react";
 import { useCatalog } from "../hooks/useCatalog";
 import type { Product } from "../model/catalog.types";
@@ -201,7 +202,7 @@ const ProductsPage = () => {
                   blurActiveElement();
                   setShowPackagingSizes(true);
                 }}
-                startIcon={<span role="img" aria-label="box">📦</span>}
+                startIcon={<Inventory2OutlinedIcon />}
                 sx={{
                   borderRadius: 2,
                   borderColor: LOGIN_COLORS.primary,
@@ -212,20 +213,14 @@ const ProductsPage = () => {
                 Gestionar Empaques
               </Button>
               <Button
-                variant="contained"
+                variant="outlined"
                 size="small"
                 onClick={handleAddCombo}
-                startIcon={<AutoAwesomeIcon />}
+                startIcon={<LayersOutlinedIcon />}
                 sx={{
                   borderRadius: 2,
-                  bgcolor: "#d32f2f",
-                  background: "linear-gradient(135deg, #d32f2f 0%, #f57c00 100%)",
-                  color: "#fff",
                   fontWeight: 700,
-                  boxShadow: "0 4px 12px rgba(211, 47, 47, 0.25)",
-                  "&:hover": {
-                    background: "linear-gradient(135deg, #b71c1c 0%, #e65100 100%)",
-                  },
+                  boxShadow: "none",
                 }}
               >
                 Crear Combo
@@ -249,7 +244,7 @@ const ProductsPage = () => {
         }
       />
 
-      <Paper sx={{ width: "100%", mb: 3, p: 2, borderRadius: 4, boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
+      <Paper elevation={0} sx={{ width: "100%", mb: 3, p: 2, borderRadius: 2, boxShadow: "none", border: "1px solid", borderColor: "divider" }}>
         <ProductsTable
           categories={categories}
           onEdit={handleEdit}

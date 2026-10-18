@@ -26,7 +26,7 @@ export default function TableLayoutActions({
         variant="outlined"
         onClick={onBackToTables}
         sx={{
-          borderRadius: 4,
+          borderRadius: 2,
           fontWeight: "bold",
           textTransform: "none",
           color: "text.secondary",
@@ -48,14 +48,12 @@ export default function TableLayoutActions({
           )
         }
         sx={{
-          borderRadius: 4,
+          borderRadius: 2,
           fontWeight: "bold",
           textTransform: "none",
           px: 4,
           py: 1.5,
-          boxShadow: hasUnsavedChanges
-            ? "0 4px 14px rgba(0,0,0,0.2)"
-            : "none",
+          boxShadow: "none",
         }}
       >
         {isSaving ? "Guardando..." : "Guardar Cambios"}

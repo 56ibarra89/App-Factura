@@ -22,11 +22,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
   Stack,
   Tooltip,
 } from "@mui/material";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SecurityIcon from "@mui/icons-material/Security";
@@ -44,7 +42,6 @@ import {
   CASH_EXPENSE_CATEGORY_LABELS,
   DEFAULT_PETTY_CASH_POLICY,
   type CashExpenseCategory,
-  type PettyCashPolicy,
 } from "../model/cash-expense.types";
 import { usePettyCashPolicy } from "../hooks/usePettyCashPolicy";
 
@@ -144,22 +141,7 @@ export default function PettyCashPolicyPage() {
         overflowX: "hidden",
       }}
     >
-      {/* Background ambient gradient */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: -200,
-          right: -200,
-          width: 600,
-          height: 600,
-          background: `radial-gradient(circle, ${LOGIN_COLORS.primarySubtle} 0%, rgba(255,255,255,0) 70%)`,
-          borderRadius: "50%",
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      />
-
-      <Box position="relative" zIndex={1}>
+      <Box>
         <PageHeader
           title="Políticas de Caja Chica (Egresos)"
           startContent={<BackButton to="/admin" />}
@@ -194,15 +176,7 @@ export default function PettyCashPolicyPage() {
           }
         />
 
-        <Box sx={{ mt: 2, mb: 4, pl: 1 }}>
-          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 850 }}>
-            Configura los límites financieros de retiro, comprobantes físicos requeridos y
-            autorizaciones obligatorias por PIN de Administrador/Supervisor para prevenir fugas y
-            descuadres al cuadrar caja.
-          </Typography>
-        </Box>
-
-        <Container maxWidth={false} disableGutters>
+        <Container maxWidth={false} disableGutters sx={{ mt: 3 }}>
           <Grid container spacing={3}>
             {/* Card 1: Umbrales Financieros */}
             <Grid size={{ xs: 12, md: 6 }}>
@@ -292,7 +266,7 @@ export default function PettyCashPolicyPage() {
 
                     <Alert severity="info" sx={{ borderRadius: 2 }}>
                       <Typography variant="caption" display="block">
-                        💡 <strong>Recomendación:</strong> Fija un monto libre suficiente para
+                        <strong>Recomendación:</strong> Fija un monto libre suficiente para
                         compras menores cotidianas (ej. C$200 - C$300). Montos mayores requerirán
                         presencia y validación del supervisor en caja.
                       </Typography>

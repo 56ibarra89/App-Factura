@@ -16,7 +16,7 @@ export const LOGIN_GRADIENTS = {
 } as const;
 
 export const LOGIN_SHADOWS = {
-  card: "0 25px 50px rgba(0,0,0,0.15)",
+  card: "0 8px 24px rgba(0,0,0,0.10)",
   logo: "0 8px 32px rgba(0, 0, 0, 0.3)",
   title: "0 2px 10px rgba(0,0,0,0.3)",
 } as const;

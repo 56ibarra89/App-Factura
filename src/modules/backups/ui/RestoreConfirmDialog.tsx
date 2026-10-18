@@ -9,6 +9,7 @@ import {
   Box,
   Alert,
   CircularProgress,
+  alpha,
 } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ShieldIcon from "@mui/icons-material/Shield";
@@ -48,7 +49,7 @@ export const RestoreConfirmDialog: React.FC<RestoreConfirmDialogProps> = ({
           sx={{
             p: 1,
             borderRadius: 2,
-            bgcolor: "warning.50",
+            bgcolor: (theme) => alpha(theme.palette.warning.main, 0.08),
             color: "warning.main",
             display: "flex",
           }}
@@ -65,7 +66,7 @@ export const RestoreConfirmDialog: React.FC<RestoreConfirmDialogProps> = ({
           <strong>Acción Crítica:</strong> Al restaurar la base de datos, toda la información actual del sistema será reemplazada por los registros contenidos en este archivo.
         </Alert>
 
-        <Box sx={{ mb: 2, bgcolor: "grey.50", p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+        <Box sx={{ mb: 2, bgcolor: "action.hover", p: 2, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
           <Typography variant="caption" color="text.secondary" fontWeight={600}>
             ARCHIVO ORIGEN:
           </Typography>
@@ -78,7 +79,7 @@ export const RestoreConfirmDialog: React.FC<RestoreConfirmDialogProps> = ({
           </Typography>
         </Box>
 
-        <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start", bgcolor: "primary.50", p: 2, borderRadius: 2 }}>
+        <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start", bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08), p: 2, borderRadius: 2 }}>
           <ShieldIcon color="primary" sx={{ mt: 0.2 }} />
           <Box>
             <Typography variant="subtitle2" fontWeight={700} color="primary.main">

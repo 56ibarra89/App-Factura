@@ -74,7 +74,16 @@ export default function CookAssignmentsSection({
   }
 
   return (
-    <Paper sx={{ p: 4, borderRadius: 3, width: "100%" }}>
+    <Paper
+      elevation={0}
+      sx={{
+        p: 4,
+        borderRadius: 2,
+        width: "100%",
+        border: "1px solid",
+        borderColor: "divider",
+      }}
+    >
       <Typography variant="h6" mb={3}>
         Asignación de Horarios por Cocinero
       </Typography>
@@ -99,7 +108,7 @@ export default function CookAssignmentsSection({
               p={3}
               border="1px solid"
               borderColor="divider"
-              borderRadius={3}
+              borderRadius={2}
               bgcolor="background.default"
             >
               <Box

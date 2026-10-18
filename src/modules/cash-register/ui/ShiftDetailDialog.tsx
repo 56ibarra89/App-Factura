@@ -24,6 +24,7 @@ import CalculateIcon from "@mui/icons-material/Calculate";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import ShieldIcon from "@mui/icons-material/Shield";
 import PrintIcon from "@mui/icons-material/Print";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import type { Shift, CashDenominationCount } from "../model/cash-register.types";
 import {
   calculateDuration,
@@ -119,16 +120,17 @@ export function ShiftDetailDialog({
                   bgcolor: "background.paper",
                 }}
               >
-                <Typography
-                  variant="caption"
-                  fontWeight="bold"
-                  color="text.secondary"
-                  textTransform="uppercase"
-                  display="block"
-                  mb={1}
-                >
-                  ⚙️ Modalidad de Cierre
-                </Typography>
+                <Stack direction="row" spacing={0.75} alignItems="center" mb={1}>
+                  <SettingsOutlinedIcon sx={{ color: "text.secondary", fontSize: 16 }} />
+                  <Typography
+                    variant="caption"
+                    fontWeight="bold"
+                    color="text.secondary"
+                    textTransform="uppercase"
+                  >
+                    Modalidad de Cierre
+                  </Typography>
+                </Stack>
 
                 {shift.status === "open" ? (
                   <Box

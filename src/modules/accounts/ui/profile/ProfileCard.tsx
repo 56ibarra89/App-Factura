@@ -1,7 +1,6 @@
-import { Box, Typography, Avatar, Paper } from "@mui/material";
+import { Box, Typography, Avatar, Divider, Paper } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import ShieldIcon from "@mui/icons-material/Security";
-import { LOGIN_GRADIENTS, LOGIN_SHADOWS } from "../../../../shared/theme";
 import logo from "../../../../assets/images/logo.png";
 import {
   ROLE_LABELS,
@@ -20,80 +19,65 @@ export function ProfileCard({ username, fullName }: ProfileCardProps) {
     <Paper
       elevation={0}
       sx={{
-        background: LOGIN_GRADIENTS.brandingPanel,
-        color: "white",
-        p: 4,
-        borderRadius: 4,
-        boxShadow: LOGIN_SHADOWS.card,
+        bgcolor: "background.paper",
+        color: "text.primary",
+        p: 3,
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: "divider",
+        boxShadow: "none",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         textAlign: "center",
         height: "100%",
         position: "relative",
-        overflow: "hidden"
+        overflow: "hidden",
       }}
     >
-      {}
       <Box
         sx={{
-          position: "absolute",
-          top: "-50%",
-          left: "-50%",
-          width: "200%",
-          height: "200%",
-          background: LOGIN_GRADIENTS.brandingPanelRadial,
-          opacity: 0.6,
-          zIndex: 0,
-          pointerEvents: "none"
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
         }}
-      />
-
-      <Box sx={{ position: "relative", zIndex: 1, width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-        {}
+      >
         <Box
           component="img"
           src={logo}
           alt="Logo"
-          sx={{ width: 120, mb: 4, filter: "drop-shadow(0px 4px 10px rgba(0,0,0,0.5))" }}
+          sx={{ width: 64, height: 64, objectFit: "contain" }}
         />
-
-        {}
         <Avatar
           sx={{
-            width: 90,
-            height: 90,
-            mb: 2,
-            bgcolor: "rgba(255,255,255,0.1)",
-            border: "2px solid rgba(255,255,255,0.2)",
-            backdropFilter: "blur(4px)"
+            width: 56,
+            height: 56,
+            bgcolor: "action.hover",
+            color: "primary.main",
+            border: "1px solid",
+            borderColor: "divider",
           }}
         >
-          <PersonIcon sx={{ fontSize: 50, color: "white" }} />
+          <PersonIcon sx={{ fontSize: 32 }} />
         </Avatar>
+      </Box>
 
-        <Typography variant="h5" fontWeight="bold" gutterBottom>
+      <Divider sx={{ width: "100%", my: 2.5 }} />
+
+      <Box sx={{ width: "100%" }}>
+        <Typography variant="h6" fontWeight={700}>
           {fullName || "Cargando..."}
         </Typography>
-        <Typography variant="body1" color="rgba(255,255,255,0.6)" mb={3}>
-          @{username}
-        </Typography>
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            bgcolor: "rgba(255,255,255,0.08)",
-            px: 2,
-            py: 0.8,
-            borderRadius: 8,
-            border: "1px solid rgba(255,255,255,0.1)"
-          }}
-        >
-          <ShieldIcon sx={{ fontSize: 18, color: role === "admin" ? "#4caf50" : "#2196f3" }} />
-          <Typography variant="caption" fontWeight="bold" sx={{ letterSpacing: 1, textTransform: "uppercase" }}>
-            {role ? ROLE_LABELS[role as keyof typeof ROLE_LABELS] || role : ""}
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="caption" color="text.secondary">Usuario</Typography>
+          <Typography variant="body2" fontWeight={600}>@{username}</Typography>
+        </Box>
+        <Divider sx={{ my: 1.5 }} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <ShieldIcon sx={{ fontSize: 18, color: "primary.main" }} />
+          <Typography variant="body2" fontWeight={600}>
+            {role ? ROLE_LABELS[role as keyof typeof ROLE_LABELS] || role : "Sin rol"}
           </Typography>
         </Box>
       </Box>

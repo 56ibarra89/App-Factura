@@ -21,7 +21,7 @@ export default function KitchenManagementPanel({
 }: KitchenManagementPanelProps) {
   return (
     <>
-      <Paper sx={{ p: 4, borderRadius: 3, mb: 4 }}>
+      <Paper elevation={0} sx={{ p: 4, borderRadius: 2, mb: 4, border: "1px solid", borderColor: "divider" }}>
         <Typography variant="h6" mb={2}>
           Agregar Nueva Cocina
         </Typography>
@@ -46,7 +46,7 @@ export default function KitchenManagementPanel({
         </Box>
       </Paper>
 
-      <Paper sx={{ p: 4, borderRadius: 3 }}>
+      <Paper elevation={0} sx={{ p: 4, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
         <Typography variant="h6" mb={3}>
           Cocinas Registradas
         </Typography>

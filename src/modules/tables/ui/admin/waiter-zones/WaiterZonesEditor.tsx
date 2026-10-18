@@ -53,7 +53,7 @@ export default function WaiterZonesEditor({
         height="100%"
         minHeight={400}
         bgcolor="background.paper"
-        borderRadius={4}
+        borderRadius={2}
         sx={{ opacity: 0.6 }}
       >
         <Person sx={{ fontSize: 80, color: "text.disabled", mb: 2 }} />
@@ -65,7 +65,7 @@ export default function WaiterZonesEditor({
   }
 
   return (
-    <Paper elevation={0} sx={{ p: 4, borderRadius: 4, height: "100%", border: "1px solid", borderColor: "divider" }}>
+    <Paper elevation={0} sx={{ p: 4, borderRadius: 2, height: "100%", border: "1px solid", borderColor: "divider" }}>
       <Typography variant="h5" fontWeight="bold" gutterBottom>
         Zonas de {selectedUser.firstName}
       </Typography>

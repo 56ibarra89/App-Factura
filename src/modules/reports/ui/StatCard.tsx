@@ -1,6 +1,5 @@
 import React from "react";
 import { Card, CardContent, Typography, Box } from "@mui/material";
-import { LOGIN_SHADOWS } from "../../../shared/theme";
 
 interface StatCardProps {
   title: string;
@@ -26,19 +25,17 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <Card
       sx={{
-        borderRadius: 4,
-        boxShadow: LOGIN_SHADOWS.card,
-        bgcolor: "background.default",
+        borderRadius: 2,
+        boxShadow: "none",
+        bgcolor: "background.paper",
+        border: "1px solid",
+        borderColor: "divider",
         display: "flex",
         flexDirection: "column",
         width: "100%",
         height: "100%",
         minHeight: 150,
         boxSizing: "border-box",
-        transition: "transform 0.2s ease-in-out",
-        "&:hover": {
-          transform: "translateY(-4px)",
-        },
       }}
     >
       <CardContent
@@ -74,6 +71,7 @@ export const StatCard: React.FC<StatCardProps> = ({
                 whiteSpace: "nowrap",
                 fontSize: { lg: "1.55rem", xl: "1.8rem" },
                 letterSpacing: "-0.02em",
+                fontVariantNumeric: "tabular-nums",
               }}
             >
               {masked ? "********" : value}

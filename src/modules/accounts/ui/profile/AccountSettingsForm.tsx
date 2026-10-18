@@ -1,6 +1,6 @@
 import { Box, Typography, TextField, Button, CircularProgress, Alert, Paper, Divider, InputAdornment, IconButton, Switch } from "@mui/material";
 import { useState } from "react";
-import { LOGIN_COLORS, LOGIN_SHADOWS } from "../../../../shared/theme";
+import { LOGIN_COLORS } from "../../../../shared/theme";
 import type { AccountData } from "../../model/account.types";
 import SaveIcon from "@mui/icons-material/Save";
 import Visibility from "@mui/icons-material/Visibility";
@@ -45,8 +45,10 @@ export function AccountSettingsForm({ data, loading, error, success, onChange, o
       sx={{
         bgcolor: "background.paper",
         p: { xs: 3, md: 5 },
-        borderRadius: 4,
-        boxShadow: LOGIN_SHADOWS.card,
+        borderRadius: 2,
+        boxShadow: "none",
+        border: "1px solid",
+        borderColor: "divider",
         height: "100%",
         display: "flex",
         flexDirection: "column"

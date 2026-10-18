@@ -9,7 +9,6 @@ import {
 import DeliveryDiningIcon from "@mui/icons-material/DeliveryDining";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import TableRestaurantIcon from "@mui/icons-material/TableRestaurant";
-import { LOGIN_SHADOWS } from "../../../shared/theme";
 import type { ChannelSalesSummary } from "../model/salesReport.types";
 
 interface SalesChannelsCardProps {
@@ -47,9 +46,11 @@ export function SalesChannelsCard({
   return (
     <Card
       sx={{
-        borderRadius: 4,
-        boxShadow: LOGIN_SHADOWS.card,
-        bgcolor: "background.default",
+        borderRadius: 2,
+        boxShadow: "none",
+        bgcolor: "background.paper",
+        border: "1px solid",
+        borderColor: "divider",
       }}
     >
       <CardContent>
@@ -111,7 +112,7 @@ export function SalesChannelsCard({
                     </Stack>
 
                     <Box textAlign="right">
-                      <Typography variant="body2" fontWeight={700}>
+                      <Typography variant="body2" fontWeight={700} sx={{ fontVariantNumeric: "tabular-nums" }}>
                         {masked ? "********" : `C$${channel.sales.toFixed(2)}`}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">

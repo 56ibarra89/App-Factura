@@ -34,7 +34,15 @@ function MetricCard({
   icon: ReactNode;
 }) {
   return (
-    <Card variant="outlined" sx={{ height: "100%", borderRadius: 3 }}>
+    <Card
+      elevation={0}
+      sx={{
+        height: "100%",
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: "divider",
+      }}
+    >
       <CardContent>
         <Stack direction="row" spacing={1.5} alignItems="center" mb={1.5}>
           {icon}
@@ -87,7 +95,11 @@ export default function ServiceSlaSettingsPage() {
   };
 
   return (
-    <Box minHeight="100vh" bgcolor="background.default" p={{ xs: 2, md: 4 }}>
+    <Box
+      minHeight="100vh"
+      bgcolor="background.default"
+      sx={{ pt: 4, pb: 4, px: { xs: 2, md: 6 } }}
+    >
       <PageHeader
         title="Tiempos de Servicio y Alertas"
         startContent={<BackButton to="/admin" />}
@@ -121,7 +133,7 @@ export default function ServiceSlaSettingsPage() {
       ) : (
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Card sx={{ height: "100%", borderRadius: 3 }}>
+            <Card elevation={0} sx={{ height: "100%", borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
               <CardContent>
                 <Stack direction="row" spacing={1.5} alignItems="center" mb={2}>
                   <RestaurantIcon color="primary" />
@@ -181,7 +193,7 @@ export default function ServiceSlaSettingsPage() {
           </Grid>
 
           <Grid size={{ xs: 12, md: 6 }}>
-            <Card sx={{ height: "100%", borderRadius: 3 }}>
+            <Card elevation={0} sx={{ height: "100%", borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
               <CardContent>
                 <Stack direction="row" spacing={1.5} alignItems="center" mb={2}>
                   <TwoWheelerIcon color="error" />

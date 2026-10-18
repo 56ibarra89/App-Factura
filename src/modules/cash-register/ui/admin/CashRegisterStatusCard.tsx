@@ -5,7 +5,11 @@ import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
-import { LOGIN_COLORS, LOGIN_SHADOWS } from "../../../../shared/theme";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
+import WorkspacePremiumOutlinedIcon from "@mui/icons-material/WorkspacePremiumOutlined";
+import TwoWheelerOutlinedIcon from "@mui/icons-material/TwoWheelerOutlined";
+import PointOfSaleOutlinedIcon from "@mui/icons-material/PointOfSaleOutlined";
+import { LOGIN_COLORS } from "../../../../shared/theme";
 import { formatCurrency } from "../../../../shared/format";
 import type { ActiveCashRegister } from "../../api/adminDashboardGateway";
 
@@ -44,7 +48,15 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
         : isDelivery
           ? "warning"
           : "info") as "error" | "secondary" | "warning" | "info",
-    icon: isAdmin ? "🛡️" : isPrincipal ? "👑" : isDelivery ? "🛵" : "💼",
+    icon: isAdmin ? (
+      <AdminPanelSettingsOutlinedIcon />
+    ) : isPrincipal ? (
+      <WorkspacePremiumOutlinedIcon />
+    ) : isDelivery ? (
+      <TwoWheelerOutlinedIcon />
+    ) : (
+      <PointOfSaleOutlinedIcon />
+    ),
     accentColor: isAdmin
       ? LOGIN_COLORS.primary
       : isPrincipal
@@ -63,18 +75,12 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 4,
+        borderRadius: 2,
         bgcolor: "background.paper",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
         border: "1px solid",
         borderColor: "divider",
         position: "relative",
         overflow: "hidden",
-        transition: "transform 0.2s, box-shadow 0.2s",
-        "&:hover": {
-          transform: "translateY(-3px)",
-          boxShadow: LOGIN_SHADOWS.card,
-        },
       }}
     >
       {/* Línea de acento superior según rol */}
@@ -112,7 +118,8 @@ export const CashRegisterStatusCard = ({ caja }: Props) => {
         </Box>
 
         <Chip
-          label={`${roleConfig.icon} ${roleConfig.label}`}
+          icon={roleConfig.icon}
+          label={roleConfig.label}
           color={roleConfig.color}
           size="small"
           sx={{ fontWeight: 700, fontSize: "0.75rem" }}

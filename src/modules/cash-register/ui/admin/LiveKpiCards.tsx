@@ -54,16 +54,10 @@ export const LiveKpiCards = ({ kpis, loading = false }: LiveKpiCardsProps) => {
           <Card
             elevation={0}
             sx={{
-              borderRadius: 3.5,
+              borderRadius: 2,
               border: "1px solid",
               borderColor: "divider",
               bgcolor: "background.paper",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
-              transition: "transform 0.2s, box-shadow 0.2s",
-              "&:hover": {
-                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                transform: "translateY(-2px)",
-              },
             }}
           >
             <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>

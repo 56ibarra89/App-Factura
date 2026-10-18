@@ -8,6 +8,7 @@ import {
   DialogTitle,
   Divider,
   Grid,
+  Stack,
   TextField,
   Typography,
 } from "@mui/material";
@@ -30,6 +31,10 @@ export function CashDenominationDialog({ value, disabled, onApply }: Props) {
     value ?? createEmptyDenominationBreakdown(),
   );
   const total = useMemo(() => calculateDenominationTotal(entries), [entries]);
+  const denominationGroups = [
+    { title: "Billetes", entries: entries.filter((entry) => entry.denomination >= 10) },
+    { title: "Monedas", entries: entries.filter((entry) => entry.denomination < 10) },
+  ];
 
   const openDialog = () => {
     setEntries(value ?? createEmptyDenominationBreakdown());
@@ -53,6 +58,8 @@ export function CashDenominationDialog({ value, disabled, onApply }: Props) {
         startIcon={<CalculateIcon />}
         onClick={openDialog}
         disabled={disabled}
+        size="small"
+        sx={{ borderRadius: 1.5 }}
       >
         Contar por denominaciones
       </Button>
@@ -62,30 +69,40 @@ export function CashDenominationDialog({ value, disabled, onApply }: Props) {
           <Typography color="text.secondary" mb={2}>
             Indica cuántos billetes o monedas tienes de cada denominación.
           </Typography>
-          <Grid container spacing={2}>
-            {entries.map((entry) => (
-              <Grid key={entry.denomination} size={{ xs: 12, sm: 6 }}>
-                <Box display="grid" gridTemplateColumns="1fr 110px 1fr" gap={2} alignItems="center">
-                  <Typography fontWeight={700}>
-                    C${entry.denomination.toFixed(entry.denomination < 1 ? 2 : 0)}
-                  </Typography>
-                  <TextField
-                    label="Cantidad"
-                    type="number"
-                    size="small"
-                    value={entry.quantity}
-                    onChange={(event) =>
-                      updateQuantity(entry.denomination, Number(event.target.value))
-                    }
-                    inputProps={{ min: 0, step: 1 }}
-                  />
-                  <Typography textAlign="right">
-                    C${(entry.denomination * entry.quantity).toFixed(2)}
-                  </Typography>
-                </Box>
-              </Grid>
+          <Stack spacing={2.5}>
+            {denominationGroups.map((group) => (
+              <Box key={group.title}>
+                <Typography variant="subtitle2" fontWeight={800} mb={1.25}>
+                  {group.title}
+                </Typography>
+                <Grid container spacing={2}>
+                  {group.entries.map((entry) => (
+                    <Grid key={entry.denomination} size={{ xs: 12, sm: 6 }}>
+                      <Box display="grid" gridTemplateColumns="1fr 110px 1fr" gap={2} alignItems="center">
+                        <Typography fontWeight={700}>
+                          C${entry.denomination.toFixed(entry.denomination < 1 ? 2 : 0)}
+                        </Typography>
+                        <TextField
+                          label="Cantidad"
+                          type="number"
+                          size="small"
+                          value={entry.quantity === 0 ? "" : entry.quantity}
+                          placeholder="0"
+                          onChange={(event) =>
+                            updateQuantity(entry.denomination, Number(event.target.value))
+                          }
+                          inputProps={{ min: 0, step: 1 }}
+                        />
+                        <Typography textAlign="right" sx={{ fontVariantNumeric: "tabular-nums" }}>
+                          C${(entry.denomination * entry.quantity).toFixed(2)}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Stack>
           <Divider sx={{ my: 3 }} />
           <Box display="flex" justifyContent="space-between">
             <Typography variant="h6" fontWeight={800}>Total contado</Typography>

@@ -39,10 +39,11 @@ export default function EmployeeScheduleEditor({
       elevation={0}
       sx={{
         p: { xs: 3, md: 5 },
-        borderRadius: 4,
+        borderRadius: 2,
         minHeight: "100%",
-        border: "1px solid rgba(0,0,0,0.08)",
-        boxShadow: "0 10px 40px -10px rgba(0,0,0,0.05)",
+        border: "1px solid",
+        borderColor: "divider",
+        boxShadow: "none",
         display: "flex",
         flexDirection: "column",
       }}
@@ -100,16 +101,12 @@ export default function EmployeeScheduleEditor({
                 sx={{
                   fontWeight: "800",
                   textTransform: "none",
-                  borderRadius: 3,
+                  borderRadius: 2,
                   px: 5,
                   py: 1.5,
                   fontSize: "1.1rem",
-                  boxShadow: `0 8px 20px -8px ${LOGIN_COLORS.primary}`,
-                  "&:hover": {
-                    boxShadow: `0 12px 24px -8px ${LOGIN_COLORS.primary}`,
-                    transform: "translateY(-2px)",
-                  },
-                  transition: "all 0.2s",
+                  boxShadow: "none",
+                  transition: "background-color 120ms ease-out",
                 }}
               >
                 Guardar Cambios

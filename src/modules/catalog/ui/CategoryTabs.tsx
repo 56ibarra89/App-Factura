@@ -1,5 +1,5 @@
 
-import { Box, Tabs, Tab, IconButton } from "@mui/material";
+import { Box, Tabs, Tab, IconButton, alpha } from "@mui/material";
 import { Home } from "@mui/icons-material";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { Category } from "../model/catalog.types";
@@ -47,15 +47,16 @@ const CategoryTabs = ({
 
   return (
     <Box
-      width="120px"
+      width="128px"
       display="flex"
       flexDirection="column"
       height="100%"
-      bgcolor="action.hover"
-      borderRadius={2}
+      bgcolor="background.paper"
       p={1}
       sx={{
         boxSizing: "border-box",
+        borderRight: "1px solid",
+        borderColor: "divider",
       }}
     >
       <Box sx={{ mb: 2, display: "flex", justifyContent: "center" }}>
@@ -63,7 +64,10 @@ const CategoryTabs = ({
           onClick={handleNavigation}
           sx={{
             bgcolor: "background.paper",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 2,
+            boxShadow: "none",
             "&:hover": { bgcolor: "action.selected" }
           }}
         >
@@ -77,8 +81,8 @@ const CategoryTabs = ({
           overflowY: "auto",
           "&::-webkit-scrollbar": { width: "6px" },
           "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "#ccc",
-            borderRadius: "4px",
+            backgroundColor: "action.disabled",
+            borderRadius: 2,
           },
         }}
       >
@@ -87,7 +91,7 @@ const CategoryTabs = ({
         value={selectedTab}
         onChange={onTabChange}
         variant="scrollable"
-        sx={{ height: "100%" }}
+        sx={{ height: "100%", "& .MuiTabs-indicator": { display: "none" } }}
       >
         {categories.map((cat) => (
           <Tab
@@ -102,7 +106,17 @@ const CategoryTabs = ({
               alignItems: "center",
               justifyContent: "center",
               textTransform: "none",
-              minHeight: 100,
+              minHeight: 92,
+              mb: 1,
+              borderRadius: 2,
+              border: "1px solid transparent",
+              transition: "background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out",
+              "&.Mui-selected": {
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                borderColor: "primary.main",
+                color: "primary.main",
+                fontWeight: 700,
+              },
             }}
           />
         ))}

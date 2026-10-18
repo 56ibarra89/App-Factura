@@ -14,6 +14,7 @@ import TimerIcon from "@mui/icons-material/Timer";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import TakeoutDiningIcon from "@mui/icons-material/TakeoutDining";
 import RestaurantIcon from "@mui/icons-material/Restaurant";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import { Order, OrderStatus } from "../model/order.types";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import { formatItemName, formatTableName } from "../../../shared/format";
@@ -105,17 +106,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        borderRadius: 4,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
-        border: `2px solid ${
-          !finalStatusBadge && urgency.level === "critical"
-            ? urgency.color
+        borderRadius: 2,
+        boxShadow: "none",
+        border: "1px solid",
+        borderColor: "divider",
+        borderLeft: `4px solid ${
+          finalStatusBadge
+            ? finalStatusBadge.color
             : order.status === "ready"
               ? LOGIN_COLORS.primary
-              : "transparent"
+              : urgency.color
         }`,
-        transition: "transform 0.2s",
-        "&:hover": { transform: "translateY(-4px)" },
       }}
     >
       <CardContent sx={{ flexGrow: 1 }}>
@@ -318,12 +319,12 @@ const OrderCard: React.FC<OrderCardProps> = ({
                               : "";
                             const statusBadge = sel.kitchenStatus
                               ? sel.kitchenStatus === "ready"
-                                ? " • ✅ Listo"
+                                ? " • Listo"
                                 : sel.kitchenStatus === "preparing"
-                                  ? " • 👨‍🍳 Preparando"
+                                  ? " • Preparando"
                                   : sel.kitchenStatus === "delivered"
-                                    ? " • 📦 Entregado"
-                                    : " • ⏳ Pendiente"
+                                    ? " • Entregado"
+                                    : " • Pendiente"
                               : "";
                             return (
                               <Typography
@@ -337,7 +338,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                                   ? ` (${sel.size})`
                                   : ""}
                                 {catBadge}
-                                {selKitchenName && ` (📍 ${selKitchenName})`}
+                                {selKitchenName && ` (Cocina: ${selKitchenName})`}
                                 {statusBadge}
                                 {sel.extras?.length
                                   ? ` • Extras: ${sel.extras.map((extra) => extra.name).join(", ")}`
@@ -350,9 +351,10 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     <Typography
                       variant="caption"
                       color="text.secondary"
-                      sx={{ fontWeight: 600 }}
+                      sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 0.5 }}
                     >
-                      📍 {displayKitchenHeader}
+                      <LocationOnOutlinedIcon sx={{ fontSize: 14 }} />
+                      {displayKitchenHeader}
                     </Typography>
                   </Box>
                   <Box>

@@ -75,8 +75,8 @@ const DevicesPage = ({ gateway }: PerifericosProps) => {
         setFailoverNotice({
           open: true,
           message: detail.critical
-            ? `⚠️ ERROR CRÍTICO: ${detail.failedPrinterName} falló y no hay respaldo.`
-            : `⚠️ AVISO: ${detail.failedPrinterName} no respondió (${detail.error}). La orden fue redirigida a ${detail.fallbackPrinterName}.`,
+            ? `ERROR CRÍTICO: ${detail.failedPrinterName} falló y no hay respaldo.`
+            : `AVISO: ${detail.failedPrinterName} no respondió (${detail.error}). La orden fue redirigida a ${detail.fallbackPrinterName}.`,
           severity: detail.critical ? "error" : "warning",
         });
       }

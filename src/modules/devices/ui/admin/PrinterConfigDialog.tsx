@@ -23,12 +23,17 @@ import {
   Alert,
   Stack,
   Divider,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import UsbIcon from "@mui/icons-material/Usb";
 import LanIcon from "@mui/icons-material/Lan";
 import WifiTetheringIcon from "@mui/icons-material/WifiTethering";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
+import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
+import CallSplitIcon from "@mui/icons-material/CallSplit";
 import type {
   ElectronSystemPrinter,
   PrinterConfig,
@@ -216,13 +221,16 @@ export default function PrinterConfigDialog({
               }}
             >
               <MenuItem value="cashier">
-                🖨️ Facturación y Caja (Recibos de clientes y gaveta)
+                <ListItemIcon><PointOfSaleIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Facturación y Caja" secondary="Recibos de clientes y gaveta" />
               </MenuItem>
               <MenuItem value="kitchen">
-                🍳 Cocina y Comandas (Órdenes de preparación)
+                <ListItemIcon><RestaurantIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Cocina y Comandas" secondary="Órdenes de preparación" />
               </MenuItem>
               <MenuItem value="both">
-                🔀 Ambos Roles (Imprime facturas y comandas en la misma impresora)
+                <ListItemIcon><CallSplitIcon fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Ambos roles" secondary="Facturas y comandas en la misma impresora" />
               </MenuItem>
             </Select>
           </FormControl>

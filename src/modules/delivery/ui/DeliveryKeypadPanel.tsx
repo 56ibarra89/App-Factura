@@ -5,9 +5,7 @@ import {
   Button,
   Paper,
   Avatar,
-  useTheme
 } from "@mui/material";
-import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import PersonIcon from "@mui/icons-material/Person";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import BackspaceIcon from "@mui/icons-material/Backspace";
@@ -26,39 +24,51 @@ export default function DeliveryKeypadPanel({
   handleConfirm,
   handleKeypadPress
 }: DeliveryKeypadPanelProps) {
-  const theme = useTheme();
-
   return (
     <Box sx={{ flex: 1, minWidth: 350, maxWidth: 450 }}>
-      <Paper sx={{ height: "100%", display: "flex", flexDirection: "column", bgcolor: "background.paper", p: 1 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          bgcolor: "background.paper",
+          p: 1,
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
 
         {}
         <Box sx={{
-            height: 180,
-            bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50',
+            minHeight: 132,
+            bgcolor: "action.hover",
             mb: 1,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 3,
-            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: selectedCustomer
+              ? "success.main"
+              : phoneInput.length >= 8
+                ? "warning.main"
+                : "divider",
             ...(selectedCustomer && {
-              bgcolor: theme.palette.mode === 'dark' ? 'success.dark' : "success.light",
-              color: theme.palette.mode === 'dark' ? 'white' : 'success.contrastText',
-              border: 'none',
-              boxShadow: "0 4px 14px rgba(0,0,0,0.1)"
+              bgcolor: "action.hover",
             })
           }}>
             {selectedCustomer ? (
               <>
-                 <Avatar sx={{ bgcolor: "success.main", width: 60, height: 60, mb: 1 }}><PersonIcon fontSize="large" /></Avatar>
-                 <Typography variant="h6" fontWeight="bold" color="success.main">LISTO!</Typography>
+                 <Avatar sx={{ bgcolor: "success.main", width: 44, height: 44, mb: 0.5 }}><PersonIcon /></Avatar>
+                 <Typography variant="subtitle1" fontWeight="bold" color="success.main">Cliente seleccionado</Typography>
                  <Button
                     variant="contained"
                     color="success"
                     fullWidth
-                    sx={{ mt: 1, borderRadius: 0 }}
+                    sx={{ mt: 1, borderRadius: 2 }}
                     onClick={handleConfirm}
                  >
                     Confirmar Orden
@@ -66,20 +76,20 @@ export default function DeliveryKeypadPanel({
               </>
             ) : phoneInput.length >= 8 ? (
               <>
-                 <Avatar sx={{ bgcolor: "warning.main", width: 60, height: 60, mb: 1 }}><PersonIcon fontSize="large" /></Avatar>
-                 <Typography variant="h6" fontWeight="bold" color="warning.main">NUEVO CLIENTE</Typography>
+                 <Avatar sx={{ bgcolor: "warning.main", width: 44, height: 44, mb: 0.5 }}><PersonIcon /></Avatar>
+                 <Typography variant="subtitle1" fontWeight="bold" color="warning.main">Nuevo cliente</Typography>
                  <Button
                     variant="contained"
                     color="warning"
                     fullWidth
-                    sx={{ mt: 1, borderRadius: 0 }}
+                    sx={{ mt: 1, borderRadius: 2 }}
                     onClick={handleConfirm}
                  >
                     Crear Orden
                  </Button>
               </>
             ) : (
-               <Avatar sx={{ width: 60, height: 60, mb: 1 }}><PersonIcon fontSize="large" /></Avatar>
+               <Avatar sx={{ width: 44, height: 44 }}><PersonIcon /></Avatar>
             )}
         </Box>
 
@@ -106,29 +116,28 @@ export default function DeliveryKeypadPanel({
              if (btn === "CHECK2") return null; // Omitimos este botón, "CHECK" ocupará 2 filas
 
              let content: React.ReactNode = btn;
-             let bgcolor = theme.palette.mode === 'dark' ? 'grey.800' : "background.paper";
-             let color = theme.palette.mode === 'dark' ? "white" : "text.primary";
+             let bgcolor = "background.paper";
+             let color = "text.primary";
              let gridRowSpan = 1;
 
              if (btn === "BACK") {
                 content = <BackspaceIcon color="action" />;
-                bgcolor = theme.palette.mode === 'dark' ? 'grey.900' : "grey.200";
+                bgcolor = "action.hover";
              } else if (btn === "CLEAR") {
                 content = "C";
-                bgcolor = theme.palette.mode === 'dark' ? 'warning.dark' : "warning.light";
-                color = theme.palette.mode === 'dark' ? "white" : "warning.contrastText";
+                bgcolor = "warning.main";
+                color = "warning.contrastText";
              } else if (btn === "CHECK") {
                 content = <CheckCircleIcon sx={{ fontSize: 40 }} />;
-                bgcolor = theme.palette.mode === 'dark' ? 'success.dark' : "success.main";
-                color = "white";
+                bgcolor = "success.main";
+                color = "success.contrastText";
                 gridRowSpan = 2;
              }
 
              return (
                <Button
                  key={idx}
-                 variant="contained"
-                 disableElevation={theme.palette.mode === 'dark'}
+                 variant={btn === "CHECK" || btn === "CLEAR" ? "contained" : "outlined"}
                  onClick={() => {
                    if (btn === "CHECK" && selectedCustomer) {
                      handleConfirm();
@@ -142,23 +151,30 @@ export default function DeliveryKeypadPanel({
                     gridRow: `span ${gridRowSpan}`,
                     fontSize: "1.5rem",
                     fontWeight: "bold",
-                    borderRadius: 3,
-                    border: theme.palette.mode === 'light' && btn !== "CHECK" && btn !== "CLEAR" ? `1px solid ${theme.palette.divider}` : 'none',
+                    borderRadius: 2,
+                    border: "1px solid",
+                    borderColor:
+                      btn === "CHECK"
+                        ? "success.main"
+                        : btn === "CLEAR"
+                          ? "warning.main"
+                          : "divider",
+                    transition: "background-color 120ms ease-out, transform 120ms ease-out",
                     "&:hover": {
-                      filter: "brightness(0.9)",
-                      bgcolor: btn === "CHECK" ? "success.dark" : undefined
-                    }
+                      bgcolor:
+                        btn === "CHECK"
+                          ? "success.dark"
+                          : btn === "CLEAR"
+                            ? "warning.dark"
+                            : "action.hover",
+                    },
+                    "&:active": { transform: "scale(0.98)" },
                  }}
                >
                  {content}
                </Button>
              )
            })}
-        </Box>
-
-        {/* Moto Icon */}
-        <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-           <TwoWheelerIcon sx={{ fontSize: 120, color: "text.secondary", opacity: 0.7 }} />
         </Box>
       </Paper>
     </Box>

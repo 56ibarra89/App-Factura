@@ -61,16 +61,10 @@ export const AuditLogStats: React.FC<AuditLogStatsProps> = ({ stats }) => {
             elevation={0}
             sx={{
               p: 2.2,
-              borderRadius: 3,
+              borderRadius: 2,
               border: "1px solid",
               borderColor: card.borderColor,
               bgcolor: "background.paper",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-              transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              "&:hover": {
-                transform: "translateY(-2px)",
-                boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
-              },
             }}
           >
             <Box display="flex" justifyContent="space-between" alignItems="flex-start">

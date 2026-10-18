@@ -1,9 +1,8 @@
-import { Paper, Typography, Box, alpha } from "@mui/material";
+import { Paper, Typography, Box, Chip, alpha } from "@mui/material";
 import type { Mesa } from "../model/table.types";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import LocalDiningIcon from "@mui/icons-material/LocalDining";
-import { LOGIN_COLORS } from "../../../shared/theme";
 import { memo } from "react";
 
 interface Props {
@@ -13,11 +12,9 @@ interface Props {
 }
 
 interface MesaTheme {
-  bg?: string;
-  shadow: string;
   icon: JSX.Element;
   label: string;
-  isNeutral?: boolean;
+  color: "error" | "warning" | "success";
 }
 
 const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
@@ -25,38 +22,22 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
     switch (mesa.estado) {
       case "ocupado":
         return {
-          bg: `linear-gradient(135deg, ${LOGIN_COLORS.primary} 0%, ${LOGIN_COLORS.primaryDark} 100%)`,
-          shadow: LOGIN_COLORS.primary,
-          icon: (
-            <LocalDiningIcon
-              sx={{ fontSize: 32, color: "white", mb: 1, opacity: 0.9 }}
-            />
-          ),
+          icon: <LocalDiningIcon sx={{ fontSize: 32 }} />,
           label: "Ocupado",
+          color: "error",
         };
       case "reservado":
         return {
-          bg: "linear-gradient(135deg, #ffa726 0%, #f57c00 100%)",
-          shadow: "#f57c00",
-          icon: (
-            <EventSeatIcon
-              sx={{ fontSize: 32, color: "white", mb: 1, opacity: 0.9 }}
-            />
-          ),
+          icon: <EventSeatIcon sx={{ fontSize: 32 }} />,
           label: "Reservado",
+          color: "warning",
         };
       case "disponible":
       default:
         return {
-          bg: undefined,
-          shadow: "rgba(0,0,0,0.06)",
-          icon: (
-            <CheckCircleOutlineIcon
-              sx={{ fontSize: 32, color: "grey.400", mb: 1 }}
-            />
-          ),
+          icon: <CheckCircleOutlineIcon sx={{ fontSize: 32 }} />,
           label: "Disponible",
-          isNeutral: true,
+          color: "success",
         };
     }
   };
@@ -66,8 +47,10 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
   return (
     <Box sx={{ position: "relative", width: "100%" }} onClick={onClick}>
       <Paper
-        elevation={theme.isNeutral ? 2 : 0}
-        sx={{
+        elevation={0}
+        sx={(muiTheme) => {
+          const statusColor = muiTheme.palette[theme.color].main;
+          return {
           width: "100%",
           aspectRatio: "1/1",
           minHeight: 145,
@@ -75,42 +58,29 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: 5,
+          borderRadius: 2,
           cursor: "pointer",
-          background: theme.bg,
-          color: theme.isNeutral ? "text.primary" : "white",
-          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          bgcolor: "background.paper",
+          color: statusColor,
+          transition: "border-color 120ms ease-out, box-shadow 120ms ease-out, background-color 120ms ease-out",
           boxShadow: isSelected
-            ? `0 0 0 4px ${LOGIN_COLORS.primary}, 0 12px 24px rgba(0,0,0,0.1)`
-            : theme.isNeutral
-              ? "0 4px 12px rgba(0,0,0,0.05)"
-              : `0 12px 24px ${alpha(theme.shadow, 0.4)}`,
-          border: theme.isNeutral ? "2px solid" : "2px solid transparent",
-          borderColor: isSelected
-            ? LOGIN_COLORS.primary
-            : theme.isNeutral
-              ? "divider"
-              : "transparent",
+            ? `0 0 0 2px ${alpha(statusColor, 0.2)}`
+            : "none",
+          border: "1px solid",
+          borderColor: isSelected ? statusColor : "divider",
           position: "relative",
           overflow: "hidden",
           "&:hover": {
-            transform: "translateY(-8px) scale(1.02)",
-            borderColor: theme.isNeutral ? LOGIN_COLORS.primary : "transparent",
-            bgcolor: theme.isNeutral ? "action.hover" : "inherit",
-            boxShadow: theme.isNeutral
-              ? `0 12px 20px ${LOGIN_COLORS.numpadHoverShadow}`
-              : `0 16px 32px ${alpha(theme.shadow, 0.5)}`,
-            "& .mesa-icon": {
-              color: theme.isNeutral ? LOGIN_COLORS.primary : "white",
-              transform: "scale(1.1)",
-            },
+            borderColor: statusColor,
+            bgcolor: alpha(statusColor, 0.04),
+            boxShadow: `0 2px 8px ${alpha(statusColor, 0.14)}`,
           },
           "&:active": {
-            transform: "scale(0.96)",
+            bgcolor: alpha(statusColor, 0.08),
           },
-        }}
+        }}}
       >
-        <Box className="mesa-icon" sx={{ transition: "all 0.2s" }}>
+        <Box className="mesa-icon" sx={{ display: "flex", mb: 1 }}>
           {theme.icon}
         </Box>
         <Typography
@@ -119,7 +89,7 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
           sx={{
             zIndex: 1,
             mt: -0.5,
-            color: theme.isNeutral ? "text.primary" : "white",
+            color: "text.primary",
             letterSpacing: -1,
           }}
         >
@@ -128,7 +98,7 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
         <Typography
           variant="caption"
           sx={{
-            opacity: 0.5,
+            color: "text.secondary",
             fontWeight: 700,
             mt: -0.5,
             px: 1,
@@ -141,42 +111,23 @@ const MesaCard = memo(({ mesa, isSelected = false, onClick }: Props) => {
         >
           {mesa.reservationName || `MESA (P-${mesa.floor})`}
         </Typography>
-      </Paper>
-
-      <Paper
-        elevation={theme.isNeutral ? 2 : 0}
-        sx={{
+        <Chip
+          label={theme.label}
+          color={theme.color}
+          size="small"
+          variant="outlined"
+          sx={{
           position: "absolute",
-          bottom: -10,
+          bottom: 10,
           left: "50%",
           transform: "translateX(-50%)",
-          background: theme.isNeutral ? undefined : theme.shadow,
-          color: theme.isNeutral ? "text.secondary" : "white",
-          px: 1.5,
-          py: 0.4,
-          borderRadius: 2,
-          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-          border: theme.isNeutral ? "1px solid" : "none",
-          borderColor: "divider",
-          borderTop: "none",
-          display: "flex",
-          alignItems: "center",
-          whiteSpace: "nowrap",
-          zIndex: 2,
-          pointerEvents: "none",
-        }}
-      >
-        <Typography
-          variant="caption"
-          fontWeight="900"
-          sx={{
+            height: 22,
+            fontWeight: 700,
             fontSize: "0.65rem",
             textTransform: "uppercase",
-            letterSpacing: 0.8,
+            letterSpacing: 0.5,
           }}
-        >
-          {theme.label}
-        </Typography>
+        />
       </Paper>
     </Box>
   );

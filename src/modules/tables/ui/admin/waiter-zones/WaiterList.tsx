@@ -33,20 +33,22 @@ export default function WaiterList({ waiters, selectedUserId, onSelect }: Waiter
             <Paper
               key={user.id}
               onClick={() => onSelect(user.id)}
-              elevation={isSelected ? 3 : 0}
+              elevation={0}
               sx={{
                 p: 2,
                 display: "flex",
                 alignItems: "center",
                 gap: 2,
                 cursor: "pointer",
-                borderRadius: 3,
-                border: `2px solid ${isSelected ? LOGIN_COLORS.primary : "transparent"}`,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: isSelected ? "primary.main" : "divider",
+                borderLeft: "3px solid",
+                borderLeftColor: isSelected ? "primary.main" : "transparent",
                 bgcolor: isSelected ? "action.selected" : "background.paper",
-                transition: "all 0.2s ease-in-out",
+                transition: "background-color 120ms ease-out, border-color 120ms ease-out",
                 "&:hover": {
-                  transform: isSelected ? "none" : "translateY(-2px)",
-                  boxShadow: isSelected ? "none" : "0 4px 12px rgba(0,0,0,0.05)",
+                  bgcolor: "action.hover",
                 }
               }}
             >

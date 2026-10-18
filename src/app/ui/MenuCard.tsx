@@ -15,19 +15,20 @@ interface MenuCardProps {
 
 const MenuCard = ({ label, icon, onClick, disabled }: MenuCardProps) => (
   <Card
-    elevation={disabled ? 1 : 4}
+    elevation={0}
     sx={{
-      borderRadius: 3,
+      borderRadius: 2,
       bgcolor: "background.paper",
-      border: "2px solid transparent",
+      border: "1px solid",
+      borderColor: "divider",
       opacity: disabled ? 0.6 : 1,
       filter: disabled ? "grayscale(0.8)" : "none",
       pointerEvents: disabled ? "none" : "auto",
-      transition: "transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease",
+      transition: "border-color 120ms ease-out, box-shadow 120ms ease-out, background-color 120ms ease-out, filter 120ms ease-out, opacity 120ms ease-out",
       "&:hover": {
-        transform: disabled ? "none" : "translateY(-4px)",
-        borderColor: disabled ? "transparent" : "primary.main",
-        boxShadow: disabled ? "none" : "0 12px 24px rgba(211, 47, 47, 0.15)",
+        bgcolor: disabled ? "background.paper" : "action.hover",
+        borderColor: disabled ? "divider" : "primary.main",
+        boxShadow: disabled ? "none" : "0 2px 8px rgba(0,0,0,0.08)",
         "& svg": { color: disabled ? "inherit" : "primary.main" },
       },
     }}
@@ -48,7 +49,7 @@ const MenuCard = ({ label, icon, onClick, disabled }: MenuCardProps) => (
             display: "flex",
             justifyContent: "center",
             mb: 1,
-            "& svg": { transition: "color 0.2s ease" },
+            "& svg": { transition: "color 120ms ease-out" },
           }}
         >
           {icon}

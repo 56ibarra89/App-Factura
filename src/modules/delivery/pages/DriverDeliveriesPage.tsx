@@ -20,6 +20,7 @@ import {
   Alert,
   Tabs,
   Tab,
+  alpha,
 } from "@mui/material";
 import { BackButton, PageHeader } from "../../../shared/ui";
 import RefreshIcon from "@mui/icons-material/Refresh";
@@ -495,7 +496,8 @@ export default function DriverDeliveriesPage() {
               }}
               sx={{
                 bgcolor: "background.paper",
-                boxShadow: 1,
+                border: "1px solid",
+                borderColor: "divider",
                 "&:hover": { bgcolor: "action.hover" },
               }}
             >
@@ -507,11 +509,13 @@ export default function DriverDeliveriesPage() {
 
       {/* Barra de Selección de Motorizado y Resumen */}
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
           p: 2.5,
           mb: 3,
-          borderRadius: 3,
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: "divider",
           bgcolor: "background.paper",
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
@@ -597,11 +601,13 @@ export default function DriverDeliveriesPage() {
 
       {/* Barra de Búsqueda y Pestañas de Estado */}
       <Paper
-        elevation={2}
+        elevation={0}
         sx={{
           p: 2,
           mb: 3,
-          borderRadius: 3,
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: "divider",
           bgcolor: "background.paper",
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
@@ -710,13 +716,13 @@ export default function DriverDeliveriesPage() {
             return (
               <Card
                 key={order.id}
-                elevation={4}
+                elevation={0}
                 sx={{
-                  borderRadius: 3,
+                  borderRadius: 2,
                   bgcolor: "background.paper",
                   display: "flex",
                   flexDirection: "column",
-                  border: "2px solid",
+                  border: isOverdue ? "1.5px solid" : "1px solid",
                   borderColor: isOverdue
                     ? "error.main"
                     : isCompleted
@@ -724,18 +730,6 @@ export default function DriverDeliveriesPage() {
                       : order.status === "ready"
                         ? "primary.main"
                         : "divider",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                  "&:hover": {
-                    transform: "translateY(-3px)",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                  },
-                  ...(isOverdue && {
-                    animation: "deliverySlaPulse 1.6s ease-in-out infinite",
-                    "@keyframes deliverySlaPulse": {
-                      "0%, 100%": { boxShadow: "0 0 0 rgba(211,47,47,0.15)" },
-                      "50%": { boxShadow: "0 0 22px rgba(211,47,47,0.55)" },
-                    },
-                  }),
                 }}
               >
                 {/* Encabezado del Ticket */}
@@ -748,7 +742,9 @@ export default function DriverDeliveriesPage() {
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    bgcolor: "action.hover",
+                    bgcolor: isOverdue
+                      ? (theme) => alpha(theme.palette.error.main, 0.08)
+                      : "action.hover",
                   }}
                 >
                   <Box>
@@ -1230,12 +1226,14 @@ export default function DriverDeliveriesPage() {
         </Box>
       ) : (
         <Paper
-          elevation={2}
+          elevation={0}
           sx={{
             p: 6,
             textAlign: "center",
-            borderRadius: 4,
+            borderRadius: 2,
             bgcolor: "background.paper",
+            border: "1px solid",
+            borderColor: "divider",
           }}
         >
           <TwoWheelerIcon
@@ -1255,11 +1253,11 @@ export default function DriverDeliveriesPage() {
       {}
       {completedOrders.length > 0 && (
         <Paper
-          elevation={6}
+          elevation={0}
           sx={{
             mt: 4,
             p: 2.5,
-            borderRadius: 3,
+            borderRadius: 2,
             bgcolor: "background.paper",
             border: "1px solid",
             borderColor: "divider",

@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
+  alpha,
   DialogActions,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -141,7 +142,8 @@ const CuponesTab = ({
                         fontWeight={700}
                         color="primary.main"
                         sx={{
-                          bgcolor: "primary.50",
+                          bgcolor: (theme) =>
+                            alpha(theme.palette.primary.main, 0.08),
                           px: 1.5,
                           py: 0.5,
                           borderRadius: 1,

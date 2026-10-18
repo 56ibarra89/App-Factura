@@ -27,11 +27,11 @@ export const CashRegisterBehaviorCard: React.FC<Props> = ({ config, onUpdate }) 
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 4,
+        borderRadius: 2,
         bgcolor: "background.paper",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+        boxShadow: "none",
         border: "1px solid",
-        borderColor: "grey.200",
+        borderColor: "divider",
         height: '100%',
       }}
     >

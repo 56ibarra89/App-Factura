@@ -1,22 +1,20 @@
 import { Box, Grid, Typography, Divider } from "@mui/material";
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import { LOGIN_GRADIENTS } from "../../../shared/theme";
 
 export default function OrderHeader() {
   return (
     <Box sx={{ display: "flex", flexDirection: "column" }}>
-      {}
       <Box sx={{
         p: 2.5,
         display: "flex",
         alignItems: "center",
         gap: 1.5,
-        background: LOGIN_GRADIENTS.brandingPanel,
-        color: "white"
+        bgcolor: "background.paper",
+        color: "text.primary",
       }}>
         <Box sx={{
-          bgcolor: "rgba(255,255,255,0.1)",
-          color: "white",
+          bgcolor: "action.hover",
+          color: "primary.main",
           p: 1,
           borderRadius: 2,
           display: "flex"
@@ -28,9 +26,8 @@ export default function OrderHeader() {
         </Typography>
       </Box>
 
-      <Divider sx={{ opacity: 0.1, bgcolor: "white" }} />
+      <Divider />
 
-      {}
       <Box sx={{
         bgcolor: "action.hover",
         color: "text.secondary",

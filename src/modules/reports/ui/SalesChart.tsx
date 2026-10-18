@@ -10,7 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from "recharts";
-import { LOGIN_SHADOWS, LOGIN_COLORS } from "../../../shared/theme";
+import { LOGIN_COLORS } from "../../../shared/theme";
 import type { SalesByTime } from "../model/salesReport.types";
 
 interface SalesChartProps {
@@ -27,9 +27,11 @@ export const SalesChart: React.FC<SalesChartProps> = ({ data, groupByDay }) => {
     <Box
       sx={{
         bgcolor: "background.paper",
-        borderRadius: 4,
+        borderRadius: 2,
         p: 3,
-        boxShadow: LOGIN_SHADOWS.card,
+        boxShadow: "none",
+        border: "1px solid",
+        borderColor: "divider",
         width: "100%",
         minHeight: 420,
         boxSizing: "border-box",

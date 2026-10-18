@@ -207,10 +207,11 @@ export default function TablesPage() {
         sx={{
           flexGrow: 1,
           bgcolor: "background.paper",
-          borderRadius: 5,
-          boxShadow: "0 20px 60px rgba(0,0,0,0.08)",
+          borderRadius: 2,
+          boxShadow: "none",
           overflowY: "auto",
-          border: "1px solid rgba(0,0,0,0.05)",
+          border: "1px solid",
+          borderColor: "divider",
         }}
       >
         <MesaGrid

@@ -6,9 +6,11 @@ import {
   LinearProgress,
   Alert,
   Stack,
+  Chip,
 } from "@mui/material";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import PersonIcon from "@mui/icons-material/Person";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { BackButton, PageHeader } from "../../../shared/ui";
 import { useCloseCashRegister } from "../hooks/useCloseCashRegister";
 import { CloseCashRegisterForm } from "../ui/CloseCashRegisterForm";
@@ -27,11 +29,9 @@ export default function CloseCashRegisterPage() {
       sx={{
         minHeight: "100vh",
         bgcolor: "background.default",
-        py: { xs: 2, md: 3 },
-        px: { xs: 2, md: 4 },
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
+        pt: 4,
+        pb: 4,
+        px: { xs: 2, md: 6 },
       }}
     >
       <Container maxWidth="lg" disableGutters>
@@ -53,11 +53,10 @@ export default function CloseCashRegisterPage() {
           elevation={0}
           sx={{
             p: { xs: 2.5, md: 3.5 },
-            borderRadius: 4,
+            borderRadius: 2,
             bgcolor: "background.paper",
             border: "1px solid",
             borderColor: "divider",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.04)",
           }}
         >
           {/* Barra Superior Compacta del Turno */}
@@ -81,20 +80,29 @@ export default function CloseCashRegisterPage() {
                   p: 0.8,
                   borderRadius: 2,
                   bgcolor: "primary.main",
-                  color: "#fff",
+                  color: "primary.contrastText",
                   display: "flex",
                 }}
               >
                 <PointOfSaleIcon fontSize="small" />
               </Box>
               <Box>
-                <Typography
-                  variant="subtitle2"
-                  fontWeight="800"
-                  color="text.primary"
-                >
-                  {displayShift.cashRegisterName || "Caja Principal"}
-                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="800"
+                    color="text.primary"
+                  >
+                    {displayShift.cashRegisterName || "Caja Principal"}
+                  </Typography>
+                  <Chip
+                    icon={<LockOutlinedIcon />}
+                    label="Arqueo ciego"
+                    size="small"
+                    variant="outlined"
+                    sx={{ height: 24, color: "text.secondary" }}
+                  />
+                </Stack>
                 <Stack direction="row" spacing={0.5} alignItems="center">
                   <PersonIcon sx={{ fontSize: 14, color: "text.secondary" }} />
                   <Typography variant="caption" color="text.secondary">

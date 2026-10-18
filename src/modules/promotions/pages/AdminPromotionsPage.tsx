@@ -7,7 +7,6 @@ import { BackButton } from "../../../shared/ui";
 import PromotionDialogs from "../ui/admin/PromotionDialogs";
 import PromotionsWorkspace from "../ui/admin/PromotionsWorkspace";
 import { useAdminPromotions } from "../hooks/useAdminPromotions";
-import { LOGIN_COLORS } from "../../../shared/theme";
 
 const AdminPromociones = () => {
   const promotions = useAdminPromotions();
@@ -24,21 +23,7 @@ const AdminPromociones = () => {
         overflowX: "hidden",
       }}
     >
-      <Box
-        sx={{
-          position: "absolute",
-          top: -200,
-          right: -200,
-          width: 600,
-          height: 600,
-          background: `radial-gradient(circle, ${LOGIN_COLORS.primarySubtle} 0%, rgba(255,255,255,0) 70%)`,
-          borderRadius: "50%",
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      />
-
-      <Box position="relative" zIndex={1}>
+      <Box>
         <Box display="flex" alignItems="center" sx={{ mb: 2 }}>
           <BackButton to="/admin" />
           <Typography
@@ -51,17 +36,7 @@ const AdminPromociones = () => {
           </Typography>
         </Box>
 
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          sx={{ mb: 5, pl: 1 }}
-        >
-          Gestiona descuentos inteligentes, horarios de <b>Happy Hour</b>,
-          campañas de <b>cupones personalizados</b> y{" "}
-          <b>certificados de producto</b> desde una sola sección.
-        </Typography>
-
-        <Container maxWidth="xl" disableGutters>
+        <Container maxWidth="xl" disableGutters sx={{ mt: 3 }}>
           <PromotionsWorkspace promotions={promotions} />
         </Container>
       </Box>

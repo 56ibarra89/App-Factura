@@ -6,7 +6,6 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
-  alpha,
   Divider,
 } from "@mui/material";
 import ShoppingCartCheckoutIcon from "@mui/icons-material/ShoppingCartCheckout";
@@ -53,7 +52,6 @@ export default function OrderActions({
   isOccupied = false,
   cannotReleaseTable = false,
 }: Props) {
-  const successColor = "#2e7d32";
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const isMenuOpen = Boolean(anchorEl);
 
@@ -83,12 +81,8 @@ export default function OrderActions({
             textTransform: "none",
             fontWeight: "800",
             borderRadius: 2.5,
-            boxShadow: "0 4px 12px rgba(25, 118, 210, 0.35)",
-            "&:hover": {
-              boxShadow: "0 6px 16px rgba(25, 118, 210, 0.45)",
-              transform: "translateY(-1px)",
-            },
-            transition: "all 0.2s",
+            boxShadow: "none",
+            transition: "background-color 120ms ease-out",
           }}
           onClick={onEditOrder}
           disabled={!onEditOrder || (!canModifyOrder && hasActiveOrder)}
@@ -102,23 +96,18 @@ export default function OrderActions({
         <Button
           fullWidth
           variant="contained"
+          color="success"
           startIcon={<ShoppingCartCheckoutIcon />}
           size="medium"
           sx={{
             py: 0.8,
-            bgcolor: successColor,
-            color: "white",
             textTransform: "none",
             fontWeight: "800",
             borderRadius: 2.5,
             fontSize: "0.95rem",
-            boxShadow: `0 4px 12px ${alpha(successColor, 0.35)}`,
-            "&:hover": {
-              bgcolor: "#1b5e20",
-              boxShadow: `0 6px 16px ${alpha(successColor, 0.45)}`,
-              transform: "translateY(-1px)",
-            },
-            transition: "all 0.2s",
+            boxShadow: "none",
+            "&:hover": { boxShadow: "none" },
+            transition: "background-color 120ms ease-out",
           }}
           onClick={onCheckout}
           disabled={!canCheckoutOrder || !canModifyOrder}
@@ -138,17 +127,17 @@ export default function OrderActions({
           onClick={handleOpenMenu}
           sx={{
             py: 0.8,
-            bgcolor: "grey.100",
-            color: "grey.800",
+            bgcolor: "action.hover",
+            color: "text.primary",
             textTransform: "none",
             fontWeight: "700",
             borderRadius: 2.5,
             fontSize: "0.88rem",
             boxShadow: "none",
             border: "1px solid",
-            borderColor: "grey.300",
+            borderColor: "divider",
             "&:hover": {
-              bgcolor: "grey.200",
+              bgcolor: "action.selected",
               boxShadow: "none",
             },
           }}

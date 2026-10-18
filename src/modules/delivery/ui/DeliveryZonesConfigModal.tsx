@@ -25,6 +25,7 @@ import {
   CircularProgress,
   Snackbar,
   Divider,
+  alpha,
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -267,7 +268,7 @@ export default function DeliveryZonesConfigModal({
               sx={{
                 p: 1,
                 borderRadius: 2,
-                bgcolor: "primary.50",
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
                 color: "primary.main",
                 display: "flex",
               }}
@@ -285,7 +286,7 @@ export default function DeliveryZonesConfigModal({
           </Box>
         </DialogTitle>
 
-        <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "grey.50", px: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: "action.hover", px: 3 }}>
           <Tabs
             value={activeTab}
             onChange={(_, val) => setActiveTab(val)}
@@ -341,7 +342,7 @@ export default function DeliveryZonesConfigModal({
               <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
                 <Table size="small">
                   <TableHead>
-                    <TableRow sx={{ bgcolor: "grey.50" }}>
+                    <TableRow sx={{ bgcolor: "action.hover" }}>
                       <TableCell sx={{ fontWeight: 700 }}>Zona / Sector</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>Tarifa Cliente</TableCell>
                       <TableCell sx={{ fontWeight: 700 }}>Pago Motorizado</TableCell>
@@ -367,7 +368,8 @@ export default function DeliveryZonesConfigModal({
                               sx={{
                                 p: 1.5,
                                 borderRadius: "50%",
-                                bgcolor: "primary.50",
+                                bgcolor: (theme) =>
+                                  alpha(theme.palette.primary.main, 0.08),
                                 color: "primary.main",
                                 display: "flex",
                               }}

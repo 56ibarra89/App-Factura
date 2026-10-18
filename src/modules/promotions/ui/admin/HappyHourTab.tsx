@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  alpha,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -145,10 +146,10 @@ const HappyHourTab = ({
                       sx={{
                         p: 1,
                         borderRadius: 1,
-                        bgcolor:
+                        bgcolor: (theme) =>
                           hh.status === "Activo"
-                            ? "secondary.50"
-                            : "grey.100",
+                            ? alpha(theme.palette.secondary.main, 0.08)
+                            : theme.palette.action.hover,
                         color:
                           hh.status === "Activo"
                             ? "secondary.main"

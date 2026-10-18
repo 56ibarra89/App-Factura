@@ -161,7 +161,11 @@ export default function PaymentMethodsSettingsPage() {
   };
 
   return (
-    <Box minHeight="100vh" bgcolor="background.default" p={{ xs: 2, md: 4 }}>
+    <Box
+      minHeight="100vh"
+      bgcolor="background.default"
+      sx={{ pt: 4, pb: 4, px: { xs: 2, md: 6 } }}
+    >
       <PageHeader
         title="Métodos de Pago y Bancos"
         startContent={<BackButton to="/admin" />}
@@ -187,7 +191,7 @@ export default function PaymentMethodsSettingsPage() {
         </Box>
       ) : (
         <Stack spacing={3}>
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
             <CardContent>
               <Typography variant="h6" fontWeight={900} mb={2}>
                 Métodos disponibles en caja
@@ -346,7 +350,7 @@ export default function PaymentMethodsSettingsPage() {
             </CardContent>
           </Card>
 
-          <Card sx={{ borderRadius: 3 }}>
+          <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
             <CardContent>
               <Stack
                 direction={{ xs: "column", md: "row" }}

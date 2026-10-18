@@ -3,7 +3,6 @@ import {
   Box,
   Container,
   Snackbar,
-  Typography,
 } from "@mui/material";
 import {
   BackButton,
@@ -11,7 +10,6 @@ import {
   PageHeader,
 } from "../../../shared/ui";
 import CompanyIdentityCard from "../ui/company/CompanyIdentityCard";
-import { LOGIN_COLORS } from "../../../shared/theme";
 import { useAdminCompanyIdentity } from "../hooks/useAdminCompanyIdentity";
 
 const CompanySettingsPage = () => {
@@ -29,39 +27,13 @@ const CompanySettingsPage = () => {
         overflowX: "hidden",
       }}
     >
-      <Box
-        sx={{
-          position: "absolute",
-          top: -200,
-          right: -200,
-          width: 600,
-          height: 600,
-          background: `radial-gradient(circle, ${LOGIN_COLORS.primarySubtle} 0%, rgba(255,255,255,0) 70%)`,
-          borderRadius: "50%",
-          zIndex: 0,
-          pointerEvents: "none",
-        }}
-      />
-
-      <Box position="relative" zIndex={1}>
+      <Box>
         <PageHeader
           title="Identidad de la Empresa"
           startContent={<BackButton to="/admin" />}
         />
 
-        <Box sx={{ mt: 2, mb: 4, pl: 1 }}>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={{ maxWidth: 650 }}
-          >
-            Configura la cara visible de tu negocio. Sube tu logotipo y
-            actualiza los datos que tus clientes verán impresos en todos los
-            tickets y comprobantes.
-          </Typography>
-        </Box>
-
-        <Container maxWidth="md" disableGutters>
+        <Container maxWidth="md" disableGutters sx={{ mt: 3 }}>
           <CompanyIdentityCard
             config={company.config}
             loading={company.loading}

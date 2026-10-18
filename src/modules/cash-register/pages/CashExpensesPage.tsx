@@ -135,11 +135,12 @@ export default function CashExpensesPage() {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card
-            elevation={1}
+            elevation={0}
             sx={{
-              borderRadius: 3,
+              borderRadius: 2,
               bgcolor: "background.paper",
-              borderLeft: "4px solid #d32f2f",
+              border: "1px solid",
+              borderColor: "divider",
             }}
           >
             <CardContent>
@@ -160,11 +161,12 @@ export default function CashExpensesPage() {
 
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card
-            elevation={1}
+            elevation={0}
             sx={{
-              borderRadius: 3,
+              borderRadius: 2,
               bgcolor: "background.paper",
-              borderLeft: "4px solid #1976d2",
+              border: "1px solid",
+              borderColor: "divider",
             }}
           >
             <CardContent>
@@ -185,11 +187,12 @@ export default function CashExpensesPage() {
 
         <Grid size={{ xs: 12, sm: 4 }}>
           <Card
-            elevation={1}
+            elevation={0}
             sx={{
-              borderRadius: 3,
+              borderRadius: 2,
               bgcolor: "background.paper",
-              borderLeft: "4px solid #f57c00",
+              border: "1px solid",
+              borderColor: "divider",
             }}
           >
             <CardContent>
@@ -210,7 +213,16 @@ export default function CashExpensesPage() {
       </Grid>
 
       {/* Barra de Filtros */}
-      <Paper elevation={1} sx={{ p: 2.5, mb: 3, borderRadius: 3 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2.5,
+          mb: 3,
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: "divider",
+        }}
+      >
         <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="center">
           {/* Búsqueda */}
           <TextField
@@ -285,7 +297,15 @@ export default function CashExpensesPage() {
       </Paper>
 
       {/* Tabla de Movimientos */}
-      <Paper elevation={1} sx={{ borderRadius: 3, overflow: "hidden" }}>
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor: "divider",
+          overflow: "hidden",
+        }}
+      >
         <TableContainer sx={{ maxHeight: "calc(100vh - 350px)" }}>
           <Table stickyHeader>
             <TableHead>

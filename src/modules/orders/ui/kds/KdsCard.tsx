@@ -157,20 +157,16 @@ export const KdsCard: React.FC<KdsCardProps> = ({
 
   return (
     <Card
-      elevation={4}
+      elevation={0}
       sx={{
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        borderRadius: 3,
+        borderRadius: 2,
         bgcolor: "background.paper",
         color: "text.primary",
-        border: "2px solid",
+        border: urgency.isPulsing ? "1.5px solid" : "1px solid",
         borderColor: urgency.isPulsing ? urgency.color : "divider",
-        boxShadow: urgency.isPulsing
-          ? "0 0 20px rgba(211, 47, 47, 0.4)"
-          : "0 4px 16px rgba(0,0,0,0.06)",
-        transition: "all 0.3s ease-in-out",
         position: "relative",
         overflow: "hidden",
       }}
@@ -185,14 +181,6 @@ export const KdsCard: React.FC<KdsCardProps> = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          animation: urgency.isPulsing
-            ? "pulseBorder 1.5s infinite ease-in-out"
-            : "none",
-          "@keyframes pulseBorder": {
-            "0%": { opacity: 0.7 },
-            "50%": { opacity: 1 },
-            "100%": { opacity: 0.7 },
-          },
         }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
@@ -572,7 +560,6 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                               py: 0.8,
                               borderRadius: 2,
                               fontSize: "0.8rem",
-                              boxShadow: "0 4px 12px rgba(211, 47, 47, 0.3)",
                               whiteSpace: "nowrap",
                             }}
                           >
@@ -602,7 +589,6 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                               py: 0.8,
                               borderRadius: 2,
                               fontSize: "0.8rem",
-                              boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
                               whiteSpace: "nowrap",
                             }}
                           >
@@ -911,7 +897,6 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                             py: 0.8,
                             borderRadius: 2,
                             fontSize: "0.8rem",
-                            boxShadow: "0 4px 12px rgba(211, 47, 47, 0.3)",
                             whiteSpace: "nowrap",
                           }}
                         >
@@ -941,7 +926,6 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                             py: 0.8,
                             borderRadius: 2,
                             fontSize: "0.8rem",
-                            boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
                             whiteSpace: "nowrap",
                           }}
                         >
@@ -1117,7 +1101,6 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                           py: 0.8,
                           borderRadius: 2,
                           fontSize: "0.8rem",
-                          boxShadow: "0 4px 12px rgba(211, 47, 47, 0.3)",
                           whiteSpace: "nowrap",
                         }}
                       >
@@ -1147,7 +1130,6 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                           py: 0.8,
                           borderRadius: 2,
                           fontSize: "0.8rem",
-                          boxShadow: "0 4px 12px rgba(46, 125, 50, 0.3)",
                           whiteSpace: "nowrap",
                         }}
                       >

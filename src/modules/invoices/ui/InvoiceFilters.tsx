@@ -7,6 +7,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import CallSplitIcon from "@mui/icons-material/CallSplit";
 import { LOGIN_COLORS } from "../../../shared/theme";
 
 interface InvoiceFiltersProps {
@@ -86,7 +87,10 @@ const InvoiceFilters = ({
                 {method.name}
               </MenuItem>
             ))}
-            <MenuItem value="MIXTO">🔀 Mixto</MenuItem>
+            <MenuItem value="MIXTO" sx={{ gap: 1 }}>
+              <CallSplitIcon fontSize="small" color="action" />
+              Mixto
+            </MenuItem>
           </TextField>
         </Box>
 

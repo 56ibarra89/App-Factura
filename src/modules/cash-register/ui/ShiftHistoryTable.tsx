@@ -30,6 +30,8 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PhoneAndroidIcon from "@mui/icons-material/PhoneAndroid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PrintIcon from "@mui/icons-material/Print";
+import BoltIcon from "@mui/icons-material/Bolt";
+import HourglassBottomIcon from "@mui/icons-material/HourglassBottom";
 import type { Shift } from "../model/cash-register.types";
 import type { UserAccount } from "../../accounts";
 import {
@@ -93,11 +95,13 @@ export function ShiftHistoryTable({
 
   return (
     <Paper
-      elevation={4}
+      elevation={0}
       sx={{
-        borderRadius: 3,
+        borderRadius: 2,
         overflow: "hidden",
         bgcolor: "background.paper",
+        border: "1px solid",
+        borderColor: "divider",
       }}
     >
       <TableContainer>
@@ -283,7 +287,8 @@ export function ShiftHistoryTable({
                         {duration.isExcessive && (
                           <Tooltip title="Duración anormalmente larga (>16h). Posible turno abandonado sin cierre oportuno.">
                             <Chip
-                              label={`⚠️ ${duration.hours}h Excesivo`}
+                              icon={<WarningAmberIcon />}
+                              label={`${duration.hours}h Excesivo`}
                               size="small"
                               color="error"
                               sx={{
@@ -297,7 +302,8 @@ export function ShiftHistoryTable({
                         {duration.isUltraShort && (
                           <Tooltip title="Turno ultracorto (<5 min). Posible apertura o cierre accidental.">
                             <Chip
-                              label="⚡ Ultracorto"
+                              icon={<BoltIcon />}
+                              label="Ultracorto"
                               size="small"
                               color="warning"
                               sx={{
@@ -311,7 +317,8 @@ export function ShiftHistoryTable({
                         {duration.isOpenProlonged && (
                           <Tooltip title="Turno en curso por más de 12 horas. Se recomienda realizar el corte de caja.">
                             <Chip
-                              label="⏳ >12h Activo"
+                              icon={<HourglassBottomIcon />}
+                              label=">12h Activo"
                               size="small"
                               color="warning"
                               sx={{
