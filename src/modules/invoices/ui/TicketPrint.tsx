@@ -39,6 +39,7 @@ const TicketPrint = ({
 
   const currentCashier = firstName ? `${firstName} ${lastName || ""}`.trim() : username;
   const displayCashier = cashierName || currentCashier;
+  const isFiscalInvoice = Boolean(invoiceNumber && invoiceNumber !== "000001" && invoiceNumber !== "Sin Factura" && !invoiceNumber.startsWith("PED-"));
 
   const formatDate = () => {
     const d = new Date();
@@ -113,7 +114,7 @@ const TicketPrint = ({
           <Typography variant="body2" fontFamily="inherit">
             Tel: {empresa.phone}
           </Typography>
-          {dgiConfig && dgiConfig.resolutionNumber && (
+          {isFiscalInvoice && dgiConfig && dgiConfig.resolutionNumber && (
             <Box mt={1}>
               <Typography variant="body2" fontFamily="inherit" fontSize="10px">
                 Resolución DGI: {dgiConfig.resolutionNumber}
@@ -130,7 +131,7 @@ const TicketPrint = ({
             Fecha: {formatDate()}
           </Typography>
           <Typography variant="body2" fontFamily="inherit">
-            Ticket #: {invoiceNumber}
+            {isFiscalInvoice ? `Ticket #: ${invoiceNumber}` : `Pedido #: ${invoiceNumber}`}
           </Typography>
           {tableId && (
             <Typography variant="body2" fontFamily="inherit" fontWeight="bold">

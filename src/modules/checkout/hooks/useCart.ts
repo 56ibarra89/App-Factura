@@ -7,6 +7,7 @@ function useCart() {
   const {
     cart,
     promotion,
+    promotionChanged,
     subTotal,
     discountAmount,
     taxAmount,
@@ -43,7 +44,7 @@ function useCart() {
   } = useProductSelection(handleConfirmProduct);
 
   const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } =
-    useCheckout(cart, promotion);
+    useCheckout(cart, promotion, promotionChanged);
 
   return {
     cart,

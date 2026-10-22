@@ -288,7 +288,28 @@ export const orderMutations = {
         else if (anyReady) newStatus = "ready";
         else if (anyPreparing) newStatus = "preparing";
 
-        return { ...order, items: [...items], total, status: newStatus };
+        const certificateSerials = Array.from(
+          new Set(
+            items
+              .flatMap((item) => {
+                if (item.certificateSerial) return [item.certificateSerial];
+                if (item.note?.startsWith("Vale: ")) {
+                  return [item.note.slice("Vale: ".length)];
+                }
+                return [];
+              })
+              .map((serial) => serial.trim().toUpperCase())
+              .filter(Boolean),
+          ),
+        );
+
+        return {
+          ...order,
+          items: [...items],
+          total,
+          status: newStatus,
+          certificateSerials,
+        };
       },
     );
   },

@@ -56,10 +56,7 @@ export function useBillingFlow({
   const completeAndPrint = useCallback(
     async (pending: PendingPrint) => {
       const { orderId, invoiceNumber, isCash } = pending;
-      if (!invoiceNumber) {
-        throw new Error("El backend no devolvió un número de factura.");
-      }
-      setCreatedInvoiceNumber(invoiceNumber);
+      setCreatedInvoiceNumber(invoiceNumber || `PED-${orderId.slice(-6).toUpperCase()}`);
       const cashierPrinter = await printerDispatcherService.getCashierPrinter();
 
       if (!pending.printed) {
@@ -131,12 +128,13 @@ export function useBillingFlow({
           ...form,
           driverId: form.driverId || deliveryDriverId,
         });
-        if (!createdOrder.invoiceNumber) {
+        const isPendingDelivery = form.orderType === "delivery";
+        if (!isPendingDelivery && !createdOrder.invoiceNumber) {
           throw new Error("El backend no devolvió un número de factura.");
         }
         pendingPrintRef.current = {
           ...createdOrder,
-          isCash,
+          isCash: isCash && !isPendingDelivery,
           printed: false,
         };
 

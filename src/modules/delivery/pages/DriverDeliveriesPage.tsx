@@ -297,6 +297,7 @@ export default function DriverDeliveriesPage() {
         payingOrder.total,
         undefined,
         payments,
+        payingOrder.certificateSerials,
       );
       setSnackbar({
         open: true,

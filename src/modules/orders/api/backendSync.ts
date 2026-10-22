@@ -54,6 +54,7 @@ export interface BackendOrder {
   deliveredAt?: string | Date | null;
   status: string;
   timestamp: string | Date;
+  paidAt?: string | Date | null;
   customerSnapshotName?: string;
   customerPhone?: string;
   customerId?: string;
@@ -86,6 +87,7 @@ export interface BackendOrder {
   isSentToKitchen?: boolean;
   invoice?: { invoiceNumber: string };
   invoiceNumber?: string;
+  certificateSerials?: string[] | null;
 }
 
 export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
@@ -158,6 +160,7 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       : undefined,
     status: backendOrder.status.toLowerCase() as OrderStatus,
     timestamp: new Date(backendOrder.timestamp),
+    paidAt: backendOrder.paidAt ? new Date(backendOrder.paidAt) : undefined,
     customerName:
       backendOrder.customerSnapshotName ||
       backendOrder.customer?.name ||
@@ -178,6 +181,9 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
     couponId: backendOrder.cuponId ?? undefined,
     discountId: backendOrder.discountId ?? undefined,
     happyHourId: backendOrder.happyHourId ?? undefined,
+    certificateSerials: Array.isArray(backendOrder.certificateSerials)
+      ? backendOrder.certificateSerials
+      : undefined,
     tableId:
       backendOrder.linkedTables && backendOrder.linkedTables.length > 0
         ? backendOrder.linkedTables[0]
@@ -389,6 +395,7 @@ export async function syncUpdateOrderItems(order: Order) {
     method: "PATCH",
     body: JSON.stringify({
       items: order.items.map((i) => ({
+        ...(typeof i.id === "number" ? { id: i.id } : {}),
         productId: i.productId,
         name: i.name,
         price: i.price,
@@ -418,6 +425,7 @@ export async function syncUpdateOrderItems(order: Order) {
       discountId: order.discountId,
       happyHourId: order.happyHourId,
       isSentToKitchen: order.isSentToKitchen,
+      certificateSerials: order.certificateSerials,
     }),
   });
   return mapBackendOrderToFrontend(response);

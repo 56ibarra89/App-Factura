@@ -99,7 +99,7 @@ export const CajaProvider = ({
       (o) =>
         o.status === "paid" &&
         o.cashierName === currentShift.cashierName &&
-        new Date(o.timestamp).getTime() >=
+        new Date(o.paidAt ?? o.timestamp).getTime() >=
           new Date(currentShift.startTime).getTime(),
     );
 

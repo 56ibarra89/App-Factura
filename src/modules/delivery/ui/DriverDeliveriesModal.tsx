@@ -156,7 +156,14 @@ export default function DriverDeliveriesModal({
       const order = orders.find((o) => o.id === orderId);
       const method = (order?.paymentMethod || "EFECTIVO").toUpperCase();
       const total = order?.total || 0;
-      await gateway.finalizeOrder(orderId, method, total);
+      await gateway.finalizeOrder(
+        orderId,
+        method,
+        total,
+        order?.splitAmounts,
+        order?.payments,
+        order?.certificateSerials,
+      );
       if (selectedDriverId) {
         await fetchOrders(selectedDriverId);
       }

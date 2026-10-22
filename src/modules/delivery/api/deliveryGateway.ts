@@ -38,8 +38,9 @@ export interface DeliveryGateway {
     orderId: string,
     paymentMethod: string,
     total: number,
-    splitAmounts?: { efectivo: number; tarjeta?: number; app?: number },
+    splitAmounts?: { efectivo?: number; tarjeta?: number; app?: number },
     customPayments?: OrderPaymentDetail[],
+    certificateSerials?: string[],
   ): Promise<void>;
 }
 
@@ -64,13 +65,14 @@ export const deliveryGateway: DeliveryGateway = {
     total,
     splitAmounts,
     customPayments,
+    certificateSerials,
   ) {
     let payments: OrderPaymentDetail[] = [];
     if (customPayments && customPayments.length > 0) {
       payments = customPayments.filter((p) => p.amount > 0);
     } else if (paymentMethod === "MIXTO" && splitAmounts) {
       payments = [
-        { method: "EFECTIVO" as const, amount: splitAmounts.efectivo },
+        { method: "EFECTIVO" as const, amount: splitAmounts.efectivo || 0 },
         { method: "TARJETA" as const, amount: splitAmounts.tarjeta || 0 },
         { method: "APP" as const, amount: splitAmounts.app || 0 },
       ].filter((p) => p.amount > 0);
@@ -88,6 +90,7 @@ export const deliveryGateway: DeliveryGateway = {
       body: JSON.stringify({
         status: "paid",
         payments,
+        certificateSerials,
       }),
     });
   },

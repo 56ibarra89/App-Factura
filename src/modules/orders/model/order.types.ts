@@ -107,6 +107,7 @@ export interface Order extends OrderPromotionSelection {
   total: number;
   status: OrderStatus;
   timestamp: Date;
+  paidAt?: Date;
   customerName?: string;
   customerPhone?: string;
   customerId?: string;

@@ -1,5 +1,10 @@
 import { useCallback } from "react";
-import { useOrderCommands, type OrderItem } from "../../orders";
+import {
+  useOrderCommands,
+  useOrderQueries,
+  type Order,
+  type OrderItem,
+} from "../../orders";
 import {
   buildSupplementalCartItems,
   buildOrderPromotionSelection,
@@ -13,10 +18,34 @@ import { useTaxConfig } from "../../settings";
 export function useCheckout(
   cart: OrderItem[],
   promotion: AppliedPromotion | null,
+  promotionChanged = false,
 ) {
   const { taxes, isExonerated } = useTaxConfig();
   const { addOrder, updateOrderItems, finalizeOrder, markAsSentToKitchen } =
     useOrderCommands();
+  const { orders } = useOrderQueries();
+
+  const shouldPreservePromotion = useCallback(
+    (orderId: string) => {
+      if (promotionChanged) return false;
+      const existingOrder: Order | undefined = orders.find(
+        (order) => order.id === orderId,
+      );
+      return Boolean(
+        existingOrder &&
+          (existingOrder.couponId ||
+            existingOrder.discountId ||
+            existingOrder.happyHourId ||
+            existingOrder.promotionSource === "coupon" ||
+            existingOrder.promotionSource === "discount" ||
+            existingOrder.promotionSource === "happy-hour" ||
+            existingOrder.items.some(
+              (item) => item.giftReason === "happy-hour-2x1",
+            )),
+      );
+    },
+    [orders, promotionChanged],
+  );
 
   const buildCheckoutCart = useCallback(
     (form: CheckoutFormValues) => [
@@ -61,6 +90,10 @@ export function useCheckout(
   const saveTableOrder = useCallback(
     async (orderId?: string, tableId?: string) => {
       const totals = calculateCartTotals(cart, taxes, isExonerated, promotion);
+      const promotionSelection =
+        orderId && shouldPreservePromotion(orderId)
+          ? {}
+          : buildOrderPromotionSelection(promotion);
 
       if (orderId) {
         await updateOrderItems(
@@ -70,7 +103,7 @@ export function useCheckout(
           totals.subTotal,
           totals.taxAmount,
           totals.discountAmount,
-          buildOrderPromotionSelection(promotion),
+          promotionSelection,
         );
         return orderId;
       }
@@ -80,17 +113,29 @@ export function useCheckout(
         ...totals,
         orderType: "local",
         tableId,
-        ...buildOrderPromotionSelection(promotion),
+        ...promotionSelection,
         certificateSerials: extractCertificateSerials(cart),
       });
     },
-    [addOrder, cart, isExonerated, promotion, taxes, updateOrderItems],
+    [
+      addOrder,
+      cart,
+      isExonerated,
+      promotion,
+      shouldPreservePromotion,
+      taxes,
+      updateOrderItems,
+    ],
   );
 
   const finalizeTableOrder = useCallback(
     async (orderId: string, form: CheckoutFormValues) => {
       const items = buildCheckoutCart(form);
       const totals = calculateCartTotals(items, taxes, isExonerated, promotion);
+      const promotionSelection =
+        shouldPreservePromotion(orderId)
+          ? {}
+          : buildOrderPromotionSelection(promotion);
 
       await updateOrderItems(
         orderId,
@@ -99,7 +144,7 @@ export function useCheckout(
         totals.subTotal,
         totals.taxAmount,
         totals.discountAmount,
-        buildOrderPromotionSelection(promotion),
+        promotionSelection,
       );
 
       return finalizeOrder(orderId, {
@@ -112,7 +157,7 @@ export function useCheckout(
         customerPhone: form.customerPhone,
         orderType: form.orderType,
         customerAddress: form.customerAddress,
-        ...buildOrderPromotionSelection(promotion),
+        ...promotionSelection,
         certificateSerials: extractCertificateSerials(items),
       });
     },
@@ -121,6 +166,7 @@ export function useCheckout(
       finalizeOrder,
       isExonerated,
       promotion,
+      shouldPreservePromotion,
       taxes,
       updateOrderItems,
     ],

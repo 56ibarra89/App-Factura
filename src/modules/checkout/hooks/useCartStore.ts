@@ -29,6 +29,8 @@ export function useCartStore() {
   const [manualPromotion, setPromotion] = useState<AppliedPromotion | null>(
     null,
   );
+  const [promotionRemoved, setPromotionRemoved] = useState(false);
+  const [promotionChanged, setPromotionChanged] = useState(false);
   const { taxes, isExonerated } = useTaxConfig();
   const { activeHappyHour, active2x1 } = useAutomaticPromotions();
 
@@ -54,6 +56,7 @@ export function useCartStore() {
         );
         const appliesTwoForOne = Boolean(
           !manualPromotion &&
+          !promotionRemoved &&
           active2x1 &&
           (hasStructuredTargets
             ? matchesStructuredTarget
@@ -75,8 +78,9 @@ export function useCartStore() {
             };
           }
         } else if (
-          item.giftReason === "happy-hour-2x1" ||
-          item.note === "2x1 Happy Hour"
+          !item.isSentToKitchen &&
+          (item.giftReason === "happy-hour-2x1" ||
+            item.note === "2x1 Happy Hour")
         ) {
           changed = true;
           return {
@@ -91,7 +95,7 @@ export function useCartStore() {
       });
       return changed ? newCart : prev;
     });
-  }, [active2x1, cart, manualPromotion]);
+  }, [active2x1, cart, manualPromotion, promotionRemoved]);
 
   const automaticPromotion: AppliedPromotion | null =
     activeHappyHour ??
@@ -106,7 +110,9 @@ export function useCartStore() {
           categoryIds: active2x1.categoryIds,
         }
       : null);
-  const promotion = manualPromotion ?? automaticPromotion;
+  const promotion = promotionRemoved
+    ? null
+    : (manualPromotion ?? automaticPromotion);
 
   const addItem = useCallback((newItem: OrderItemInput) => {
     // Sanitización y Validación (ISO 27001)
@@ -218,7 +224,19 @@ export function useCartStore() {
     [],
   );
 
-  const clearCart = useCallback(() => setCart([]), []);
+  const clearCart = useCallback(() => {
+    setCart([]);
+    setPromotion(null);
+    setPromotionRemoved(false);
+    setPromotionChanged(false);
+  }, []);
+
+  const replaceCart = useCallback((items: OrderItem[]) => {
+    setCart(items);
+    setPromotion(null);
+    setPromotionRemoved(false);
+    setPromotionChanged(false);
+  }, []);
 
   const { subTotal, discountAmount, taxAmount, total } = useMemo(
     () => calculateCartTotals(cart, taxes, isExonerated, promotion),
@@ -227,15 +245,20 @@ export function useCartStore() {
 
   const applyPromotion = useCallback((promo: AppliedPromotion) => {
     setPromotion(promo);
+    setPromotionRemoved(false);
+    setPromotionChanged(true);
   }, []);
 
   const removePromotion = useCallback(() => {
     setPromotion(null);
+    setPromotionRemoved(true);
+    setPromotionChanged(true);
   }, []);
 
   return {
     cart,
     promotion,
+    promotionChanged,
     subTotal,
     discountAmount,
     taxAmount,
@@ -246,7 +269,7 @@ export function useCartStore() {
     changeGiftQuantity,
     changeKitchenInstructions,
     clearCart,
-    setCart,
+    setCart: replaceCart,
     applyPromotion,
     removePromotion,
   };

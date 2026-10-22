@@ -175,11 +175,9 @@ class ShiftRepository implements IShiftRepository {
 
   async getActiveShift(): Promise<Shift | null> {
     try {
-      const response: BackendShift[] = await apiClient(
-        "/shifts?status=OPEN&limit=1",
-      );
-      if (response && response.length > 0) {
-        return this.mapToFrontendShift(response[0]);
+      const response: BackendShift | null = await apiClient("/shifts/active");
+      if (response && response.id) {
+        return this.mapToFrontendShift(response);
       }
       return null;
     } catch (error) {
