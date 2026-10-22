@@ -89,11 +89,24 @@ export function useCheckout(
 
   const saveTableOrder = useCallback(
     async (orderId?: string, tableId?: string) => {
-      const totals = calculateCartTotals(cart, taxes, isExonerated, promotion);
-      const promotionSelection =
-        orderId && shouldPreservePromotion(orderId)
-          ? {}
-          : buildOrderPromotionSelection(promotion);
+      const preservePromotion = Boolean(
+        orderId && shouldPreservePromotion(orderId),
+      );
+      const existingOrder = orderId
+        ? orders.find((order) => order.id === orderId)
+        : undefined;
+      const totals = calculateCartTotals(
+        cart,
+        taxes,
+        isExonerated,
+        promotion,
+        preservePromotion && !promotion
+          ? existingOrder?.discountAmount
+          : undefined,
+      );
+      const promotionSelection = preservePromotion
+        ? {}
+        : buildOrderPromotionSelection(promotion);
 
       if (orderId) {
         await updateOrderItems(
@@ -121,6 +134,7 @@ export function useCheckout(
       addOrder,
       cart,
       isExonerated,
+      orders,
       promotion,
       shouldPreservePromotion,
       taxes,
@@ -131,11 +145,20 @@ export function useCheckout(
   const finalizeTableOrder = useCallback(
     async (orderId: string, form: CheckoutFormValues) => {
       const items = buildCheckoutCart(form);
-      const totals = calculateCartTotals(items, taxes, isExonerated, promotion);
-      const promotionSelection =
-        shouldPreservePromotion(orderId)
-          ? {}
-          : buildOrderPromotionSelection(promotion);
+      const preservePromotion = shouldPreservePromotion(orderId);
+      const existingOrder = orders.find((order) => order.id === orderId);
+      const totals = calculateCartTotals(
+        items,
+        taxes,
+        isExonerated,
+        promotion,
+        preservePromotion && !promotion
+          ? existingOrder?.discountAmount
+          : undefined,
+      );
+      const promotionSelection = preservePromotion
+        ? {}
+        : buildOrderPromotionSelection(promotion);
 
       await updateOrderItems(
         orderId,
@@ -165,6 +188,7 @@ export function useCheckout(
       buildCheckoutCart,
       finalizeOrder,
       isExonerated,
+      orders,
       promotion,
       shouldPreservePromotion,
       taxes,

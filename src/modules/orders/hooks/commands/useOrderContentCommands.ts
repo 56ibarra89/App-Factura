@@ -53,7 +53,7 @@ export function useOrderContentCommands({
           if (typeof discountAmount === "number") {
             result.modified.discountAmount = discountAmount;
           }
-          if (promotion) {
+          if (promotion && promotion.promotionSource !== undefined) {
             result.modified.promotionSource = promotion.promotionSource;
             result.modified.promotionCode = promotion.promotionCode;
             result.modified.couponId = promotion.couponId;
@@ -76,6 +76,20 @@ export function useOrderContentCommands({
                   ...order,
                   items:
                     updatedOrder.items || order.items,
+                  total: updatedOrder.total ?? order.total,
+                  subTotal: updatedOrder.subTotal ?? order.subTotal,
+                  discountAmount:
+                    updatedOrder.discountAmount ?? order.discountAmount,
+                  taxAmount: updatedOrder.taxAmount ?? order.taxAmount,
+                  promotionSource:
+                    updatedOrder.promotionSource ?? order.promotionSource,
+                  promotionCode:
+                    updatedOrder.promotionCode ?? order.promotionCode,
+                  couponId: updatedOrder.couponId ?? order.couponId,
+                  discountId: updatedOrder.discountId ?? order.discountId,
+                  happyHourId: updatedOrder.happyHourId ?? order.happyHourId,
+                  certificateSerials:
+                    updatedOrder.certificateSerials ?? order.certificateSerials,
                 }
               : order,
           ),

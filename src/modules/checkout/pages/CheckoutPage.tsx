@@ -45,6 +45,13 @@ const CheckoutPage = () => {
     state?.deliveryAddress || "",
   );
 
+  const [searchParams] = useSearchParams();
+  const tableId = searchParams.get("tableId");
+  const isCheckoutMode = searchParams.get("checkout") === "true";
+  const { getOrderByTable } = useOrderQueries();
+  const { markAsSentToKitchenByTable } = useOrderCommands();
+  const activeOrder = tableId ? getOrderByTable(tableId) : null;
+
   const {
     cart,
     promotion,
@@ -75,14 +82,7 @@ const CheckoutPage = () => {
     handleClearCart,
     handleApplyPromotion,
     handleRemovePromotion,
-  } = useCart();
-
-  const [searchParams] = useSearchParams();
-  const tableId = searchParams.get("tableId");
-  const isCheckoutMode = searchParams.get("checkout") === "true";
-  const { getOrderByTable } = useOrderQueries();
-  const { markAsSentToKitchenByTable } = useOrderCommands();
-  const activeOrder = tableId ? getOrderByTable(tableId) : null;
+  } = useCart(activeOrder);
 
   useEffect(() => {
     if (activeOrder && cart.length === 0) {

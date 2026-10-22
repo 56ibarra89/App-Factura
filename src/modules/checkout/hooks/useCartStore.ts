@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
-import type { OrderItem, OrderItemInput } from "../../orders";
+import type { Order, OrderItem, OrderItemInput } from "../../orders";
 import type { SelectedExtra } from "../../catalog";
 import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
 import { useTaxConfig } from "../../settings";
@@ -24,7 +24,7 @@ const modifiersKey = (modifiers?: KitchenModifierSelection[]) =>
 const comboSelectionsKey = (item: OrderItemInput | OrderItem) =>
   JSON.stringify(item.comboSelections ?? []);
 
-export function useCartStore() {
+export function useCartStore(activeOrder?: Order | null) {
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [manualPromotion, setPromotion] = useState<AppliedPromotion | null>(
     null,
@@ -33,6 +33,24 @@ export function useCartStore() {
   const [promotionChanged, setPromotionChanged] = useState(false);
   const { taxes, isExonerated } = useTaxConfig();
   const { activeHappyHour, active2x1 } = useAutomaticPromotions();
+
+  const hasExistingOrderPromotion = Boolean(
+    activeOrder &&
+      (activeOrder.couponId ||
+        activeOrder.discountId ||
+        activeOrder.happyHourId ||
+        activeOrder.promotionSource === "coupon" ||
+        activeOrder.promotionSource === "discount" ||
+        activeOrder.promotionSource === "happy-hour" ||
+        activeOrder.items.some((item) => item.giftReason === "happy-hour-2x1")),
+  );
+  const hasExistingNonHappyHourPromotion = Boolean(
+    activeOrder &&
+      (activeOrder.couponId ||
+        activeOrder.discountId ||
+        activeOrder.promotionSource === "coupon" ||
+        activeOrder.promotionSource === "discount"),
+  );
 
   useEffect(() => {
     setCart((prev) => {
@@ -57,6 +75,7 @@ export function useCartStore() {
         const appliesTwoForOne = Boolean(
           !manualPromotion &&
           !promotionRemoved &&
+          (!hasExistingNonHappyHourPromotion || promotionChanged) &&
           active2x1 &&
           (hasStructuredTargets
             ? matchesStructuredTarget
@@ -78,7 +97,7 @@ export function useCartStore() {
             };
           }
         } else if (
-          !item.isSentToKitchen &&
+          (!item.isSentToKitchen || Math.floor(item.quantity / 2) === 0) &&
           (item.giftReason === "happy-hour-2x1" ||
             item.note === "2x1 Happy Hour")
         ) {
@@ -95,7 +114,14 @@ export function useCartStore() {
       });
       return changed ? newCart : prev;
     });
-  }, [active2x1, cart, manualPromotion, promotionRemoved]);
+  }, [
+    active2x1,
+    cart,
+    hasExistingNonHappyHourPromotion,
+    manualPromotion,
+    promotionChanged,
+    promotionRemoved,
+  ]);
 
   const automaticPromotion: AppliedPromotion | null =
     activeHappyHour ??
@@ -112,7 +138,10 @@ export function useCartStore() {
       : null);
   const promotion = promotionRemoved
     ? null
-    : (manualPromotion ?? automaticPromotion);
+    : (manualPromotion ??
+      (hasExistingNonHappyHourPromotion && !promotionChanged
+        ? null
+        : automaticPromotion));
 
   const addItem = useCallback((newItem: OrderItemInput) => {
     // Sanitización y Validación (ISO 27001)
@@ -177,9 +206,27 @@ export function useCartStore() {
       const updated = [...prev];
       // Limitar cantidad máxima por seguridad operativa
       const newQuantity = Math.max(1, Math.min(999, quantity));
-      const currentGiftQuantity = updated[index].giftQuantity || 0;
+      const item = updated[index];
+      if (item.giftReason === "happy-hour-2x1") {
+        const nextGiftQuantity = Math.min(
+          item.giftQuantity || 0,
+          Math.floor(newQuantity / 2),
+        );
+        updated[index] = {
+          ...item,
+          quantity: newQuantity,
+          giftQuantity: nextGiftQuantity,
+          giftReason: nextGiftQuantity > 0 ? "happy-hour-2x1" : undefined,
+          note:
+            nextGiftQuantity === 0 && item.note === "2x1 Happy Hour"
+              ? ""
+              : item.note,
+        };
+        return updated;
+      }
+      const currentGiftQuantity = item.giftQuantity || 0;
       updated[index] = {
-        ...updated[index],
+        ...item,
         quantity: newQuantity,
         giftQuantity: Math.min(newQuantity, currentGiftQuantity),
       };
@@ -238,9 +285,25 @@ export function useCartStore() {
     setPromotionChanged(false);
   }, []);
 
+  const preservedDiscountAmount =
+    !promotion &&
+    !promotionRemoved &&
+    !promotionChanged &&
+    hasExistingOrderPromotion &&
+    typeof activeOrder?.discountAmount === "number"
+      ? activeOrder.discountAmount
+      : undefined;
+
   const { subTotal, discountAmount, taxAmount, total } = useMemo(
-    () => calculateCartTotals(cart, taxes, isExonerated, promotion),
-    [cart, taxes, isExonerated, promotion],
+    () =>
+      calculateCartTotals(
+        cart,
+        taxes,
+        isExonerated,
+        promotion,
+        preservedDiscountAmount,
+      ),
+    [cart, taxes, isExonerated, promotion, preservedDiscountAmount],
   );
 
   const applyPromotion = useCallback((promo: AppliedPromotion) => {

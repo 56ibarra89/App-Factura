@@ -45,10 +45,29 @@ export function useOrderFinalizationCommand({
 
       if (!modifiedOrder) return;
       try {
-        await itemsGateway.updateItems(modifiedOrder);
+        const updatedOrder = await itemsGateway.updateItems(modifiedOrder);
+        const orderToFinalize: Order = {
+          ...modifiedOrder,
+          subTotal: updatedOrder.subTotal ?? modifiedOrder.subTotal,
+          discountAmount:
+            updatedOrder.discountAmount ?? modifiedOrder.discountAmount,
+          taxAmount: updatedOrder.taxAmount ?? modifiedOrder.taxAmount,
+          total: updatedOrder.total ?? modifiedOrder.total,
+          payments:
+            modifiedOrder.payments?.length === 1 &&
+            Math.abs(modifiedOrder.payments[0].amount - modifiedOrder.total) <
+              0.01
+              ? [
+                  {
+                    ...modifiedOrder.payments[0],
+                    amount: updatedOrder.total ?? modifiedOrder.total,
+                  },
+                ]
+              : modifiedOrder.payments,
+        };
         const finalizedOrder =
           await finalizationGateway.finalize(
-            modifiedOrder,
+            orderToFinalize,
           );
         updateOrders((current) =>
           current.map((order) =>
@@ -56,6 +75,7 @@ export function useOrderFinalizationCommand({
               ? {
                   ...order,
                   status: "paid",
+                  paidAt: finalizedOrder.paidAt ?? order.paidAt,
                   invoiceNumber:
                     finalizedOrder.invoiceNumber,
                 }

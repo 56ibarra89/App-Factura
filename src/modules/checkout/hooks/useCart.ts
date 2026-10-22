@@ -1,9 +1,10 @@
 import { useCallback } from "react";
+import type { Order } from "../../orders";
 import { useCartStore } from "./useCartStore";
 import { useCheckout } from "./useCheckout";
 import { useProductSelection } from "./useProductSelection";
 
-function useCart() {
+function useCart(activeOrder?: Order | null) {
   const {
     cart,
     promotion,
@@ -21,7 +22,7 @@ function useCart() {
     setCart,
     applyPromotion,
     removePromotion,
-  } = useCartStore();
+  } = useCartStore(activeOrder);
 
   const handleConfirmProduct = useCallback(
     (item: Parameters<typeof addItem>[0]) => {

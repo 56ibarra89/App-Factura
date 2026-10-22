@@ -369,6 +369,7 @@ export const orderMutations = {
         return {
           ...order,
           status: "paid" as OrderStatus,
+          paidAt: new Date(nowMs),
           paymentMethod,
           splitAmounts,
           payments,

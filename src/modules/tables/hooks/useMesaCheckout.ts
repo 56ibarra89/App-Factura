@@ -45,43 +45,26 @@ export function useMesaCheckout(
     taxAmount: checkoutTaxAmount,
     total: checkoutTotal,
     discountAmount: checkoutDiscountAmount,
-  } = useMemo(() => {
-    const baseTotals = calculateCartTotals(
+  } = useMemo(
+    () =>
+      calculateCartTotals(
+        checkoutCart,
+        taxes,
+        isExonerated,
+        checkoutPromotion,
+        !checkoutPromotion && !promotionRemoved
+          ? checkoutOrder?.discountAmount
+          : undefined,
+      ),
+    [
       checkoutCart,
-      taxes,
-      isExonerated,
+      checkoutOrder,
       checkoutPromotion,
-    );
-    if (
-      !checkoutPromotion &&
-      !promotionRemoved &&
-      checkoutOrder &&
-      typeof checkoutOrder.discountAmount === "number" &&
-      checkoutOrder.discountAmount > 0
-    ) {
-      const discountAmount = Math.min(
-        baseTotals.subTotal,
-        checkoutOrder.discountAmount,
-      );
-      const taxable = Math.max(0, baseTotals.subTotal - discountAmount);
-      const taxPct = isExonerated ? 0 : (taxes[0]?.percentage ?? 0);
-      const taxAmount = taxPct > 0 ? taxable * (taxPct / 100) : 0;
-      return {
-        subTotal: baseTotals.subTotal,
-        discountAmount,
-        taxAmount,
-        total: Math.max(0, taxable + taxAmount),
-      };
-    }
-    return baseTotals;
-  }, [
-    checkoutCart,
-    checkoutOrder,
-    checkoutPromotion,
-    isExonerated,
-    promotionRemoved,
-    taxes,
-  ]);
+      isExonerated,
+      promotionRemoved,
+      taxes,
+    ],
+  );
 
   const openCheckoutPreview = useCallback((order: Order) => {
     setCheckoutOrder(order);
@@ -109,12 +92,6 @@ export function useMesaCheckout(
         form.orderType === "delivery" ? form.deliveryCost : undefined,
       );
       const items = [...checkoutCart, ...supplementalItems];
-      const baseTotals = calculateCartTotals(
-        items,
-        taxes,
-        isExonerated,
-        checkoutPromotion,
-      );
       const preserveExistingPromotion =
         !checkoutPromotion &&
         !promotionRemoved &&
@@ -122,38 +99,22 @@ export function useMesaCheckout(
           checkoutOrder.couponId ||
             checkoutOrder.discountId ||
             checkoutOrder.happyHourId ||
+            checkoutOrder.promotionSource === "coupon" ||
+            checkoutOrder.promotionSource === "discount" ||
+            checkoutOrder.promotionSource === "happy-hour" ||
             items.some((item) => item.giftReason === "happy-hour-2x1"),
         );
 
-      const totals =
-        preserveExistingPromotion &&
-        typeof checkoutOrder.discountAmount === "number" &&
-        checkoutOrder.discountAmount > 0
-          ? (() => {
-              const discountAmount = Math.min(
-                baseTotals.subTotal,
-                checkoutOrder.discountAmount,
-              );
-              const taxable = Math.max(0, baseTotals.subTotal - discountAmount);
-              const taxPct = isExonerated ? 0 : (taxes[0]?.percentage ?? 0);
-              const taxAmount = taxPct > 0 ? taxable * (taxPct / 100) : 0;
-              return {
-                subTotal: baseTotals.subTotal,
-                discountAmount,
-                taxAmount,
-                total: Math.max(0, taxable + taxAmount),
-              };
-            })()
-          : baseTotals;
+      const totals = calculateCartTotals(
+        items,
+        taxes,
+        isExonerated,
+        checkoutPromotion,
+        preserveExistingPromotion ? checkoutOrder.discountAmount : undefined,
+      );
 
       const promotionSelection = preserveExistingPromotion
-        ? {
-            promotionSource: checkoutOrder.promotionSource,
-            promotionCode: checkoutOrder.promotionCode,
-            couponId: checkoutOrder.couponId,
-            discountId: checkoutOrder.discountId,
-            happyHourId: checkoutOrder.happyHourId,
-          }
+        ? {}
         : buildOrderPromotionSelection(checkoutPromotion);
 
       if (supplementalItems.length > 0) {

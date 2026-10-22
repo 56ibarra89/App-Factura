@@ -42,7 +42,8 @@ export function calculateCartTotals(
   items: OrderItem[],
   taxes: TaxLike[] | undefined,
   isExonerated: boolean,
-  promotion?: AppliedPromotion | null
+  promotion?: AppliedPromotion | null,
+  fallbackDiscountAmount?: number,
 ): { subTotal: number; discountAmount: number; taxAmount: number; total: number } {
   const subTotal = calculateSubtotal(items);
 
@@ -72,6 +73,12 @@ export function calculateCartTotals(
         discountableSubtotal,
       );
     }
+  } else if (
+    !promotion &&
+    typeof fallbackDiscountAmount === "number" &&
+    fallbackDiscountAmount > 0
+  ) {
+    discountAmount = fallbackDiscountAmount;
   }
 
   discountAmount = Math.min(discountAmount, subTotal);
