@@ -1,7 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
 import { useOrderCommands, type Order, type OrderItem } from "../../orders";
 import { useTaxConfig } from "../../settings";
-import type { AppliedPromotion } from "../../promotions";
+import {
+  useOrderPromotionRehydration,
+  type AppliedPromotion,
+} from "../../promotions";
 import {
   buildSupplementalCartItems,
   buildOrderPromotionSelection,
@@ -19,13 +22,20 @@ export function useMesaCheckout(
   const { taxes, isExonerated } = useTaxConfig();
 
   const [checkoutOrder, setCheckoutOrder] = useState<Order | null>(null);
-  const [checkoutPromotion, setCheckoutPromotionState] =
+  const [isSubAccountCheckout, setIsSubAccountCheckout] = useState(false);
+  const [checkoutPromotionState, setCheckoutPromotionState] =
     useState<AppliedPromotion | null>(null);
   const [promotionRemoved, setPromotionRemoved] = useState(false);
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<
     string | undefined
   >(undefined);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const rehydratedPromotion = useOrderPromotionRehydration(
+    isSubAccountCheckout ? null : checkoutOrder,
+  );
+  const checkoutPromotion = promotionRemoved
+    ? null
+    : (checkoutPromotionState ?? rehydratedPromotion);
 
   const setCheckoutPromotion = useCallback(
     (promotion: AppliedPromotion | null) => {
@@ -35,10 +45,26 @@ export function useMesaCheckout(
     [],
   );
 
-  const checkoutCart: OrderItem[] = useMemo(
-    () => (checkoutOrder ? checkoutOrder.items : []),
-    [checkoutOrder],
-  );
+  const checkoutCart: OrderItem[] = useMemo(() => {
+    if (!checkoutOrder) return [];
+    const stripHappyHourTwoForOne =
+      promotionRemoved ||
+      (checkoutPromotionState !== null &&
+        checkoutPromotionState.discountType !== "2x1");
+    if (!stripHappyHourTwoForOne) {
+      return checkoutOrder.items;
+    }
+    return checkoutOrder.items.map((item) =>
+      item.giftReason === "happy-hour-2x1" || item.note === "2x1 Happy Hour"
+        ? {
+            ...item,
+            giftQuantity: 0,
+            giftReason: undefined,
+            note: item.note === "2x1 Happy Hour" ? "" : item.note,
+          }
+        : item,
+    );
+  }, [checkoutOrder, checkoutPromotionState, promotionRemoved]);
 
   const {
     subTotal: checkoutSubTotal,
@@ -66,17 +92,22 @@ export function useMesaCheckout(
     ],
   );
 
-  const openCheckoutPreview = useCallback((order: Order) => {
-    setCheckoutOrder(order);
-    setCheckoutPromotionState(null);
-    setPromotionRemoved(false);
-    setCreatedInvoiceNumber(undefined);
-    setIsPreviewOpen(true);
-  }, []);
+  const openCheckoutPreview = useCallback(
+    (order: Order, options?: { isSubAccount?: boolean }) => {
+      setCheckoutOrder(order);
+      setIsSubAccountCheckout(Boolean(options?.isSubAccount));
+      setCheckoutPromotionState(null);
+      setPromotionRemoved(false);
+      setCreatedInvoiceNumber(undefined);
+      setIsPreviewOpen(true);
+    },
+    [],
+  );
 
   const closeCheckoutPreview = useCallback(() => {
     setIsPreviewOpen(false);
     setCheckoutOrder(null);
+    setIsSubAccountCheckout(false);
     setCheckoutPromotionState(null);
     setPromotionRemoved(false);
     setCreatedInvoiceNumber(undefined);
@@ -93,31 +124,34 @@ export function useMesaCheckout(
       );
       const items = [...checkoutCart, ...supplementalItems];
       const preserveExistingPromotion =
-        !checkoutPromotion &&
+        !checkoutPromotionState &&
         !promotionRemoved &&
-        Boolean(
-          checkoutOrder.couponId ||
-            checkoutOrder.discountId ||
-            checkoutOrder.happyHourId ||
-            checkoutOrder.promotionSource === "coupon" ||
-            checkoutOrder.promotionSource === "discount" ||
-            checkoutOrder.promotionSource === "happy-hour" ||
-            items.some((item) => item.giftReason === "happy-hour-2x1"),
-        );
+        (isSubAccountCheckout ||
+          Boolean(
+            checkoutOrder.couponId ||
+              checkoutOrder.discountId ||
+              checkoutOrder.happyHourId ||
+              checkoutOrder.promotionSource === "coupon" ||
+              checkoutOrder.promotionSource === "discount" ||
+              checkoutOrder.promotionSource === "happy-hour" ||
+              items.some((item) => item.giftReason === "happy-hour-2x1"),
+          ));
 
       const totals = calculateCartTotals(
         items,
         taxes,
         isExonerated,
         checkoutPromotion,
-        preserveExistingPromotion ? checkoutOrder.discountAmount : undefined,
+        preserveExistingPromotion && !checkoutPromotion
+          ? checkoutOrder.discountAmount
+          : undefined,
       );
 
       const promotionSelection = preserveExistingPromotion
         ? {}
         : buildOrderPromotionSelection(checkoutPromotion);
 
-      if (supplementalItems.length > 0) {
+      if (supplementalItems.length > 0 || checkoutCart !== checkoutOrder.items) {
         await updateOrderItems(
           checkoutOrder.id,
           items,
@@ -154,6 +188,7 @@ export function useMesaCheckout(
       });
       setIsPreviewOpen(false);
       setCheckoutOrder(null);
+      setIsSubAccountCheckout(false);
       restoreFocus();
     },
     [
@@ -162,7 +197,9 @@ export function useMesaCheckout(
       restoreFocus,
       checkoutCart,
       checkoutPromotion,
+      checkoutPromotionState,
       isExonerated,
+      isSubAccountCheckout,
       printer,
       promotionRemoved,
       taxes,

@@ -45,6 +45,19 @@ export function useOrderCollectionCommands({
               ? {
                   ...order,
                   invoiceNumber,
+                  paidAt: createdOrder.paidAt ?? order.paidAt,
+                  subTotal: createdOrder.subTotal ?? order.subTotal,
+                  discountAmount:
+                    createdOrder.discountAmount ?? order.discountAmount,
+                  taxAmount: createdOrder.taxAmount ?? order.taxAmount,
+                  total: createdOrder.total ?? order.total,
+                  promotionSource:
+                    createdOrder.promotionSource ?? order.promotionSource,
+                  couponId: createdOrder.couponId ?? order.couponId,
+                  discountId: createdOrder.discountId ?? order.discountId,
+                  happyHourId: createdOrder.happyHourId ?? order.happyHourId,
+                  certificateSerials:
+                    createdOrder.certificateSerials ?? order.certificateSerials,
                   items:
                     createdOrder.items || order.items,
                 }

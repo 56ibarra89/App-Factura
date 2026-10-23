@@ -18,6 +18,62 @@ interface UseOrderFinalizationCommandOptions {
   finalizationGateway: OrderFinalizationGateway;
 }
 
+function reconcileFinalizationPayments(
+  order: Order,
+  targetTotal: number,
+): Order["payments"] {
+  const basePayments = order.payments?.length
+    ? order.payments
+    : order.paymentMethod === "MIXTO" && order.splitAmounts
+      ? [
+          {
+            method: "EFECTIVO" as const,
+            amount: order.splitAmounts.efectivo || 0,
+          },
+          {
+            method: "TARJETA" as const,
+            amount: order.splitAmounts.tarjeta || 0,
+          },
+          {
+            method: "APP" as const,
+            amount: order.splitAmounts.app || 0,
+          },
+        ].filter((p) => p.amount > 0)
+      : undefined;
+
+  if (!basePayments?.length) {
+    return order.payments;
+  }
+
+  const currentSum = basePayments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0,
+  );
+
+  const delta = Number((targetTotal - currentSum).toFixed(2));
+  if (Math.abs(delta) < 0.01) {
+    return basePayments;
+  }
+
+  const adjustIndex = [...basePayments]
+    .map((payment, index) => ({ payment, index }))
+    .reverse()
+    .find(({ payment }) => payment.amount + delta > 0)?.index;
+
+  if (adjustIndex === undefined) {
+    return basePayments;
+  }
+
+  return basePayments.map((payment, index) =>
+    index === adjustIndex
+      ? {
+          ...payment,
+          amount: Number((payment.amount + delta).toFixed(2)),
+        }
+      : payment,
+  );
+}
+
 export function useOrderFinalizationCommand({
   ordersRef,
   updateOrders,
@@ -46,24 +102,18 @@ export function useOrderFinalizationCommand({
       if (!modifiedOrder) return;
       try {
         const updatedOrder = await itemsGateway.updateItems(modifiedOrder);
+        const resolvedTotal = updatedOrder.total ?? modifiedOrder.total;
         const orderToFinalize: Order = {
           ...modifiedOrder,
           subTotal: updatedOrder.subTotal ?? modifiedOrder.subTotal,
           discountAmount:
             updatedOrder.discountAmount ?? modifiedOrder.discountAmount,
           taxAmount: updatedOrder.taxAmount ?? modifiedOrder.taxAmount,
-          total: updatedOrder.total ?? modifiedOrder.total,
-          payments:
-            modifiedOrder.payments?.length === 1 &&
-            Math.abs(modifiedOrder.payments[0].amount - modifiedOrder.total) <
-              0.01
-              ? [
-                  {
-                    ...modifiedOrder.payments[0],
-                    amount: updatedOrder.total ?? modifiedOrder.total,
-                  },
-                ]
-              : modifiedOrder.payments,
+          total: resolvedTotal,
+          payments: reconcileFinalizationPayments(
+            modifiedOrder,
+            resolvedTotal,
+          ),
         };
         const finalizedOrder =
           await finalizationGateway.finalize(
@@ -76,6 +126,11 @@ export function useOrderFinalizationCommand({
                   ...order,
                   status: "paid",
                   paidAt: finalizedOrder.paidAt ?? order.paidAt,
+                  subTotal: orderToFinalize.subTotal,
+                  discountAmount: orderToFinalize.discountAmount,
+                  taxAmount: orderToFinalize.taxAmount,
+                  total: orderToFinalize.total,
+                  payments: orderToFinalize.payments,
                   invoiceNumber:
                     finalizedOrder.invoiceNumber,
                 }

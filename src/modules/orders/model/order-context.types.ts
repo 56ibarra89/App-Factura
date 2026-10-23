@@ -39,7 +39,7 @@ export interface OrderCommands {
     command: FinalizeOrderCommand,
   ): Promise<string | void>;
   markAsSentToKitchen(orderId: string): Promise<void>;
-  markAsSentToKitchenByTable(tableId: string): void;
+  markAsSentToKitchenByTable(tableId: string): Promise<OrderItem[] | undefined>;
   moveOrder(sourceTableId: string, destinationTableId: string | string[]): void;
   unirMesas(sourceTableId: string, destinationTableId: string | string[]): void;
 }

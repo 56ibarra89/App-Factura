@@ -459,7 +459,8 @@ export const orderMutations = {
     return updateOne(
       prev,
       (order) =>
-        order.tableId === tableId &&
+        (order.tableId === tableId ||
+          Boolean(order.linkedTables && order.linkedTables.includes(tableId))) &&
         order.status !== "paid" &&
         order.status !== "cancelled",
       (order) => ({

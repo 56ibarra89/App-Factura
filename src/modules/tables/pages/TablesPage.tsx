@@ -88,6 +88,30 @@ export default function TablesPage() {
 
     if (selection.items && selection.items.length > 0) {
       itemsToCheckout = selection.items;
+      const calcItemNet = (item: OrderItem) =>
+        item.price * Math.max(0, item.quantity - (item.giftQuantity || 0));
+      const fullSubtotal =
+        logic.activeOrder.subTotal ??
+        logic.activeOrder.items.reduce((sum, item) => sum + calcItemNet(item), 0);
+      const subSubtotal = selection.items.reduce(
+        (sum, item) => sum + calcItemNet(item),
+        0,
+      );
+      const fullDiscount = logic.activeOrder.discountAmount ?? 0;
+      const subOrderDiscountAmount =
+        fullSubtotal > 0 && fullDiscount > 0
+          ? Math.round(((fullDiscount * subSubtotal) / fullSubtotal) * 100) /
+            100
+          : 0;
+      const subOrder: Order = {
+        ...logic.activeOrder,
+        customerName: `${logic.activeOrder.customerName || "Cliente"} (${selection.accountName})`,
+        items: itemsToCheckout,
+        total: selection.amount,
+        discountAmount: subOrderDiscountAmount,
+      };
+      checkout.openCheckoutPreview(subOrder, { isSubAccount: true });
+      return;
     } else {
       const activeTaxRate = isExonerated ? 0 : (taxes?.[0]?.percentage ?? 15);
       const taxFactor = 1 + activeTaxRate / 100;
@@ -110,6 +134,12 @@ export default function TablesPage() {
       customerName: `${logic.activeOrder.customerName || "Cliente"} (${selection.accountName})`,
       items: itemsToCheckout,
       total: selection.amount,
+      discountAmount: 0,
+      promotionSource: "none",
+      promotionCode: undefined,
+      couponId: undefined,
+      discountId: undefined,
+      happyHourId: undefined,
     };
 
     checkout.openCheckoutPreview(subOrder);

@@ -84,10 +84,23 @@ export function useOrderContentCommands({
                   promotionSource:
                     updatedOrder.promotionSource ?? order.promotionSource,
                   promotionCode:
-                    updatedOrder.promotionCode ?? order.promotionCode,
-                  couponId: updatedOrder.couponId ?? order.couponId,
-                  discountId: updatedOrder.discountId ?? order.discountId,
-                  happyHourId: updatedOrder.happyHourId ?? order.happyHourId,
+                    updatedOrder.promotionCode ??
+                    ((updatedOrder.promotionSource ?? order.promotionSource) ===
+                    "coupon"
+                      ? order.promotionCode
+                      : undefined),
+                  couponId:
+                    updatedOrder.promotionSource !== undefined
+                      ? updatedOrder.couponId
+                      : (updatedOrder.couponId ?? order.couponId),
+                  discountId:
+                    updatedOrder.promotionSource !== undefined
+                      ? updatedOrder.discountId
+                      : (updatedOrder.discountId ?? order.discountId),
+                  happyHourId:
+                    updatedOrder.promotionSource !== undefined
+                      ? updatedOrder.happyHourId
+                      : (updatedOrder.happyHourId ?? order.happyHourId),
                   certificateSerials:
                     updatedOrder.certificateSerials ?? order.certificateSerials,
                 }

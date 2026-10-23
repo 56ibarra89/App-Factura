@@ -143,7 +143,7 @@ export default function FacturaPreviewDialog({
             config={checkout.config}
           />
 
-          {!isTableMode && onApplyPromotion && onRemovePromotion && (
+          {onApplyPromotion && onRemovePromotion && (
             <PromocionesSelector
               currentPromotion={promotion ?? null}
               onApply={onApplyPromotion}

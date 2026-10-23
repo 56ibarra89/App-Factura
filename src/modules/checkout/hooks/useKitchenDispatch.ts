@@ -11,7 +11,9 @@ interface UseKitchenDispatchOptions {
   username: string;
   role: string | null;
   saveTableOrder(orderId?: string, tableId?: string): Promise<unknown>;
-  markAsSentToKitchenByTable(tableId: string): void;
+  markAsSentToKitchenByTable(
+    tableId: string,
+  ): Promise<OrderItem[] | undefined> | OrderItem[] | undefined;
   setCart(items: OrderItem[]): void;
   runExclusive: RunExclusiveAction;
 }
@@ -49,29 +51,30 @@ export function useKitchenDispatch({
 
     await runExclusive(async () => {
       await saveTableOrder(activeOrderId, tableId);
-      markAsSentToKitchenByTable(tableId);
+      const syncedItems = await markAsSentToKitchenByTable(tableId);
 
       const sentAt = Date.now();
       setCart(
-        cart.map((item) => {
-          if (!requiresKitchenPreparation(item)) {
+        syncedItems ??
+          cart.map((item) => {
+            if (!requiresKitchenPreparation(item)) {
+              return {
+                ...item,
+                isSentToKitchen: false,
+                sentAt: undefined,
+                kitchenStatus: undefined,
+              };
+            }
+
             return {
               ...item,
-              isSentToKitchen: false,
-              sentAt: undefined,
-              kitchenStatus: undefined,
+              isSentToKitchen: true,
+              sentAt: item.isSentToKitchen ? item.sentAt : sentAt,
+              kitchenStatus: item.isSentToKitchen
+                ? item.kitchenStatus
+                : "pending",
             };
-          }
-
-          return {
-            ...item,
-            isSentToKitchen: true,
-            sentAt: item.isSentToKitchen ? item.sentAt : sentAt,
-            kitchenStatus: item.isSentToKitchen
-              ? item.kitchenStatus
-              : "pending",
-          };
-        }),
+          }),
       );
 
       logService.log(

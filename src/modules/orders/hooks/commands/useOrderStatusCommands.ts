@@ -82,7 +82,7 @@ export function useOrderStatusCommands({
   const markAsSentToKitchenByTable = useCallback<
     OrderCommands["markAsSentToKitchenByTable"]
   >(
-    (tableId) => {
+    async (tableId) => {
       let modifiedOrder: Order | undefined;
       updateOrders((current) => {
         const result = orderMutations.markAsSentToKitchenByTable(
@@ -94,13 +94,28 @@ export function useOrderStatusCommands({
         return result.orders;
       });
 
-      if (modifiedOrder) {
-        void itemsGateway
-          .updateItems(modifiedOrder)
-          .catch((error: unknown) =>
-            console.error("Error marking table order for kitchen", error),
+      if (!modifiedOrder) return undefined;
+
+      try {
+        const updatedOrder = await itemsGateway.updateItems(modifiedOrder);
+        if (updatedOrder.items) {
+          updateOrders((current) =>
+            current.map((order) =>
+              order.id === modifiedOrder?.id
+                ? {
+                    ...order,
+                    items: updatedOrder.items || order.items,
+                  }
+                : order,
+            ),
           );
+          return updatedOrder.items;
+        }
+      } catch (error: unknown) {
+        console.error("Error marking table order for kitchen", error);
       }
+
+      return modifiedOrder.items;
     },
     [itemsGateway, updateOrders],
   );

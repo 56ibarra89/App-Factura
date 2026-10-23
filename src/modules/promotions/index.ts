@@ -1,4 +1,8 @@
-export { useAutomaticPromotions } from "./hooks/useAutomaticPromotions";
+export {
+  useAutomaticPromotions,
+  useOrderPromotionRehydration,
+} from "./hooks/useAutomaticPromotions";
+export type { OrderPromotionSnapshot } from "./hooks/useAutomaticPromotions";
 export { useCertificateRedemption } from "./hooks/useCertificateRedemption";
 export { default as CertificadoDialog } from "./ui/CertificadoDialog";
 export { default as PromocionesSelector } from "./ui/PromocionesSelector";

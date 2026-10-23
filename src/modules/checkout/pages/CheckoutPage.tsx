@@ -1,5 +1,5 @@
 import Box from "@mui/material/Box";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import BillingDialogs from "../ui/BillingDialogs";
 import Cart from "../ui/Cart";
@@ -84,11 +84,21 @@ const CheckoutPage = () => {
     handleRemovePromotion,
   } = useCart(activeOrder);
 
+  const hydratedOrderIdRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (activeOrder && cart.length === 0) {
+    if (!tableId) {
+      hydratedOrderIdRef.current = null;
+      return;
+    }
+    if (!activeOrder) return;
+    if (hydratedOrderIdRef.current === activeOrder.id) return;
+
+    hydratedOrderIdRef.current = activeOrder.id;
+    if (cart.length === 0) {
       handleSetCart(activeOrder.items);
     }
-  }, [activeOrder, cart.length, handleSetCart]);
+  }, [activeOrder, cart.length, handleSetCart, tableId]);
 
   const closePreview = useCallback(() => {
     setPreviewOpen(false);
