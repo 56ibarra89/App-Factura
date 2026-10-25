@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { Order } from "../model/order.types";
 import type { OrderItem } from "../model/order.types";
 import {
+  isSplitBillOrderItem,
   isSupplementalOrderItem,
   requiresKitchenPreparation,
 } from "../model/orderItemDomain";
@@ -15,7 +16,9 @@ import {
 const splitIntoKitchenTickets = (order: Order): Order[] => {
   if (!order.isSentToKitchen) return [];
 
-  const supplementalItems = order.items.filter(isSupplementalOrderItem);
+  const supplementalItems = order.items.filter(
+    (item) => isSupplementalOrderItem(item) && !isSplitBillOrderItem(item),
+  );
   const sentItems = order.items.filter(
     (item) => item.isSentToKitchen && requiresKitchenPreparation(item),
   );
