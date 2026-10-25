@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import type { OrderItem } from "../../orders";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { isSplitBillOrderItem, type OrderItem } from "../../orders";
 import {
   calculateItemSplitTotals,
   createSplitBillAccounts,
@@ -8,6 +8,7 @@ import {
 } from "../model/splitBillDomain";
 import type {
   SplitBillAccount,
+  SplitBillCheckoutSelection,
   SplitBillMode,
 } from "../model/splitBill.types";
 
@@ -16,10 +17,108 @@ interface UseSplitBillOptions {
   totalAmount: number;
 }
 
+function isSameSplitItem(a: OrderItem, b: OrderItem): boolean {
+  if (a.id !== undefined && b.id !== undefined && a.id === b.id) return true;
+  return (
+    a.name === b.name &&
+    a.price === b.price &&
+    a.size === b.size &&
+    JSON.stringify(a.extras || []) === JSON.stringify(b.extras || []) &&
+    (a.note ?? "") === (b.note ?? "")
+  );
+}
+
+function deriveUnassignedItems(
+  sourceItems: readonly OrderItem[],
+  accounts: readonly SplitBillAccount[],
+): OrderItem[] {
+  const remaining = sourceItems
+    .filter((item) => !isSplitBillOrderItem(item))
+    .map((item) => ({ ...item }));
+
+  for (const assigned of accounts.flatMap((account) => account.items)) {
+    let quantityToRemove = assigned.quantity;
+    let giftsToRemove = assigned.giftQuantity ?? 0;
+    for (let index = 0; index < remaining.length && quantityToRemove > 0; index += 1) {
+      const candidate = remaining[index];
+      if (!isSameSplitItem(candidate, assigned)) continue;
+      const removedQuantity = Math.min(quantityToRemove, candidate.quantity);
+      const removedGifts = Math.min(
+        giftsToRemove,
+        candidate.giftQuantity ?? 0,
+        removedQuantity,
+      );
+      remaining[index] = normalizeSplitItemGift(
+        candidate,
+        candidate.quantity - removedQuantity,
+        Math.max(0, (candidate.giftQuantity ?? 0) - removedGifts),
+      );
+      quantityToRemove -= removedQuantity;
+      giftsToRemove -= removedGifts;
+    }
+  }
+
+  return remaining.filter((item) => item.quantity > 0);
+}
+
+function normalizeSplitItemGift(
+  item: OrderItem,
+  quantity: number,
+  giftQuantity: number,
+): OrderItem {
+  const safeGift = Math.min(quantity, Math.max(0, giftQuantity));
+  const wasTwoForOne =
+    item.giftReason === "happy-hour-2x1" || item.note === "2x1 Happy Hour";
+
+  if (wasTwoForOne) {
+    const validTwoForOneGift = Math.min(safeGift, Math.floor(quantity / 2));
+    return {
+      ...item,
+      quantity,
+      giftQuantity: validTwoForOneGift,
+      giftReason: validTwoForOneGift > 0 ? "happy-hour-2x1" : undefined,
+      note:
+        validTwoForOneGift === 0 && item.note === "2x1 Happy Hour"
+          ? undefined
+          : item.note,
+    };
+  }
+
+  return {
+    ...item,
+    quantity,
+    giftQuantity: safeGift,
+    giftReason: safeGift > 0 ? item.giftReason : undefined,
+  };
+}
+
+function computeSplitStep(
+  item: OrderItem,
+  moveAll: boolean,
+): { qtyToMove: number; giftToMove: number } {
+  const totalQty = item.quantity;
+  const totalGift = Math.min(totalQty, Math.max(0, item.giftQuantity ?? 0));
+
+  if (moveAll || totalQty <= 1) {
+    return { qtyToMove: totalQty, giftToMove: totalGift };
+  }
+
+  if (totalGift > 0 && totalQty <= 2 * totalGift) {
+    const pairQty = Math.min(totalQty, 2);
+    return { qtyToMove: pairQty, giftToMove: 1 };
+  }
+
+  return { qtyToMove: 1, giftToMove: 0 };
+}
+
 export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
   const nextAccountNumber = useRef(3);
+  const nextEqualAccountNumber = useRef(3);
   const [mode, setMode] = useState<SplitBillMode>("items");
-  const [equalPeopleCount, setEqualPeopleCount] = useState(2);
+  const [equalAccountIdentities, setEqualAccountIdentities] = useState(() => [
+    { id: "equal-account-1", name: "Persona 1" },
+    { id: "equal-account-2", name: "Persona 2" },
+  ]);
   const [accounts, setAccounts] = useState<SplitBillAccount[]>(() =>
     createSplitBillAccounts(),
   );
@@ -27,16 +126,28 @@ export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
     "split-account-1",
   );
   const [unassignedItems, setUnassignedItems] = useState<OrderItem[]>(() =>
-    items.map((item) => ({ ...item })),
+    deriveUnassignedItems(items, []),
   );
+
+  useEffect(() => {
+    setUnassignedItems(deriveUnassignedItems(items, accounts));
+  }, [accounts, items]);
 
   const itemSplit = useMemo(
     () => calculateItemSplitTotals(accounts, unassignedItems, totalAmount),
     [accounts, totalAmount, unassignedItems],
   );
   const equalAccounts = useMemo(
-    () => splitTotalEqually(totalAmount, equalPeopleCount),
-    [equalPeopleCount, totalAmount],
+    () => {
+      if (equalAccountIdentities.length === 0) return [];
+      return splitTotalEqually(totalAmount, equalAccountIdentities.length).map(
+        (account, index) => ({
+          ...account,
+          ...equalAccountIdentities[index],
+        }),
+      );
+    },
+    [equalAccountIdentities, totalAmount],
   );
   const customAssignedTotal = useMemo(
     () => roundMoney(
@@ -76,7 +187,25 @@ export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
 
       setAccounts(remainingAccounts);
       if (account?.items.length) {
-        setUnassignedItems((current) => [...current, ...account.items]);
+        setUnassignedItems((current) => {
+          const next = [...current];
+          for (const returnedItem of account.items) {
+            const existingIdx = next.findIndex((it) =>
+              isSameSplitItem(it, returnedItem),
+            );
+            if (existingIdx >= 0) {
+              const prev = next[existingIdx];
+              next[existingIdx] = normalizeSplitItemGift(
+                prev,
+                prev.quantity + returnedItem.quantity,
+                (prev.giftQuantity ?? 0) + (returnedItem.giftQuantity ?? 0),
+              );
+            } else {
+              next.push({ ...returnedItem });
+            }
+          }
+          return next;
+        });
       }
       if (activeAccountId === accountId) {
         setActiveAccountId(remainingAccounts[0]?.id ?? "");
@@ -90,15 +219,21 @@ export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
       const targetItem = unassignedItems[itemIndex];
       if (!targetItem) return;
 
-      const qtyToMove = assignAll ? targetItem.quantity : 1;
+      const { qtyToMove, giftToMove } = computeSplitStep(targetItem, assignAll);
       const remainingQty = targetItem.quantity - qtyToMove;
+      const remainingGift = Math.max(
+        0,
+        (targetItem.giftQuantity ?? 0) - giftToMove,
+      );
 
       setUnassignedItems((current) => {
         if (remainingQty <= 0) {
           return current.filter((_, index) => index !== itemIndex);
         }
         return current.map((it, index) =>
-          index === itemIndex ? { ...it, quantity: remainingQty } : it,
+          index === itemIndex
+            ? normalizeSplitItemGift(it, remainingQty, remainingGift)
+            : it,
         );
       });
 
@@ -106,25 +241,26 @@ export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
         current.map((account) => {
           if (account.id !== accountId) return account;
 
-          const existingIndex = account.items.findIndex(
-            (it) =>
-              it.name === targetItem.name &&
-              it.price === targetItem.price &&
-              it.size === targetItem.size &&
-              JSON.stringify(it.extras || []) ===
-                JSON.stringify(targetItem.extras || []),
+          const existingIndex = account.items.findIndex((it) =>
+            isSameSplitItem(it, targetItem),
           );
 
           if (existingIndex >= 0) {
             const updatedItems = [...account.items];
-            updatedItems[existingIndex] = {
-              ...updatedItems[existingIndex],
-              quantity: updatedItems[existingIndex].quantity + qtyToMove,
-            };
+            const prev = updatedItems[existingIndex];
+            updatedItems[existingIndex] = normalizeSplitItemGift(
+              targetItem,
+              prev.quantity + qtyToMove,
+              (prev.giftQuantity ?? 0) + giftToMove,
+            );
             return { ...account, items: updatedItems };
           }
 
-          const newItem: OrderItem = { ...targetItem, quantity: qtyToMove };
+          const newItem = normalizeSplitItemGift(
+            targetItem,
+            qtyToMove,
+            giftToMove,
+          );
           return { ...account, items: [...account.items, newItem] };
         }),
       );
@@ -138,8 +274,15 @@ export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
       const targetItem = account?.items[itemIndex];
       if (!account || !targetItem) return;
 
-      const qtyToMove = unassignAll ? targetItem.quantity : 1;
+      const { qtyToMove, giftToMove } = computeSplitStep(
+        targetItem,
+        unassignAll,
+      );
       const remainingQty = targetItem.quantity - qtyToMove;
+      const remainingGift = Math.max(
+        0,
+        (targetItem.giftQuantity ?? 0) - giftToMove,
+      );
 
       setAccounts((current) =>
         current.map((candidate) => {
@@ -156,32 +299,34 @@ export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
           return {
             ...candidate,
             items: candidate.items.map((it, index) =>
-              index === itemIndex ? { ...it, quantity: remainingQty } : it,
+              index === itemIndex
+                ? normalizeSplitItemGift(it, remainingQty, remainingGift)
+                : it,
             ),
           };
         }),
       );
 
       setUnassignedItems((current) => {
-        const existingIndex = current.findIndex(
-          (it) =>
-            it.name === targetItem.name &&
-            it.price === targetItem.price &&
-            it.size === targetItem.size &&
-            JSON.stringify(it.extras || []) ===
-              JSON.stringify(targetItem.extras || []),
+        const existingIndex = current.findIndex((it) =>
+          isSameSplitItem(it, targetItem),
         );
 
         if (existingIndex >= 0) {
           const updated = [...current];
-          updated[existingIndex] = {
-            ...updated[existingIndex],
-            quantity: updated[existingIndex].quantity + qtyToMove,
-          };
+          const prev = updated[existingIndex];
+          updated[existingIndex] = normalizeSplitItemGift(
+            targetItem,
+            prev.quantity + qtyToMove,
+            (prev.giftQuantity ?? 0) + giftToMove,
+          );
           return updated;
         }
 
-        return [...current, { ...targetItem, quantity: qtyToMove }];
+        return [
+          ...current,
+          normalizeSplitItemGift(targetItem, qtyToMove, giftToMove),
+        ];
       });
     },
     [accounts],
@@ -198,10 +343,51 @@ export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
     );
   }, []);
 
+  const setEqualPeopleCount = useCallback((count: number) => {
+    const safeCount = Math.min(100, Math.max(1, Math.trunc(count)));
+    setEqualAccountIdentities((current) => {
+      if (safeCount <= current.length) return current.slice(0, safeCount);
+      const additions = Array.from(
+        { length: safeCount - current.length },
+        () => {
+          const accountNumber = nextEqualAccountNumber.current;
+          nextEqualAccountNumber.current += 1;
+          return {
+            id: `equal-account-${accountNumber}`,
+            name: `Persona ${accountNumber}`,
+          };
+        },
+      );
+      return [...current, ...additions];
+    });
+  }, []);
+
+  const completeCheckout = useCallback(
+    (selection: SplitBillCheckoutSelection) => {
+      if (selection.mode === "equal") {
+        setEqualAccountIdentities((current) =>
+          current.filter((account) => account.id !== selection.accountId),
+        );
+        return;
+      }
+
+      const remainingAccounts = accounts.filter(
+        (account) => account.id !== selection.accountId,
+      );
+      setAccounts(remainingAccounts);
+      setActiveAccountId((active) =>
+        active === selection.accountId
+          ? (remainingAccounts[0]?.id ?? "")
+          : active,
+      );
+    },
+    [accounts],
+  );
+
   return {
     mode,
     setMode,
-    equalPeopleCount,
+    equalPeopleCount: equalAccountIdentities.length,
     setEqualPeopleCount,
     accounts,
     itemAccountTotals: itemSplit.accounts,
@@ -218,5 +404,6 @@ export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
     assignItem,
     unassignItem,
     setCustomAmount,
+    completeCheckout,
   };
 }

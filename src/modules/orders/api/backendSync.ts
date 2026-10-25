@@ -8,6 +8,7 @@ import {
 } from "../model/order.types";
 import { apiClient } from "../../../shared/api";
 import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
+import type { SplitCheckoutOrderCommand } from "../model/order-command.types";
 
 interface BackendExtra {
   name: string;
@@ -54,7 +55,11 @@ export interface BackendOrder {
   deliveredAt?: string | Date | null;
   status: string;
   timestamp: string | Date;
+  updatedAt?: string | Date;
   paidAt?: string | Date | null;
+  parentOrderId?: string | null;
+  splitAccountName?: string | null;
+  splitMode?: "items" | "equal" | "custom" | null;
   customerSnapshotName?: string;
   customerPhone?: string;
   customerId?: string;
@@ -160,7 +165,13 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       : undefined,
     status: backendOrder.status.toLowerCase() as OrderStatus,
     timestamp: new Date(backendOrder.timestamp),
+    updatedAt: backendOrder.updatedAt
+      ? new Date(backendOrder.updatedAt)
+      : undefined,
     paidAt: backendOrder.paidAt ? new Date(backendOrder.paidAt) : undefined,
+    parentOrderId: backendOrder.parentOrderId ?? undefined,
+    splitAccountName: backendOrder.splitAccountName ?? undefined,
+    splitMode: backendOrder.splitMode ?? undefined,
     customerName:
       backendOrder.customerSnapshotName ||
       backendOrder.customer?.name ||
@@ -469,6 +480,78 @@ export async function syncFinalizeOrder(order: Order): Promise<Order> {
     }),
   });
   return mapBackendOrderToFrontend(response);
+}
+
+export async function syncSplitCheckoutOrder(
+  parentOrderId: string,
+  command: SplitCheckoutOrderCommand,
+): Promise<{ paidOrder: Order; parentOrder: Order }> {
+  const paymentsPayload = command.payments?.length
+    ? command.payments
+    : command.paymentMethod === "MIXTO" && command.splitAmounts
+      ? [
+          { method: "EFECTIVO", amount: command.splitAmounts.efectivo || 0 },
+          { method: "TARJETA", amount: command.splitAmounts.tarjeta || 0 },
+          { method: "APP", amount: command.splitAmounts.app || 0 },
+        ].filter((p) => p.amount > 0)
+      : [
+          {
+            method: command.paymentMethod?.toUpperCase() || "EFECTIVO",
+            amount: command.total,
+          },
+        ];
+
+  const response: { paidOrder: BackendOrder; parentOrder: BackendOrder } =
+    await apiClient(`/orders/${parentOrderId}/split-checkout`, {
+      method: "POST",
+      body: JSON.stringify({
+        mode: command.mode,
+        accountName: command.accountName,
+        subAccountAmount: command.subAccountAmount,
+        items: command.items.map((i) => ({
+          ...(typeof i.id === "number" ? { id: i.id } : {}),
+          productId: i.productId,
+          name: i.name,
+          price: i.price,
+          size: i.size.toLowerCase() === "unico" ? "único" : i.size.toLowerCase(),
+          quantity: i.quantity,
+          extras: i.extras
+            ? i.extras.map((e) => ({ name: e.name, price: e.price }))
+            : [],
+          note: i.note,
+          kitchenModifiers: toKitchenModifierPayload(i.kitchenModifiers),
+          giftQuantity: i.giftQuantity || 0,
+          giftReason: i.giftReason,
+          isSentToKitchen: !!i.isSentToKitchen,
+          sentAt: i.sentAt ? new Date(i.sentAt).getTime() : undefined,
+          kitchenStatus: i.kitchenStatus,
+          kitchenId: i.kitchenId,
+          isCombo: Boolean(i.isCombo),
+          comboSelections: i.comboSelections || undefined,
+        })),
+        payments: paymentsPayload,
+        customerId: command.customerId,
+        customerSnapshotName: command.customerName,
+        customerPhone: command.customerPhone,
+        orderType: command.orderType?.toLowerCase(),
+        customerAddress: command.customerAddress,
+        subTotal: command.subTotal,
+        taxAmount: command.taxAmount,
+        discountAmount: command.discountAmount,
+        finalTotal: command.total,
+        promotionCode: command.promotionCode,
+        cuponId: command.couponId,
+        promotionSource: command.promotionSource,
+        discountId: command.discountId,
+        happyHourId: command.happyHourId,
+        certificateSerials: command.certificateSerials,
+      }),
+    });
+
+  return {
+    paidOrder: mapBackendOrderToFrontend(response.paidOrder),
+    parentOrder: mapBackendOrderToFrontend(response.parentOrder),
+  };
 }
 
 export async function syncUpdateTables(

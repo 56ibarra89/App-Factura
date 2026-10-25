@@ -36,29 +36,28 @@ export function useMesaAvailability({
   role,
   username,
 }: UseMesaAvailabilityOptions) {
-  const isTableBlocked = useCallback(
-    (tableId: string) =>
-      orders.some((order) => {
-        if (!order.items || order.items.length === 0) {
-          return false;
-        }
-
-        const belongsToTable =
-          order.tableId === tableId ||
-          order.linkedTables?.includes(tableId);
-        return (
-          belongsToTable &&
-          order.status !== "cancelled" &&
-          (order.status !== "paid" ||
-            order.items.some(
-              (item) =>
-                requiresKitchenPreparation(item) &&
-                item.isSentToKitchen &&
-                item.kitchenStatus !== "delivered",
-            ))
+  const blockedTableIds = useMemo(() => {
+    const blocked = new Set<string>();
+    for (const order of orders) {
+      if (!order.items?.length || order.status === "cancelled") continue;
+      const remainsOperationallyActive =
+        order.status !== "paid" ||
+        order.items.some(
+          (item) =>
+            requiresKitchenPreparation(item) &&
+            item.isSentToKitchen &&
+            item.kitchenStatus !== "delivered",
         );
-      }),
-    [orders],
+      if (!remainsOperationallyActive) continue;
+      if (order.tableId) blocked.add(order.tableId);
+      for (const tableId of order.linkedTables ?? []) blocked.add(tableId);
+    }
+    return blocked;
+  }, [orders]);
+
+  const isTableBlocked = useCallback(
+    (tableId: string) => blockedTableIds.has(tableId),
+    [blockedTableIds],
   );
 
   const mesas = useMemo<Mesa[]>(

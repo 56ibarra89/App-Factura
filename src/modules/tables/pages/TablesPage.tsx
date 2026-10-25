@@ -24,7 +24,11 @@ import { PERMISSIONS, useAuth } from "../../auth";
 import { useMesaDialogs } from "../hooks/useMesaDialogs";
 import { useMesaCheckout } from "../hooks/useMesaCheckout";
 import { useMesaLogic } from "../hooks/useMesaLogic";
-import type { Order, OrderItem } from "../../orders";
+import {
+  isSplitBillOrderItem,
+  type Order,
+  type OrderItem,
+} from "../../orders";
 
 export default function TablesPage() {
   const { floorsConfig, isLoading: isLoadingConfig, error, retryFetch } = useMesasConfig();
@@ -91,8 +95,9 @@ export default function TablesPage() {
       const calcItemNet = (item: OrderItem) =>
         item.price * Math.max(0, item.quantity - (item.giftQuantity || 0));
       const fullSubtotal =
-        logic.activeOrder.subTotal ??
-        logic.activeOrder.items.reduce((sum, item) => sum + calcItemNet(item), 0);
+        logic.activeOrder.items
+          .filter((item) => !isSplitBillOrderItem(item))
+          .reduce((sum, item) => sum + calcItemNet(item), 0);
       const subSubtotal = selection.items.reduce(
         (sum, item) => sum + calcItemNet(item),
         0,
@@ -110,12 +115,16 @@ export default function TablesPage() {
         total: selection.amount,
         discountAmount: subOrderDiscountAmount,
       };
-      checkout.openCheckoutPreview(subOrder, { isSubAccount: true });
+      checkout.openCheckoutPreview(subOrder, {
+        isSubAccount: true,
+        splitSelection: selection,
+        parentOrderId: logic.activeOrder.id,
+      });
       return;
     } else {
       const activeTaxRate = isExonerated ? 0 : (taxes?.[0]?.percentage ?? 15);
       const taxFactor = 1 + activeTaxRate / 100;
-      const baseSubtotal = Math.round((selection.amount / taxFactor) * 100) / 100;
+      const baseSubtotal = selection.amount / taxFactor;
 
       itemsToCheckout = [
         {
@@ -142,7 +151,11 @@ export default function TablesPage() {
       happyHourId: undefined,
     };
 
-    checkout.openCheckoutPreview(subOrder);
+    checkout.openCheckoutPreview(subOrder, {
+      isSubAccount: true,
+      splitSelection: selection,
+      parentOrderId: logic.activeOrder.id,
+    });
   }, [logic.activeOrder, checkout, isExonerated, taxes]);
 
   const isLoading = isLoadingConfig || loadingZone;
@@ -256,6 +269,7 @@ export default function TablesPage() {
       <Box sx={{ width: 400, flexShrink: 0 }}>
         <OrderPanel
           order={currentOrder}
+          discountAmount={logic.activeOrder?.discountAmount}
           cashierName={logic.activeOrder?.cashierName}
           onSalir={handleSalir}
           onReservar={logic.handleReservar}
@@ -311,6 +325,11 @@ export default function TablesPage() {
         tableId={logic.selectedMesaId}
         order={logic.activeOrder}
         onCheckout={handleCheckoutSubAccount}
+        completedSelection={
+          checkout.completedSplitCheckout?.parentOrderId === logic.activeOrder?.id
+            ? (checkout.completedSplitCheckout?.selection ?? null)
+            : null
+        }
       />
 
       {checkout.checkoutOrder && (

@@ -7,6 +7,7 @@ import type { OrderItem } from "../../orders";
 
 interface Props {
   order: OrderItem[];
+  discountAmount?: number;
   cashierName?: string;
   onSalir: () => void;
   onReservar: () => void;
@@ -26,6 +27,7 @@ interface Props {
 
 export default function OrderPanel({ 
   order, 
+  discountAmount,
   cashierName,
   onSalir, 
   onReservar, 
@@ -69,7 +71,11 @@ export default function OrderPanel({
         borderColor: "divider",
         bgcolor: "action.hover" 
       }}>
-        <OrderSummary order={order} cashierName={cashierName} />
+        <OrderSummary
+          order={order}
+          discountAmount={discountAmount}
+          cashierName={cashierName}
+        />
         <Box sx={{ mt: 1.5 }}>
           <OrderActions 
             onSalir={onSalir} 

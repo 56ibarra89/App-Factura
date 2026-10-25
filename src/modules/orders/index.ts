@@ -33,6 +33,9 @@ export type { PaymentBreakdownRow } from "./model/paymentReporting";
 export {
   isDeliveryChargeOrderItem,
   isPackagingOrderItem,
+  isSplitBillCreditOrderItem,
+  isSplitBillOrderItem,
+  isSplitBillPartialPaymentItem,
   isSupplementalOrderItem,
   requiresKitchenPreparation,
 } from "./model/orderItemDomain";
@@ -41,6 +44,7 @@ export type {
   FinalizeOrderCommand,
   OrderCreationResult,
   OrderTotals,
+  SplitCheckoutOrderCommand,
   SplitPaymentAmounts,
 } from "./model/order-command.types";
 export { statusColors, statusLabels } from "./model/orderStatusConfig";

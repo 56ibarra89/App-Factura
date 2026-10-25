@@ -9,6 +9,7 @@ import type {
 export interface SplitPaymentAmounts {
   efectivo: number;
   tarjeta: number;
+  app?: number;
 }
 
 export interface OrderTotals {
@@ -39,6 +40,13 @@ export interface CreateOrderCommand
 export interface OrderCreationResult {
   orderId: string;
   invoiceNumber?: string;
+}
+
+export interface SplitCheckoutOrderCommand extends FinalizeOrderCommand {
+  mode: "items" | "equal" | "custom";
+  accountName: string;
+  items: OrderItem[];
+  subAccountAmount?: number;
 }
 
 export interface FinalizeOrderCommand

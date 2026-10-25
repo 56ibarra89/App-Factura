@@ -16,7 +16,11 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
-import type { Order } from "../../../orders";
+import { useEffect, useRef, useState } from "react";
+import {
+  isSplitBillCreditOrderItem,
+  type Order,
+} from "../../../orders";
 import { formatCurrency } from "../../../../shared/format";
 import { useSplitBill } from "../../hooks/useSplitBill";
 import type {
@@ -33,28 +37,50 @@ interface SplitBillDialogProps {
   tableId?: string | null;
   order?: Order | null;
   onCheckout(selection: SplitBillCheckoutSelection): void;
+  completedSelection?: SplitBillCheckoutSelection | null;
 }
 
 interface SplitBillDialogContentProps {
   order: Order;
   onCheckout(selection: SplitBillCheckoutSelection): void;
+  completedSelection?: SplitBillCheckoutSelection | null;
 }
 
 function SplitBillDialogContent({
   order,
   onCheckout,
+  completedSelection,
 }: SplitBillDialogContentProps) {
   const splitBill = useSplitBill({
     items: order.items,
     totalAmount: order.total,
   });
+  const { completeCheckout, mode, setMode } = splitBill;
+  const appliedCompletion = useRef<SplitBillCheckoutSelection | null>(null);
+  const hasAmountCredits = order.items.some(isSplitBillCreditOrderItem);
+
+  useEffect(() => {
+    if (hasAmountCredits && mode === "items") {
+      setMode("equal");
+    }
+  }, [hasAmountCredits, mode, setMode]);
+
+  useEffect(() => {
+    if (
+      completedSelection &&
+      appliedCompletion.current !== completedSelection
+    ) {
+      completeCheckout(completedSelection);
+      appliedCompletion.current = completedSelection;
+    }
+  }, [completedSelection, completeCheckout]);
 
   return (
     <>
       <Box sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}>
         <Tabs
-          value={splitBill.mode}
-          onChange={(_, value: SplitBillMode) => splitBill.setMode(value)}
+          value={mode}
+          onChange={(_, value: SplitBillMode) => setMode(value)}
           variant="fullWidth"
         >
           <Tab
@@ -62,6 +88,7 @@ function SplitBillDialogContent({
             iconPosition="start"
             label="Por productos"
             value="items"
+            disabled={hasAmountCredits}
             sx={{ fontWeight: 700, textTransform: "none" }}
           />
           <Tab
@@ -81,7 +108,7 @@ function SplitBillDialogContent({
         </Tabs>
       </Box>
 
-      {splitBill.mode === "items" && (
+      {mode === "items" && (
         <SplitByItemsPanel
           accounts={splitBill.accounts}
           accountTotals={splitBill.itemAccountTotals}
@@ -97,7 +124,7 @@ function SplitBillDialogContent({
         />
       )}
 
-      {splitBill.mode === "equal" && (
+      {mode === "equal" && (
         <SplitEquallyPanel
           peopleCount={splitBill.equalPeopleCount}
           accounts={splitBill.equalAccounts}
@@ -106,7 +133,7 @@ function SplitBillDialogContent({
         />
       )}
 
-      {splitBill.mode === "custom" && (
+      {mode === "custom" && (
         <SplitCustomAmountsPanel
           accounts={splitBill.accounts}
           assignedTotal={splitBill.customAssignedTotal}
@@ -128,13 +155,19 @@ export default function SplitBillDialog({
   tableId,
   order,
   onCheckout,
+  completedSelection,
 }: SplitBillDialogProps) {
-  if (!open || !order) return null;
+  const [openedOrderId, setOpenedOrderId] = useState<string | null>(null);
+  useEffect(() => {
+    if (open && order) setOpenedOrderId(order.id);
+  }, [open, order]);
+
+  if (!order || openedOrderId !== order.id) return null;
 
   const tableNumber = tableId ? tableId.split("-M")[1] || tableId : "";
 
   return (
-    <Dialog open onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth keepMounted>
       <DialogTitle
         sx={{
           display: "flex",
@@ -177,6 +210,7 @@ export default function SplitBillDialog({
           key={order.id}
           order={order}
           onCheckout={onCheckout}
+          completedSelection={completedSelection}
         />
       </DialogContent>
 

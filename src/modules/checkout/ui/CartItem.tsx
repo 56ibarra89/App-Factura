@@ -12,6 +12,7 @@ import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import Chip from "@mui/material/Chip";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import EditNoteIcon from "@mui/icons-material/EditNote";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useState } from "react";
 import type { SelectedExtra } from "../../catalog";
 import type { SelectedComboOptionItem } from "../../orders";
@@ -30,6 +31,7 @@ interface CartItemProps {
   kitchenModifiers?: KitchenModifierSelection[];
   isCombo?: boolean;
   comboSelections?: SelectedComboOptionItem[];
+  locked?: boolean;
   onAdd: () => void;
   onRemove: () => void;
   onChangeQuantity?: (qty: number) => void;
@@ -53,6 +55,7 @@ const CartItem = ({
   kitchenModifiers,
   isCombo,
   comboSelections,
+  locked = false,
   onAdd,
   onRemove,
   onChangeQuantity,
@@ -96,6 +99,14 @@ const CartItem = ({
                   fontSize: "0.6rem",
                   height: 18,
                 }}
+              />
+            )}
+            {locked && (
+              <Chip
+                icon={<LockOutlinedIcon />}
+                label="Abono registrado"
+                size="small"
+                variant="outlined"
               />
             )}
           </Box>
@@ -165,7 +176,7 @@ const CartItem = ({
             C${price.toFixed(2)} x {quantity} = C$
             {(price * Math.max(0, quantity - giftQuantity)).toFixed(2)}
           </Typography>
-          {onChangeKitchenInstructions && (
+          {onChangeKitchenInstructions && !locked && (
             <Button
               size="small"
               variant="text"
@@ -194,13 +205,14 @@ const CartItem = ({
           alignItems="flex-end"
         >
           <Box display="flex" alignItems="center" gap={0.25}>
-            <IconButton onClick={onRemove} size="small" sx={{ width: 32, height: 32 }}>
+            <IconButton disabled={locked} onClick={onRemove} size="small" sx={{ width: 32, height: 32 }}>
               <RemoveIcon fontSize="small" />
             </IconButton>
 
             <TextField
               type="number"
               value={quantity}
+              disabled={locked}
               onChange={(e) => {
                 const value = parseInt(e.target.value, 10);
                 if (!isNaN(value) && onChangeQuantity) {
@@ -226,11 +238,11 @@ const CartItem = ({
               }}
             />
 
-            <IconButton onClick={onAdd} size="small" sx={{ width: 32, height: 32 }}>
+            <IconButton disabled={locked} onClick={onAdd} size="small" sx={{ width: 32, height: 32 }}>
               <AddIcon fontSize="small" />
             </IconButton>
           </Box>
-          {onChangeGiftQuantity && (
+          {onChangeGiftQuantity && !locked && (
             <Box display="flex" alignItems="center" gap={0.5}>
               <CardGiftcardIcon fontSize="small" color="success" />
               <IconButton
@@ -258,7 +270,7 @@ const CartItem = ({
           )}
         </Box>
       </Paper>
-      {onChangeKitchenInstructions && (
+      {onChangeKitchenInstructions && !locked && (
         <KitchenModifiersDialog
           open={modifierDialogOpen}
           productName={name}

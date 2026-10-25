@@ -10,7 +10,6 @@ import {
   Grid,
   IconButton,
   InputAdornment,
-  Stack,
   TextField,
   Typography,
 } from "@mui/material";
@@ -44,7 +43,7 @@ export default function SplitEquallyPanel({
   };
 
   const handleDecrement = () => {
-    if (peopleCount > 2) {
+    if (peopleCount > 1) {
       onPeopleCountChange(peopleCount - 1);
     }
   };
@@ -73,7 +72,7 @@ export default function SplitEquallyPanel({
       >
         <IconButton
           onClick={handleDecrement}
-          disabled={peopleCount <= 2}
+          disabled={peopleCount <= 1}
           color="primary"
           sx={{ border: "1px solid", borderColor: "divider", p: 1.2 }}
         >
@@ -92,7 +91,7 @@ export default function SplitEquallyPanel({
                 </InputAdornment>
               ),
               inputProps: {
-                min: 2,
+                min: 1,
                 max: 100,
                 style: { textAlign: "center", fontWeight: 800, fontSize: "1.3rem" },
               },

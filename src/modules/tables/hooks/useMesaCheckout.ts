@@ -11,6 +11,7 @@ import {
   calculateCartTotals,
   extractCertificateSerials,
   type CheckoutFormValues,
+  type SplitBillCheckoutSelection,
 } from "../../checkout";
 import { receiptPrinter, type ReceiptPrinter } from "../../../shared/printing";
 
@@ -18,11 +19,19 @@ export function useMesaCheckout(
   restoreFocus: () => void,
   printer: ReceiptPrinter = receiptPrinter,
 ) {
-  const { finalizeOrder, updateOrderItems } = useOrderCommands();
+  const { finalizeOrder, updateOrderItems, splitCheckoutOrder } =
+    useOrderCommands();
   const { taxes, isExonerated } = useTaxConfig();
 
   const [checkoutOrder, setCheckoutOrder] = useState<Order | null>(null);
   const [isSubAccountCheckout, setIsSubAccountCheckout] = useState(false);
+  const [splitSelection, setSplitSelection] =
+    useState<SplitBillCheckoutSelection | null>(null);
+  const [parentOrderId, setParentOrderId] = useState<string | null>(null);
+  const [completedSplitCheckout, setCompletedSplitCheckout] = useState<{
+    parentOrderId: string;
+    selection: SplitBillCheckoutSelection;
+  } | null>(null);
   const [checkoutPromotionState, setCheckoutPromotionState] =
     useState<AppliedPromotion | null>(null);
   const [promotionRemoved, setPromotionRemoved] = useState(false);
@@ -93,9 +102,18 @@ export function useMesaCheckout(
   );
 
   const openCheckoutPreview = useCallback(
-    (order: Order, options?: { isSubAccount?: boolean }) => {
+    (
+      order: Order,
+      options?: {
+        isSubAccount?: boolean;
+        splitSelection?: SplitBillCheckoutSelection;
+        parentOrderId?: string;
+      },
+    ) => {
       setCheckoutOrder(order);
       setIsSubAccountCheckout(Boolean(options?.isSubAccount));
+      setSplitSelection(options?.splitSelection ?? null);
+      setParentOrderId(options?.parentOrderId ?? null);
       setCheckoutPromotionState(null);
       setPromotionRemoved(false);
       setCreatedInvoiceNumber(undefined);
@@ -108,6 +126,8 @@ export function useMesaCheckout(
     setIsPreviewOpen(false);
     setCheckoutOrder(null);
     setIsSubAccountCheckout(false);
+    setSplitSelection(null);
+    setParentOrderId(null);
     setCheckoutPromotionState(null);
     setPromotionRemoved(false);
     setCreatedInvoiceNumber(undefined);
@@ -151,34 +171,65 @@ export function useMesaCheckout(
         ? {}
         : buildOrderPromotionSelection(checkoutPromotion);
 
-      if (supplementalItems.length > 0 || checkoutCart !== checkoutOrder.items) {
-        await updateOrderItems(
-          checkoutOrder.id,
-          items,
-          totals.total,
-          totals.subTotal,
-          totals.taxAmount,
-          totals.discountAmount,
-          promotionSelection,
-        );
-      }
+      let invoiceNumber: string | void;
 
-      const invoiceNumber = await finalizeOrder(checkoutOrder.id, {
-        ...totals,
-        customerId: form.customerId,
-        paymentMethod: form.paymentMethod,
-        splitAmounts: form.splitAmounts,
-        payments: form.payments,
-        customerName: form.customerName,
-        customerPhone: form.customerPhone,
-        orderType: form.orderType,
-        customerAddress: form.customerAddress,
-        ...promotionSelection,
-        certificateSerials: extractCertificateSerials(items),
-      });
+      if (isSubAccountCheckout && splitSelection && parentOrderId) {
+        invoiceNumber = await splitCheckoutOrder(parentOrderId, {
+          mode: splitSelection.mode,
+          accountName: splitSelection.accountName,
+          subAccountAmount: splitSelection.amount,
+          items,
+          ...totals,
+          customerId: form.customerId,
+          paymentMethod: form.paymentMethod,
+          splitAmounts: form.splitAmounts,
+          payments: form.payments,
+          customerName: form.customerName,
+          customerPhone: form.customerPhone,
+          orderType: form.orderType,
+          customerAddress: form.customerAddress,
+          ...promotionSelection,
+          certificateSerials: extractCertificateSerials(items),
+        });
+      } else {
+        if (
+          supplementalItems.length > 0 ||
+          checkoutCart !== checkoutOrder.items
+        ) {
+          await updateOrderItems(
+            checkoutOrder.id,
+            items,
+            totals.total,
+            totals.subTotal,
+            totals.taxAmount,
+            totals.discountAmount,
+            promotionSelection,
+          );
+        }
+
+        invoiceNumber = await finalizeOrder(checkoutOrder.id, {
+          ...totals,
+          customerId: form.customerId,
+          paymentMethod: form.paymentMethod,
+          splitAmounts: form.splitAmounts,
+          payments: form.payments,
+          customerName: form.customerName,
+          customerPhone: form.customerPhone,
+          orderType: form.orderType,
+          customerAddress: form.customerAddress,
+          ...promotionSelection,
+          certificateSerials: extractCertificateSerials(items),
+        });
+      }
 
       if (!invoiceNumber) {
         throw new Error("El backend no devolvió un número de factura.");
+      }
+      if (isSubAccountCheckout && splitSelection && parentOrderId) {
+        setCompletedSplitCheckout({
+          parentOrderId,
+          selection: splitSelection,
+        });
       }
       setCreatedInvoiceNumber(invoiceNumber);
 
@@ -189,6 +240,8 @@ export function useMesaCheckout(
       setIsPreviewOpen(false);
       setCheckoutOrder(null);
       setIsSubAccountCheckout(false);
+      setSplitSelection(null);
+      setParentOrderId(null);
       restoreFocus();
     },
     [
@@ -200,8 +253,11 @@ export function useMesaCheckout(
       checkoutPromotionState,
       isExonerated,
       isSubAccountCheckout,
+      parentOrderId,
       printer,
       promotionRemoved,
+      splitCheckoutOrder,
+      splitSelection,
       taxes,
       updateOrderItems,
     ],
@@ -218,6 +274,7 @@ export function useMesaCheckout(
     checkoutTaxAmount,
     checkoutTotal,
     checkoutDiscountAmount,
+    completedSplitCheckout,
     openCheckoutPreview,
     closeCheckoutPreview,
     handleFinalConfirm,

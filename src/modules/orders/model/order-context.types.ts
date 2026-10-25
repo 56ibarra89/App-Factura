@@ -3,6 +3,7 @@ import type {
   CreateOrderCommand,
   FinalizeOrderCommand,
   OrderCreationResult,
+  SplitCheckoutOrderCommand,
 } from "./order-command.types";
 import type { Order, OrderStatus } from "./order.types";
 
@@ -37,6 +38,10 @@ export interface OrderCommands {
   finalizeOrder(
     orderId: string,
     command: FinalizeOrderCommand,
+  ): Promise<string | void>;
+  splitCheckoutOrder(
+    parentOrderId: string,
+    command: SplitCheckoutOrderCommand,
   ): Promise<string | void>;
   markAsSentToKitchen(orderId: string): Promise<void>;
   markAsSentToKitchenByTable(tableId: string): Promise<OrderItem[] | undefined>;

@@ -1,6 +1,6 @@
 import { Box, Typography, Divider, Button } from "@mui/material";
 import CartItem from "./CartItem";
-import type { OrderItem } from "../../orders";
+import { isSplitBillCreditOrderItem, type OrderItem } from "../../orders";
 import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
 import { formatItemName } from "../../../shared/format";
 
@@ -57,7 +57,9 @@ const Cart = ({
       <Divider />
 
       <Box flex={1} overflow="auto" pr={1} my={1}>
-        {cartItems.map((item, i) => (
+        {cartItems.map((item, i) => {
+          const isProtectedCredit = isSplitBillCreditOrderItem(item);
+          return (
           <CartItem
             key={`${item.name}-${item.size}-${i}`}
             name={formatItemName(item.name, item.size)}
@@ -70,6 +72,7 @@ const Cart = ({
             giftQuantity={item.giftQuantity}
             isCombo={item.isCombo}
             comboSelections={item.comboSelections}
+            locked={isProtectedCredit}
             onAdd={() =>
               onAddItem({
                 productId: item.productId,
@@ -92,7 +95,8 @@ const Cart = ({
               onChangeKitchenInstructions(i, modifiers, note)
             }
           />
-        ))}
+          );
+        })}
       </Box>
 
       <Divider sx={{ my: 1 }} />

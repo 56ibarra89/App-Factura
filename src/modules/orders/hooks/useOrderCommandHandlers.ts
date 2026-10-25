@@ -80,7 +80,7 @@ export function useOrderCommandHandlers({
     markAsSentToKitchenByTable,
   } = status;
   const { updateOrderItems } = content;
-  const { finalizeOrder } = finalization;
+  const { finalizeOrder, splitCheckoutOrder } = finalization;
   const { moveOrder, unirMesas } = tables;
 
   return useMemo(
@@ -91,6 +91,7 @@ export function useOrderCommandHandlers({
       clearHistory,
       updateOrderItems,
       finalizeOrder,
+      splitCheckoutOrder,
       markAsSentToKitchen,
       markAsSentToKitchenByTable,
       moveOrder,
@@ -100,6 +101,7 @@ export function useOrderCommandHandlers({
       addOrder,
       clearHistory,
       finalizeOrder,
+      splitCheckoutOrder,
       markAsSentToKitchen,
       markAsSentToKitchenByTable,
       moveOrder,

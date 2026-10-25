@@ -6,10 +6,15 @@ import { useTaxConfig } from "../../settings";
 
 interface Props {
   order: OrderItem[];
+  discountAmount?: number;
   cashierName?: string;
 }
 
-export default function OrderSummary({ order, cashierName }: Props) {
+export default function OrderSummary({
+  order,
+  discountAmount = 0,
+  cashierName,
+}: Props) {
   const { username } = useAuth();
   const displayUsername = cashierName || username;
   const { taxes, isExonerated } = useTaxConfig();
@@ -23,9 +28,11 @@ export default function OrderSummary({ order, cashierName }: Props) {
     0,
   );
 
+  const safeDiscount = Math.max(0, discountAmount);
+  const netSubTotal = Math.max(0, subTotal - safeDiscount);
   const activeTax = taxes[0]?.percentage || 0;
-  const taxAmount = isExonerated ? 0 : subTotal * (activeTax / 100);
-  const total = subTotal + taxAmount;
+  const taxAmount = isExonerated ? 0 : netSubTotal * (activeTax / 100);
+  const total = netSubTotal + taxAmount;
 
   return (
     <Box>
@@ -44,6 +51,24 @@ export default function OrderSummary({ order, cashierName }: Props) {
           C${subTotal.toFixed(2)}
         </Typography>
       </Box>
+
+      {safeDiscount > 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            mb: 0.5,
+            color: "success.main",
+          }}
+        >
+          <Typography variant="body2" fontWeight="500">
+            Descuento
+          </Typography>
+          <Typography variant="body2" fontWeight="700">
+            -C${safeDiscount.toFixed(2)}
+          </Typography>
+        </Box>
+      )}
 
       {!isExonerated && activeTax > 0 && (
         <Box

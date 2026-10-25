@@ -18,6 +18,8 @@ interface UseOrderFinalizationCommandOptions {
   finalizationGateway: OrderFinalizationGateway;
 }
 
+const MAX_PAYMENT_ROUNDING_ADJUSTMENT = 1;
+
 function reconcileFinalizationPayments(
   order: Order,
   targetTotal: number,
@@ -50,8 +52,19 @@ function reconcileFinalizationPayments(
     0,
   );
 
+  // Solo se reconcilian los pagos que cuadraban con el total calculado en el
+  // cliente y cuya diferencia con el backend es de redondeo. Una diferencia
+  // mayor significa que el cajero cobró otro monto: no se altera el pago
+  // registrado y el backend rechazará la finalización con un mensaje claro.
+  if (Math.abs(currentSum - order.total) >= 0.01) {
+    return basePayments;
+  }
+
   const delta = Number((targetTotal - currentSum).toFixed(2));
-  if (Math.abs(delta) < 0.01) {
+  if (
+    Math.abs(delta) < 0.01 ||
+    Math.abs(delta) > MAX_PAYMENT_ROUNDING_ADJUSTMENT
+  ) {
     return basePayments;
   }
 
@@ -159,5 +172,39 @@ export function useOrderFinalizationCommand({
     ],
   );
 
-  return { finalizeOrder };
+  const splitCheckoutOrder = useCallback<
+    OrderCommands["splitCheckoutOrder"]
+  >(
+    async (parentOrderId, command) => {
+      if (!finalizationGateway.splitCheckout) {
+        return finalizeOrder(parentOrderId, command);
+      }
+
+      const result = await finalizationGateway.splitCheckout(
+        parentOrderId,
+        command,
+      );
+
+      updateOrders((current) => {
+        const updatedList = current.map((order) =>
+          order.id === result.parentOrder.id
+            ? result.parentOrder
+            : order.id === result.paidOrder.id
+              ? result.paidOrder
+              : order,
+        );
+        const hasPaidOrder = updatedList.some(
+          (order) => order.id === result.paidOrder.id,
+        );
+        return hasPaidOrder
+          ? updatedList
+          : [result.paidOrder, ...updatedList];
+      });
+
+      return result.paidOrder.invoiceNumber;
+    },
+    [finalizationGateway, finalizeOrder, updateOrders],
+  );
+
+  return { finalizeOrder, splitCheckoutOrder };
 }

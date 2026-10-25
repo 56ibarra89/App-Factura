@@ -1,4 +1,4 @@
-import type { OrderItem } from "../../orders";
+import { isSplitBillOrderItem, type OrderItem } from "../../orders";
 import type { AppliedPromotion } from "../../promotions";
 
 export interface TaxLike {
@@ -55,6 +55,7 @@ export function calculateCartTotals(
       if (
         isPackaging ||
         isDelivery ||
+        isSplitBillOrderItem(item) ||
         !isPromotionEligible(item, promotion)
       ) {
         return sum;
@@ -81,11 +82,11 @@ export function calculateCartTotals(
     discountAmount = fallbackDiscountAmount;
   }
 
-  discountAmount = Math.min(discountAmount, subTotal);
+  discountAmount = Math.min(discountAmount, Math.max(0, subTotal));
 
-  const subTotalAfterDiscount = subTotal - discountAmount;
+  const subTotalAfterDiscount = Math.max(0, subTotal - discountAmount);
   const taxAmount = calculateTaxAmount(subTotalAfterDiscount, taxes, isExonerated);
 
-  return { subTotal, discountAmount, taxAmount, total: subTotalAfterDiscount + taxAmount };
+  return { subTotal, discountAmount, taxAmount, total: Math.max(0, subTotalAfterDiscount + taxAmount) };
 }
 

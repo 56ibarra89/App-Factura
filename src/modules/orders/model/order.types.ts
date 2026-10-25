@@ -107,7 +107,11 @@ export interface Order extends OrderPromotionSelection {
   total: number;
   status: OrderStatus;
   timestamp: Date;
+  updatedAt?: Date;
   paidAt?: Date;
+  parentOrderId?: string;
+  splitAccountName?: string;
+  splitMode?: "items" | "equal" | "custom";
   customerName?: string;
   customerPhone?: string;
   customerId?: string;

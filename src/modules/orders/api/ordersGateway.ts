@@ -1,9 +1,11 @@
 import type { Order, OrderStatus } from "../model/order.types";
+import type { SplitCheckoutOrderCommand } from "../model/order-command.types";
 import {
   fetchOrderHistory,
   fetchOrdersFromBackend,
   syncAddOrderToBackend,
   syncFinalizeOrder,
+  syncSplitCheckoutOrder,
   syncStartDelivery,
   syncUpdateOrderItems,
   syncUpdateOrderStatus,
@@ -64,6 +66,10 @@ export interface OrderItemsGateway {
 
 export interface OrderFinalizationGateway {
   finalize(order: Order): Promise<Order>;
+  splitCheckout?(
+    parentOrderId: string,
+    command: SplitCheckoutOrderCommand,
+  ): Promise<{ paidOrder: Order; parentOrder: Order }>;
 }
 
 export interface OrderTablesGateway {
@@ -105,5 +111,6 @@ export const ordersGateway: OrdersGateway = {
   startDelivery: syncStartDelivery,
   updateItems: syncUpdateOrderItems,
   finalize: syncFinalizeOrder,
+  splitCheckout: syncSplitCheckoutOrder,
   updateTables: syncUpdateTables,
 };
