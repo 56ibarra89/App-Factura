@@ -141,6 +141,9 @@ export function useMesaCheckout(
       const supplementalItems = buildSupplementalCartItems(
         form.packagingItems,
         form.orderType === "delivery" ? form.deliveryCost : undefined,
+        form.orderType === "delivery" ? form.deliveryZoneName : undefined,
+        form.orderType === "delivery" ? form.deliveryDriverPayout : undefined,
+        form.orderType === "delivery" ? form.isFreeDelivery : false,
       );
       const items = [...checkoutCart, ...supplementalItems];
       const preserveExistingPromotion =

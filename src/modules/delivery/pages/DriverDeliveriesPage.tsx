@@ -473,6 +473,18 @@ export default function DriverDeliveriesPage() {
     () => completedOrders.reduce((acc, o) => acc + o.total, 0),
     [completedOrders],
   );
+  const totalCashCollected = useMemo(
+    () =>
+      completedOrders.reduce((acc, o) => {
+        const method = (o.paymentMethod || "EFECTIVO").toUpperCase();
+        if (method === "EFECTIVO") return acc + o.total;
+        if (method === "MIXTO" && o.splitAmounts?.efectivo) {
+          return acc + o.splitAmounts.efectivo;
+        }
+        return acc;
+      }, 0),
+    [completedOrders],
+  );
   const totalChangeGiven = useMemo(
     () => completedOrders.reduce((acc, o) => acc + (o.deliveryChange || 0), 0),
     [completedOrders],
@@ -1284,10 +1296,18 @@ export default function DriverDeliveriesPage() {
           <Stack direction="row" spacing={3} justifyContent="flex-end">
             <Box textAlign="right">
               <Typography variant="caption" color="text.secondary">
+                Total Pedidos
+              </Typography>
+              <Typography variant="h6" color="text.primary" fontWeight="900">
+                C${totalRevenue.toFixed(2)}
+              </Typography>
+            </Box>
+            <Box textAlign="right">
+              <Typography variant="caption" color="text.secondary">
                 Total Recaudado (Efectivo)
               </Typography>
               <Typography variant="h6" color="primary.main" fontWeight="900">
-                C${totalRevenue.toFixed(2)}
+                C${totalCashCollected.toFixed(2)}
               </Typography>
             </Box>
             <Box textAlign="right">

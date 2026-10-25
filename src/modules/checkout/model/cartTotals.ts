@@ -1,4 +1,9 @@
-import { isSplitBillOrderItem, type OrderItem } from "../../orders";
+import {
+  isDeliveryChargeOrderItem,
+  isPackagingOrderItem,
+  isSplitBillOrderItem,
+  type OrderItem,
+} from "../../orders";
 import type { AppliedPromotion } from "../../promotions";
 
 export interface TaxLike {
@@ -50,8 +55,8 @@ export function calculateCartTotals(
   let discountAmount = 0;
   if (promotion && promotion.discountType !== "2x1") {
     const discountableSubtotal = items.reduce((sum, item) => {
-      const isPackaging = item.name.toLowerCase().startsWith("empaque");
-      const isDelivery = item.name.toLowerCase() === "delivery";
+      const isPackaging = isPackagingOrderItem(item);
+      const isDelivery = isDeliveryChargeOrderItem(item);
       if (
         isPackaging ||
         isDelivery ||

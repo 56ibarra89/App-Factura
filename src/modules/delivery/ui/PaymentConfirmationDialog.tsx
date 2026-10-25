@@ -54,24 +54,68 @@ export function PaymentConfirmationDialog({
 
   useEffect(() => {
     if (!open) return;
+    setError("");
     void paymentMethodsGateway.load().then((config) => {
       const active = config.methods.filter((method) => method.isActive);
       if (!active.length) return;
-      const cash =
+      const cashMethod =
         active.find(
           (method) => method.type === "CASH" && method.currency === "NIO",
-        ) ?? active[0];
+        ) ??
+        active.find((method) => method.type === "CASH") ??
+        active[0];
       const electronic =
         active.find((method) => method.type !== "CASH") ?? active[0];
       setMethods(active);
-      setSelectedId(cash.id);
-      setOtherId(electronic.id);
+
+      const orderPayments = order?.payments ?? [];
+      const isOrderMixed =
+        order?.paymentMethod === "MIXTO" || orderPayments.length > 1;
+
+      if (isOrderMixed) {
+        const cashPayment = orderPayments.find(
+          (payment) => payment.method === "EFECTIVO",
+        );
+        const otherPayment =
+          orderPayments.find((payment) => payment.method !== "EFECTIVO") ??
+          orderPayments[1];
+        const matchedOther =
+          (otherPayment?.methodConfigId &&
+            active.find((m) => m.id === otherPayment.methodConfigId)) ||
+          (otherPayment &&
+            active.find(
+              (m) =>
+                m.id !== cashMethod.id &&
+                toLegacyPaymentMethod(m) === otherPayment.method,
+            )) ||
+          electronic;
+        const initialCash =
+          cashPayment?.amount ?? order?.splitAmounts?.efectivo ?? 0;
+
+        setMixed(true);
+        setSelectedId(cashMethod.id);
+        setOtherId(matchedOther.id);
+        setCashAmount(initialCash > 0 ? String(initialCash) : "");
+        setReference(otherPayment?.reference ?? "");
+      } else {
+        const singlePayment = orderPayments[0];
+        const matchedSingle =
+          (singlePayment?.methodConfigId &&
+            active.find((m) => m.id === singlePayment.methodConfigId)) ||
+          (order?.paymentMethod &&
+            active.find(
+              (m) => toLegacyPaymentMethod(m) === order.paymentMethod,
+            )) ||
+          cashMethod;
+
+        setMixed(false);
+        setSelectedId(matchedSingle.id);
+        setOtherId(electronic.id);
+        setCashAmount("");
+        setReference(singlePayment?.reference ?? "");
+      }
     });
-    setMixed(false);
-    setCashAmount("");
-    setReference("");
-    setError("");
-  }, [open]);
+  }, [open, order]);
 
   const selected = methods.find((method) => method.id === selectedId);
   const cash =
@@ -165,7 +209,7 @@ export function PaymentConfirmationDialog({
         </Box>
         <Grid container spacing={1} mb={2}>
           {methods.map((method) => (
-            <Grid key={method.id} size={{ xs: 6, sm: 4 }}>
+            <Grid key={method.id} size={{ xs: 6, sm: 4 }} sx={{ display: "flex" }}>
               <Button
                 fullWidth
                 variant={
@@ -176,20 +220,20 @@ export function PaymentConfirmationDialog({
                   setSelectedId(method.id);
                   setReference("");
                 }}
-                sx={{ minHeight: 58, textTransform: "none" }}
+                sx={{ height: "100%", minHeight: 58, textTransform: "none" }}
               >
                 {method.name}
               </Button>
             </Grid>
           ))}
           {cash && electronicMethods.length > 0 && (
-            <Grid size={{ xs: 6, sm: 4 }}>
+            <Grid size={{ xs: 6, sm: 4 }} sx={{ display: "flex" }}>
               <Button
                 fullWidth
                 variant={mixed ? "contained" : "outlined"}
                 startIcon={<CallSplitIcon />}
                 onClick={() => setMixed(true)}
-                sx={{ minHeight: 58, textTransform: "none" }}
+                sx={{ height: "100%", minHeight: 58, textTransform: "none" }}
               >
                 Mixto
               </Button>

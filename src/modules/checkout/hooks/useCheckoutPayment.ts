@@ -15,7 +15,7 @@ import { isCheckoutPaymentValid } from "../model/checkoutFormDomain";
 
 interface UseCheckoutPaymentOptions {
   open: boolean;
-  baseTotal: number;
+  baseTotal?: number;
   finalTotal: number;
   exchangeRate: number;
   isTableMode: boolean;
@@ -24,7 +24,6 @@ interface UseCheckoutPaymentOptions {
 
 export function useCheckoutPayment({
   open,
-  baseTotal,
   finalTotal,
   exchangeRate,
   isTableMode,
@@ -60,7 +59,11 @@ export function useCheckoutPayment({
           (method) => method.type === "CASH" && method.currency === "NIO",
         ) ?? active[0];
       const secondary =
-        active.find((method) => method.id !== primary.id) ?? primary;
+        active.find(
+          (method) => method.type !== "CASH" && method.id !== primary.id,
+        ) ??
+        active.find((method) => method.id !== primary.id) ??
+        primary;
       setSelectedMethodId(primary.id);
       setPaymentMethod(toLegacyPaymentMethod(primary));
       setMixedMethodIds([primary.id, secondary.id]);
@@ -69,11 +72,31 @@ export function useCheckoutPayment({
 
   useEffect(() => {
     if (!open) return;
-    setSplitAmounts({ efectivo: 0, tarjeta: baseTotal });
+    setSplitAmounts({
+      efectivo: 0,
+      tarjeta: Number(Math.max(0, finalTotal).toFixed(2)),
+    });
     setReceivedLocal(initialCustomerTendered ?? "");
     setReceivedSecondary("");
     setPaymentReferences({});
-  }, [baseTotal, initialCustomerTendered, open]);
+    // Solo reiniciar los campos al abrir el diálogo
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCustomerTendered, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setSplitAmounts((current) => {
+      const first = Math.min(finalTotal, Math.max(0, current.efectivo));
+      const second = Number(Math.max(0, finalTotal - first).toFixed(2));
+      if (current.efectivo === first && current.tarjeta === second) {
+        return current;
+      }
+      return {
+        efectivo: first,
+        tarjeta: second,
+      };
+    });
+  }, [finalTotal, open]);
 
   const selectedMethod =
     methods.find((method) => method.id === selectedMethodId) ?? methods[0];

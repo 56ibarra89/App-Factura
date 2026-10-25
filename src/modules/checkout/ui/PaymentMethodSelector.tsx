@@ -108,7 +108,7 @@ export default function PaymentMethodSelector({
     const first = Math.min(total, Math.max(0, value || 0));
     setSplitAmounts({
       efectivo: first,
-      tarjeta: Number((total - first).toFixed(2)),
+      tarjeta: Number(Math.max(0, total - first).toFixed(2)),
     });
   };
 
@@ -166,7 +166,7 @@ export default function PaymentMethodSelector({
       </Typography>
       <Grid container spacing={1}>
         {methods.map((method) => (
-          <Grid key={method.id} size={{ xs: 6, sm: 4 }}>
+          <Grid key={method.id} size={{ xs: 6, sm: 4 }} sx={{ display: "flex" }}>
             <ToggleButton
               value={method.id}
               selected={
@@ -175,34 +175,68 @@ export default function PaymentMethodSelector({
               onClick={() => choose(method)}
               color="error"
               fullWidth
-              sx={{ display: "flex", flexDirection: "column", py: 1.5 }}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                height: "100%",
+                minHeight: 88,
+                py: 1.5,
+              }}
             >
               <MethodIcon type={method.type} />
-              <Typography variant="caption" fontWeight="bold" mt={0.5}>
+              <Typography
+                variant="caption"
+                fontWeight="bold"
+                mt={0.5}
+                sx={{ lineHeight: 1.2, textAlign: "center" }}
+              >
                 {method.name}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" mt={0.25}>
                 {method.currency === "USD" ? "US$" : "C$"}
               </Typography>
             </ToggleButton>
           </Grid>
         ))}
         {methods.length >= 2 && (
-          <Grid size={{ xs: 6, sm: 4 }}>
+          <Grid size={{ xs: 6, sm: 4 }} sx={{ display: "flex" }}>
             <ToggleButton
               value="MIXTO"
               selected={paymentMethod === "MIXTO"}
               onClick={() => {
                 setPaymentMethod("MIXTO");
-                setSplitAmounts({ efectivo: 0, tarjeta: total });
+                const first = Math.min(
+                  total,
+                  Math.max(0, splitAmounts.efectivo),
+                );
+                setSplitAmounts({
+                  efectivo: first,
+                  tarjeta: Number(Math.max(0, total - first).toFixed(2)),
+                });
               }}
               color="error"
               fullWidth
-              sx={{ display: "flex", flexDirection: "column", py: 1.5 }}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                height: "100%",
+                minHeight: 88,
+                py: 1.5,
+              }}
             >
               <CallSplitIcon />
-              <Typography variant="caption" fontWeight="bold" mt={0.5}>
+              <Typography
+                variant="caption"
+                fontWeight="bold"
+                mt={0.5}
+                sx={{ lineHeight: 1.2, textAlign: "center" }}
+              >
                 PAGO MIXTO
+              </Typography>
+              <Typography variant="caption" color="text.secondary" mt={0.25}>
+                C$ / US$
               </Typography>
             </ToggleButton>
           </Grid>
