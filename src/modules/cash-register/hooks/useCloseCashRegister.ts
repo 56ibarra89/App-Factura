@@ -27,8 +27,8 @@ export function useCloseCashRegister(
   const { config } = useGeneralSettings();
   const [closeType, setCloseTypeState] = useState<'HANDOVER' | 'END_OF_DAY'>('HANDOVER');
   const [amount, setAmountState] = useState("");
-  const [declaredCardAmount, setDeclaredCardAmount] = useState("");
-  const [declaredAppAmount, setDeclaredAppAmount] = useState("");
+  const [declaredCardAmount, setDeclaredCardAmountState] = useState("");
+  const [declaredAppAmount, setDeclaredAppAmountState] = useState("");
   const [loading, setLoading] = useState(false);
   const [preflightLoading, setPreflightLoading] = useState(false);
   const [error, setError] = useState("");
@@ -84,16 +84,16 @@ export function useCloseCashRegister(
     void refreshPreview();
   }, [refreshPreview]);
 
+  const resetAuthorization = () => {
+    setRequiresAuthorization(false);
+    setDiscrepancyReason("");
+    setAuthorizationPin("");
+  };
+
   const setCloseType = (type: 'HANDOVER' | 'END_OF_DAY') => {
+    if (type === closeType) return;
+    resetAuthorization();
     setCloseTypeState(type);
-    void refreshPreview(
-      {
-        cash: Number(amount) || 0,
-        card: Number(declaredCardAmount) || 0,
-        app: Number(declaredAppAmount) || 0,
-      },
-      type,
-    );
   };
 
   const validAmount =
@@ -118,15 +118,19 @@ export function useCloseCashRegister(
     !loading &&
     !preflightLoading;
 
-  const resetAuthorization = () => {
-    setRequiresAuthorization(false);
-    setDiscrepancyReason("");
-    setAuthorizationPin("");
-  };
-
   const setAmount = (value: string) => {
     setAmountState(value);
     setDenominationBreakdown(undefined);
+    resetAuthorization();
+  };
+
+  const setDeclaredCardAmount = (value: string) => {
+    setDeclaredCardAmountState(value);
+    resetAuthorization();
+  };
+
+  const setDeclaredAppAmount = (value: string) => {
+    setDeclaredAppAmountState(value);
     resetAuthorization();
   };
 
