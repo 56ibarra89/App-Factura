@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { isSplitBillOrderItem, type OrderItem } from "../../orders";
+import {
+  isSplitBillCreditOrderItem,
+  isSplitBillOrderItem,
+  type OrderItem,
+} from "../../orders";
 import {
   calculateItemSplitTotals,
   createSplitBillAccounts,
@@ -15,6 +19,49 @@ import type {
 interface UseSplitBillOptions {
   items: OrderItem[];
   totalAmount: number;
+  subTotalAmount?: number;
+  discountAmount?: number;
+  taxAmount?: number;
+}
+
+function deriveEqualAccountIdentities(
+  items: readonly OrderItem[],
+  totalAmount: number,
+  subTotalAmount = totalAmount,
+  discountAmount = 0,
+  taxAmount = 0,
+) {
+  const credits = items.filter(isSplitBillCreditOrderItem);
+  if (credits.length === 0) {
+    return [
+      { id: "equal-account-1", name: "Persona 1" },
+      { id: "equal-account-2", name: "Persona 2" },
+    ];
+  }
+
+  const creditBaseAmounts = credits
+    .map((item) => Math.abs(item.price * item.quantity))
+    .filter((amount) => amount > 0.01);
+  const representativeCredit = creditBaseAmounts[0];
+  const taxableBase = Math.max(0, subTotalAmount - discountAmount);
+  const taxFactor = taxableBase > 0 ? 1 + taxAmount / taxableBase : 1;
+  const installmentAmount = representativeCredit * taxFactor;
+  const remainingCount =
+    installmentAmount > 0
+      ? Math.max(1, Math.round(totalAmount / installmentAmount))
+      : 2;
+  const highestPaidNumber = credits.reduce((highest, item) => {
+    const match = item.name.match(/persona\s+(\d+)/i);
+    return Math.max(highest, match ? Number(match[1]) : 0);
+  }, 0);
+
+  return Array.from({ length: remainingCount }, (_, index) => {
+    const accountNumber = highestPaidNumber + index + 1;
+    return {
+      id: `equal-account-${accountNumber}`,
+      name: `Persona ${accountNumber}`,
+    };
+  });
 }
 
 function isSameSplitItem(a: OrderItem, b: OrderItem): boolean {
@@ -24,7 +71,11 @@ function isSameSplitItem(a: OrderItem, b: OrderItem): boolean {
     a.price === b.price &&
     a.size === b.size &&
     JSON.stringify(a.extras || []) === JSON.stringify(b.extras || []) &&
-    (a.note ?? "") === (b.note ?? "")
+    (a.note ?? "") === (b.note ?? "") &&
+    JSON.stringify(a.kitchenModifiers || []) ===
+      JSON.stringify(b.kitchenModifiers || []) &&
+    JSON.stringify(a.comboSelections || []) ===
+      JSON.stringify(b.comboSelections || [])
   );
 }
 
@@ -111,14 +162,37 @@ function computeSplitStep(
   return { qtyToMove: 1, giftToMove: 0 };
 }
 
-export function useSplitBill({ items, totalAmount }: UseSplitBillOptions) {
+export function useSplitBill({
+  items,
+  totalAmount,
+  subTotalAmount,
+  discountAmount,
+  taxAmount,
+}: UseSplitBillOptions) {
+  const initialEqualIdentities = useMemo(
+    () =>
+      deriveEqualAccountIdentities(
+        items,
+        totalAmount,
+        subTotalAmount,
+        discountAmount,
+        taxAmount,
+      ),
+    [discountAmount, items, subTotalAmount, taxAmount, totalAmount],
+  );
+  const highestInitialEqualAccount = initialEqualIdentities.reduce(
+    (highest, account) => {
+      const match = account.name.match(/persona\s+(\d+)/i);
+      return Math.max(highest, match ? Number(match[1]) : 0);
+    },
+    0,
+  );
   const nextAccountNumber = useRef(3);
-  const nextEqualAccountNumber = useRef(3);
+  const nextEqualAccountNumber = useRef(highestInitialEqualAccount + 1);
   const [mode, setMode] = useState<SplitBillMode>("items");
-  const [equalAccountIdentities, setEqualAccountIdentities] = useState(() => [
-    { id: "equal-account-1", name: "Persona 1" },
-    { id: "equal-account-2", name: "Persona 2" },
-  ]);
+  const [equalAccountIdentities, setEqualAccountIdentities] = useState(
+    initialEqualIdentities,
+  );
   const [accounts, setAccounts] = useState<SplitBillAccount[]>(() =>
     createSplitBillAccounts(),
   );

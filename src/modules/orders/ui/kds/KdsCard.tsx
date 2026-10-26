@@ -884,7 +884,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                               undefined,
                               undefined,
                               sentAtTimestampMs,
-                              item.kitchenId,
+                              selectedKitchenId || undefined,
                               item.id,
                             )
                           }
@@ -915,7 +915,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                               undefined,
                               undefined,
                               sentAtTimestampMs,
-                              item.kitchenId,
+                              selectedKitchenId || undefined,
                               item.id,
                             )
                           }
@@ -944,7 +944,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                               undefined,
                               undefined,
                               sentAtTimestampMs,
-                              item.kitchenId,
+                              selectedKitchenId || undefined,
                               item.id,
                             )
                           }

@@ -23,7 +23,7 @@ export interface OrderCommands {
     kitchenId?: string,
     itemId?: number | string,
     cancelReasonId?: string,
-  ): void;
+  ): Promise<void>;
   removeOrder(orderId: string): void;
   clearHistory(): void;
   updateOrderItems(

@@ -87,8 +87,11 @@ export default function FacturaPreviewDialog({
   const isPrintRetry = Boolean(invoiceNumber);
   const checkout = useCheckoutDialog({
     open,
+    items: cart,
     total,
     orderSubTotal: subTotal,
+    promotion,
+    fallbackDiscountAmount: promotion ? undefined : discountAmount,
     isTableMode,
     initialCustomer,
     initialPhone,
@@ -207,8 +210,8 @@ export default function FacturaPreviewDialog({
                 setMixedMethodIds={checkout.setMixedMethodIds}
                 paymentReferences={checkout.paymentReferences}
                 setPaymentReferences={checkout.setPaymentReferences}
-                splitAmounts={checkout.splitAmounts}
-                setSplitAmounts={checkout.setSplitAmounts}
+                mixedAmounts={checkout.mixedAmounts}
+                setMixedAmounts={checkout.setMixedAmounts}
                 receivedLocal={checkout.receivedLocal}
                 setReceivedLocal={checkout.setReceivedLocal}
                 receivedSecondary={checkout.receivedSecondary}

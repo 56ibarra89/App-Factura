@@ -20,7 +20,7 @@ export function useOrderStatusCommands({
   itemsGateway,
 }: UseOrderStatusCommandsOptions) {
   const updateOrderStatus = useCallback<OrderCommands["updateOrderStatus"]>(
-    (
+    async (
       orderId,
       status,
       cancelReason,
@@ -30,6 +30,16 @@ export function useOrderStatusCommands({
       itemId,
       cancelReasonId,
     ) => {
+      await statusGateway.updateStatus({
+        orderId,
+        status,
+        cancelReason,
+        adminPin,
+        sentAt,
+        kitchenId,
+        itemId,
+        cancelReasonId,
+      });
       updateOrders((current) => {
         const result = orderMutations.updateOrderStatus(
           current,
@@ -41,20 +51,6 @@ export function useOrderStatusCommands({
         );
         return result.orders;
       });
-      void statusGateway
-        .updateStatus({
-          orderId,
-          status,
-          cancelReason,
-          adminPin,
-          sentAt,
-          kitchenId,
-          itemId,
-          cancelReasonId,
-        })
-        .catch((error: unknown) =>
-          console.error("Error updating order status", error),
-        );
     },
     [statusGateway, updateOrders],
   );

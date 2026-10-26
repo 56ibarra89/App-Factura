@@ -95,10 +95,8 @@ const CheckoutPage = () => {
     if (hydratedOrderIdRef.current === activeOrder.id) return;
 
     hydratedOrderIdRef.current = activeOrder.id;
-    if (cart.length === 0) {
-      handleSetCart(activeOrder.items);
-    }
-  }, [activeOrder, cart.length, handleSetCart, tableId]);
+    handleSetCart(activeOrder.items);
+  }, [activeOrder, handleSetCart, tableId]);
 
   const closePreview = useCallback(() => {
     setPreviewOpen(false);

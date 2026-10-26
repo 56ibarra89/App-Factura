@@ -21,6 +21,7 @@ interface InvoiceCancellationDialogsProps {
   reasons: CancellationReasonPolicy[];
   reasonId: string;
   note: string;
+  error?: string;
   onReasonChange(reasonId: string): void;
   onNoteChange(note: string): void;
   onCloseReason(): void;
@@ -35,6 +36,7 @@ export function InvoiceCancellationDialogs({
   reasons,
   reasonId,
   note,
+  error,
   onReasonChange,
   onNoteChange,
   onCloseReason,
@@ -82,6 +84,11 @@ export function InvoiceCancellationDialogs({
             value={note}
             onChange={(event) => onNoteChange(event.target.value)}
           />
+          {error && (
+            <Typography color="error" variant="body2" mt={2}>
+              {error}
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>
           <Button onClick={onCloseReason} color="inherit">

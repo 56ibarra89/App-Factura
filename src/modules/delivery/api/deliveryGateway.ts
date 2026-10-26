@@ -1,6 +1,7 @@
 import { apiClient } from "../../../shared/api";
 import type { DeliveryDriver, DeliveryStat } from "../model/delivery.types";
 import type { Order, OrderPaymentDetail } from "../../orders";
+import { mapBackendOrderToFrontend } from "../../orders/api/backendSync";
 
 const WEEK_DAYS = [
   "SUNDAY",
@@ -56,8 +57,11 @@ export const deliveryGateway: DeliveryGateway = {
     );
   },
 
-  getDriverOrdersToday: (driverId) =>
-    apiClient(`/orders/driver/${driverId}/today`),
+  async getDriverOrdersToday(driverId) {
+    const orders: Parameters<typeof mapBackendOrderToFrontend>[0][] =
+      await apiClient(`/orders/driver/${driverId}/today`);
+    return orders.map(mapBackendOrderToFrontend);
+  },
 
   async finalizeOrder(
     orderId,

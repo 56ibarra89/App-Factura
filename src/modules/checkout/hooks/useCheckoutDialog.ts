@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { customerRepository, type Customer } from "../../customers";
 import type { CheckoutFormValues } from "../model/checkout.types";
-import type { OrderType } from "../../orders";
+import type { OrderItem, OrderType } from "../../orders";
+import type { AppliedPromotion } from "../../promotions";
 import { checkoutGateway, type CheckoutGateway } from "../api/checkoutGateway";
-import {
-  calculateCheckoutCosts,
-  canSubmitCheckout,
-} from "../model/checkoutFormDomain";
+import { canSubmitCheckout } from "../model/checkoutFormDomain";
+import { buildSupplementalCartItems } from "../model/checkoutDomain";
+import { calculateCartTotals } from "../model/cartTotals";
 import { useCheckoutPayment } from "./useCheckoutPayment";
 import { useCustomerDeliveryForm } from "./useCustomerDeliveryForm";
 import { usePackagingSelection } from "./usePackagingSelection";
@@ -15,8 +15,11 @@ import type { DeliveryZone } from "../../delivery";
 
 interface UseCheckoutDialogOptions {
   open: boolean;
+  items: OrderItem[];
   total: number;
   orderSubTotal?: number;
+  promotion?: AppliedPromotion | null;
+  fallbackDiscountAmount?: number;
   isTableMode: boolean;
   initialCustomer: Customer | null;
   initialPhone: string;
@@ -32,8 +35,11 @@ interface UseCheckoutDialogOptions {
 
 export function useCheckoutDialog({
   open,
+  items,
   total,
   orderSubTotal,
+  promotion,
+  fallbackDiscountAmount,
   isTableMode,
   initialCustomer,
   initialPhone,
@@ -74,24 +80,60 @@ export function useCheckoutDialog({
     gateway,
   });
 
-  const taxPercentage = isExonerated ? 0 : (taxes[0]?.percentage ?? 0);
   const costs = useMemo(
-    () =>
-      calculateCheckoutCosts({
-        baseTotal: total,
-        totalPackagingCost: packaging.totalPackagingCost,
-        deliveryCost: customerDelivery.deliveryCost,
-        orderType: customerDelivery.orderType,
-        taxPercentage,
-        exchangeRate,
-      }),
+    () => {
+      const supplementalItems = buildSupplementalCartItems(
+      packaging.packagingItems,
+      customerDelivery.orderType === "delivery"
+        ? customerDelivery.deliveryCost
+        : undefined,
+      customerDelivery.selectedZone?.name,
+      customerDelivery.driverPayout,
+      customerDelivery.isFreeDelivery,
+    );
+    const baseTotals = calculateCartTotals(
+      items,
+      taxes,
+      isExonerated,
+      promotion,
+      fallbackDiscountAmount,
+    );
+    const finalTotals = calculateCartTotals(
+      [...items, ...supplementalItems],
+      taxes,
+      isExonerated,
+      promotion,
+      fallbackDiscountAmount,
+    );
+    const deliveryCharge =
+      customerDelivery.orderType === "delivery"
+        ? customerDelivery.deliveryCost
+        : 0;
+
+      return {
+        deliveryCharge,
+        extraCostsSubtotal: supplementalItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        ),
+        extraCostsTax: Math.max(0, finalTotals.taxAmount - baseTotals.taxAmount),
+        finalTotal: finalTotals.total,
+        finalTotalSecondary: finalTotals.total / exchangeRate,
+      };
+    },
     [
       customerDelivery.deliveryCost,
+      customerDelivery.driverPayout,
+      customerDelivery.isFreeDelivery,
       customerDelivery.orderType,
+      customerDelivery.selectedZone?.name,
       exchangeRate,
-      packaging.totalPackagingCost,
-      taxPercentage,
-      total,
+      fallbackDiscountAmount,
+      isExonerated,
+      items,
+      packaging.packagingItems,
+      promotion,
+      taxes,
     ],
   );
   const payment = useCheckoutPayment({
@@ -167,10 +209,11 @@ export function useCheckoutDialog({
             : undefined,
         packagingItems: packaging.packagingItems,
         customerTendered:
-          payment.paymentMethod === "EFECTIVO"
+          payment.payments.some((detail) => detail.method === "EFECTIVO")
             ? Number(payment.receivedLocal || 0) +
                 Number(payment.receivedSecondary || 0) * exchangeRate ||
-              undefined
+              payment.payments.find((detail) => detail.method === "EFECTIVO")
+                ?.amount
             : undefined,
         driverId:
           customerDelivery.orderType === "delivery"

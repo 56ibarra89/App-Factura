@@ -29,6 +29,7 @@ interface UseBillingFlowOptions {
 type PendingPrint = OrderCreationResult & {
   isCash: boolean;
   printed: boolean;
+  sendToKitchen: boolean;
 };
 
 export function useBillingFlow({
@@ -67,7 +68,9 @@ export function useBillingFlow({
         });
         pending.printed = true;
       }
-      await sendOrderToKitchen(orderId);
+      if (pending.sendToKitchen) {
+        await sendOrderToKitchen(orderId);
+      }
 
       if (isCash) {
         void printerDispatcherService.openCashDrawer(cashierPrinter);
@@ -82,7 +85,9 @@ export function useBillingFlow({
 
   const handleFinalConfirm = useCallback(
     async (form: CheckoutFormValues) => {
-      const isCash = form.paymentMethod === "EFECTIVO";
+      const isCash =
+        form.payments?.some((payment) => payment.method === "EFECTIVO") ??
+        form.paymentMethod === "EFECTIVO";
 
       await runExclusive(async () => {
         if (pendingPrintRef.current) {
@@ -111,6 +116,7 @@ export function useBillingFlow({
               invoiceNumber,
               isCash,
               printed: false,
+              sendToKitchen: false,
             };
             await completeAndPrint(pendingPrintRef.current);
             navigate("/mesas");
@@ -136,6 +142,7 @@ export function useBillingFlow({
           ...createdOrder,
           isCash: isCash && !isPendingDelivery,
           printed: false,
+          sendToKitchen: true,
         };
 
         await completeAndPrint(pendingPrintRef.current);

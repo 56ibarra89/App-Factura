@@ -25,7 +25,6 @@ import { useMesaDialogs } from "../hooks/useMesaDialogs";
 import { useMesaCheckout } from "../hooks/useMesaCheckout";
 import { useMesaLogic } from "../hooks/useMesaLogic";
 import {
-  isSplitBillOrderItem,
   type Order,
   type OrderItem,
 } from "../../orders";
@@ -92,28 +91,12 @@ export default function TablesPage() {
 
     if (selection.items && selection.items.length > 0) {
       itemsToCheckout = selection.items;
-      const calcItemNet = (item: OrderItem) =>
-        item.price * Math.max(0, item.quantity - (item.giftQuantity || 0));
-      const fullSubtotal =
-        logic.activeOrder.items
-          .filter((item) => !isSplitBillOrderItem(item))
-          .reduce((sum, item) => sum + calcItemNet(item), 0);
-      const subSubtotal = selection.items.reduce(
-        (sum, item) => sum + calcItemNet(item),
-        0,
-      );
-      const fullDiscount = logic.activeOrder.discountAmount ?? 0;
-      const subOrderDiscountAmount =
-        fullSubtotal > 0 && fullDiscount > 0
-          ? Math.round(((fullDiscount * subSubtotal) / fullSubtotal) * 100) /
-            100
-          : 0;
       const subOrder: Order = {
         ...logic.activeOrder,
         customerName: `${logic.activeOrder.customerName || "Cliente"} (${selection.accountName})`,
         items: itemsToCheckout,
         total: selection.amount,
-        discountAmount: subOrderDiscountAmount,
+        discountAmount: undefined,
       };
       checkout.openCheckoutPreview(subOrder, {
         isSubAccount: true,
@@ -122,7 +105,12 @@ export default function TablesPage() {
       });
       return;
     } else {
-      const activeTaxRate = isExonerated ? 0 : (taxes?.[0]?.percentage ?? 15);
+      const activeTaxRate = isExonerated
+        ? 0
+        : (taxes ?? []).reduce(
+            (sum, tax) => sum + (Number(tax.percentage) || 0),
+            0,
+          );
       const taxFactor = 1 + activeTaxRate / 100;
       const baseSubtotal = selection.amount / taxFactor;
 

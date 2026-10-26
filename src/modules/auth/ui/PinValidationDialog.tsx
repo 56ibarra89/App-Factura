@@ -18,7 +18,7 @@ import {
 interface PinValidationDialogProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: (pin?: string) => void;
+  onSuccess: (pin?: string) => void | Promise<void>;
   title?: string;
   requiredPermission?: PermissionCode;
 }
@@ -50,7 +50,7 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
       if (result.success) {
         const validPin = pin;
         setPin("");
-        onSuccess(validPin);
+        await onSuccess(validPin);
       } else {
         setPin("");
         setError(result.error || "Error en la validación");

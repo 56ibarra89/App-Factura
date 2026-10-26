@@ -42,8 +42,8 @@ interface Props {
   setMixedMethodIds: Dispatch<SetStateAction<[string, string]>>;
   paymentReferences: Record<string, string>;
   setPaymentReferences: Dispatch<SetStateAction<Record<string, string>>>;
-  splitAmounts: SplitAmounts;
-  setSplitAmounts(amounts: SplitAmounts): void;
+  mixedAmounts: SplitAmounts;
+  setMixedAmounts(amounts: SplitAmounts): void;
   receivedLocal: number | "";
   setReceivedLocal(value: number | ""): void;
   receivedSecondary: number | "";
@@ -71,8 +71,8 @@ export default function PaymentMethodSelector({
   setMixedMethodIds,
   paymentReferences,
   setPaymentReferences,
-  splitAmounts,
-  setSplitAmounts,
+  mixedAmounts,
+  setMixedAmounts,
   receivedLocal,
   setReceivedLocal,
   receivedSecondary,
@@ -106,7 +106,7 @@ export default function PaymentMethodSelector({
 
   const setFirstAmount = (value: number) => {
     const first = Math.min(total, Math.max(0, value || 0));
-    setSplitAmounts({
+    setMixedAmounts({
       efectivo: first,
       tarjeta: Number(Math.max(0, total - first).toFixed(2)),
     });
@@ -158,6 +158,18 @@ export default function PaymentMethodSelector({
   const mixed = mixedMethodIds.map(
     (id) => methods.find((method) => method.id === id) ?? methods[0],
   );
+  const mixedCashIndex = mixed.findIndex((method) => method?.type === "CASH");
+  const mixedCashMethod = mixedCashIndex >= 0 ? mixed[mixedCashIndex] : undefined;
+  const mixedCashDue =
+    mixedCashIndex === 0
+      ? mixedAmounts.efectivo
+      : mixedCashIndex === 1
+        ? mixedAmounts.tarjeta
+        : 0;
+  const mixedCashReceived =
+    mixedCashMethod?.currency === "USD"
+      ? Number(receivedSecondary) * exchange
+      : Number(receivedLocal);
 
   return (
     <>
@@ -208,9 +220,9 @@ export default function PaymentMethodSelector({
                 setPaymentMethod("MIXTO");
                 const first = Math.min(
                   total,
-                  Math.max(0, splitAmounts.efectivo),
+                  Math.max(0, mixedAmounts.efectivo),
                 );
-                setSplitAmounts({
+                setMixedAmounts({
                   efectivo: first,
                   tarjeta: Number(Math.max(0, total - first).toFixed(2)),
                 });
@@ -310,7 +322,9 @@ export default function PaymentMethodSelector({
             {[0, 1].map((index) => {
               const method = mixed[index];
               const amount =
-                index === 0 ? splitAmounts.efectivo : splitAmounts.tarjeta;
+                index === 0 ? mixedAmounts.efectivo : mixedAmounts.tarjeta;
+              const displayedAmount =
+                method?.currency === "USD" ? amount / exchange : amount;
               return (
                 <Grid key={index} size={{ xs: 12, md: 6 }}>
                   <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
@@ -341,12 +355,16 @@ export default function PaymentMethodSelector({
                     fullWidth
                     size="small"
                     type="number"
-                    label={`Monto ${method?.name ?? ""} en C$`}
-                    value={amount || ""}
+                    label={`Monto ${method?.name ?? ""} en ${method?.currency === "USD" ? "US$" : "C$"}`}
+                    value={displayedAmount || ""}
                     onChange={(event) => {
-                      const value = Number(event.target.value);
-                      if (index === 0) setFirstAmount(value);
-                      else setFirstAmount(total - value);
+                      const nativeValue = Number(event.target.value);
+                      const valueInNio =
+                        method?.currency === "USD"
+                          ? nativeValue * exchange
+                          : nativeValue;
+                      if (index === 0) setFirstAmount(valueInNio);
+                      else setFirstAmount(total - valueInNio);
                     }}
                     onKeyDown={blockInvalidChar}
                     sx={{ mb: 1.5 }}
@@ -356,6 +374,37 @@ export default function PaymentMethodSelector({
               );
             })}
           </Grid>
+          {mixedCashMethod && (
+            <Box mt={2}>
+              <TextField
+                fullWidth
+                size="small"
+                type="number"
+                label={`Monto recibido en ${mixedCashMethod.currency === "USD" ? "dólares" : "córdobas"}`}
+                value={
+                  mixedCashMethod.currency === "USD"
+                    ? receivedSecondary
+                    : receivedLocal
+                }
+                onChange={(event) => {
+                  const value =
+                    event.target.value === "" ? "" : Number(event.target.value);
+                  if (mixedCashMethod.currency === "USD") {
+                    setReceivedSecondary(value);
+                  } else {
+                    setReceivedLocal(value);
+                  }
+                }}
+                onKeyDown={blockInvalidChar}
+              />
+              {mixedCashReceived >= mixedCashDue && (
+                <Typography mt={1} fontWeight="bold" color="success.main">
+                  Vuelto: {currencySymbol}
+                  {(mixedCashReceived - mixedCashDue).toFixed(2)}
+                </Typography>
+              )}
+            </Box>
+          )}
         </Box>
       )}
     </>

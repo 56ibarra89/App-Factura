@@ -9,7 +9,7 @@ export function useOpenCashRegister() {
   const navigate = useNavigate();
   const { abrirCaja, currentShift } = useCaja();
   const { config } = useGeneralSettings();
-  const { username, role } = useAuth();
+  const { role } = useAuth();
 
   const getDefaultRegisterName = () => {
     switch (role) {
@@ -34,20 +34,23 @@ export function useOpenCashRegister() {
     let isMounted = true;
     shiftRepository.getAll().then((shifts) => {
       if (!isMounted) return;
-      if (shifts.length > 0) {
-        const lastShift = shifts[0];
-        if (lastShift.status === "closed" && lastShift.closingAmount !== undefined) {
+      const lastShift = shifts.find(
+        (shift) =>
+          shift.status === "closed" &&
+          shift.cashRegisterName === cashRegisterName &&
+          shift.closingAmount !== undefined,
+      );
+      if (lastShift?.closingAmount !== undefined) {
           setExpectedAmount(lastShift.closingAmount);
           if (config.requireExactOpeningAmount) {
             setAmount(String(lastShift.closingAmount));
           }
-        }
       }
     });
     return () => {
       isMounted = false;
     };
-  }, [config.requireExactOpeningAmount]);
+  }, [cashRegisterName, config.requireExactOpeningAmount]);
 
   const numAmount = Number(amount);
 

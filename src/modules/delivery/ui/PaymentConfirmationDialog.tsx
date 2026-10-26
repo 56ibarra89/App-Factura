@@ -20,9 +20,12 @@ import type { Order, OrderPaymentDetail } from "../../orders";
 import { paymentMethodsGateway } from "../../settings/api/paymentMethodsGateway";
 import {
   DEFAULT_PAYMENT_METHODS_CONFIG,
+  isValidPosReference,
+  sanitizePosReference,
   toLegacyPaymentMethod,
   type ConfiguredPaymentMethod,
 } from "../../settings/model/paymentMethods.types";
+import { useGeneralSettings } from "../../settings";
 
 interface Props {
   open: boolean;
@@ -40,6 +43,7 @@ export function PaymentConfirmationDialog({
   onClose,
   onConfirm,
 }: Props) {
+  const { config } = useGeneralSettings();
   const [methods, setMethods] = useState<ConfiguredPaymentMethod[]>(
     DEFAULT_PAYMENT_METHODS_CONFIG.methods,
   );
@@ -127,20 +131,31 @@ export function PaymentConfirmationDialog({
   const referenceRequired = mixed
     ? other?.requiresReference
     : selected?.requiresReference;
-  const validReference = !referenceRequired || reference.trim().length >= 4;
+  const referenceMethod = mixed ? other : selected;
+  const validReference =
+    !referenceRequired ||
+    (referenceMethod?.type === "CARD_POS"
+      ? isValidPosReference(reference)
+      : reference.trim().length >= 4);
 
   const buildPayment = (
     method: ConfiguredPaymentMethod,
     amount: number,
     paymentReference?: string,
-  ): OrderPaymentDetail => ({
-    method: toLegacyPaymentMethod(method),
-    amount,
-    methodConfigId: method.id,
-    reference: paymentReference?.trim() || undefined,
-    originalAmount: amount,
-    exchangeRate: 1,
-  });
+  ): OrderPaymentDetail => {
+    const exchangeRate =
+      method.currency === "USD" && config.exchangeRate > 0
+        ? config.exchangeRate
+        : 1;
+    return {
+      method: toLegacyPaymentMethod(method),
+      amount,
+      methodConfigId: method.id,
+      reference: paymentReference?.trim() || undefined,
+      originalAmount: Math.round((amount / exchangeRate) * 100) / 100,
+      exchangeRate,
+    };
+  };
 
   const handleConfirm = async () => {
     if (!order || !validReference) return;
@@ -287,7 +302,13 @@ export function PaymentConfirmationDialog({
             required
             label="Número de referencia / aprobación"
             value={reference}
-            onChange={(event) => setReference(event.target.value)}
+            onChange={(event) =>
+              setReference(
+                referenceMethod?.type === "CARD_POS"
+                  ? sanitizePosReference(event.target.value)
+                  : event.target.value,
+              )
+            }
             helperText="Ingresa al menos los últimos 4 caracteres del voucher."
           />
         )}

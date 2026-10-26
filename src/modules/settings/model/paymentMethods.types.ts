@@ -53,6 +53,9 @@ export interface PaymentMetricRow {
   grossAmount: number;
   commissionAmount: number;
   netAmount: number;
+  grossAmountNio: number;
+  commissionAmountNio: number;
+  netAmountNio: number;
 }
 
 export interface PaymentMetrics {

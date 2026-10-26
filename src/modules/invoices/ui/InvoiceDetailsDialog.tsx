@@ -26,6 +26,7 @@ interface InvoiceDetailsDialogProps {
   orderType?: string;
   invoiceNumber?: string;
   cashierName?: string;
+  tableId?: string;
   discountAmount?: number;
   onClose: () => void;
   onConfirm: () => void;
@@ -51,6 +52,7 @@ export default function InvoiceDetailsDialog({
   orderType,
   invoiceNumber,
   cashierName,
+  tableId,
 }: InvoiceDetailsDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -164,6 +166,7 @@ export default function InvoiceDetailsDialog({
         orderType={orderType}
         invoiceNumber={invoiceNumber}
         cashierName={cashierName}
+        tableId={tableId}
       />
     </Dialog>
   );

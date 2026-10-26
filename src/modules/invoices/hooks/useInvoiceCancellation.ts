@@ -36,6 +36,7 @@ export function useInvoiceCancellation(
   const [cancelNote, setCancelNote] = useState("");
   const [reasonDialogOpen, setReasonDialogOpen] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [cancellationError, setCancellationError] = useState("");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -100,9 +101,11 @@ export function useInvoiceCancellation(
   }, []);
 
   const confirmCancellation = useCallback(
-    (pin?: string) => {
-      if (orderToCancel) {
-        updateOrderStatus(
+    async (pin?: string) => {
+      if (!orderToCancel) return;
+      setCancellationError("");
+      try {
+        await updateOrderStatus(
           orderToCancel.id,
           "cancelled",
           cancelNote,
@@ -112,21 +115,21 @@ export function useInvoiceCancellation(
           undefined,
           cancelReasonId,
         );
-        setOrders((current) =>
-          current.map((order) =>
-            order.id === orderToCancel.id
-              ? { ...order, status: "cancelled" }
-              : order,
-          ),
+        await refresh();
+        setPinDialogOpen(false);
+        setOrderToCancel(null);
+        setCancelReasonId("");
+        setCancelNote("");
+      } catch (error: unknown) {
+        setCancellationError(
+          error instanceof Error
+            ? error.message
+            : "El servidor rechazó la anulación.",
         );
+        throw error;
       }
-
-      setPinDialogOpen(false);
-      setOrderToCancel(null);
-      setCancelReasonId("");
-      setCancelNote("");
     },
-    [cancelNote, cancelReasonId, orderToCancel, updateOrderStatus],
+    [cancelNote, cancelReasonId, orderToCancel, refresh, updateOrderStatus],
   );
 
   const submitReason = useCallback(() => {
@@ -188,6 +191,7 @@ export function useInvoiceCancellation(
     dialogs: {
       reasonOpen: reasonDialogOpen,
       pinOpen: pinDialogOpen,
+      error: cancellationError,
       reasons: policyConfig.reasons.filter((reason) => reason.isActive),
       reasonId: cancelReasonId,
       setReasonId: setCancelReasonId,

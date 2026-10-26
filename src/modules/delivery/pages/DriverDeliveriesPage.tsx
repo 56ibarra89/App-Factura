@@ -45,6 +45,7 @@ import {
   statusLabels,
   statusColors,
   ordersGateway,
+  getOrderPaymentDetails,
   requiresKitchenPreparation,
   type Order,
 } from "../../orders";
@@ -475,14 +476,14 @@ export default function DriverDeliveriesPage() {
   );
   const totalCashCollected = useMemo(
     () =>
-      completedOrders.reduce((acc, o) => {
-        const method = (o.paymentMethod || "EFECTIVO").toUpperCase();
-        if (method === "EFECTIVO") return acc + o.total;
-        if (method === "MIXTO" && o.splitAmounts?.efectivo) {
-          return acc + o.splitAmounts.efectivo;
-        }
-        return acc;
-      }, 0),
+      completedOrders.reduce(
+        (total, order) =>
+          total +
+          getOrderPaymentDetails(order)
+            .filter((payment) => payment.method === "EFECTIVO")
+            .reduce((sum, payment) => sum + payment.amount, 0),
+        0,
+      ),
     [completedOrders],
   );
   const totalChangeGiven = useMemo(

@@ -16,6 +16,7 @@ import {
   receiptPrinter,
   type ReceiptPrinter,
 } from "../../../shared/printing";
+import { printerDispatcherService } from "../../devices";
 
 export function useCloseCashRegister(
   printer: ReceiptPrinter = receiptPrinter,
@@ -162,7 +163,13 @@ export function useCloseCashRegister(
 
     if (config.autoPrintReceipt) {
       try {
-        await printer.print({ renderDelayMs: 500, settleDelayMs: 1000 });
+        const cashierPrinter =
+          await printerDispatcherService.getCashierPrinter();
+        await printer.print({
+          renderDelayMs: 500,
+          settleDelayMs: 1000,
+          deviceName: cashierPrinter?.windowsDeviceName,
+        });
       } catch (printError: unknown) {
         console.error(
           "La caja cerró, pero no se pudo imprimir el arqueo:",

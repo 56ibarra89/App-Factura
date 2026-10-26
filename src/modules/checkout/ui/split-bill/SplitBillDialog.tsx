@@ -54,6 +54,9 @@ function SplitBillDialogContent({
   const splitBill = useSplitBill({
     items: order.items,
     totalAmount: order.total,
+    subTotalAmount: order.subTotal,
+    discountAmount: order.discountAmount,
+    taxAmount: order.taxAmount,
   });
   const { completeCheckout, mode, setMode } = splitBill;
   const appliedCompletion = useRef<SplitBillCheckoutSelection | null>(null);

@@ -449,13 +449,37 @@ export default function PaymentMethodsSettingsPage() {
                           {row.transactionCount}
                         </TableCell>
                         <TableCell align="right">
-                          {money.format(row.grossAmount)}
+                          {new Intl.NumberFormat("es-NI", {
+                            style: "currency",
+                            currency: row.currency,
+                          }).format(row.grossAmount)}
+                          {row.currency !== "NIO" && (
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Equiv. {money.format(row.grossAmountNio)}
+                            </Typography>
+                          )}
                         </TableCell>
                         <TableCell align="right">
-                          {money.format(row.commissionAmount)}
+                          {new Intl.NumberFormat("es-NI", {
+                            style: "currency",
+                            currency: row.currency,
+                          }).format(row.commissionAmount)}
+                          {row.currency !== "NIO" && (
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Equiv. {money.format(row.commissionAmountNio)}
+                            </Typography>
+                          )}
                         </TableCell>
                         <TableCell align="right">
-                          {money.format(row.netAmount)}
+                          {new Intl.NumberFormat("es-NI", {
+                            style: "currency",
+                            currency: row.currency,
+                          }).format(row.netAmount)}
+                          {row.currency !== "NIO" && (
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              Equiv. {money.format(row.netAmountNio)}
+                            </Typography>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

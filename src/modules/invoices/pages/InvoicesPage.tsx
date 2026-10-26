@@ -8,6 +8,7 @@ import InvoiceFilters from "../ui/InvoiceFilters";
 import InvoiceTable from "../ui/InvoiceTable";
 import { PERMISSIONS, PinValidationDialog, useAuth } from "../../auth";
 import { receiptPrinter, type ReceiptPrinter } from "../../../shared/printing";
+import { printerDispatcherService } from "../../devices";
 
 interface InvoicesPageProps {
   printer?: ReceiptPrinter;
@@ -74,7 +75,11 @@ const InvoicesPage = ({ printer = receiptPrinter }: InvoicesPageProps) => {
   };
 
   const handleConfirmPrint = async () => {
-    await printer.print({ settleDelayMs: 500 });
+    const cashierPrinter = await printerDispatcherService.getCashierPrinter();
+    await printer.print({
+      settleDelayMs: 500,
+      deviceName: cashierPrinter?.windowsDeviceName,
+    });
     handleClosePreview();
   };
 
@@ -137,6 +142,7 @@ const InvoicesPage = ({ printer = receiptPrinter }: InvoicesPageProps) => {
           orderType={selectedOrder.orderType}
           invoiceNumber={selectedOrder.invoiceNumber || "Sin Factura"}
           cashierName={selectedOrder.cashierName}
+          tableId={selectedOrder.tableId}
           title={`Factura #${selectedOrder.invoiceNumber || "Sin Factura"} - ${selectedOrder.customerName || "Cliente"}`}
           confirmText="Imprimir"
           showConfirmButton={!isViewOnly}

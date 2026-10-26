@@ -104,7 +104,13 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
     if (isCook && !selectedKitchenId) return [];
     if (!selectedKitchenId) return activeOrders;
     return activeOrders.filter((order) =>
-      order.items.some((item) => item.kitchenId === selectedKitchenId),
+      order.items.some(
+        (item) =>
+          item.kitchenId === selectedKitchenId ||
+          item.comboSelections?.some(
+            (selection) => selection.kitchenId === selectedKitchenId,
+          ),
+      ),
     );
   }, [activeOrders, isCook, selectedKitchenId]);
 
@@ -112,7 +118,13 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
     if (isCook && !selectedKitchenId) return [];
     if (!selectedKitchenId) return finishedOrders;
     return finishedOrders.filter((order) =>
-      order.items.some((item) => item.kitchenId === selectedKitchenId),
+      order.items.some(
+        (item) =>
+          item.kitchenId === selectedKitchenId ||
+          item.comboSelections?.some(
+            (selection) => selection.kitchenId === selectedKitchenId,
+          ),
+      ),
     );
   }, [finishedOrders, isCook, selectedKitchenId]);
 

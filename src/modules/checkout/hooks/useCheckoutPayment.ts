@@ -41,7 +41,7 @@ export function useCheckoutPayment({
   const [paymentReferences, setPaymentReferences] = useState<
     Record<string, string>
   >({});
-  const [splitAmounts, setSplitAmounts] = useState<SplitPaymentAmounts>({
+  const [mixedAmounts, setMixedAmounts] = useState<SplitPaymentAmounts>({
     efectivo: 0,
     tarjeta: 0,
   });
@@ -72,7 +72,7 @@ export function useCheckoutPayment({
 
   useEffect(() => {
     if (!open) return;
-    setSplitAmounts({
+    setMixedAmounts({
       efectivo: 0,
       tarjeta: Number(Math.max(0, finalTotal).toFixed(2)),
     });
@@ -85,7 +85,7 @@ export function useCheckoutPayment({
 
   useEffect(() => {
     if (!open) return;
-    setSplitAmounts((current) => {
+    setMixedAmounts((current) => {
       const first = Math.min(finalTotal, Math.max(0, current.efectivo));
       const second = Number(Math.max(0, finalTotal - first).toFixed(2));
       if (current.efectivo === first && current.tarjeta === second) {
@@ -103,6 +103,21 @@ export function useCheckoutPayment({
   const mixedMethods = mixedMethodIds.map(
     (id) => methods.find((method) => method.id === id) ?? methods[0],
   );
+  const mixedCashIndex = mixedMethods.findIndex(
+    (method) => method?.type === "CASH",
+  );
+  const mixedCashMethod =
+    mixedCashIndex >= 0 ? mixedMethods[mixedCashIndex] : undefined;
+  const mixedCashDue =
+    mixedCashIndex === 0
+      ? mixedAmounts.efectivo
+      : mixedCashIndex === 1
+        ? mixedAmounts.tarjeta
+        : 0;
+  const mixedCashReceived =
+    mixedCashMethod?.currency === "USD"
+      ? Number(receivedSecondary || 0) * exchangeRate
+      : Number(receivedLocal || 0);
 
   const referencesValid = useMemo(() => {
     const selected =
@@ -120,10 +135,13 @@ export function useCheckoutPayment({
   const isPaymentValid = useMemo(
     () =>
       referencesValid &&
+      (paymentMethod !== "MIXTO" ||
+        !mixedCashMethod ||
+        mixedCashReceived >= mixedCashDue - 0.01) &&
       isCheckoutPaymentValid({
         isTableMode,
         paymentMethod,
-        splitAmounts,
+        splitAmounts: mixedAmounts,
         receivedLocal,
         receivedSecondary,
         exchangeRate,
@@ -134,10 +152,13 @@ export function useCheckoutPayment({
       finalTotal,
       isTableMode,
       paymentMethod,
+      mixedCashDue,
+      mixedCashMethod,
+      mixedCashReceived,
       receivedLocal,
       receivedSecondary,
       referencesValid,
-      splitAmounts,
+      mixedAmounts,
     ],
   );
 
@@ -160,8 +181,8 @@ export function useCheckoutPayment({
 
     if (paymentMethod === "MIXTO") {
       return [
-        build(mixedMethods[0], splitAmounts.efectivo),
-        build(mixedMethods[1], splitAmounts.tarjeta),
+        build(mixedMethods[0], mixedAmounts.efectivo),
+        build(mixedMethods[1], mixedAmounts.tarjeta),
       ].filter((payment): payment is OrderPaymentDetail => Boolean(payment));
     }
     const payment = build(selectedMethod, finalTotal);
@@ -173,8 +194,22 @@ export function useCheckoutPayment({
     paymentMethod,
     paymentReferences,
     selectedMethod,
-    splitAmounts,
+    mixedAmounts,
   ]);
+
+  const splitAmounts = useMemo<SplitPaymentAmounts>(() => {
+    const grouped: SplitPaymentAmounts = {
+      efectivo: 0,
+      tarjeta: 0,
+      app: 0,
+    };
+    payments.forEach((payment) => {
+      if (payment.method === "EFECTIVO") grouped.efectivo += payment.amount;
+      else if (payment.method === "TARJETA") grouped.tarjeta += payment.amount;
+      else grouped.app = (grouped.app ?? 0) + payment.amount;
+    });
+    return grouped;
+  }, [payments]);
 
   return {
     methods,
@@ -188,7 +223,8 @@ export function useCheckoutPayment({
     setPaymentReferences,
     payments,
     splitAmounts,
-    setSplitAmounts,
+    mixedAmounts,
+    setMixedAmounts,
     receivedLocal,
     setReceivedLocal,
     receivedSecondary,

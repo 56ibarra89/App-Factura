@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { useOrderCommands, type Order, type OrderItem } from "../../orders";
 import { useTaxConfig } from "../../settings";
 import {
@@ -14,6 +14,13 @@ import {
   type SplitBillCheckoutSelection,
 } from "../../checkout";
 import { receiptPrinter, type ReceiptPrinter } from "../../../shared/printing";
+import { printerDispatcherService } from "../../devices";
+
+interface PendingMesaPrint {
+  invoiceNumber: string;
+  isCash: boolean;
+  printed: boolean;
+}
 
 export function useMesaCheckout(
   restoreFocus: () => void,
@@ -22,6 +29,7 @@ export function useMesaCheckout(
   const { finalizeOrder, updateOrderItems, splitCheckoutOrder } =
     useOrderCommands();
   const { taxes, isExonerated } = useTaxConfig();
+  const pendingPrintRef = useRef<PendingMesaPrint | null>(null);
 
   const [checkoutOrder, setCheckoutOrder] = useState<Order | null>(null);
   const [isSubAccountCheckout, setIsSubAccountCheckout] = useState(false);
@@ -39,9 +47,7 @@ export function useMesaCheckout(
     string | undefined
   >(undefined);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const rehydratedPromotion = useOrderPromotionRehydration(
-    isSubAccountCheckout ? null : checkoutOrder,
-  );
+  const rehydratedPromotion = useOrderPromotionRehydration(checkoutOrder);
   const checkoutPromotion = promotionRemoved
     ? null
     : (checkoutPromotionState ?? rehydratedPromotion);
@@ -137,6 +143,31 @@ export function useMesaCheckout(
   const handleFinalConfirm = useCallback(
     async (form: CheckoutFormValues) => {
       if (!checkoutOrder) return;
+
+      const completePendingPrint = async (pending: PendingMesaPrint) => {
+        setCreatedInvoiceNumber(pending.invoiceNumber);
+        const cashierPrinter =
+          await printerDispatcherService.getCashierPrinter();
+        if (!pending.printed) {
+          await printer.print({
+            renderDelayMs: 500,
+            settleDelayMs: 500,
+            deviceName: cashierPrinter?.windowsDeviceName,
+          });
+          pending.printed = true;
+        }
+        if (pending.isCash) {
+          await printerDispatcherService.openCashDrawer(cashierPrinter);
+        }
+        pendingPrintRef.current = null;
+      };
+
+      if (pendingPrintRef.current) {
+        await completePendingPrint(pendingPrintRef.current);
+        setIsPreviewOpen(false);
+        restoreFocus();
+        return;
+      }
 
       const supplementalItems = buildSupplementalCartItems(
         form.packagingItems,
@@ -234,12 +265,14 @@ export function useMesaCheckout(
           selection: splitSelection,
         });
       }
-      setCreatedInvoiceNumber(invoiceNumber);
-
-      await printer.print({
-        renderDelayMs: 500,
-        settleDelayMs: 500,
-      });
+      pendingPrintRef.current = {
+        invoiceNumber,
+        isCash:
+          form.payments?.some((payment) => payment.method === "EFECTIVO") ??
+          form.paymentMethod === "EFECTIVO",
+        printed: false,
+      };
+      await completePendingPrint(pendingPrintRef.current);
       setIsPreviewOpen(false);
       setCheckoutOrder(null);
       setIsSubAccountCheckout(false);

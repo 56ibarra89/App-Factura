@@ -24,7 +24,10 @@ function calculateTaxAmount(
   isExonerated: boolean
 ): number {
   if (isExonerated) return 0;
-  const activeTax = taxes?.[0]?.percentage ?? 0;
+  const activeTax = (taxes ?? []).reduce(
+    (sum, tax) => sum + (Number(tax.percentage) || 0),
+    0,
+  );
   return subTotal * (activeTax / 100);
 }
 

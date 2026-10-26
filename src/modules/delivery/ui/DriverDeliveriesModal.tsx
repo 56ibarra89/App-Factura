@@ -33,7 +33,9 @@ import {
   statusLabels,
   statusColors,
   ordersGateway,
+  getOrderPaymentDetails,
   type Order,
+  type OrderPaymentDetail,
 } from "../../orders";
 import { useAuth } from "../../auth";
 import {
@@ -41,6 +43,7 @@ import {
   type DeliveryGateway,
 } from "../api/deliveryGateway";
 import { apiClient } from "../../../shared/api";
+import { PaymentConfirmationDialog } from "./PaymentConfirmationDialog";
 
 interface DriverDeliveriesModalProps {
   open: boolean;
@@ -67,8 +70,6 @@ function getOrderDeliveryInfo(order: Order): {
         driverPayout = parsed;
       }
     }
-  } else if (!deliveryItem && order.orderType === "delivery") {
-    driverPayout = 30;
   }
 
   return { customerDeliveryFee, driverPayout };
@@ -86,6 +87,7 @@ export default function DriverDeliveriesModal({
   const [loadingDrivers, setLoadingDrivers] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [payingOrder, setPayingOrder] = useState<Order | null>(null);
 
   const fetchDrivers = useCallback(async () => {
     setLoadingDrivers(true);
@@ -151,19 +153,21 @@ export default function DriverDeliveriesModal({
     }
   }, [selectedDriverId, fetchOrders]);
 
-  const handleMarkAsPaid = async (orderId: string) => {
+  const handleMarkAsPaid = async (
+    payments: OrderPaymentDetail[],
+    paymentMethodLabel: string,
+  ) => {
     try {
-      const order = orders.find((o) => o.id === orderId);
-      const method = (order?.paymentMethod || "EFECTIVO").toUpperCase();
-      const total = order?.total || 0;
+      if (!payingOrder) return;
       await gateway.finalizeOrder(
-        orderId,
-        method,
-        total,
-        order?.splitAmounts,
-        order?.payments,
-        order?.certificateSerials,
+        payingOrder.id,
+        paymentMethodLabel,
+        payingOrder.total,
+        undefined,
+        payments,
+        payingOrder.certificateSerials,
       );
+      setPayingOrder(null);
       if (selectedDriverId) {
         await fetchOrders(selectedDriverId);
       }
@@ -235,14 +239,16 @@ export default function DriverDeliveriesModal({
     );
   };
 
-  const completedOrders = orders.filter((o) => o.status === "delivered" || o.status === "paid");
+  const completedOrders = orders.filter((o) => o.status === "paid");
   const totalRevenue = completedOrders.reduce((acc, o) => acc + o.total, 0);
-  const totalCashCollected = completedOrders.reduce((acc, o) => {
-    const method = (o.paymentMethod || "EFECTIVO").toUpperCase();
-    if (method === "EFECTIVO") return acc + o.total;
-    if (method === "MIXTO" && o.splitAmounts?.efectivo) return acc + o.splitAmounts.efectivo;
-    return acc;
-  }, 0);
+  const totalCashCollected = completedOrders.reduce(
+    (total, order) =>
+      total +
+      getOrderPaymentDetails(order)
+        .filter((payment) => payment.method === "EFECTIVO")
+        .reduce((sum, payment) => sum + payment.amount, 0),
+    0,
+  );
 
   const totalDeliveryFees = completedOrders.reduce((acc, o) => {
     return acc + getOrderDeliveryInfo(o).customerDeliveryFee;
@@ -350,7 +356,7 @@ export default function DriverDeliveriesModal({
                                         variant="outlined"
                                         size="small"
                                         color="success"
-                                        onClick={() => handleMarkAsPaid(order.id)}
+                                        onClick={() => setPayingOrder(order)}
                                         sx={{ fontWeight: "bold" }}
                                       >
                                         Cobrar
@@ -525,6 +531,12 @@ export default function DriverDeliveriesModal({
           {errorMessage}
         </Alert>
       </Snackbar>
+      <PaymentConfirmationDialog
+        open={Boolean(payingOrder)}
+        order={payingOrder}
+        onClose={() => setPayingOrder(null)}
+        onConfirm={handleMarkAsPaid}
+      />
     </Dialog>
   );
 }

@@ -98,7 +98,6 @@ export const CajaProvider = ({
     const shiftOrders = orders.filter(
       (o) =>
         o.status === "paid" &&
-        o.cashierName === currentShift.cashierName &&
         new Date(o.paidAt ?? o.timestamp).getTime() >=
           new Date(currentShift.startTime).getTime(),
     );
