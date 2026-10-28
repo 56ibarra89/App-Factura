@@ -7,6 +7,7 @@ export interface NotificationItem {
   message: string;
   isRead: boolean;
   createdAt: string;
+  orderId?: string | null;
 }
 
 export interface NotificationsGateway {
