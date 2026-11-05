@@ -49,6 +49,7 @@ export type {
 } from "./model/order-command.types";
 export { statusColors, statusLabels } from "./model/orderStatusConfig";
 export { ordersGateway } from "./api/ordersGateway";
+export { mapBackendOrderToFrontend } from "./api/backendSync";
 export type {
   OrderHistoryGateway,
   OrderHistoryPage,
@@ -62,6 +63,7 @@ export type {
 } from "./api/ordersRealtimeGateway";
 export { default as OrdersPage } from "./pages/OrdersPage";
 export { default as KdsPage } from "./pages/KdsPage";
+export { default as KitchenModifierChips } from "./ui/KitchenModifierChips";
 export { KdsCard } from "./ui/kds/KdsCard";
 export { KdsKanbanBoard } from "./ui/kds/KdsKanbanBoard";
 export { useKdsAudioAlert } from "./hooks/useKdsAudioAlert";

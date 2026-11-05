@@ -17,15 +17,15 @@ import {
 } from "@mui/material";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import type { Order, OrderPaymentDetail } from "../../orders";
-import { paymentMethodsGateway } from "../../settings/api/paymentMethodsGateway";
 import {
   DEFAULT_PAYMENT_METHODS_CONFIG,
   isValidPosReference,
+  paymentMethodsGateway,
   sanitizePosReference,
   toLegacyPaymentMethod,
+  useGeneralSettings,
   type ConfiguredPaymentMethod,
-} from "../../settings/model/paymentMethods.types";
-import { useGeneralSettings } from "../../settings";
+} from "../../settings";
 
 interface Props {
   open: boolean;

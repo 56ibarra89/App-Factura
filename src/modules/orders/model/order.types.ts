@@ -1,5 +1,5 @@
 import type { ProductSize, SelectedExtra } from "../../catalog";
-import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
+import type { KitchenModifierSelection } from "../../settings";
 
 export type OrderStatus =
   | "pending"

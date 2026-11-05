@@ -1,9 +1,9 @@
 import { Chip, Stack } from "@mui/material";
-import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
 import {
   formatKitchenModifier,
   KITCHEN_MODIFIER_COLORS,
-} from "../../settings/model/kitchenModifiers.types";
+  type KitchenModifierSelection,
+} from "../../settings";
 
 interface KitchenModifierChipsProps {
   modifiers?: KitchenModifierSelection[];

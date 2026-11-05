@@ -24,31 +24,81 @@ function sanitizeLinkedTables(order: Order): Order {
   };
 }
 
+function getOrderVersionTimestamp(order: Order): number | null {
+  if (!order.updatedAt) return null;
+  const time = new Date(order.updatedAt).getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+function isLocalOrderNewer(localOrder: Order, incomingOrder: Order): boolean {
+  const localVersion = getOrderVersionTimestamp(localOrder);
+  const incomingVersion = getOrderVersionTimestamp(incomingOrder);
+  if (localVersion !== null && incomingVersion !== null) {
+    return localVersion > incomingVersion;
+  }
+  return false;
+}
+
+function resolveSynchronizedTableState(
+  localOrder: Order | undefined,
+  incomingOrder: Order,
+): Order {
+  const sanitizedIncoming = sanitizeLinkedTables(incomingOrder);
+  if (!localOrder) {
+    return sanitizedIncoming;
+  }
+
+  // Solo conservar mesas locales si el payload entrante omitió por completo
+  // la información de mesas (tanto linkedTables como tableId ausentes).
+  // Si linkedTables viene como [] o con elementos, el servidor ya confirmó la
+  // asignación real (incluyendo desvinculación o movimiento a una sola mesa).
+  const hasExplicitTableState =
+    incomingOrder.linkedTables !== undefined ||
+    incomingOrder.tableId !== undefined;
+
+  if (hasExplicitTableState) {
+    if (
+      Array.isArray(incomingOrder.linkedTables) &&
+      incomingOrder.linkedTables.length === 0 &&
+      incomingOrder.tableId === undefined
+    ) {
+      return {
+        ...sanitizedIncoming,
+        tableId: undefined,
+        linkedTables: [],
+      };
+    }
+    return sanitizedIncoming;
+  }
+
+  return sanitizeLinkedTables({
+    ...sanitizedIncoming,
+    tableId: localOrder.tableId,
+    linkedTables: localOrder.linkedTables,
+  });
+}
+
 export function reconcileOrders(
   currentOrders: readonly Order[],
   backendOrders: readonly Order[],
   hiddenOrderIds: readonly string[],
   now = Date.now(),
 ): Order[] {
-  const sanitizedBackendOrders = backendOrders.map(sanitizeLinkedTables);
-  const mergedOrders = sanitizedBackendOrders.map((backendOrder) => {
-    const localOrder = currentOrders.find(
-      (order) => order.id === backendOrder.id,
-    );
-    if (!localOrder) return backendOrder;
+  const localOrderById = new Map(
+    currentOrders.map((order) => [order.id, order] as const),
+  );
 
-    const backendHasLinkedTables =
-      (backendOrder.linkedTables?.length ?? 0) > 0;
-    const localHasLinkedTables = (localOrder.linkedTables?.length ?? 0) > 0;
-
-    if (!backendHasLinkedTables && localHasLinkedTables) {
-      return {
-        ...backendOrder,
-        tableId: localOrder.tableId,
-        linkedTables: localOrder.linkedTables,
-      };
+  const mergedOrders = backendOrders.map((rawBackendOrder) => {
+    const localOrder = localOrderById.get(rawBackendOrder.id);
+    if (!localOrder) {
+      return sanitizeLinkedTables(rawBackendOrder);
     }
-    return backendOrder;
+
+    if (isLocalOrderNewer(localOrder, rawBackendOrder)) {
+      return localOrder;
+    }
+
+    return resolveSynchronizedTableState(localOrder, rawBackendOrder);
   });
 
   const backendOrderIds = new Set(backendOrders.map((order) => order.id));
@@ -75,21 +125,15 @@ export function reconcileRealtimeOrder(
     return currentOrders.filter((order) => order.id !== realtimeOrder.id);
   }
 
-  const sanitizedOrder = sanitizeLinkedTables(realtimeOrder);
   const localOrder = currentOrders.find(
-    (order) => order.id === sanitizedOrder.id,
+    (order) => order.id === realtimeOrder.id,
   );
-  const shouldPreserveLinkedTables =
-    localOrder &&
-    (sanitizedOrder.linkedTables?.length ?? 0) === 0 &&
-    (localOrder.linkedTables?.length ?? 0) > 0;
-  const mergedOrder = shouldPreserveLinkedTables
-    ? {
-        ...sanitizedOrder,
-        tableId: localOrder.tableId,
-        linkedTables: localOrder.linkedTables,
-      }
-    : sanitizedOrder;
+
+  if (localOrder && isLocalOrderNewer(localOrder, realtimeOrder)) {
+    return [...currentOrders];
+  }
+
+  const mergedOrder = resolveSynchronizedTableState(localOrder, realtimeOrder);
 
   if (!localOrder) {
     return [mergedOrder, ...currentOrders];
@@ -127,14 +171,25 @@ export function useOrderSynchronization({
 
     let active = true;
     let loading = false;
+    let reloadRequested = false;
     let preferencesWarningShown = false;
     let realtimeWarningShown = false;
     let hiddenOrderIds: string[] = [];
     let fallbackIntervalId: number | undefined;
+    let realtimeMutationSeq = 0;
+    const realtimeEntriesByOrderId = new Map<
+      string,
+      { seq: number; order: Order }
+    >();
 
     const loadOrders = async () => {
-      if (loading) return;
+      if (loading) {
+        reloadRequested = true;
+        return;
+      }
       loading = true;
+      reloadRequested = false;
+      const requestStartSeq = realtimeMutationSeq;
 
       try {
         const hiddenOrderIdsPromise = preferencesGateway
@@ -155,16 +210,41 @@ export function useOrderSynchronization({
 
         if (!active) return;
         hiddenOrderIds = loadedHiddenOrderIds;
-        const nextOrders = reconcileOrders(
-          ordersRef.current,
-          backendOrders,
-          loadedHiddenOrderIds,
+
+        // Si llegaron eventos en tiempo real mientras la petición HTTP estaba en vuelo,
+        // preservar la versión en tiempo real salvo que el snapshot HTTP tenga un updatedAt estrictamente posterior.
+        const effectiveBackendOrders = backendOrders.map((backendOrder) => {
+          const realtimeEntry = realtimeEntriesByOrderId.get(backendOrder.id);
+          if (!realtimeEntry || realtimeEntry.seq <= requestStartSeq) {
+            return backendOrder;
+          }
+          const realtimeVersion = getOrderVersionTimestamp(realtimeEntry.order);
+          const backendVersion = getOrderVersionTimestamp(backendOrder);
+          if (
+            realtimeVersion !== null &&
+            backendVersion !== null &&
+            backendVersion > realtimeVersion
+          ) {
+            return backendOrder;
+          }
+          return realtimeEntry.order;
+        });
+
+        updateOrders((current) =>
+          reconcileOrders(
+            current,
+            effectiveBackendOrders,
+            loadedHiddenOrderIds,
+          ),
         );
-        updateOrders(() => nextOrders);
       } catch (error: unknown) {
         console.error("Failed to load orders from backend", error);
       } finally {
         loading = false;
+        if (active && reloadRequested) {
+          reloadRequested = false;
+          void loadOrders();
+        }
       }
     };
 
@@ -185,6 +265,11 @@ export function useOrderSynchronization({
 
     const handleRealtimeOrder = ({ order }: OrderRealtimeEvent) => {
       if (!active) return;
+      realtimeMutationSeq += 1;
+      realtimeEntriesByOrderId.set(order.id, {
+        seq: realtimeMutationSeq,
+        order,
+      });
       updateOrders((current) =>
         reconcileRealtimeOrder(current, order, hiddenOrderIds),
       );

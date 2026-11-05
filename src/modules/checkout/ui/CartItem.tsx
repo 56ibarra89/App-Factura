@@ -15,11 +15,13 @@ import EditNoteIcon from "@mui/icons-material/EditNote";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useState } from "react";
 import type { SelectedExtra } from "../../catalog";
-import type { SelectedComboOptionItem } from "../../orders";
-import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
+import {
+  KitchenModifierChips,
+  type SelectedComboOptionItem,
+} from "../../orders";
+import type { KitchenModifierSelection } from "../../settings";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import KitchenModifiersDialog from "./KitchenModifiersDialog";
-import KitchenModifierChips from "../../orders/ui/KitchenModifierChips";
 
 interface CartItemProps {
   name: string;

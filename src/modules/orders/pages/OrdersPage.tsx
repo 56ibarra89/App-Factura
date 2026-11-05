@@ -24,12 +24,12 @@ import {
   getSelectedKitchenId,
   setSelectedKitchenId as saveSelectedKitchenId,
 } from "../api/selectedKitchenPreference";
-import { InvoiceCancellationDialogs } from "../../invoices/ui/InvoiceCancellationDialogs";
-import { voidWastePolicyGateway } from "../../settings/api/voidWastePolicyGateway";
+import { InvoiceCancellationDialogs } from "../../invoices";
 import {
   DEFAULT_VOID_WASTE_POLICY_CONFIG,
+  voidWastePolicyGateway,
   type VoidWastePolicyConfig,
-} from "../../settings/model/voidWastePolicy.types";
+} from "../../settings";
 import type { Order } from "../model/order.types";
 
 interface OrdersPageProps {

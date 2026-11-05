@@ -9,6 +9,7 @@ export interface AuthLoginResult {
   firstName?: string;
   lastName?: string;
   access_token?: string;
+  refresh_token?: string;
   themePreference?: string;
   errorMessage?: string;
   accessRoleId?: string;
@@ -28,6 +29,7 @@ export interface AuthPinLoginSuccess {
   firstName: string;
   lastName: string;
   access_token: string;
+  refresh_token?: string;
   themePreference: string;
   accessRoleId?: string;
   accessRoleName?: string;
@@ -53,4 +55,3 @@ export interface IAuthService {
   logoutAllDevices(): Promise<LogoutResult>;
   refreshToken(): Promise<string | null>;
 }
-

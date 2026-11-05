@@ -39,6 +39,8 @@ export function useOrderTableCommands({
   >(
     (sourceTableId, destinationTableId) => {
       let modifiedOrder: Order | undefined;
+      let previousOrder: Order | undefined;
+
       updateOrders((current) => {
         const result = orderMutations.moveOrder(
           current,
@@ -46,21 +48,37 @@ export function useOrderTableCommands({
           destinationTableId,
         );
         modifiedOrder = result.modified;
+        if (modifiedOrder) {
+          previousOrder = current.find(
+            (order) => order.id === modifiedOrder?.id,
+          );
+        }
         return result.orders;
       });
 
       if (modifiedOrder) {
+        const targetOrder = modifiedOrder;
+        const snapshotToRestore = previousOrder;
         void tablesGateway
           .updateTables(
-            modifiedOrder.id,
-            getTablesToSynchronize(modifiedOrder),
+            targetOrder.id,
+            getTablesToSynchronize(targetOrder),
           )
-          .catch((error: unknown) =>
+          .catch((error: unknown) => {
             console.error(
               "Error moving order between tables",
               error,
-            ),
-          );
+            );
+            if (snapshotToRestore) {
+              updateOrders((current) =>
+                current.map((order) =>
+                  order.id === snapshotToRestore.id
+                    ? snapshotToRestore
+                    : order,
+                ),
+              );
+            }
+          });
       }
     },
     [tablesGateway, updateOrders],
@@ -71,6 +89,7 @@ export function useOrderTableCommands({
   >(
     (sourceTableId, destinationTableId) => {
       let modifiedOrder: Order | undefined;
+      let previousOrder: Order | undefined;
       let isNewOrder = false;
 
       updateOrders((current) => {
@@ -82,7 +101,11 @@ export function useOrderTableCommands({
         let { modified } = result;
         let nextOrders = result.orders;
 
-        if (!modified) {
+        if (modified) {
+          previousOrder = current.find(
+            (order) => order.id === modified?.id,
+          );
+        } else {
           modified = createOrder({
             items: [],
             total: 0,
@@ -104,29 +127,60 @@ export function useOrderTableCommands({
       });
 
       if (!modifiedOrder) return;
+      const targetOrder = modifiedOrder;
+      const snapshotToRestore = previousOrder;
+
       if (isNewOrder) {
         void creationGateway
-          .create(modifiedOrder)
-          .catch((error: unknown) =>
+          .create(targetOrder)
+          .then((persistedOrder) => {
+            if (persistedOrder && typeof persistedOrder === "object") {
+              updateOrders((current) =>
+                current.map((order) =>
+                  order.id === targetOrder.id
+                    ? {
+                        ...order,
+                        ...persistedOrder,
+                      }
+                    : order,
+                ),
+              );
+            }
+          })
+          .catch((error: unknown) => {
             console.error(
               "Error creating linked table order",
               error,
-            ),
-          );
+            );
+            updateOrders((current) =>
+              current.filter(
+                (order) => order.id !== targetOrder.id,
+              ),
+            );
+          });
         return;
       }
 
       void tablesGateway
         .updateTables(
-          modifiedOrder.id,
-          getTablesToSynchronize(modifiedOrder),
+          targetOrder.id,
+          getTablesToSynchronize(targetOrder),
         )
-        .catch((error: unknown) =>
+        .catch((error: unknown) => {
           console.error(
             "Error linking order tables",
             error,
-          ),
-        );
+          );
+          if (snapshotToRestore) {
+            updateOrders((current) =>
+              current.map((order) =>
+                order.id === snapshotToRestore.id
+                  ? snapshotToRestore
+                  : order,
+              ),
+            );
+          }
+        });
     },
     [
       creationGateway,

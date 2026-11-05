@@ -18,7 +18,7 @@ interface UseOrderFinalizationCommandOptions {
   finalizationGateway: OrderFinalizationGateway;
 }
 
-const MAX_PAYMENT_ROUNDING_ADJUSTMENT = 1;
+const MAX_PAYMENT_ROUNDING_ADJUSTMENT = 0.01;
 
 function reconcileFinalizationPayments(
   order: Order,
@@ -52,10 +52,9 @@ function reconcileFinalizationPayments(
     0,
   );
 
-  // Solo se reconcilian los pagos que cuadraban con el total calculado en el
-  // cliente y cuya diferencia con el backend es de redondeo. Una diferencia
-  // mayor significa que el cajero cobró otro monto: no se altera el pago
-  // registrado y el backend rechazará la finalización con un mensaje claro.
+  // Solo se reconcilian diferencias de hasta 1 centavo por redondeo en pagos
+  // en efectivo (moneda local). Nunca se alteran montos de tarjeta, transferencia
+  // o moneda extranjera ni se desincroniza originalAmount respecto a amount.
   if (Math.abs(currentSum - order.total) >= 0.01) {
     return basePayments;
   }
@@ -71,20 +70,28 @@ function reconcileFinalizationPayments(
   const adjustIndex = [...basePayments]
     .map((payment, index) => ({ payment, index }))
     .reverse()
-    .find(({ payment }) => payment.amount + delta > 0)?.index;
+    .find(
+      ({ payment }) =>
+        payment.method === "EFECTIVO" &&
+        (!payment.currency || payment.currency === "NIO") &&
+        payment.amount + delta > 0,
+    )?.index;
 
   if (adjustIndex === undefined) {
     return basePayments;
   }
 
-  return basePayments.map((payment, index) =>
-    index === adjustIndex
-      ? {
-          ...payment,
-          amount: Number((payment.amount + delta).toFixed(2)),
-        }
-      : payment,
-  );
+  return basePayments.map((payment, index) => {
+    if (index !== adjustIndex) return payment;
+    const adjustedAmount = Number((payment.amount + delta).toFixed(2));
+    return {
+      ...payment,
+      amount: adjustedAmount,
+      ...(payment.originalAmount !== undefined
+        ? { originalAmount: adjustedAmount }
+        : {}),
+    };
+  });
 }
 
 export function useOrderFinalizationCommand({

@@ -1,5 +1,5 @@
 import { io, type Socket } from "socket.io-client";
-import { accessTokenStore } from "../../../shared/api/accessTokenStore";
+import { accessTokenStore } from "../../../shared/api";
 import type { Order } from "../model/order.types";
 import {
   mapBackendOrderToFrontend,

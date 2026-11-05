@@ -1,7 +1,7 @@
 import {
   accessTokenStore,
   type AccessTokenStore,
-} from "../../../shared/api/accessTokenStore";
+} from "../../../shared/api";
 
 interface AuthRuntime {
   authAPI?: {
@@ -11,7 +11,7 @@ interface AuthRuntime {
 }
 
 export interface SecureTokenGateway {
-  store(token: string): Promise<void>;
+  store(token: string, refreshToken?: string): Promise<void>;
   clear(): Promise<void>;
 }
 
@@ -20,9 +20,15 @@ export function createSecureTokenGateway(
   tokenStore: AccessTokenStore = accessTokenStore,
 ): SecureTokenGateway {
   return {
-    async store(token) {
+    async store(token, refreshToken) {
+      if (typeof refreshToken === "string" && refreshToken) {
+        tokenStore.setRefreshToken?.(refreshToken);
+      }
       if (runtime.authAPI) {
         tokenStore.clear();
+        if (typeof refreshToken === "string" && refreshToken) {
+          tokenStore.setRefreshToken?.(refreshToken);
+        }
         const stored = await runtime.authAPI.setToken(token);
         if (!stored) throw new Error("No fue posible proteger la sesión.");
         return;

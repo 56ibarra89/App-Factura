@@ -20,24 +20,15 @@ const PrivateRoute = ({
 }: PrivateRouteProps) => {
   const { isLoggedIn, role, hasPermission } = useAuth();
   if (!isLoggedIn) return <Navigate to="/" replace />;
-  if (
-    role === "motorizado" &&
-    !allowMotorizado &&
-    !requiredPermissions?.length
-  ) {
+  if (role === "motorizado" && !allowMotorizado) {
+    return <Navigate to="/home" replace />;
+  }
+  if (allowedRoles && (!role || !allowedRoles.includes(role))) {
     return <Navigate to="/home" replace />;
   }
   if (
     requiredPermissions?.length &&
     !hasPermission(...requiredPermissions)
-  ) {
-    return <Navigate to="/home" replace />;
-  }
-  if (
-    !requiredPermissions?.length &&
-    allowedRoles &&
-    role &&
-    !allowedRoles.includes(role)
   ) {
     return <Navigate to="/home" replace />;
   }

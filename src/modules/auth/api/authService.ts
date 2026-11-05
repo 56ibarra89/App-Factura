@@ -2,7 +2,11 @@ import type {
   IAuthService,
   AuthLoginResult,
 } from "../model/auth-service.types";
-import { ApiClientError, apiClient } from "../../../shared/api";
+import {
+  ApiClientError,
+  apiClient,
+  attemptTokenRefresh,
+} from "../../../shared/api";
 import type { UserRole } from "../model/user.types";
 import type { PermissionCode } from "../model/permission.types";
 import { secureTokenGateway } from "./secureTokenGateway";
@@ -15,6 +19,7 @@ interface AuthResponse {
   firstName: string;
   lastName: string;
   access_token: string;
+  refresh_token?: string;
   themePreference: string;
   accessRoleId?: string;
   accessRoleName?: string;
@@ -49,6 +54,7 @@ export const authService: IAuthService = {
         firstName: result.firstName,
         lastName: result.lastName,
         access_token: result.access_token,
+        refresh_token: result.refresh_token,
         themePreference: result.themePreference,
         accessRoleId: result.accessRoleId,
         accessRoleName: result.accessRoleName,
@@ -159,12 +165,10 @@ export const authService: IAuthService = {
 
   refreshToken: async (): Promise<string | null> => {
     try {
-      const result: { access_token?: string } | null = await apiClient("/auth/refresh", {
-        method: "POST",
-      });
-      if (result?.access_token) {
-        await secureTokenGateway.store(result.access_token);
-        return result.access_token;
+      const refreshed = await attemptTokenRefresh();
+      if (refreshed) {
+        await secureTokenGateway.store(refreshed);
+        return refreshed;
       }
       return null;
     } catch (error: unknown) {

@@ -3,6 +3,7 @@ import {
   useEffect,
   ReactNode,
   useCallback,
+  useRef,
 } from "react";
 import type {
   CloseShiftData,
@@ -23,16 +24,20 @@ import { useAuth } from "../../auth";
 import { calculateShiftSales } from "./shiftDomain";
 import { CajaContext } from "./CajaContext";
 
+const SHIFT_SYNC_POLL_INTERVAL_MS = 15_000;
+
 interface CajaProviderProps {
   children: ReactNode;
   repository?: IShiftRepository;
   expenseGateway?: CashExpenseGateway;
+  pollIntervalMs?: number;
 }
 
 export const CajaProvider = ({
   children,
   repository = defaultShiftRepository,
   expenseGateway = defaultExpenseGateway,
+  pollIntervalMs = SHIFT_SYNC_POLL_INTERVAL_MS,
 }: CajaProviderProps) => {
   const { username, hasPermission } = useAuth();
   const { orders } = useOrderQueries();
@@ -41,6 +46,9 @@ export const CajaProvider = ({
   const [currentShiftExpenses, setCurrentShiftExpenses] = useState<
     CashExpense[]
   >([]);
+  const isFetchingShiftRef = useRef(false);
+
+  const canReadCashStatus = Boolean(username && hasPermission("cash.status"));
 
   const refreshCurrentShiftExpenses = useCallback(async () => {
     if (!currentShift?.id) {
@@ -55,6 +63,43 @@ export const CajaProvider = ({
     }
   }, [currentShift?.id, expenseGateway]);
 
+  const syncActiveShift = useCallback(async (): Promise<Shift | null> => {
+    if (!canReadCashStatus) {
+      return null;
+    }
+    if (isFetchingShiftRef.current) {
+      return null;
+    }
+    isFetchingShiftRef.current = true;
+    try {
+      const shift = await repository.getActiveShift();
+      setCurrentShift((prevShift) => {
+        const changed =
+          prevShift?.id !== shift?.id ||
+          prevShift?.status !== shift?.status;
+        if (changed) {
+          console.log(
+            "[CajaContext] Estado de caja global sincronizado:",
+            shift ? `ABIERTA por ${shift.cashierName}` : "CERRADA",
+          );
+        }
+        return shift;
+      });
+      if (!shift) {
+        setCurrentShiftExpenses([]);
+      }
+      return shift;
+    } catch (err) {
+      console.error(
+        "[CajaContext] Error al recuperar turno activo global:",
+        err,
+      );
+      return null;
+    } finally {
+      isFetchingShiftRef.current = false;
+    }
+  }, [canReadCashStatus, repository]);
+
   useEffect(() => {
     if (!username) {
       console.log("[CajaContext] Usuario deslogueado. Limpiando estado.");
@@ -64,31 +109,44 @@ export const CajaProvider = ({
   }, [username]);
 
   useEffect(() => {
-    let isMounted = true;
-    if (username && hasPermission("cash.status")) {
-      repository
-        .getActiveShift()
-        .then((shift) => {
-          if (isMounted) {
-            console.log(
-              "[CajaContext] Estado de caja global recuperado:",
-              shift ? `ABIERTA por ${shift.cashierName}` : "CERRADA",
-            );
-            setCurrentShift(shift);
-          }
-        })
-        .catch((err) =>
-          console.error("[CajaContext] Error al recuperar turno activo global:", err),
-        );
+    if (!canReadCashStatus) {
+      return;
     }
-    return () => {
-      isMounted = false;
+
+    let active = true;
+
+    const triggerSync = () => {
+      if (!active) return;
+      void syncActiveShift();
     };
-  }, [hasPermission, username, repository]);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        triggerSync();
+      }
+    };
+
+    triggerSync();
+
+    const intervalId = window.setInterval(triggerSync, pollIntervalMs);
+    window.addEventListener("focus", triggerSync);
+    window.addEventListener("appfactura:shift-changed", triggerSync);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", triggerSync);
+      window.removeEventListener("appfactura:shift-changed", triggerSync);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [canReadCashStatus, pollIntervalMs, syncActiveShift]);
 
   useEffect(() => {
     if (currentShift?.id) {
       void refreshCurrentShiftExpenses();
+    } else {
+      setCurrentShiftExpenses([]);
     }
   }, [currentShift?.id, refreshCurrentShiftExpenses]);
 
@@ -119,12 +177,14 @@ export const CajaProvider = ({
         });
         setCurrentShift(newShift);
         setCurrentShiftExpenses([]);
+        window.dispatchEvent(new CustomEvent("appfactura:shift-changed"));
       } catch (error) {
         console.error("Error al abrir caja en backend:", error);
+        void syncActiveShift();
         throw error;
       }
     },
-    [username, repository],
+    [username, repository, syncActiveShift],
   );
 
   const cerrarCaja = useCallback(
@@ -138,13 +198,15 @@ export const CajaProvider = ({
 
         setCurrentShift(null);
         setCurrentShiftExpenses([]);
+        window.dispatchEvent(new CustomEvent("appfactura:shift-changed"));
         return closedShift;
       } catch (error) {
         console.error("Error closing shift:", error);
+        void syncActiveShift();
         throw error;
       }
     },
-    [currentShift, repository],
+    [currentShift, repository, syncActiveShift],
   );
 
   return (

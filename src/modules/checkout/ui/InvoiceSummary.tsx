@@ -6,10 +6,9 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import type { OrderItem } from "../../orders";
+import { KitchenModifierChips, type OrderItem } from "../../orders";
 import type { GeneralConfigState } from "../../settings";
 import { formatItemName } from "../../../shared/format";
-import KitchenModifierChips from "../../orders/ui/KitchenModifierChips";
 
 interface InvoiceSummaryProps {
   cart: OrderItem[];

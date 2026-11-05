@@ -7,7 +7,7 @@ import {
   SelectedComboOptionItem,
 } from "../model/order.types";
 import { apiClient } from "../../../shared/api";
-import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
+import type { KitchenModifierSelection } from "../../settings";
 import type { SplitCheckoutOrderCommand } from "../model/order-command.types";
 
 interface BackendExtra {

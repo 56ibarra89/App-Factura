@@ -4,13 +4,13 @@ import type {
   PaymentMethod,
   SplitPaymentAmounts,
 } from "../../orders";
-import { paymentMethodsGateway } from "../../settings/api/paymentMethodsGateway";
 import {
   DEFAULT_PAYMENT_METHODS_CONFIG,
   isValidPosReference,
+  paymentMethodsGateway,
   toLegacyPaymentMethod,
   type ConfiguredPaymentMethod,
-} from "../../settings/model/paymentMethods.types";
+} from "../../settings";
 import { isCheckoutPaymentValid } from "../model/checkoutFormDomain";
 
 interface UseCheckoutPaymentOptions {

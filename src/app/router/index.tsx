@@ -174,7 +174,12 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<DeliveryPage />}
-              allowedRoles={["admin", "despachador"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.DELIVERY_MANAGE]}
             />
           }
@@ -185,7 +190,13 @@ const AppRoutes = () => (
             <PrivateRoute
               element={<MisEntregas />}
               allowMotorizado
-              allowedRoles={["admin", "despachador", "motorizado"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "despachador",
+                "motorizado",
+              ]}
               requiredPermissions={[PERMISSIONS.DELIVERY_READ]}
             />
           }
@@ -195,7 +206,12 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<AbrirCajaPage />}
-              allowedRoles={["admin", "cajero_principal"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.CASH_OPEN]}
             />
           }
@@ -205,7 +221,12 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<CerrarCajaPage />}
-              allowedRoles={["admin", "cajero_principal"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.CASH_CLOSE]}
             />
           }
@@ -215,7 +236,12 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<ConsultarTurnos />}
-              allowedRoles={["admin", "cajero_principal"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.CASH_READ]}
             />
           }
@@ -235,7 +261,13 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<Mesa />}
-              allowedRoles={["admin", "mesero"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "mesero",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.TABLES_READ]}
             />
           }
@@ -245,7 +277,14 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<Ordenes />}
-              allowedRoles={["admin", "cocinero"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "mesero",
+                "cocinero",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.ORDERS_READ]}
             />
           }
@@ -255,7 +294,13 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<KdsPage />}
-              allowedRoles={["admin", "cocinero"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "cocinero",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.KITCHEN_READ]}
             />
           }
@@ -265,7 +310,12 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<AnularFactura />}
-              allowedRoles={["admin", "cajero", "cajero_principal"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.INVOICES_CANCEL]}
             />
           }
@@ -275,7 +325,12 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<ConsultarFacturas />}
-              allowedRoles={["admin", "cajero", "cajero_principal"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.INVOICES_READ]}
             />
           }

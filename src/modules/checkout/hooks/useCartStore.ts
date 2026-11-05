@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useState, useEffect } from "react";
 import type { Order, OrderItem, OrderItemInput } from "../../orders";
 import type { SelectedExtra } from "../../catalog";
-import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
-import { useTaxConfig } from "../../settings";
+import {
+  useTaxConfig,
+  type KitchenModifierSelection,
+} from "../../settings";
 import { calculateCartTotals } from "../model/cartTotals";
 import {
   useAutomaticPromotions,

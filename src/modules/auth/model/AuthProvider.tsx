@@ -13,8 +13,7 @@ import { secureTokenGateway as defaultTokenGateway } from "../api/secureTokenGat
 import { authService as defaultAuthService } from "../api/authService";
 import type { IAuthService } from "./auth-service.types";
 import { AuthContext } from "./AuthContext";
-import { accessTokenStore } from "../../../shared/api/accessTokenStore";
-import { apiClient } from "../../../shared/api";
+import { accessTokenStore, apiClient } from "../../../shared/api";
 import type { PermissionCode } from "./permission.types";
 
 interface AuthProviderProps {

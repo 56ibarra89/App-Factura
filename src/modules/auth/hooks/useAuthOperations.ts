@@ -117,7 +117,10 @@ export function useAuthOperations({
             result.username || username;
 
           if (result.access_token) {
-            await tokenGateway.store(result.access_token);
+            await tokenGateway.store(
+              result.access_token,
+              result.refresh_token,
+            );
           }
           preferencesGateway.applyTheme(
             result.themePreference === "dark"
@@ -195,7 +198,10 @@ export function useAuthOperations({
 
         if (result.success) {
           if (result.access_token) {
-            await tokenGateway.store(result.access_token);
+            await tokenGateway.store(
+              result.access_token,
+              result.refresh_token,
+            );
           }
           preferencesGateway.applyTheme(
             result.themePreference === "dark"

@@ -23,7 +23,7 @@ import {
   sanitizePosReference,
   toLegacyPaymentMethod,
   type ConfiguredPaymentMethod,
-} from "../../settings/model/paymentMethods.types";
+} from "../../settings";
 import { blockInvalidChar } from "../../../shared/forms";
 
 interface SplitAmounts {

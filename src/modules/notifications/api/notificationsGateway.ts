@@ -1,5 +1,4 @@
-import { apiClient } from "../../../shared/api";
-import { accessTokenStore } from "../../../shared/api/accessTokenStore";
+import { accessTokenStore, apiClient } from "../../../shared/api";
 
 export interface NotificationItem {
   id: string;

@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { PERMISSIONS, PinValidationDialog } from "../../auth";
 import { LOGIN_COLORS } from "../../../shared/theme";
-import type { CancellationReasonPolicy } from "../../settings/model/voidWastePolicy.types";
+import type { CancellationReasonPolicy } from "../../settings";
 
 interface InvoiceCancellationDialogsProps {
   reasonOpen: boolean;

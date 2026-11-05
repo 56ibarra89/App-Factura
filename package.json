@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
     "build:web": "vite build",
+    "test": "node --test tests/architecture-and-contracts.test.mjs",
     "audit:prod": "npm audit --omit=dev",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview"

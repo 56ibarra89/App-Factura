@@ -1,8 +1,10 @@
 import { deviceGateway } from "../api/deviceGateway";
 import type { PrinterConfig } from "../api/printerConfig.types";
 import { EscPosBuilder } from "../../../shared/printing/escposBuilder";
-import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
-import { KITCHEN_MODIFIER_PREFIXES } from "../../settings/model/kitchenModifiers.types";
+import {
+  KITCHEN_MODIFIER_PREFIXES,
+  type KitchenModifierSelection,
+} from "../../settings";
 
 export interface KitchenOrderItem {
   name: string;
@@ -24,6 +26,7 @@ export interface KitchenOrderItem {
 }
 
 export interface KitchenComandaData {
+  jobId?: string;
   orderId?: string;
   tableNumber?: string | number;
   orderType?: string;
@@ -32,8 +35,16 @@ export interface KitchenComandaData {
   timestamp?: number | string | Date;
 }
 
+export type PrintDispatchStatus =
+  | "printed"
+  | "skipped"
+  | "pending"
+  | "failed";
+
 export interface PrintDispatchResult {
   success: boolean;
+  status?: PrintDispatchStatus;
+  jobId?: string;
   redirected?: boolean;
   originalPrinter?: string;
   fallbackPrinter?: string;
@@ -43,6 +54,39 @@ export interface PrintDispatchResult {
 class PrinterDispatcherService {
   private cachedPrinters: PrinterConfig[] | null = null;
   private lastFetchTime = 0;
+  private readonly printedJobIds = new Set<string>();
+  private readonly pendingJobs = new Map<string, KitchenComandaData>();
+
+  private deriveJobId(data: KitchenComandaData): string {
+    if (data.jobId && data.jobId.trim()) {
+      return data.jobId.trim();
+    }
+    const ts =
+      data.timestamp !== undefined
+        ? new Date(data.timestamp).getTime()
+        : Date.now();
+    const itemSummary = (data.items || [])
+      .map((item) => `${item.quantity}x${item.name}:${item.size || ""}`)
+      .join("|");
+    return `${data.orderId || "no-order"}:${ts}:${itemSummary}`;
+  }
+
+  getPendingJobs(): KitchenComandaData[] {
+    return Array.from(this.pendingJobs.values());
+  }
+
+  async retryPendingComanda(jobId: string): Promise<PrintDispatchResult> {
+    const pending = this.pendingJobs.get(jobId);
+    if (!pending) {
+      return {
+        success: false,
+        status: "skipped",
+        jobId,
+        error: "No existe una comanda pendiente con el identificador indicado.",
+      };
+    }
+    return await this.printKitchenComanda(pending);
+  }
 
   /**
    * Obtiene la configuración de impresoras con caché de corta duración (5s)
@@ -175,12 +219,14 @@ class PrinterDispatcherService {
       if (!printer.ipAddress) {
         return {
           success: false,
+          status: "failed",
           error: "La impresora no tiene dirección IP configurada.",
         };
       }
       if (!window.printAPI?.printNetworkTicket) {
         return {
           success: false,
+          status: "failed",
           error: "La impresión de tickets por red no está disponible en Electron.",
         };
       }
@@ -192,7 +238,10 @@ class PrinterDispatcherService {
         timeoutMs: 3000,
       });
 
-      return res;
+      return {
+        ...res,
+        status: res.success ? "printed" : "failed",
+      };
     }
 
     // Impresión por Windows / USB
@@ -201,13 +250,13 @@ class PrinterDispatcherService {
         deviceName: printer.windowsDeviceName,
       });
       if (!result.success) {
-        return { success: false, error: result.error };
+        return { success: false, status: "failed", error: result.error };
       }
-      return { success: true };
+      return { success: true, status: "printed" };
     }
 
     window.print();
-    return { success: true };
+    return { success: true, status: "printed" };
   }
 
   /**
@@ -315,16 +364,30 @@ class PrinterDispatcherService {
     data: KitchenComandaData,
   ): Promise<PrintDispatchResult> {
     if (!data.items || data.items.length === 0) {
-      return { success: true };
+      return { success: true, status: "skipped" };
+    }
+
+    const jobId = this.deriveJobId(data);
+    if (this.printedJobIds.has(jobId)) {
+      return {
+        success: true,
+        status: "skipped",
+        jobId,
+        originalPrinter: "Ya impreso",
+      };
     }
 
     const kitchenPrinter = await this.getKitchenPrinter();
 
-    // Si no hay impresora de cocina configurada, finalizar de forma segura sin imprimir pantallas de la app
+    // Si no hay impresora de cocina configurada, registrar como omitida/pendiente sin informar falso éxito de impresión
     if (!kitchenPrinter) {
+      this.pendingJobs.set(jobId, { ...data, jobId });
       return {
-        success: true,
+        success: false,
+        status: "skipped",
+        jobId,
         originalPrinter: "Ninguna (No configurada)",
+        error: "No hay impresora de cocina activa configurada.",
       };
     }
 
@@ -341,46 +404,70 @@ class PrinterDispatcherService {
           data,
           comandaBuffer,
           "La impresora de cocina no tiene IP configurada",
+          jobId,
         );
       }
 
-      if (window.printAPI?.printNetworkTicket) {
-        try {
-          const result = await window.printAPI.printNetworkTicket({
-            host,
-            port,
-            data: comandaBuffer,
-            timeoutMs: 3000,
-          });
+      if (!window.printAPI?.printNetworkTicket) {
+        return await this.executeFailover(
+          kitchenPrinter,
+          data,
+          comandaBuffer,
+          "La API de impresión por red de Electron no está disponible",
+          jobId,
+        );
+      }
 
-          if (result.success) {
-            return { success: true, originalPrinter: kitchenPrinter.name };
-          }
+      try {
+        const result = await window.printAPI.printNetworkTicket({
+          host,
+          port,
+          data: comandaBuffer,
+          timeoutMs: 3000,
+        });
 
-          // Falló la conexión TCP -> Activar Failover
-          return await this.executeFailover(
-            kitchenPrinter,
-            data,
-            comandaBuffer,
-            result.error || "Falla de comunicación con la impresora de cocina",
-          );
-        } catch (err: unknown) {
-          const errMsg = err instanceof Error ? err.message : String(err);
-          return await this.executeFailover(
-            kitchenPrinter,
-            data,
-            comandaBuffer,
-            errMsg,
-          );
+        if (result.success) {
+          this.printedJobIds.add(jobId);
+          this.pendingJobs.delete(jobId);
+          return {
+            success: true,
+            status: "printed",
+            jobId,
+            originalPrinter: kitchenPrinter.name,
+          };
         }
+
+        // Falló la conexión TCP -> Activar Failover
+        return await this.executeFailover(
+          kitchenPrinter,
+          data,
+          comandaBuffer,
+          result.error || "Falla de comunicación con la impresora de cocina",
+          jobId,
+        );
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        return await this.executeFailover(
+          kitchenPrinter,
+          data,
+          comandaBuffer,
+          errMsg,
+          jobId,
+        );
       }
     }
 
-    // Si la impresora de cocina es USB / Windows, no invocar printSilent para no imprimir el DOM visible
-    console.warn(
-      `[PrinterDispatcher] Impresión directa de comanda en impresora USB/Windows (${kitchenPrinter.windowsDeviceName || kitchenPrinter.name}) requiere conexión de red RAW 9100. Se omite para no imprimir la interfaz gráfica.`,
+    // Si la impresora de cocina es USB / Windows, no invocar printSilent para no imprimir el DOM visible;
+    // intentar Failover hacia una impresora de respaldo en red y, si no es posible, informar que se omitió.
+    const usbSkipReason = `Impresión directa de comanda en impresora USB/Windows (${kitchenPrinter.windowsDeviceName || kitchenPrinter.name}) requiere conexión de red RAW 9100. Se omite para no imprimir la interfaz gráfica.`;
+    console.warn(`[PrinterDispatcher] ${usbSkipReason}`);
+    return await this.executeFailover(
+      kitchenPrinter,
+      data,
+      comandaBuffer,
+      usbSkipReason,
+      jobId,
     );
-    return { success: true, originalPrinter: kitchenPrinter.name };
   }
 
   /**
@@ -391,6 +478,7 @@ class PrinterDispatcherService {
     data: KitchenComandaData,
     comandaBuffer: Uint8Array,
     errorReason: string,
+    jobId = this.deriveJobId(data),
   ): Promise<PrintDispatchResult> {
     const printers = await this.getPrinters();
 
@@ -414,13 +502,20 @@ class PrinterDispatcherService {
 
     if (!fallbackPrinter) {
       const errorMsg = `Impresora de cocina no responde (${errorReason}) y no hay impresora de respaldo disponible.`;
+      this.pendingJobs.set(jobId, { ...data, jobId });
       this.notifyFailoverAlert({
         failedPrinterName: failedPrinter.name,
         fallbackPrinterName: "Ninguna",
         error: errorMsg,
         critical: true,
       });
-      return { success: false, error: errorMsg };
+      return {
+        success: false,
+        status: "failed",
+        jobId,
+        originalPrinter: failedPrinter.name,
+        error: errorMsg,
+      };
     }
 
     // Enviar comanda a la impresora de respaldo
@@ -428,33 +523,117 @@ class PrinterDispatcherService {
       fallbackPrinter.connectionType === "network" &&
       fallbackPrinter.ipAddress
     ) {
-      if (window.printAPI?.printNetworkTicket) {
-        await window.printAPI.printNetworkTicket({
+      if (!window.printAPI?.printNetworkTicket) {
+        const noApiError = `Impresora principal (${failedPrinter.name}) falló (${errorReason}) y la API de red de Electron no está disponible para la impresora de respaldo (${fallbackPrinter.name}).`;
+        this.pendingJobs.set(jobId, { ...data, jobId });
+        this.notifyFailoverAlert({
+          failedPrinterName: failedPrinter.name,
+          fallbackPrinterName: fallbackPrinter.name,
+          error: noApiError,
+          critical: true,
+        });
+        return {
+          success: false,
+          status: "failed",
+          jobId,
+          redirected: false,
+          originalPrinter: failedPrinter.name,
+          fallbackPrinter: fallbackPrinter.name,
+          error: noApiError,
+        };
+      }
+
+      try {
+        const fallbackResult = await window.printAPI.printNetworkTicket({
           host: fallbackPrinter.ipAddress,
           port: fallbackPrinter.port || 9100,
           data: comandaBuffer,
           timeoutMs: 3000,
         });
+
+        if (!fallbackResult.success) {
+          const fallbackErr =
+            fallbackResult.error ||
+            "La impresora de respaldo tampoco respondió";
+          const combinedError = `Impresora principal (${failedPrinter.name}) falló (${errorReason}) y respaldo (${fallbackPrinter.name}) también falló (${fallbackErr}).`;
+          this.pendingJobs.set(jobId, { ...data, jobId });
+          this.notifyFailoverAlert({
+            failedPrinterName: failedPrinter.name,
+            fallbackPrinterName: fallbackPrinter.name,
+            error: combinedError,
+            critical: true,
+          });
+          return {
+            success: false,
+            status: "failed",
+            jobId,
+            redirected: false,
+            originalPrinter: failedPrinter.name,
+            fallbackPrinter: fallbackPrinter.name,
+            error: combinedError,
+          };
+        }
+      } catch (err: unknown) {
+        const fallbackErr = err instanceof Error ? err.message : String(err);
+        const combinedError = `Impresora principal (${failedPrinter.name}) falló (${errorReason}) y respaldo (${fallbackPrinter.name}) lanzó error (${fallbackErr}).`;
+        this.pendingJobs.set(jobId, { ...data, jobId });
+        this.notifyFailoverAlert({
+          failedPrinterName: failedPrinter.name,
+          fallbackPrinterName: fallbackPrinter.name,
+          error: combinedError,
+          critical: true,
+        });
+        return {
+          success: false,
+          status: "failed",
+          jobId,
+          redirected: false,
+          originalPrinter: failedPrinter.name,
+          fallbackPrinter: fallbackPrinter.name,
+          error: combinedError,
+        };
       }
-    } else {
-      // Impresora de respaldo es USB / Windows
-      this.printToCashierPrinter(data, fallbackPrinter);
+
+      // Éxito verificado en la impresora de respaldo por red
+      this.printedJobIds.add(jobId);
+      this.pendingJobs.delete(jobId);
+      this.notifyFailoverAlert({
+        failedPrinterName: failedPrinter.name,
+        fallbackPrinterName: fallbackPrinter.name,
+        error: errorReason,
+        critical: false,
+      });
+
+      return {
+        success: true,
+        status: "printed",
+        jobId,
+        redirected: true,
+        originalPrinter: failedPrinter.name,
+        fallbackPrinter: fallbackPrinter.name,
+        error: errorReason,
+      };
     }
 
-    // Notificar en la interfaz de usuario que ocurrió un Failover
+    // Impresora de respaldo es USB / Windows (sin soporte RAW ESC/POS)
+    const usbResult = this.printToCashierPrinter(data, fallbackPrinter);
+    const combinedUsbError = `Impresora principal (${failedPrinter.name}) falló (${errorReason}) y respaldo (${fallbackPrinter.name}) no soporta comanda RAW (${usbResult.error}).`;
+    this.pendingJobs.set(jobId, { ...data, jobId });
     this.notifyFailoverAlert({
       failedPrinterName: failedPrinter.name,
       fallbackPrinterName: fallbackPrinter.name,
-      error: errorReason,
-      critical: false,
+      error: combinedUsbError,
+      critical: true,
     });
 
     return {
-      success: true,
-      redirected: true,
+      success: false,
+      status: usbResult.status ?? "skipped",
+      jobId,
+      redirected: false,
       originalPrinter: failedPrinter.name,
       fallbackPrinter: fallbackPrinter.name,
-      error: errorReason,
+      error: combinedUsbError,
     };
   }
 
@@ -464,10 +643,15 @@ class PrinterDispatcherService {
   private printToCashierPrinter(
     _data: KitchenComandaData,
     printer: PrinterConfig,
-  ) {
-    console.warn(
-      `[PrinterDispatcher] Omitiendo impresión de comanda en impresora ${printer.name}: se evita captura de pantalla (printSilent) al no disponer de conexión RAW o plantilla DOM.`,
-    );
+  ): PrintDispatchResult {
+    const error = `Omitiendo impresión de comanda en impresora ${printer.name}: se evita captura de pantalla (printSilent) al no disponer de conexión RAW o plantilla DOM.`;
+    console.warn(`[PrinterDispatcher] ${error}`);
+    return {
+      success: false,
+      status: "skipped",
+      originalPrinter: printer.name,
+      error,
+    };
   }
 
   /**

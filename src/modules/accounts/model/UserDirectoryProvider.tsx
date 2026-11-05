@@ -52,7 +52,10 @@ export function UserDirectoryProvider({
   }, [gateway, hasPermission]);
 
   useEffect(() => {
-    if (!isLoggedIn || !hasPermission("users.directory")) {
+    if (
+      !isLoggedIn ||
+      (!hasPermission("users.directory") && !hasPermission("users.read"))
+    ) {
       setUsers([]);
       setError(null);
       setLoading(false);

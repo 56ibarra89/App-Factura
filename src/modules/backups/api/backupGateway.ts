@@ -1,5 +1,4 @@
-import { apiClient } from "../../../shared/api";
-import { accessTokenStore } from "../../../shared/api/accessTokenStore";
+import { accessTokenStore, apiClient } from "../../../shared/api";
 
 export const MAX_BACKUP_UPLOAD_BYTES = 100 * 1024 * 1024;
 export const MAX_BACKUP_UPLOAD_MB = MAX_BACKUP_UPLOAD_BYTES / (1024 * 1024);

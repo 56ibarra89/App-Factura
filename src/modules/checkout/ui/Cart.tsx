@@ -1,7 +1,7 @@
 import { Box, Typography, Divider, Button } from "@mui/material";
 import CartItem from "./CartItem";
 import { isSplitBillCreditOrderItem, type OrderItem } from "../../orders";
-import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
+import type { KitchenModifierSelection } from "../../settings";
 import { formatItemName } from "../../../shared/format";
 
 interface CartProps {

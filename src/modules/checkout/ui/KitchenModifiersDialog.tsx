@@ -14,14 +14,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import type { KitchenModifierSelection } from "../../settings/model/kitchenModifiers.types";
 import {
   KITCHEN_MODIFIER_COLORS,
   KITCHEN_MODIFIER_KIND_LABELS,
   KITCHEN_MODIFIER_KINDS,
   KITCHEN_MODIFIER_PREFIXES,
-} from "../../settings/model/kitchenModifiers.types";
-import { kitchenModifiersGateway } from "../../settings/api/kitchenModifiersGateway";
+  kitchenModifiersGateway,
+  type KitchenModifierSelection,
+} from "../../settings";
 
 const toSelection = ({
   id,

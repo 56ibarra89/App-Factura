@@ -1,11 +1,25 @@
 import { localStore, sessionStore } from "../storage/storage";
-import { accessTokenStore } from "./accessTokenStore";
+import {
+  accessTokenStore,
+  isJwtTokenExpiringSoon,
+} from "./accessTokenStore";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEFAULT_REQUEST_TIMEOUT_MS = 20_000;
 
-export interface ApiRequestOptions extends RequestInit {
+export type ResponseValidator<T> = (data: unknown) => T;
+
+export interface ApiRequestOptions<T = any> extends RequestInit {
   timeoutMs?: number;
+  /**
+   * Cuando es true, la respuesta exitosa actualiza la marca de actividad humana.
+   * Por defecto es false para evitar que sondeos o tráfico de fondo reinicien el temporizador de inactividad.
+   */
+  trackUserActivity?: boolean;
+  /**
+   * Validador opcional de contrato en ejecución para garantizar la forma de la respuesta HTTP.
+   */
+  validateResponse?: ResponseValidator<T>;
 }
 
 export class ApiClientError extends Error {
@@ -34,6 +48,9 @@ const AUTH_KEYS = [
   "firstName",
   "lastName",
   "lastActivity",
+  "accessRoleId",
+  "accessRoleName",
+  "permissions",
 ] as const;
 
 let isHandlingUnauthorized = false;
@@ -112,7 +129,7 @@ function isAuthEndpoint(endpoint: string): boolean {
   );
 }
 
-async function attemptTokenRefresh(): Promise<string | null> {
+export async function attemptTokenRefresh(): Promise<string | null> {
   if (refreshPromise) {
     return refreshPromise;
   }
@@ -121,16 +138,22 @@ async function attemptTokenRefresh(): Promise<string | null> {
     try {
       const baseUrl = API_BASE_URL || "";
       const url = `${baseUrl}/auth/refresh`;
-      const currentToken = accessTokenStore.get();
+      const currentRefreshToken =
+        accessTokenStore.getRefreshToken?.() ?? null;
+      const currentAccessToken = accessTokenStore.get();
+      const bearerToken = currentRefreshToken || currentAccessToken;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        ...(currentToken ? { Authorization: `Bearer ${currentToken}` } : {}),
+        ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
       };
 
       const response = await fetchWithTimeout(url, {
         method: "POST",
         cache: "no-store",
         headers,
+        body: JSON.stringify(
+          currentRefreshToken ? { refresh_token: currentRefreshToken } : {},
+        ),
       });
 
       if (!response.ok) {
@@ -139,8 +162,12 @@ async function attemptTokenRefresh(): Promise<string | null> {
 
       const data = await response.json();
       const newToken = data?.access_token;
+      const newRefreshToken = data?.refresh_token;
       if (typeof newToken === "string" && newToken) {
         accessTokenStore.set(newToken);
+        if (typeof newRefreshToken === "string" && newRefreshToken) {
+          accessTokenStore.setRefreshToken?.(newRefreshToken);
+        }
         if (window.authAPI) {
           await window.authAPI.setToken(newToken);
         }
@@ -157,15 +184,31 @@ async function attemptTokenRefresh(): Promise<string | null> {
   return refreshPromise;
 }
 
-export const apiClient = async (
+export const apiClient = async <T = any>(
   endpoint: string,
-  options: ApiRequestOptions = {},
-) => {
+  options: ApiRequestOptions<T> = {},
+): Promise<T> => {
   const baseUrl = API_BASE_URL || "";
   const url = `${baseUrl}${endpoint}`;
-  const { timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS, ...requestOptions } = options;
+  const {
+    timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+    trackUserActivity = false,
+    validateResponse,
+    ...requestOptions
+  } = options;
   const hasMultipartBody = requestOptions.body instanceof FormData;
-  const accessToken = accessTokenStore.get();
+  let accessToken = accessTokenStore.get();
+
+  if (
+    !isAuthEndpoint(endpoint) &&
+    accessToken &&
+    isJwtTokenExpiringSoon(accessToken)
+  ) {
+    const proactivelyRefreshed = await attemptTokenRefresh();
+    if (proactivelyRefreshed) {
+      accessToken = proactivelyRefreshed;
+    }
+  }
 
   const headers: Record<string, string> = {
     ...(hasMultipartBody ? {} : { "Content-Type": "application/json" }),
@@ -242,17 +285,19 @@ export const apiClient = async (
     }
   }
 
-  // Actualizar marca de actividad en almacenamiento local
-  localStore.setItem("lastActivity", Date.now().toString());
+  if (trackUserActivity) {
+    localStore.setItem("lastActivity", Date.now().toString());
+  }
 
   if (response.status === 204) {
-    return null;
+    return (validateResponse ? validateResponse(null) : null) as T;
   }
 
   const responseBody = await response.text();
   if (!responseBody.trim()) {
-    return null;
+    return (validateResponse ? validateResponse(null) : null) as T;
   }
 
-  return JSON.parse(responseBody);
+  const parsed: unknown = JSON.parse(responseBody);
+  return (validateResponse ? validateResponse(parsed) : parsed) as T;
 };

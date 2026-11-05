@@ -4,11 +4,11 @@ import { useOrderCommands } from "../../orders";
 import type { InvoiceGateway } from "../api/invoiceGateway";
 import { invoiceGateway } from "../api/invoiceGateway";
 import type { Invoice } from "../model/invoice.types";
-import { voidWastePolicyGateway } from "../../settings/api/voidWastePolicyGateway";
 import {
   DEFAULT_VOID_WASTE_POLICY_CONFIG,
+  voidWastePolicyGateway,
   type VoidWastePolicyConfig,
-} from "../../settings/model/voidWastePolicy.types";
+} from "../../settings";
 
 const toLocalDateInput = (date: Date) =>
   new Date(date.getTime() - date.getTimezoneOffset() * 60_000)

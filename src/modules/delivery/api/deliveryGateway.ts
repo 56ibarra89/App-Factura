@@ -1,7 +1,10 @@
 import { apiClient } from "../../../shared/api";
 import type { DeliveryDriver, DeliveryStat } from "../model/delivery.types";
-import type { Order, OrderPaymentDetail } from "../../orders";
-import { mapBackendOrderToFrontend } from "../../orders/api/backendSync";
+import {
+  mapBackendOrderToFrontend,
+  type Order,
+  type OrderPaymentDetail,
+} from "../../orders";
 
 const WEEK_DAYS = [
   "SUNDAY",
@@ -47,8 +50,10 @@ export interface DeliveryGateway {
 
 export const deliveryGateway: DeliveryGateway = {
   async listAvailableDrivers(date = new Date()) {
-    const users: DeliveryDriver[] = await apiClient("/users");
-    return users.filter((user) => isDriverAvailable(user, date));
+    const users: DeliveryDriver[] = await apiClient("/users/directory");
+    return users.filter(
+      (user) => user.isActive !== false && isDriverAvailable(user, date),
+    );
   },
 
   getStats(date) {
