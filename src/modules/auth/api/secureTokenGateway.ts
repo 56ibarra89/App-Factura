@@ -25,13 +25,8 @@ export function createSecureTokenGateway(
         tokenStore.setRefreshToken?.(refreshToken);
       }
       if (runtime.authAPI) {
-        tokenStore.clear();
-        if (typeof refreshToken === "string" && refreshToken) {
-          tokenStore.setRefreshToken?.(refreshToken);
-        }
         const stored = await runtime.authAPI.setToken(token);
         if (!stored) throw new Error("No fue posible proteger la sesión.");
-        return;
       }
       tokenStore.set(token);
     },

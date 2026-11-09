@@ -97,7 +97,6 @@ function reconcileFinalizationPayments(
 export function useOrderFinalizationCommand({
   ordersRef,
   updateOrders,
-  itemsGateway,
   finalizationGateway,
 }: UseOrderFinalizationCommandOptions) {
   const finalizeOrder = useCallback<
@@ -121,15 +120,9 @@ export function useOrderFinalizationCommand({
 
       if (!modifiedOrder) return;
       try {
-        const updatedOrder = await itemsGateway.updateItems(modifiedOrder);
-        const resolvedTotal = updatedOrder.total ?? modifiedOrder.total;
+        const resolvedTotal = modifiedOrder.total;
         const orderToFinalize: Order = {
           ...modifiedOrder,
-          subTotal: updatedOrder.subTotal ?? modifiedOrder.subTotal,
-          discountAmount:
-            updatedOrder.discountAmount ?? modifiedOrder.discountAmount,
-          taxAmount: updatedOrder.taxAmount ?? modifiedOrder.taxAmount,
-          total: resolvedTotal,
           payments: reconcileFinalizationPayments(
             modifiedOrder,
             resolvedTotal,
@@ -145,12 +138,26 @@ export function useOrderFinalizationCommand({
               ? {
                   ...order,
                   status: "paid",
+                  updatedAt: finalizedOrder.updatedAt ?? order.updatedAt,
                   paidAt: finalizedOrder.paidAt ?? order.paidAt,
-                  subTotal: orderToFinalize.subTotal,
-                  discountAmount: orderToFinalize.discountAmount,
-                  taxAmount: orderToFinalize.taxAmount,
-                  total: orderToFinalize.total,
-                  payments: orderToFinalize.payments,
+                  subTotal:
+                    finalizedOrder.subTotal ?? orderToFinalize.subTotal,
+                  discountAmount:
+                    finalizedOrder.discountAmount ??
+                    orderToFinalize.discountAmount,
+                  taxAmount:
+                    finalizedOrder.taxAmount ?? orderToFinalize.taxAmount,
+                  total: finalizedOrder.total ?? orderToFinalize.total,
+                  payments:
+                    finalizedOrder.payments ?? orderToFinalize.payments,
+                  items: finalizedOrder.items?.length
+                    ? finalizedOrder.items
+                    : order.items,
+                  linkedTables:
+                    finalizedOrder.linkedTables !== undefined
+                      ? finalizedOrder.linkedTables
+                      : order.linkedTables,
+                  tableId: finalizedOrder.tableId,
                   invoiceNumber:
                     finalizedOrder.invoiceNumber,
                 }
@@ -173,7 +180,6 @@ export function useOrderFinalizationCommand({
     },
     [
       finalizationGateway,
-      itemsGateway,
       ordersRef,
       updateOrders,
     ],

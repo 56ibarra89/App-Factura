@@ -33,8 +33,7 @@ export function useTableReservations({
       const newStatusMap: Record<string, TableStatus> = {};
       const newReservationDetails: Record<string, ReservationInfo> = {};
 
-      mesas.forEach(mesa => {
-
+      mesas.forEach((mesa) => {
         const status = mesa.estado.toLowerCase() as TableStatus;
         newStatusMap[mesa.id] = status;
 
@@ -57,65 +56,116 @@ export function useTableReservations({
     fetchMesas();
   }, [fetchMesas]);
 
-  const setTableStatus = async (tableId: string, status: TableStatus) => {
-
-    const prevMap = { ...tableStatusMap };
-    setTableStatusMap(prev => ({ ...prev, [tableId]: status }));
-
-    try {
-      const backendStatus = status.toUpperCase();
-      await state.updateStatus(tableId, backendStatus);
-    } catch (err) {
-      console.error("Error updating table status:", err);
-
-      setTableStatusMap(prevMap);
-    }
-  };
-
-  const releaseTable = async (tableId: string) => {
-
-    const prevStatusMap = { ...tableStatusMap };
-    const prevDetails = { ...reservationDetails };
-
-    setTableStatusMap(prev => ({ ...prev, [tableId]: "disponible" }));
-    setReservationDetails(prev => {
-      const next = { ...prev };
-      delete next[tableId];
-      return next;
-    });
-
-    try {
-      await reservation.release(tableId);
-    } catch (err) {
-      console.error("Error releasing table:", err);
-
-      setTableStatusMap(prevStatusMap);
-      setReservationDetails(prevDetails);
-    }
-  };
-
-  const reserveTable = async (tableId: string, info: ReservationInfo) => {
-
-    const prevStatusMap = { ...tableStatusMap };
-    const prevDetails = { ...reservationDetails };
-
-    setTableStatusMap(prev => ({ ...prev, [tableId]: "reservado" }));
-    setReservationDetails(prev => ({ ...prev, [tableId]: info }));
-
-    try {
-      await reservation.reserve(tableId, {
-        reservationName: info.nombre,
-        reservationAmount: info.monto,
-        reservationTime: info.reservationTime,
-        expirationTime: info.expirationTime,
+  const setTableStatus = useCallback(
+    async (tableId: string, status: TableStatus) => {
+      let prevStatus: TableStatus | undefined;
+      setTableStatusMap((prev) => {
+        prevStatus = prev[tableId];
+        return { ...prev, [tableId]: status };
       });
-    } catch (err) {
-      console.error("Error reserving table:", err);
 
-      setTableStatusMap(prevStatusMap);
-      setReservationDetails(prevDetails);
-    }
-  };
+      try {
+        const backendStatus = status.toUpperCase();
+        await state.updateStatus(tableId, backendStatus);
+      } catch (err) {
+        console.error("Error updating table status:", err);
+        setTableStatusMap((prev) => {
+          if (prevStatus === undefined) {
+            const next = { ...prev };
+            delete next[tableId];
+            return next;
+          }
+          return { ...prev, [tableId]: prevStatus };
+        });
+      }
+    },
+    [state],
+  );
+
+  const releaseTable = useCallback(
+    async (tableId: string) => {
+      let prevStatus: TableStatus | undefined;
+      let prevReservation: ReservationInfo | undefined;
+
+      setTableStatusMap((prev) => {
+        prevStatus = prev[tableId];
+        return { ...prev, [tableId]: "disponible" };
+      });
+      setReservationDetails((prev) => {
+        prevReservation = prev[tableId];
+        const next = { ...prev };
+        delete next[tableId];
+        return next;
+      });
+
+      try {
+        await reservation.release(tableId);
+      } catch (err) {
+        console.error("Error releasing table:", err);
+        setTableStatusMap((prev) => {
+          if (prevStatus === undefined) {
+            const next = { ...prev };
+            delete next[tableId];
+            return next;
+          }
+          return { ...prev, [tableId]: prevStatus };
+        });
+        setReservationDetails((prev) => {
+          if (prevReservation === undefined) {
+            const next = { ...prev };
+            delete next[tableId];
+            return next;
+          }
+          return { ...prev, [tableId]: prevReservation };
+        });
+      }
+    },
+    [reservation],
+  );
+
+  const reserveTable = useCallback(
+    async (tableId: string, info: ReservationInfo) => {
+      let prevStatus: TableStatus | undefined;
+      let prevReservation: ReservationInfo | undefined;
+
+      setTableStatusMap((prev) => {
+        prevStatus = prev[tableId];
+        return { ...prev, [tableId]: "reservado" };
+      });
+      setReservationDetails((prev) => {
+        prevReservation = prev[tableId];
+        return { ...prev, [tableId]: info };
+      });
+
+      try {
+        await reservation.reserve(tableId, {
+          reservationName: info.nombre,
+          reservationAmount: info.monto,
+          reservationTime: info.reservationTime,
+          expirationTime: info.expirationTime,
+        });
+      } catch (err) {
+        console.error("Error reserving table:", err);
+        setTableStatusMap((prev) => {
+          if (prevStatus === undefined) {
+            const next = { ...prev };
+            delete next[tableId];
+            return next;
+          }
+          return { ...prev, [tableId]: prevStatus };
+        });
+        setReservationDetails((prev) => {
+          if (prevReservation === undefined) {
+            const next = { ...prev };
+            delete next[tableId];
+            return next;
+          }
+          return { ...prev, [tableId]: prevReservation };
+        });
+      }
+    },
+    [reservation],
+  );
 
   return {
     tableStatusMap,
@@ -126,4 +176,3 @@ export function useTableReservations({
     refreshMesas: fetchMesas,
   };
 }
-

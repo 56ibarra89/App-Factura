@@ -3,6 +3,7 @@ import {
   useEffect,
   ReactNode,
   useCallback,
+  useMemo,
   useRef,
 } from "react";
 import type {
@@ -51,21 +52,34 @@ export const CajaProvider = ({
   const sessionGenerationRef = useRef(0);
 
   const canReadCashStatus = Boolean(username && hasPermission("cash.status"));
-  const canReadExpenses = Boolean(username && role && ["admin", "cajero_principal", "cajero"].includes(role) && hasPermission("cash.expenses"));
+  const canReadExpenses = Boolean(
+    username &&
+      role &&
+      ["admin", "cajero_principal", "cajero", "despachador"].includes(role) &&
+      hasPermission("cash.expenses"),
+  );
 
-  const fetchShiftExpenses = useCallback(async (shiftId?: string) => {
-    const request = ++expenseRequestRef.current;
-    if (!shiftId || !canReadExpenses) {
-      setCurrentShiftExpenses([]);
-      return;
-    }
-    try {
-      const exps = await expenseGateway.listExpensesByShift(shiftId);
-      if (request === expenseRequestRef.current) setCurrentShiftExpenses(exps);
-    } catch (err) {
-      console.error("[CajaContext] Error al cargar gastos del turno:", err);
-    }
-  }, [expenseGateway, canReadExpenses]);
+  const invalidateInFlightShiftRequests = useCallback(() => {
+    sessionGenerationRef.current += 1;
+    expenseRequestRef.current += 1;
+  }, []);
+
+  const fetchShiftExpenses = useCallback(
+    async (shiftId?: string) => {
+      const request = ++expenseRequestRef.current;
+      if (!shiftId || !canReadExpenses) {
+        setCurrentShiftExpenses([]);
+        return;
+      }
+      try {
+        const exps = await expenseGateway.listExpensesByShift(shiftId);
+        if (request === expenseRequestRef.current) setCurrentShiftExpenses(exps);
+      } catch (err) {
+        console.error("[CajaContext] Error al cargar gastos del turno:", err);
+      }
+    },
+    [expenseGateway, canReadExpenses],
+  );
 
   const refreshCurrentShiftExpenses = useCallback(
     () => fetchShiftExpenses(currentShift?.id),
@@ -86,8 +100,7 @@ export const CajaProvider = ({
       if (generation !== sessionGenerationRef.current) return null;
       setCurrentShift((prevShift) => {
         const changed =
-          prevShift?.id !== shift?.id ||
-          prevShift?.status !== shift?.status;
+          prevShift?.id !== shift?.id || prevShift?.status !== shift?.status;
         if (changed) {
           console.log(
             "[CajaContext] Estado de caja global sincronizado:",
@@ -145,14 +158,19 @@ export const CajaProvider = ({
 
     return () => {
       active = false;
-      sessionGenerationRef.current++;
-      expenseRequestRef.current++;
+      invalidateInFlightShiftRequests();
       window.clearInterval(intervalId);
       window.removeEventListener("focus", triggerSync);
       window.removeEventListener("appfactura:shift-changed", triggerSync);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [username, canReadCashStatus, pollIntervalMs, syncActiveShift]);
+  }, [
+    username,
+    canReadCashStatus,
+    pollIntervalMs,
+    syncActiveShift,
+    invalidateInFlightShiftRequests,
+  ]);
 
   useEffect(() => {
     if (!currentShift?.id || !canReadExpenses) {
@@ -220,18 +238,29 @@ export const CajaProvider = ({
     [currentShift, repository, syncActiveShift],
   );
 
+  const contextValue = useMemo(
+    () => ({
+      currentShift,
+      currentShiftExpenses,
+      abrirCaja,
+      cerrarCaja,
+      calculateCurrentShiftSales,
+      calculateCurrentShiftExpenses,
+      refreshCurrentShiftExpenses,
+    }),
+    [
+      currentShift,
+      currentShiftExpenses,
+      abrirCaja,
+      cerrarCaja,
+      calculateCurrentShiftSales,
+      calculateCurrentShiftExpenses,
+      refreshCurrentShiftExpenses,
+    ],
+  );
+
   return (
-    <CajaContext.Provider
-      value={{
-        currentShift,
-        currentShiftExpenses,
-        abrirCaja,
-        cerrarCaja,
-        calculateCurrentShiftSales,
-        calculateCurrentShiftExpenses,
-        refreshCurrentShiftExpenses,
-      }}
-    >
+    <CajaContext.Provider value={contextValue}>
       {children}
     </CajaContext.Provider>
   );

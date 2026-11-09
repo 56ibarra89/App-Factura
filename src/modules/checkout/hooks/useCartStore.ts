@@ -65,10 +65,10 @@ export function useCartStore(activeOrder?: Order | null) {
           activeOrder.happyHourId === active2x1?.id)),
   );
 
-  useEffect(() => {
-    setCart((prev) => {
+  const syncTwoForOneItems = useCallback(
+    (items: OrderItem[]): OrderItem[] => {
       let changed = false;
-      const newCart = prev.map((item) => {
+      const newCart = items.map((item) => {
         if (item.note?.startsWith("Vale: ")) return item;
 
         const hasStructuredTargets = Boolean(
@@ -76,23 +76,23 @@ export function useCartStore(activeOrder?: Order | null) {
         );
         const matchesStructuredTarget = Boolean(
           (item.productId && active2x1?.productIds?.includes(item.productId)) ||
-          (item.categoryId &&
-            active2x1?.categoryIds?.includes(item.categoryId)),
+            (item.categoryId &&
+              active2x1?.categoryIds?.includes(item.categoryId)),
         );
         const matchesLegacyTarget = Boolean(
           active2x1 &&
-          (!active2x1.appliesTo ||
-            active2x1.appliesTo === "Todos" ||
-            item.name === active2x1.appliesTo),
+            (!active2x1.appliesTo ||
+              active2x1.appliesTo === "Todos" ||
+              item.name === active2x1.appliesTo),
         );
         const appliesTwoForOne = Boolean(
           !manualPromotion &&
-          !promotionRemoved &&
-          canAutoApplyTwoForOne &&
-          active2x1 &&
-          (hasStructuredTargets
-            ? matchesStructuredTarget
-            : matchesLegacyTarget),
+            !promotionRemoved &&
+            canAutoApplyTwoForOne &&
+            active2x1 &&
+            (hasStructuredTargets
+              ? matchesStructuredTarget
+              : matchesLegacyTarget),
         );
 
         const expectedGift = Math.floor(item.quantity / 2);
@@ -129,17 +129,20 @@ export function useCartStore(activeOrder?: Order | null) {
 
         return item;
       });
-      return changed ? newCart : prev;
-    });
-  }, [
-    active2x1,
-    canAutoApplyTwoForOne,
-    cart,
-    manualPromotion,
-    preserveExistingTwoForOne,
-    promotionChanged,
-    promotionRemoved,
-  ]);
+      return changed ? newCart : items;
+    },
+    [
+      active2x1,
+      canAutoApplyTwoForOne,
+      manualPromotion,
+      preserveExistingTwoForOne,
+      promotionRemoved,
+    ],
+  );
+
+  useEffect(() => {
+    setCart((prev) => syncTwoForOneItems(prev));
+  }, [syncTwoForOneItems, promotionChanged]);
 
   const automaticPromotion: AppliedPromotion | null =
     activeHappyHour ??
@@ -161,51 +164,54 @@ export function useCartStore(activeOrder?: Order | null) {
         ? rehydratedOrderPromotion
         : automaticPromotion));
 
-  const addItem = useCallback((newItem: OrderItemInput) => {
-    // Sanitización y Validación (ISO 27001)
-    const sanitizedPrice = Math.max(0, newItem.price);
-    const sanitizedNote = newItem.note
-      ? newItem.note.substring(0, 200).replace(/[<>]/g, "")
-      : "";
+  const addItem = useCallback(
+    (newItem: OrderItemInput) => {
+      // Sanitización y Validación (ISO 27001)
+      const sanitizedPrice = Math.max(0, newItem.price);
+      const sanitizedNote = newItem.note
+        ? newItem.note.substring(0, 200).replace(/[<>]/g, "")
+        : "";
 
-    setCart((prev) => {
-      const existingIndex = prev.findIndex(
-        (item) =>
-          item.name === newItem.name &&
-          item.size === newItem.size &&
-          extrasKey(item.extras) === extrasKey(newItem.extras) &&
-          modifiersKey(item.kitchenModifiers) ===
-            modifiersKey(newItem.kitchenModifiers) &&
-          comboSelectionsKey(item) === comboSelectionsKey(newItem) &&
-          item.note === sanitizedNote &&
-          !item.isSentToKitchen, // No fusionar si ya se envió a cocina
-      );
+      setCart((prev) => {
+        const existingIndex = prev.findIndex(
+          (item) =>
+            item.name === newItem.name &&
+            item.size === newItem.size &&
+            extrasKey(item.extras) === extrasKey(newItem.extras) &&
+            modifiersKey(item.kitchenModifiers) ===
+              modifiersKey(newItem.kitchenModifiers) &&
+            comboSelectionsKey(item) === comboSelectionsKey(newItem) &&
+            item.note === sanitizedNote &&
+            !item.isSentToKitchen, // No fusionar si ya se envió a cocina
+        );
 
-      if (existingIndex !== -1 && !newItem.giftQuantity) {
-        const updated = [...prev];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          quantity: updated[existingIndex].quantity + 1,
-        };
-        return updated;
-      }
+        if (existingIndex !== -1 && !newItem.giftQuantity) {
+          const updated = [...prev];
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            quantity: updated[existingIndex].quantity + 1,
+          };
+          return syncTwoForOneItems(updated);
+        }
 
-      const extrasTotal = newItem.extras.reduce(
-        (sum, e) => sum + Math.max(0, e.price),
-        0,
-      );
-      return [
-        ...prev,
-        {
-          ...newItem,
-          price: sanitizedPrice + extrasTotal,
-          note: sanitizedNote,
-          quantity: Math.max(1, newItem.giftQuantity || 1),
-          giftQuantity: newItem.giftQuantity || 0,
-        },
-      ];
-    });
-  }, []);
+        const extrasTotal = newItem.extras.reduce(
+          (sum, e) => sum + Math.max(0, e.price),
+          0,
+        );
+        return syncTwoForOneItems([
+          ...prev,
+          {
+            ...newItem,
+            price: sanitizedPrice + extrasTotal,
+            note: sanitizedNote,
+            quantity: Math.max(1, newItem.giftQuantity || 1),
+            giftQuantity: newItem.giftQuantity || 0,
+          },
+        ]);
+      });
+    },
+    [syncTwoForOneItems],
+  );
 
   const removeItem = useCallback((index: number) => {
     setCart((prev) => {
@@ -242,39 +248,42 @@ export function useCartStore(activeOrder?: Order | null) {
     });
   }, []);
 
-  const changeQuantity = useCallback((index: number, quantity: number) => {
-    setCart((prev) => {
-      if (!prev[index]) return prev;
-      const updated = [...prev];
-      // Limitar cantidad máxima por seguridad operativa
-      const newQuantity = Math.max(1, Math.min(999, quantity));
-      const item = updated[index];
-      if (item.giftReason === "happy-hour-2x1") {
-        const nextGiftQuantity = Math.min(
-          item.giftQuantity || 0,
-          Math.floor(newQuantity / 2),
-        );
+  const changeQuantity = useCallback(
+    (index: number, quantity: number) => {
+      setCart((prev) => {
+        if (!prev[index]) return prev;
+        const updated = [...prev];
+        // Limitar cantidad máxima por seguridad operativa
+        const newQuantity = Math.max(1, Math.min(999, quantity));
+        const item = updated[index];
+        if (item.giftReason === "happy-hour-2x1") {
+          const nextGiftQuantity = Math.min(
+            item.giftQuantity || 0,
+            Math.floor(newQuantity / 2),
+          );
+          updated[index] = {
+            ...item,
+            quantity: newQuantity,
+            giftQuantity: nextGiftQuantity,
+            giftReason: nextGiftQuantity > 0 ? "happy-hour-2x1" : undefined,
+            note:
+              nextGiftQuantity === 0 && item.note === "2x1 Happy Hour"
+                ? ""
+                : item.note,
+          };
+          return syncTwoForOneItems(updated);
+        }
+        const currentGiftQuantity = item.giftQuantity || 0;
         updated[index] = {
           ...item,
           quantity: newQuantity,
-          giftQuantity: nextGiftQuantity,
-          giftReason: nextGiftQuantity > 0 ? "happy-hour-2x1" : undefined,
-          note:
-            nextGiftQuantity === 0 && item.note === "2x1 Happy Hour"
-              ? ""
-              : item.note,
+          giftQuantity: Math.min(newQuantity, currentGiftQuantity),
         };
-        return updated;
-      }
-      const currentGiftQuantity = item.giftQuantity || 0;
-      updated[index] = {
-        ...item,
-        quantity: newQuantity,
-        giftQuantity: Math.min(newQuantity, currentGiftQuantity),
-      };
-      return updated;
-    });
-  }, []);
+        return syncTwoForOneItems(updated);
+      });
+    },
+    [syncTwoForOneItems],
+  );
 
   const changeGiftQuantity = useCallback(
     (index: number, giftQuantity: number) => {
@@ -320,9 +329,12 @@ export function useCartStore(activeOrder?: Order | null) {
     setPromotionChanged(false);
   }, []);
 
-  const replaceCart = useCallback((items: OrderItem[]) => {
-    setCart(items);
-  }, []);
+  const replaceCart = useCallback(
+    (items: OrderItem[]) => {
+      setCart(syncTwoForOneItems(items));
+    },
+    [syncTwoForOneItems],
+  );
 
   const preservedDiscountAmount =
     !promotion &&

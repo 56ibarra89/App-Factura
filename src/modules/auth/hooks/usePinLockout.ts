@@ -35,6 +35,10 @@ export function usePinLockout(): PinLockoutState {
 
   useEffect(() => {
     LEGACY_STORAGE_KEYS.forEach((key) => localStore.removeItem(key));
+  }, []);
+
+  useEffect(() => {
+    if (lockoutTime <= 0) return;
 
     const tick = () => {
       const until = getLockoutUntil();
@@ -44,10 +48,9 @@ export function usePinLockout(): PinLockoutState {
         localStore.removeItem(STORAGE_LOCKOUT_UNTIL);
       }
     };
-    tick();
     const timer = window.setInterval(tick, 250);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [lockoutTime]);
 
   const applyServerLockout = useCallback((lockoutSeconds: number) => {
     const safeSeconds = Math.min(

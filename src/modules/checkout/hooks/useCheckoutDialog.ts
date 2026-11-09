@@ -320,7 +320,7 @@ export function useCheckoutDialog({
       submissionLock.current = false;
       setIsSubmitting(false);
     }
-  }, [canConfirm, customerDelivery, executeFinalSubmission, isSubmitting]);
+  }, [canConfirm, customerDelivery, executeFinalSubmission]);
 
   const handleConfirmAsNewCustomer = useCallback(async () => {
     if (!matchedCustomer || submissionLock.current) return;

@@ -22,7 +22,17 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
 
   const [newOrderAlert, setNewOrderAlert] = useState<Order | null>(null);
   const previousOrdersCountRef = useRef<number | null>(null);
+  const seenOrderIdsRef = useRef<Set<string> | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
+        void audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
+    };
+  }, []);
 
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => {
@@ -30,7 +40,7 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
       try {
         localStorage.setItem(STORAGE_KEY, String(next));
       } catch {
-
+        // Ignorar errores de almacenamiento local
       }
       return next;
     });
@@ -40,7 +50,9 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
     if (isMuted) return;
 
     try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!AudioCtx) return;
 
       if (!audioCtxRef.current || audioCtxRef.current.state === "closed") {
@@ -81,13 +93,25 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
   }, [isMuted]);
 
   useEffect(() => {
-    if (previousOrdersCountRef.current === null) {
+    if (seenOrderIdsRef.current === null || previousOrdersCountRef.current === null) {
+      seenOrderIdsRef.current = new Set(activeOrders.map((order) => order.id));
       previousOrdersCountRef.current = activeOrders.length;
       return;
     }
 
-    if (activeOrders.length > previousOrdersCountRef.current) {
-      const newestOrder = activeOrders[activeOrders.length - 1] || activeOrders[0];
+    const unseenOrders = activeOrders.filter(
+      (order) => !seenOrderIdsRef.current!.has(order.id),
+    );
+    for (const order of activeOrders) {
+      seenOrderIdsRef.current.add(order.id);
+    }
+
+    if (
+      unseenOrders.length > 0 &&
+      activeOrders.length > previousOrdersCountRef.current
+    ) {
+      const newestOrder =
+        unseenOrders[unseenOrders.length - 1] || unseenOrders[0];
       setNewOrderAlert(newestOrder);
       playNewOrderSound();
     }
@@ -107,4 +131,3 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
     clearNewOrderAlert,
   };
 }
-

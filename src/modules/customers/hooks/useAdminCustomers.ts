@@ -34,7 +34,7 @@ export function useAdminCustomers() {
 
   const filteredCustomers = useMemo(() => {
     return customerData.customers;
-  }, [customerData.customers, search]);
+  }, [customerData.customers]);
 
   const notify = (
     message: string,

@@ -45,6 +45,7 @@ export function useOrderCollectionCommands({
               ? {
                   ...order,
                   invoiceNumber,
+                  updatedAt: createdOrder.updatedAt ?? order.updatedAt,
                   paidAt: createdOrder.paidAt ?? order.paidAt,
                   subTotal: createdOrder.subTotal ?? order.subTotal,
                   discountAmount:

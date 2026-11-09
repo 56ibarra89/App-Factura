@@ -140,7 +140,9 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
               InputLabelProps={{ shrink: true }}
               value={
                 formData.issueDate
-                  ? new Date(formData.issueDate).toISOString().split("T")[0]
+                  ? new Intl.DateTimeFormat("en-CA", {
+                      timeZone: "America/Managua",
+                    }).format(new Date(formData.issueDate))
                   : ""
               }
               onChange={(e) => setFormData({ ...formData, issueDate: new Date(e.target.value) })}

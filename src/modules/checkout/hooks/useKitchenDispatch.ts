@@ -50,7 +50,12 @@ export function useKitchenDispatch({
     if (!tableId) return;
 
     await runExclusive(async () => {
-      await saveTableOrder(activeOrderId, tableId);
+      const savedResult = await saveTableOrder(activeOrderId, tableId);
+      const resolvedOrderId =
+        typeof savedResult === "string"
+          ? savedResult
+          : (savedResult as { orderId?: string } | undefined)?.orderId ??
+            activeOrderId;
       const syncedItems = await markAsSentToKitchenByTable(tableId);
 
       const sentAt = Date.now();
@@ -89,7 +94,7 @@ export function useKitchenDispatch({
       );
       if (kitchenItems.length > 0) {
         void printerDispatcherService.printKitchenComanda({
-          orderId: activeOrderId,
+          orderId: resolvedOrderId,
           tableNumber: tableId
             ? tableId.replace("T-", "").replace("-M", " ")
             : undefined,

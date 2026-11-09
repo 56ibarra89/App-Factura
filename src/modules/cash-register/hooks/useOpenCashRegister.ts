@@ -41,10 +41,12 @@ export function useOpenCashRegister() {
           shift.closingAmount !== undefined,
       );
       if (lastShift?.closingAmount !== undefined) {
-          setExpectedAmount(lastShift.closingAmount);
-          if (config.requireExactOpeningAmount) {
-            setAmount(String(lastShift.closingAmount));
-          }
+        setExpectedAmount(lastShift.closingAmount);
+        if (config.requireExactOpeningAmount) {
+          setAmount(String(lastShift.closingAmount));
+        }
+      } else {
+        setExpectedAmount(null);
       }
     });
     return () => {

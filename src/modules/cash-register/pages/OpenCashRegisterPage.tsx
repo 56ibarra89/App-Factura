@@ -1,5 +1,5 @@
 import { Box, Typography, Divider, Alert } from "@mui/material";
-import { AuthLayout, BrandingPanel, useAuth } from "../../auth";
+import { AuthLayout, BrandingPanel } from "../../auth";
 import { OpenCashRegisterForm } from "../ui/OpenCashRegisterForm";
 import { useOpenCashRegister } from "../hooks/useOpenCashRegister";
 import { useEffect } from "react";
@@ -7,7 +7,6 @@ import { useCaja } from "../model/CajaContext";
 
 export default function OpenCashRegisterPage() {
   const { currentShift } = useCaja();
-  const { username } = useAuth();
   const {
     cashRegisterName,
     setCashRegisterName,
@@ -28,8 +27,6 @@ export default function OpenCashRegisterPage() {
       currentShift ? "ABIERTA" : "CERRADA",
     );
   }, [currentShift]);
-
-  const hasMyOpenShift = currentShift && currentShift.cashierName === username;
 
   return (
     <AuthLayout error="" onClearError={() => {}}>

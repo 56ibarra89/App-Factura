@@ -51,11 +51,10 @@ export function useInactivityTimer(
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    // Los cocineros y la pantalla KDS de preparación operan de forma continua
-    // en cocina sin interacción constante de ratón/teclado, por lo que se eximen del auto-logout.
-    const isKitchenDisplay =
-      role === "cocinero" || window.location.hash.includes("kds");
-    if (isKitchenDisplay) return;
+    // Los cocineros operan de forma continua en cocina sin interacción constante de ratón/teclado.
+    if (role === "cocinero") return;
+
+    const isKdsRoute = () => window.location.hash.includes("kds");
 
     if (gateway.getLastActivity() === null) {
       lastTouchRef.current = Date.now();
@@ -63,6 +62,10 @@ export function useInactivityTimer(
     }
 
     const checkInactivity = () => {
+      if (isKdsRoute()) {
+        gateway.touch();
+        return;
+      }
       const last = gateway.getLastActivity();
       if (last === null) {
         gateway.touch();
@@ -85,10 +88,15 @@ export function useInactivityTimer(
     };
 
     const handleActivity = () => resetTimer();
+    const handleHashChange = () => {
+      lastTouchRef.current = Date.now();
+      gateway.touch();
+    };
 
     ACTIVITY_EVENTS.forEach((event) =>
       window.addEventListener(event, handleActivity, { passive: true }),
     );
+    window.addEventListener("hashchange", handleHashChange);
     checkInactivity();
     const interval = setInterval(checkInactivity, CHECK_INTERVAL_MS);
 
@@ -96,6 +104,7 @@ export function useInactivityTimer(
       ACTIVITY_EVENTS.forEach((event) =>
         window.removeEventListener(event, handleActivity),
       );
+      window.removeEventListener("hashchange", handleHashChange);
       clearInterval(interval);
     };
   }, [gateway, isLoggedIn, username, role, onExpire, resetTimer]);

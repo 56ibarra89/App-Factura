@@ -4,7 +4,7 @@ import {
   DEFAULT_DELIVERY_RULES,
   type DeliveryRulesGateway,
 } from "../api/deliveryRulesGateway";
-import type { DeliveryRulesConfig, DeliveryZone } from "../model/delivery.types";
+import type { DeliveryRulesConfig } from "../model/delivery.types";
 
 export function useDeliveryRules(gateway: DeliveryRulesGateway = deliveryRulesGateway) {
   const [rules, setRules] = useState<DeliveryRulesConfig>(DEFAULT_DELIVERY_RULES);

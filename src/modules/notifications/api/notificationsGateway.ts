@@ -1,4 +1,8 @@
-import { accessTokenStore, apiClient } from "../../../shared/api";
+import {
+  accessTokenStore,
+  apiClient,
+  attemptTokenRefresh,
+} from "../../../shared/api";
 
 export interface NotificationItem {
   id: string;
@@ -35,6 +39,7 @@ export const notificationsGateway: NotificationsGateway = {
     let reconnectTimer: number | undefined;
 
     const connect = async () => {
+      if (stopped) return;
       controller = new AbortController();
       const token = accessTokenStore.get();
       try {
@@ -43,6 +48,18 @@ export const notificationsGateway: NotificationsGateway = {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           signal: controller.signal,
         });
+        if (response.status === 401) {
+          const refreshed = await attemptTokenRefresh();
+          if (!refreshed) {
+            stopped = true;
+            return;
+          }
+          throw new Error("Notification stream token refreshed (401)");
+        }
+        if (response.status === 403) {
+          stopped = true;
+          return;
+        }
         if (!response.ok || !response.body) {
           throw new Error(`Notification stream failed (${response.status})`);
         }

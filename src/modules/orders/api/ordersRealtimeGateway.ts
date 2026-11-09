@@ -60,14 +60,7 @@ export const ordersRealtimeGateway: OrdersRealtimeGateway = {
       manualReconnectTimer = undefined;
     };
 
-    const handleConnect = () => {
-      clearManualReconnect();
-      handlers.onConnect();
-    };
-
-    const handleConnectError = (error: Error) => {
-      handlers.onError(error);
-
+    const scheduleReconnectIfAuthenticated = () => {
       if (!accessTokenStore.get()) {
         clearManualReconnect();
         return;
@@ -81,6 +74,23 @@ export const ordersRealtimeGateway: OrdersRealtimeGateway = {
           }
         }, 3_000);
       }
+    };
+
+    const handleConnect = () => {
+      clearManualReconnect();
+      handlers.onConnect();
+    };
+
+    const handleDisconnect = (reason: Socket.DisconnectReason) => {
+      handlers.onDisconnect();
+      if (reason === "io server disconnect") {
+        scheduleReconnectIfAuthenticated();
+      }
+    };
+
+    const handleConnectError = (error: Error) => {
+      handlers.onError(error);
+      scheduleReconnectIfAuthenticated();
     };
 
     const handleChanged = (event: BackendOrderRealtimeEvent) => {
@@ -97,14 +107,14 @@ export const ordersRealtimeGateway: OrdersRealtimeGateway = {
 
     socket.on("orders:changed", handleChanged);
     socket.on("connect", handleConnect);
-    socket.on("disconnect", handlers.onDisconnect);
+    socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
 
     return () => {
       clearManualReconnect();
       socket.off("orders:changed", handleChanged);
       socket.off("connect", handleConnect);
-      socket.off("disconnect", handlers.onDisconnect);
+      socket.off("disconnect", handleDisconnect);
       socket.off("connect_error", handleConnectError);
       socket.disconnect();
     };

@@ -9,6 +9,7 @@ const DEFAULT_REQUEST_TIMEOUT_MS = 20_000;
 
 export type ResponseValidator<T> = (data: unknown) => T;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ApiRequestOptions<T = any> extends RequestInit {
   timeoutMs?: number;
   /**
@@ -191,6 +192,7 @@ export async function attemptTokenRefresh(): Promise<string | null> {
   return refreshPromise;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const apiClient = async <T = any>(
   endpoint: string,
   options: ApiRequestOptions<T> = {},

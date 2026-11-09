@@ -92,7 +92,7 @@ export default function DriverDeliveriesModal({
   const fetchDrivers = useCallback(async () => {
     setLoadingDrivers(true);
     try {
-      const usersList: DeliveryDriver[] = await apiClient("/users").catch(() => []);
+      const usersList: DeliveryDriver[] = await apiClient("/users/directory").catch(() => []);
       const motorizados = usersList.filter((u) => u.role === "motorizado");
       const listToUse = motorizados.length > 0 ? motorizados : usersList;
       setDrivers(listToUse);

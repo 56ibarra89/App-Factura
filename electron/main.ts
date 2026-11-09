@@ -280,7 +280,12 @@ app.whenReady().then(() => {
         } else {
           tokenStr = encryptedToken.toString('utf-8');
         }
-        details.requestHeaders['Authorization'] = `Bearer ${tokenStr}`;
+        const hasAuthHeader =
+          Boolean(details.requestHeaders['Authorization']) ||
+          Boolean(details.requestHeaders['authorization']);
+        if (!hasAuthHeader) {
+          details.requestHeaders['Authorization'] = `Bearer ${tokenStr}`;
+        }
       } catch (e) {
         console.error("[Main] Error desencriptando token:", e);
       }

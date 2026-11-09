@@ -1,5 +1,3 @@
-import type { LogLevel } from "../model/audit.types";
-
 export interface ParsedLogDetails {
   isJson: boolean;
   raw: string;
@@ -183,39 +181,39 @@ export function parseLogDetails(details?: string): ParsedLogDetails {
   }
 
   try {
-    const parsed = JSON.parse(trimmed) as Record<string, any>;
+    const parsed = JSON.parse(trimmed) as Record<string, unknown>;
 
     if (parsed.invoiceNumber || parsed.orderId || parsed.finalTotal !== undefined) {
       const payments = Array.isArray(parsed.payments)
-        ? parsed.payments.map((p: any) => ({
-            method: String(p.method || "PAGO"),
-            amount: Number(p.amount || 0),
+        ? parsed.payments.map((p: Record<string, unknown>) => ({
+            method: String(p?.method || "PAGO"),
+            amount: Number(p?.amount || 0),
           }))
         : [];
 
-      const summaryText = `Factura #${parsed.invoiceNumber || "S/N"} para la orden ${parsed.orderId || "N/A"}`;
+      const summaryText = `Factura #${String(parsed.invoiceNumber || "S/N")} para la orden ${String(parsed.orderId || "N/A")}`;
 
       return {
         isJson: true,
         raw: details,
         summaryText,
         orderInfo: {
-          invoiceNumber: parsed.invoiceNumber,
-          issuedNumber: parsed.issuedNumber,
-          orderId: parsed.orderId,
-          finalTotal: parsed.finalTotal,
-          taxAmount: parsed.taxAmount,
+          invoiceNumber: typeof parsed.invoiceNumber === "string" ? parsed.invoiceNumber : undefined,
+          issuedNumber: typeof parsed.issuedNumber === "number" ? parsed.issuedNumber : undefined,
+          orderId: typeof parsed.orderId === "string" ? parsed.orderId : undefined,
+          finalTotal: typeof parsed.finalTotal === "number" ? parsed.finalTotal : undefined,
+          taxAmount: typeof parsed.taxAmount === "number" ? parsed.taxAmount : undefined,
           payments,
-          promotionCode: parsed.promotionCode,
-          promotionSource: parsed.promotionSource,
-          resolutionNumber: parsed.resolutionNumber,
+          promotionCode: typeof parsed.promotionCode === "string" ? parsed.promotionCode : undefined,
+          promotionSource: typeof parsed.promotionSource === "string" ? parsed.promotionSource : undefined,
+          resolutionNumber: typeof parsed.resolutionNumber === "string" ? parsed.resolutionNumber : undefined,
         },
       };
     }
 
     // Genérico JSON: Convertir claves a un formato amigable
     const keyValuePairs = Object.entries(parsed)
-      .filter(([_, val]) => val !== undefined && val !== null && val !== "")
+      .filter(([, val]) => val !== undefined && val !== null && val !== "")
       .map(([key, value]) => {
         const label = key
           .replace(/([A-Z])/g, " $1")
@@ -234,4 +232,3 @@ export function parseLogDetails(details?: string): ParsedLogDetails {
     return { isJson: false, raw: details, summaryText: details };
   }
 }
-

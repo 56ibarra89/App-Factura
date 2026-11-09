@@ -45,7 +45,9 @@ export function useAdminSchedules() {
     setCurrentWorkDays(selectedUser?.workDays ?? []);
   }, [selectedUser]);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Managua",
+  }).format(new Date());
   const currentMonth = today.slice(0, 7);
   const hasExtraDayToday =
     selectedUser?.extraDays?.some((day) => day.date.startsWith(today)) ??

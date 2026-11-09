@@ -1,4 +1,4 @@
-import { useCallback, useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, type ReactNode } from "react";
 import { useAuthOperations } from "../hooks/useAuthOperations";
 import { useAuthSession } from "../hooks/useAuthSession";
 import { useInactivityTimer } from "../hooks/useInactivityTimer";
@@ -89,24 +89,41 @@ export const AuthProvider = ({
     sessionGateway,
   );
 
+  const contextValue = useMemo(
+    () => ({
+      ...session.state,
+      hasPermission,
+      loading: authentication.loading,
+      error: authentication.error,
+      login: authentication.login,
+      loginWithPin: authentication.loginWithPin,
+      logout: authentication.logout,
+      logoutAllDevices: authentication.logoutAllDevices,
+      clearError: authentication.clearError,
+      validatePinForAction: authentication.validatePinForAction,
+      updateUsername: session.updateUsername,
+      lockoutTime: pinLockout.lockoutTime,
+      loginLockoutTime: loginLockout.loginLockoutTime,
+    }),
+    [
+      session.state,
+      hasPermission,
+      authentication.loading,
+      authentication.error,
+      authentication.login,
+      authentication.loginWithPin,
+      authentication.logout,
+      authentication.logoutAllDevices,
+      authentication.clearError,
+      authentication.validatePinForAction,
+      session.updateUsername,
+      pinLockout.lockoutTime,
+      loginLockout.loginLockoutTime,
+    ],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        ...session.state,
-        hasPermission,
-        loading: authentication.loading,
-        error: authentication.error,
-        login: authentication.login,
-        loginWithPin: authentication.loginWithPin,
-        logout: authentication.logout,
-        logoutAllDevices: authentication.logoutAllDevices,
-        clearError: authentication.clearError,
-        validatePinForAction: authentication.validatePinForAction,
-        updateUsername: session.updateUsername,
-        lockoutTime: pinLockout.lockoutTime,
-        loginLockoutTime: loginLockout.loginLockoutTime,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

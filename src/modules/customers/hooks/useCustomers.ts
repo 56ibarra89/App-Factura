@@ -23,12 +23,16 @@ interface UseCustomersOptions {
 
 export const useCustomers = (options: UseCustomersOptions = {}) => {
   const repository = options.repository ?? customerRepository;
-  const { page = 0, limit = 10, query = '', autoLoad = true } = options;
+  const { page = 0, limit = 10, query = "", autoLoad = true } = options;
   const [total, setTotal] = useState(0);
   const requestVersion = useRef(0);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const invalidatePendingRequest = useCallback(() => {
+    requestVersion.current += 1;
+  }, []);
 
   const loadCustomers = useCallback(async () => {
     if (!autoLoad) return;
@@ -49,9 +53,11 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
   }, [repository, page, limit, query, autoLoad]);
 
   useEffect(() => {
-    loadCustomers();
-    return () => { requestVersion.current++; };
-  }, [loadCustomers]);
+    void loadCustomers();
+    return () => {
+      invalidatePendingRequest();
+    };
+  }, [loadCustomers, invalidatePendingRequest]);
 
   const createCustomer = useCallback(
     async (data: CustomerFormData): Promise<void> => {

@@ -74,6 +74,7 @@ export function useOrderContentCommands({
             order.id === orderId
               ? {
                   ...order,
+                  updatedAt: updatedOrder.updatedAt ?? order.updatedAt,
                   items:
                     updatedOrder.items || order.items,
                   total: updatedOrder.total ?? order.total,

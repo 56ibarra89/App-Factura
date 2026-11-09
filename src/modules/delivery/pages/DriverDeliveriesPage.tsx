@@ -119,7 +119,7 @@ export default function DriverDeliveriesPage() {
           ? usersGateway
               .findByUsername(username)
               .then((currentUser) => [currentUser])
-          : usersGateway.list();
+          : (usersGateway.listDirectory ?? usersGateway.list)();
       const [usersList, customersList] = await Promise.all([
         usersRequest,
         customerRepository.getAll().catch(() => [] as Customer[]),
@@ -140,8 +140,8 @@ export default function DriverDeliveriesPage() {
         } else if (motorizados.length > 0) {
           setSelectedDriverId(motorizados[0].id);
         }
-      } else if (!selectedDriverId && motorizados.length > 0) {
-        setSelectedDriverId(motorizados[0].id);
+      } else if (motorizados.length > 0) {
+        setSelectedDriverId((prev) => prev || motorizados[0].id);
       }
     } catch (err) {
       console.error("Error al cargar datos iniciales:", err);
@@ -153,7 +153,7 @@ export default function DriverDeliveriesPage() {
     } finally {
       setLoading(false);
     }
-  }, [isMotorizado, selectedDriverId, username]);
+  }, [isMotorizado, username]);
 
   const fetchAllDeliveryOrders = useCallback(async () => {
     try {
