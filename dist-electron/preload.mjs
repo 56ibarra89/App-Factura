@@ -1,1 +1,14 @@
-"use strict";const e=require("electron");e.contextBridge.exposeInMainWorld("printAPI",{printSilent:r=>e.ipcRenderer.invoke("printer:print-current-page",r),getSystemPrinters:()=>e.ipcRenderer.invoke("printer:list-system"),testNetworkPrinter:r=>e.ipcRenderer.invoke("printer:test-network",r),printNetworkTicket:r=>e.ipcRenderer.invoke("printer:print-ticket",r),openNetworkCashDrawer:r=>e.ipcRenderer.invoke("printer:open-network-drawer",r)});e.contextBridge.exposeInMainWorld("authAPI",{setToken:r=>e.ipcRenderer.invoke("auth:set-token",r),clearToken:()=>e.ipcRenderer.invoke("auth:clear-token"),hasToken:()=>e.ipcRenderer.invoke("auth:has-token")});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("printAPI", {
+  printSilent: (options) => electron.ipcRenderer.invoke("printer:print-current-page", options),
+  getSystemPrinters: () => electron.ipcRenderer.invoke("printer:list-system"),
+  testNetworkPrinter: (options) => electron.ipcRenderer.invoke("printer:test-network", options),
+  printNetworkTicket: (options) => electron.ipcRenderer.invoke("printer:print-ticket", options),
+  openNetworkCashDrawer: (options) => electron.ipcRenderer.invoke("printer:open-network-drawer", options)
+});
+electron.contextBridge.exposeInMainWorld("authAPI", {
+  setToken: (token) => electron.ipcRenderer.invoke("auth:set-token", token),
+  clearToken: () => electron.ipcRenderer.invoke("auth:clear-token"),
+  hasToken: () => electron.ipcRenderer.invoke("auth:has-token")
+});

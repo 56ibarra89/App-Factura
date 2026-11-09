@@ -6,10 +6,12 @@ export interface AccessTokenStore {
   getRefreshToken?(): string | null;
   setRefreshToken?(token: string | null): void;
   clear(): void;
+  getRevision(): number;
 }
 
 let currentAccessToken: string | null = null;
 let currentRefreshToken: string | null = null;
+let revision = 0;
 
 // Remove tokens persisted by versions prior to the secure in-memory/Electron store.
 localStore.removeItem("access_token");
@@ -21,6 +23,7 @@ export const accessTokenStore: AccessTokenStore = {
   },
 
   set(token) {
+    revision++;
     currentAccessToken = token;
   },
 
@@ -29,13 +32,16 @@ export const accessTokenStore: AccessTokenStore = {
   },
 
   setRefreshToken(token) {
+    revision++;
     currentRefreshToken = token;
   },
 
   clear() {
+    revision++;
     currentAccessToken = null;
     currentRefreshToken = null;
   },
+  getRevision() { return revision; },
 };
 
 export function hasAccessToken(): boolean {

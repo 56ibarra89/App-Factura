@@ -141,6 +141,7 @@ export async function attemptTokenRefresh(): Promise<string | null> {
       const currentRefreshToken =
         accessTokenStore.getRefreshToken?.() ?? null;
       const currentAccessToken = accessTokenStore.get();
+      const revision = accessTokenStore.getRevision();
       const bearerToken = currentRefreshToken || currentAccessToken;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -163,14 +164,17 @@ export async function attemptTokenRefresh(): Promise<string | null> {
       const data = await response.json();
       const newToken = data?.access_token;
       const newRefreshToken = data?.refresh_token;
+      if (accessTokenStore.getRevision() !== revision) return null;
       if (typeof newToken === "string" && newToken) {
         accessTokenStore.set(newToken);
         if (typeof newRefreshToken === "string" && newRefreshToken) {
           accessTokenStore.setRefreshToken?.(newRefreshToken);
         }
+        const committedRevision = accessTokenStore.getRevision();
         if (window.authAPI) {
           await window.authAPI.setToken(newToken);
         }
+        if (accessTokenStore.getRevision() !== committedRevision) return null;
         return newToken;
       }
       return null;
@@ -207,6 +211,8 @@ export const apiClient = async <T = any>(
     const proactivelyRefreshed = await attemptTokenRefresh();
     if (proactivelyRefreshed) {
       accessToken = proactivelyRefreshed;
+    } else if (accessTokenStore.get() !== accessToken) {
+      throw new Error('La sesión cambió durante la petición.');
     }
   }
 
@@ -229,8 +235,14 @@ export const apiClient = async <T = any>(
 
   if (!response.ok) {
     if (response.status === 401 && !isAuthEndpoint(endpoint)) {
+      if (accessTokenStore.get() !== accessToken) {
+        throw new Error('La sesión cambió durante la petición.');
+      }
       // Intentar renovación silenciosa antes de dar por expirada la sesión
       const refreshedToken = await attemptTokenRefresh();
+      if (!refreshedToken && accessTokenStore.get() !== accessToken) {
+        throw new Error('La sesión cambió durante la petición.');
+      }
       if (refreshedToken) {
         const retryHeaders: Record<string, string> = {
           ...headers,
@@ -248,6 +260,9 @@ export const apiClient = async <T = any>(
       }
 
       if (!response.ok && response.status === 401) {
+        if (accessTokenStore.get() !== (refreshedToken || accessToken)) {
+          throw new Error('La sesión cambió durante la petición.');
+        }
         handleUnauthorizedSession();
         throw new Error(
           "Sesión expirada. Por favor, inicia sesión nuevamente.",

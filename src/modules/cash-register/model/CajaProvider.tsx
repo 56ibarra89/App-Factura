@@ -39,7 +39,7 @@ export const CajaProvider = ({
   expenseGateway = defaultExpenseGateway,
   pollIntervalMs = SHIFT_SYNC_POLL_INTERVAL_MS,
 }: CajaProviderProps) => {
-  const { username, hasPermission } = useAuth();
+  const { username, role, hasPermission } = useAuth();
   const { orders } = useOrderQueries();
 
   const [currentShift, setCurrentShift] = useState<Shift | null>(null);
@@ -47,21 +47,30 @@ export const CajaProvider = ({
     CashExpense[]
   >([]);
   const isFetchingShiftRef = useRef(false);
+  const expenseRequestRef = useRef(0);
+  const sessionGenerationRef = useRef(0);
 
   const canReadCashStatus = Boolean(username && hasPermission("cash.status"));
+  const canReadExpenses = Boolean(username && role && ["admin", "cajero_principal", "cajero"].includes(role) && hasPermission("cash.expenses"));
 
-  const refreshCurrentShiftExpenses = useCallback(async () => {
-    if (!currentShift?.id) {
+  const fetchShiftExpenses = useCallback(async (shiftId?: string) => {
+    const request = ++expenseRequestRef.current;
+    if (!shiftId || !canReadExpenses) {
       setCurrentShiftExpenses([]);
       return;
     }
     try {
-      const exps = await expenseGateway.listExpensesByShift(currentShift.id);
-      setCurrentShiftExpenses(exps);
+      const exps = await expenseGateway.listExpensesByShift(shiftId);
+      if (request === expenseRequestRef.current) setCurrentShiftExpenses(exps);
     } catch (err) {
       console.error("[CajaContext] Error al cargar gastos del turno:", err);
     }
-  }, [currentShift?.id, expenseGateway]);
+  }, [expenseGateway, canReadExpenses]);
+
+  const refreshCurrentShiftExpenses = useCallback(
+    () => fetchShiftExpenses(currentShift?.id),
+    [currentShift?.id, fetchShiftExpenses],
+  );
 
   const syncActiveShift = useCallback(async (): Promise<Shift | null> => {
     if (!canReadCashStatus) {
@@ -71,8 +80,10 @@ export const CajaProvider = ({
       return null;
     }
     isFetchingShiftRef.current = true;
+    const generation = sessionGenerationRef.current;
     try {
       const shift = await repository.getActiveShift();
+      if (generation !== sessionGenerationRef.current) return null;
       setCurrentShift((prevShift) => {
         const changed =
           prevShift?.id !== shift?.id ||
@@ -85,9 +96,7 @@ export const CajaProvider = ({
         }
         return shift;
       });
-      if (!shift) {
-        setCurrentShiftExpenses([]);
-      }
+      void fetchShiftExpenses(shift?.id);
       return shift;
     } catch (err) {
       console.error(
@@ -98,10 +107,11 @@ export const CajaProvider = ({
     } finally {
       isFetchingShiftRef.current = false;
     }
-  }, [canReadCashStatus, repository]);
+  }, [canReadCashStatus, repository, fetchShiftExpenses]);
 
   useEffect(() => {
     if (!username) {
+      expenseRequestRef.current++;
       console.log("[CajaContext] Usuario deslogueado. Limpiando estado.");
       setCurrentShift(null);
       setCurrentShiftExpenses([]);
@@ -135,20 +145,21 @@ export const CajaProvider = ({
 
     return () => {
       active = false;
+      sessionGenerationRef.current++;
+      expenseRequestRef.current++;
       window.clearInterval(intervalId);
       window.removeEventListener("focus", triggerSync);
       window.removeEventListener("appfactura:shift-changed", triggerSync);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [canReadCashStatus, pollIntervalMs, syncActiveShift]);
+  }, [username, canReadCashStatus, pollIntervalMs, syncActiveShift]);
 
   useEffect(() => {
-    if (currentShift?.id) {
-      void refreshCurrentShiftExpenses();
-    } else {
+    if (!currentShift?.id || !canReadExpenses) {
+      expenseRequestRef.current++;
       setCurrentShiftExpenses([]);
     }
-  }, [currentShift?.id, refreshCurrentShiftExpenses]);
+  }, [currentShift?.id, canReadExpenses]);
 
   const calculateCurrentShiftSales = useCallback((): ShiftSales => {
     if (!currentShift) return { cash: 0, card: 0, app: 0, total: 0 };
