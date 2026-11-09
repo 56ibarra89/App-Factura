@@ -24,7 +24,7 @@ function reconcileFinalizationPayments(
   order: Order,
   targetTotal: number,
 ): Order["payments"] {
-  const basePayments = order.payments?.length
+  const basePayments: Order["payments"] = order.payments?.length
     ? order.payments
     : order.paymentMethod === "MIXTO" && order.splitAmounts
       ? [

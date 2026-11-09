@@ -48,11 +48,14 @@ const AdminClientes = () => {
 
       <CustomerSearchBar
         value={customers.search}
-        resultCount={customers.filteredCustomers.length}
+        resultCount={customers.total}
         onChange={customers.setSearch}
       />
 
       <CustomerTable
+        page={customers.page} onPageChange={customers.setPage}
+        rowsPerPage={customers.rowsPerPage} onRowsPerPageChange={customers.setRowsPerPage}
+        total={customers.total}
         customers={customers.filteredCustomers}
         loading={customers.loading}
         onEdit={customers.openEdit}

@@ -15,6 +15,7 @@ export interface UpdateCustomerPayload {
 }
 
 export interface ICustomerRepository {
+  getPage(page: number, limit: number, query?: string): Promise<{ items: Customer[]; total: number }>;
   searchByName(query: string): Promise<Customer[]>;
   createCustomer(
     name: string,
@@ -33,6 +34,9 @@ export interface ICustomerRepository {
 }
 
 class CustomerRepository implements ICustomerRepository {
+  getPage(page: number, limit: number, query = ''): Promise<{ items: Customer[]; total: number }> {
+    return apiClient(`/customers/page?${new URLSearchParams({ page: String(page), limit: String(limit), query })}`);
+  }
   async searchByName(query: string): Promise<Customer[]> {
     return await apiClient(`/customers?query=${encodeURIComponent(query)}`, {
       method: "GET",

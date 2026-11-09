@@ -286,21 +286,22 @@ export function useCustomerDeliveryForm({
   const persistCustomer = useCallback(async () => {
     const trimmedName = customerName.trim();
     const trimmedPhone = customerPhone.trim();
-    if (!trimmedName && !trimmedPhone) return false;
+    if (!trimmedName && !trimmedPhone) return null;
 
     const nameToSave = trimmedName || `Cliente ${trimmedPhone}`;
 
     if (selectedCustomer?.id) {
       try {
-        await customerRepository.update({
+        const customer = await customerRepository.update({
           id: selectedCustomer.id,
           name: nameToSave,
           phone: trimmedPhone || undefined,
           address: orderType === "delivery" ? customerAddress?.trim() : undefined,
         });
-        return false;
+        return { customer, isNew: false };
       } catch (err) {
         console.error("Error actualizando cliente en persistCustomer:", err);
+        throw err;
       }
     }
 

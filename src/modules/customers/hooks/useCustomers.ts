@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   customerRepository,
   type ICustomerRepository,
@@ -15,30 +15,42 @@ const generateId = (): string =>
 
 interface UseCustomersOptions {
   repository?: ICustomerRepository;
+  page?: number;
+  limit?: number;
+  query?: string;
+  autoLoad?: boolean;
 }
 
 export const useCustomers = (options: UseCustomersOptions = {}) => {
   const repository = options.repository ?? customerRepository;
+  const { page = 0, limit = 10, query = '', autoLoad = true } = options;
+  const [total, setTotal] = useState(0);
+  const requestVersion = useRef(0);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadCustomers = useCallback(async () => {
+    if (!autoLoad) return;
+    const version = ++requestVersion.current;
     setLoading(true);
     setError(null);
     try {
-      const data = await repository.getAll();
-      setCustomers(data);
+      const data = await repository.getPage(page, limit, query);
+      if (version !== requestVersion.current) return;
+      setCustomers(data.items);
+      setTotal(data.total);
     } catch (err) {
       console.error("useCustomers: error al cargar", err);
-      setError("No se pudo cargar la lista de clientes.");
+      if (version === requestVersion.current) setError("No se pudo cargar la lista de clientes.");
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
-  }, [repository]);
+  }, [repository, page, limit, query, autoLoad]);
 
   useEffect(() => {
     loadCustomers();
+    return () => { requestVersion.current++; };
   }, [loadCustomers]);
 
   const createCustomer = useCallback(
@@ -56,7 +68,7 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
   const updateCustomer = useCallback(
     async (data: CustomerFormData): Promise<void> => {
       if (!data.id) throw new Error("ID requerido para editar");
-      const existing = customers.find((c) => c.id === data.id);
+      const existing = customers.find((c) => c.id === data.id) ?? await repository.findById(data.id);
       if (!existing) throw new Error("Cliente no encontrado");
 
       await repository.update({
@@ -156,6 +168,7 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
     }));
 
   return {
+    total,
     customers,
     loading,
     error,

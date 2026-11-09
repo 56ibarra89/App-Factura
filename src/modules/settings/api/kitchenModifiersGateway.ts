@@ -5,6 +5,7 @@ import {
 } from "../model/kitchenModifiers.types";
 
 const CONFIG_KEY = "kitchen_modifiers";
+export type KitchenModifiersGateway = typeof kitchenModifiersGateway;
 
 export const kitchenModifiersGateway = {
   async load() {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   useCustomerSearch,
@@ -11,16 +11,26 @@ import {
   type DeliveryGateway,
 } from "../api/deliveryGateway";
 import { useDeliveryRules } from "./useDeliveryRules";
+import { useAuth } from "../../auth";
 
 export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
   const navigate = useNavigate();
+  const { role, hasPermission } = useAuth();
+  const canReadStats = Boolean(role && ['admin', 'cajero', 'cajero_principal', 'despachador', 'motorizado'].includes(role) && hasPermission('delivery.read'));
+  const canReadDrivers = hasPermission('users.directory');
   const { suggestions, search, clearSuggestions } = useCustomerSearch();
-  const { addAddress, removeAddress, updateCustomer } = useCustomers();
+  const { addAddress, removeAddress, updateCustomer } = useCustomers({ autoLoad: false });
   const { rules: deliveryRules, activeZones } = useDeliveryRules();
 
   const [phoneInput, setPhoneInput] = useState("");
   const [transporteInput, setTransporteInput] = useState("30.00");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const manualCustomer = useRef<Customer | null>(null);
+  const selectCustomer = useCallback((customer: Customer | null) => {
+    manualCustomer.current = customer;
+    setSelectedCustomer(customer);
+    clearSuggestions();
+  }, [clearSuggestions]);
   const [selectedAddress, setSelectedAddress] = useState<string>("");
   const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
@@ -38,6 +48,9 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
   }, [activeZones, selectedZone]);
 
   useEffect(() => {
+    const manual = manualCustomer.current;
+    if (manual && (manual.phone === phoneInput || manual.phones?.some((entry) => entry.phone === phoneInput))) return;
+    manualCustomer.current = null;
     if (phoneInput.length >= 8) {
       search(phoneInput);
     } else {
@@ -47,11 +60,12 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
   }, [phoneInput, search, clearSuggestions]);
 
   useEffect(() => {
-    if (suggestions.length > 0) {
+    if (manualCustomer.current) return;
+    if (suggestions.length === 1) {
       setSelectedCustomer(suggestions[0]);
       if (suggestions[0].addresses && suggestions[0].addresses.length > 0) {
         setSelectedAddress(suggestions[0].addresses[0].address);
-      }
+      } else setSelectedAddress('');
     } else {
       setSelectedCustomer(null);
       setSelectedAddress("");
@@ -59,21 +73,18 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
   }, [suggestions]);
 
   useEffect(() => {
-    const fetchDriversAndStats = async () => {
-      try {
-        const now = new Date();
-        const [motorizados, statsData] = await Promise.all([
-          gateway.listAvailableDrivers(now),
-          gateway.getStats(now),
-        ]);
-        setDrivers(motorizados);
-        setStats(statsData);
-      } catch (err) {
-        console.error("Error fetching motorizados or stats:", err);
-      }
-    };
-    void fetchDriversAndStats();
-  }, [gateway]);
+    let active = true;
+    const now = new Date();
+    setDrivers([]);
+    setStats([]);
+    if (canReadDrivers) void gateway.listAvailableDrivers(now)
+      .then((rows) => { if (active) setDrivers(rows); })
+      .catch((error) => console.error('Error cargando repartidores', error));
+    if (canReadStats) void gateway.getStats(now)
+      .then((rows) => { if (active) setStats(rows); })
+      .catch((error) => console.error('Error cargando estadísticas', error));
+    return () => { active = false; };
+  }, [gateway, canReadDrivers, canReadStats]);
 
   const handleConfirm = useCallback(() => {
     navigate("/facturacion", {
@@ -140,7 +151,7 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
     transporteInput,
     setTransporteInput,
     selectedCustomer,
-    setSelectedCustomer,
+    setSelectedCustomer: selectCustomer,
     selectedAddress,
     setSelectedAddress,
     searchDialogOpen,

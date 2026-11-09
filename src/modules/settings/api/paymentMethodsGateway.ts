@@ -6,6 +6,7 @@ import {
 } from "../model/paymentMethods.types";
 
 const CONFIG_KEY = "payment_methods";
+export type PaymentMethodsGateway = typeof paymentMethodsGateway;
 
 export const paymentMethodsGateway = {
   async load() {

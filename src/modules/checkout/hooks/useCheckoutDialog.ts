@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { customerRepository, type Customer } from "../../customers";
 import type { CheckoutFormValues } from "../model/checkout.types";
 import type { OrderItem, OrderType } from "../../orders";
@@ -55,6 +55,7 @@ export function useCheckoutDialog({
   const [toastOpen, setToastOpen] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionLock = useRef(false);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [matchedCustomer, setMatchedCustomer] = useState<Customer | null>(null);
 
@@ -263,7 +264,9 @@ export function useCheckoutDialog({
   );
 
   const handleConfirm = useCallback(async () => {
-    if (!canConfirm || isSubmitting) return;
+    if (!canConfirm || submissionLock.current) return;
+    submissionLock.current = true;
+    setIsSubmitting(true);
 
     setSubmitError("");
     const name = customerDelivery.customerName.trim();
@@ -291,6 +294,8 @@ export function useCheckoutDialog({
             // Existe un cliente registrado con ese nombre, pero el teléfono es nuevo
             setMatchedCustomer(exactMatch);
             setMatchDialogOpen(true);
+            submissionLock.current = false;
+            setIsSubmitting(false);
             return;
           }
         }
@@ -301,10 +306,10 @@ export function useCheckoutDialog({
 
     setIsSubmitting(true);
     try {
-      const isNewCustomer = await customerDelivery.persistCustomer();
-      if (isNewCustomer) setToastOpen(true);
+      const persisted = await customerDelivery.persistCustomer();
+      if (persisted?.isNew) setToastOpen(true);
 
-      await executeFinalSubmission(customerDelivery.selectedCustomer?.id);
+      await executeFinalSubmission(persisted?.customer.id ?? customerDelivery.selectedCustomer?.id);
     } catch (error: unknown) {
       setSubmitError(
         error instanceof Error
@@ -312,12 +317,14 @@ export function useCheckoutDialog({
           : "No se pudo completar el cobro. Inténtalo nuevamente.",
       );
     } finally {
+      submissionLock.current = false;
       setIsSubmitting(false);
     }
   }, [canConfirm, customerDelivery, executeFinalSubmission, isSubmitting]);
 
   const handleConfirmAsNewCustomer = useCallback(async () => {
-    if (!matchedCustomer) return;
+    if (!matchedCustomer || submissionLock.current) return;
+    submissionLock.current = true;
     setSubmitError("");
     setIsSubmitting(true);
     try {
@@ -346,6 +353,7 @@ export function useCheckoutDialog({
           : "No se pudo crear el nuevo cliente. Inténtalo de nuevo.",
       );
     } finally {
+      submissionLock.current = false;
       setIsSubmitting(false);
     }
   }, [
@@ -358,7 +366,8 @@ export function useCheckoutDialog({
   ]);
 
   const handleConfirmAsExistingCustomer = useCallback(async () => {
-    if (!matchedCustomer) return;
+    if (!matchedCustomer || submissionLock.current) return;
+    submissionLock.current = true;
     setSubmitError("");
     setIsSubmitting(true);
     try {
@@ -384,6 +393,7 @@ export function useCheckoutDialog({
           : "No se pudo actualizar el cliente existente.",
       );
     } finally {
+      submissionLock.current = false;
       setIsSubmitting(false);
     }
   }, [

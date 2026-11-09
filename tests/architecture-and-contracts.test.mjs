@@ -10,6 +10,27 @@ const projectRoot = path.resolve(__dirname, "..");
 const modulesRoot = path.join(projectRoot, "src", "modules");
 const sharedRoot = path.join(projectRoot, "src", "shared");
 
+test('la rotación de tokens conserva la sesión y logout invalida su identidad', async () => {
+  const ts = await import('typescript');
+  const source = fs.readFileSync(path.join(sharedRoot, 'api/accessTokenStore.ts'), 'utf8');
+  const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+  const exports = {};
+  new Function('require', 'exports', compiled)(() => ({ localStore: { removeItem() {} } }), exports);
+  const store = exports.accessTokenStore;
+  store.set('login-a');
+  const session = store.getSessionRevision();
+  const revision = store.getRevision();
+  store.rotate('renewed-a');
+  store.setRefreshToken('refresh-a');
+  assert.equal(store.getSessionRevision(), session);
+  assert.ok(store.getRevision() > revision);
+  store.clear();
+  assert.notEqual(store.getSessionRevision(), session);
+  const loggedOut = store.getSessionRevision();
+  store.set('login-b');
+  assert.notEqual(store.getSessionRevision(), loggedOut);
+});
+
 function walkCodeFiles(dir) {
   const results = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

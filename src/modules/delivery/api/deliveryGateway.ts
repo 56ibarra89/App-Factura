@@ -50,10 +50,7 @@ export interface DeliveryGateway {
 
 export const deliveryGateway: DeliveryGateway = {
   async listAvailableDrivers(date = new Date()) {
-    const users: DeliveryDriver[] = await apiClient("/users/directory");
-    return users.filter(
-      (user) => user.isActive !== false && isDriverAvailable(user, date),
-    );
+    return apiClient(`/users/drivers?date=${toLocalDateKey(date)}`);
   },
 
   getStats(date) {

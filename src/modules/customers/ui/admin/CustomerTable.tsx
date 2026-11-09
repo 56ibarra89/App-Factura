@@ -24,6 +24,11 @@ import StarIcon from "@mui/icons-material/Star";
 import type { Customer } from "../../model/customer.types";
 
 interface Props {
+  page: number;
+  rowsPerPage: number;
+  total: number;
+  onPageChange(page: number): void;
+  onRowsPerPageChange(size: number): void;
   customers: Customer[];
   loading: boolean;
   onEdit: (customer: Customer) => void;
@@ -31,18 +36,13 @@ interface Props {
 }
 
 const CustomerTable: React.FC<Props> = ({
+  page, rowsPerPage, total, onPageChange: setPage, onRowsPerPageChange: setRowsPerPage,
   customers,
   loading,
   onEdit,
   onDelete,
 }) => {
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
-  const paginated = customers.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const paginated = customers;
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("es", {
@@ -228,7 +228,7 @@ const CustomerTable: React.FC<Props> = ({
 
       <TablePagination
         component="div"
-        count={customers.length}
+        count={total}
         page={page}
         onPageChange={(_, p) => setPage(p)}
         rowsPerPage={rowsPerPage}

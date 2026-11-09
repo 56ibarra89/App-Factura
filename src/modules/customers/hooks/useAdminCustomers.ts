@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type {
   Customer,
   CustomerFormData,
@@ -12,8 +12,17 @@ interface CustomerNotification {
 }
 
 export function useAdminCustomers() {
-  const customerData = useCustomers();
-  const [search, setSearch] = useState("");
+  const [search, updateSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, updateRowsPerPage] = useState(10);
+  const setSearch = (value: string) => { setPage(0); updateSearch(value); };
+  const setRowsPerPage = (value: number) => { setPage(0); updateRowsPerPage(value); };
+  const customerData = useCustomers({ page, limit: rowsPerPage, query: search });
+  useEffect(() => {
+    if (!customerData.loading && page > 0 && page * rowsPerPage >= customerData.total) {
+      setPage(Math.max(0, Math.ceil(customerData.total / rowsPerPage) - 1));
+    }
+  }, [customerData.loading, customerData.total, page, rowsPerPage]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
@@ -24,12 +33,7 @@ export function useAdminCustomers() {
   });
 
   const filteredCustomers = useMemo(() => {
-    const normalizedSearch = search.toLowerCase();
-    return customerData.customers.filter(
-      (customer) =>
-        customer.name.toLowerCase().includes(normalizedSearch) ||
-        customer.phone?.includes(search),
-    );
+    return customerData.customers;
   }, [customerData.customers, search]);
 
   const notify = (
@@ -80,6 +84,7 @@ export function useAdminCustomers() {
   };
 
   return {
+    page, setPage, rowsPerPage, setRowsPerPage,
     ...customerData,
     search,
     filteredCustomers,

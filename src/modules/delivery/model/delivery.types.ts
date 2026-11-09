@@ -4,6 +4,7 @@ export interface DeliveryStat {
 }
 
 export interface DeliveryDriver {
+  isActive?: boolean;
   id: string;
   username?: string;
   firstName: string;

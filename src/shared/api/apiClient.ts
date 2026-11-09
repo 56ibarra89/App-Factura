@@ -56,6 +56,7 @@ const AUTH_KEYS = [
 let isHandlingUnauthorized = false;
 let unauthorizedTimeout: ReturnType<typeof setTimeout> | null = null;
 let refreshPromise: Promise<string | null> | null = null;
+let refreshSession = -1;
 
 async function fetchWithTimeout(
   url: string,
@@ -130,10 +131,12 @@ function isAuthEndpoint(endpoint: string): boolean {
 }
 
 export async function attemptTokenRefresh(): Promise<string | null> {
-  if (refreshPromise) {
+  const session = accessTokenStore.getSessionRevision();
+  if (refreshPromise && refreshSession === session) {
     return refreshPromise;
   }
 
+  refreshSession = session;
   refreshPromise = (async () => {
     try {
       const baseUrl = API_BASE_URL || "";
@@ -166,7 +169,7 @@ export async function attemptTokenRefresh(): Promise<string | null> {
       const newRefreshToken = data?.refresh_token;
       if (accessTokenStore.getRevision() !== revision) return null;
       if (typeof newToken === "string" && newToken) {
-        accessTokenStore.set(newToken);
+        accessTokenStore.rotate(newToken);
         if (typeof newRefreshToken === "string" && newRefreshToken) {
           accessTokenStore.setRefreshToken?.(newRefreshToken);
         }
@@ -181,7 +184,7 @@ export async function attemptTokenRefresh(): Promise<string | null> {
     } catch {
       return null;
     } finally {
-      refreshPromise = null;
+      if (refreshSession === session) refreshPromise = null;
     }
   })();
 
@@ -202,6 +205,7 @@ export const apiClient = async <T = any>(
   } = options;
   const hasMultipartBody = requestOptions.body instanceof FormData;
   let accessToken = accessTokenStore.get();
+  const requestSession = accessTokenStore.getSessionRevision();
 
   if (
     !isAuthEndpoint(endpoint) &&
@@ -211,7 +215,7 @@ export const apiClient = async <T = any>(
     const proactivelyRefreshed = await attemptTokenRefresh();
     if (proactivelyRefreshed) {
       accessToken = proactivelyRefreshed;
-    } else if (accessTokenStore.get() !== accessToken) {
+    } else if (accessTokenStore.getSessionRevision() !== requestSession) {
       throw new Error('La sesión cambió durante la petición.');
     }
   }
@@ -235,12 +239,14 @@ export const apiClient = async <T = any>(
 
   if (!response.ok) {
     if (response.status === 401 && !isAuthEndpoint(endpoint)) {
-      if (accessTokenStore.get() !== accessToken) {
+      if (accessTokenStore.getSessionRevision() !== requestSession) {
         throw new Error('La sesión cambió durante la petición.');
       }
       // Intentar renovación silenciosa antes de dar por expirada la sesión
-      const refreshedToken = await attemptTokenRefresh();
-      if (!refreshedToken && accessTokenStore.get() !== accessToken) {
+      const refreshedToken = accessTokenStore.get() !== accessToken
+        ? accessTokenStore.get()
+        : await attemptTokenRefresh();
+      if (accessTokenStore.getSessionRevision() !== requestSession) {
         throw new Error('La sesión cambió durante la petición.');
       }
       if (refreshedToken) {
@@ -260,7 +266,7 @@ export const apiClient = async <T = any>(
       }
 
       if (!response.ok && response.status === 401) {
-        if (accessTokenStore.get() !== (refreshedToken || accessToken)) {
+        if (accessTokenStore.getSessionRevision() !== requestSession) {
           throw new Error('La sesión cambió durante la petición.');
         }
         handleUnauthorizedSession();
