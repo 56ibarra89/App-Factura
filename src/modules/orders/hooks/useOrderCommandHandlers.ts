@@ -7,6 +7,7 @@ import type {
   OrderItemsGateway,
   OrderStatusGateway,
   OrderTablesGateway,
+  OrderWaiterGateway,
 } from "../api/ordersGateway";
 import type { OrderCommands } from "../model/order-context.types";
 import type { Order } from "../model/order.types";
@@ -26,6 +27,7 @@ interface UseOrderCommandHandlersOptions {
   itemsGateway: OrderItemsGateway;
   finalizationGateway: OrderFinalizationGateway;
   tablesGateway: OrderTablesGateway;
+  waiterGateway: OrderWaiterGateway;
   preferencesGateway: OrderPreferencesGateway;
 }
 
@@ -38,6 +40,7 @@ export function useOrderCommandHandlers({
   itemsGateway,
   finalizationGateway,
   tablesGateway,
+  waiterGateway,
   preferencesGateway,
 }: UseOrderCommandHandlersOptions): OrderCommands {
   const collection = useOrderCollectionCommands({
@@ -68,6 +71,7 @@ export function useOrderCommandHandlers({
     updateOrders,
     creationGateway,
     tablesGateway,
+    waiterGateway,
   });
   const {
     addOrder,
@@ -81,7 +85,7 @@ export function useOrderCommandHandlers({
   } = status;
   const { updateOrderItems } = content;
   const { finalizeOrder, splitCheckoutOrder } = finalization;
-  const { moveOrder, unirMesas } = tables;
+  const { moveOrder, unirMesas, assignOrderWaiter } = tables;
 
   return useMemo(
     () => ({
@@ -96,9 +100,11 @@ export function useOrderCommandHandlers({
       markAsSentToKitchenByTable,
       moveOrder,
       unirMesas,
+      assignOrderWaiter,
     }),
     [
       addOrder,
+      assignOrderWaiter,
       clearHistory,
       finalizeOrder,
       splitCheckoutOrder,

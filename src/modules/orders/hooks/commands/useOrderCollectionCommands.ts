@@ -59,6 +59,8 @@ export function useOrderCollectionCommands({
                   happyHourId: createdOrder.happyHourId ?? order.happyHourId,
                   certificateSerials:
                     createdOrder.certificateSerials ?? order.certificateSerials,
+                  waiterId: createdOrder.waiterId ?? order.waiterId,
+                  waiterName: createdOrder.waiterName ?? order.waiterName,
                   items:
                     createdOrder.items || order.items,
                 }

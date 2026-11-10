@@ -82,11 +82,13 @@ export function validatePrintPayload(value: unknown): Buffer | null {
 
 export function validateDeviceName(value: unknown): string | undefined | null {
   if (value === undefined) return undefined;
-  if (!isRecord(value) || value.deviceName === undefined) return null;
+  if (!isRecord(value)) return null;
+  if (value.deviceName === undefined) return undefined;
   if (typeof value.deviceName !== "string") return null;
 
   const deviceName = value.deviceName.trim();
-  if (deviceName.length === 0 || deviceName.length > 256) return null;
+  if (deviceName.length === 0) return undefined;
+  if (deviceName.length > 256) return null;
   return deviceName;
 }
 

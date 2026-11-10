@@ -67,6 +67,8 @@ export interface BackendOrder {
   orderType?: string;
   customerAddress?: string;
   driverId?: string;
+  waiterId?: string;
+  waiterSnapshotName?: string;
   promotionSource?: string;
   promotionCode?: string;
   cuponId?: number | null;
@@ -185,6 +187,8 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       : undefined,
     customerAddress: backendOrder.customerAddress || undefined,
     driverId: backendOrder.driverId || undefined,
+    waiterId: backendOrder.waiterId || undefined,
+    waiterName: backendOrder.waiterSnapshotName || undefined,
     promotionSource: backendOrder.promotionSource
       ? (backendOrder.promotionSource as Order["promotionSource"])
       : undefined,
@@ -199,7 +203,12 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       backendOrder.linkedTables && backendOrder.linkedTables.length > 0
         ? backendOrder.linkedTables[0]
         : undefined,
-    linkedTables: backendOrder.linkedTables,
+    linkedTables:
+      backendOrder.linkedTables && backendOrder.linkedTables.length > 0
+        ? backendOrder.linkedTables.filter(
+            (id) => id !== backendOrder.linkedTables?.[0],
+          )
+        : backendOrder.linkedTables,
     splitAmounts: hasMultiplePayments
       ? {
           efectivo: (backendOrder.payments ?? [])
@@ -342,7 +351,12 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     isSentToKitchen: order.isSentToKitchen,
     linkedTables:
       order.linkedTables && order.linkedTables.length > 0
-        ? order.linkedTables
+        ? Array.from(
+            new Set([
+              ...(order.tableId ? [order.tableId] : []),
+              ...order.linkedTables,
+            ]),
+          )
         : order.tableId
           ? [order.tableId]
           : undefined,
@@ -562,4 +576,15 @@ export async function syncUpdateTables(
     method: "PATCH",
     body: JSON.stringify({ tableIds: linkedTables }),
   });
+}
+
+export async function syncAssignOrderWaiter(
+  orderId: string,
+  waiterId: string,
+): Promise<Order> {
+  const response = await apiClient(`/orders/${orderId}/waiter`, {
+    method: "PATCH",
+    body: JSON.stringify({ waiterId }),
+  });
+  return mapBackendOrderToFrontend(response);
 }

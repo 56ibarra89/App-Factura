@@ -6,6 +6,7 @@ import MesaGrid from "../ui/MesaGrid";
 import OrderPanel from "../ui/OrderPanel";
 import ReservationDialog from "../ui/ReservationDialog";
 import TableSelectDialog from "../ui/TableSelectDialog";
+import WaiterAssignmentDialog from "../ui/WaiterAssignmentDialog";
 import MesasLoadingState from "../ui/MesasLoadingState";
 import MesasRestrictedAccess from "../ui/MesasRestrictedAccess";
 import MesasSetupRequired from "../ui/MesasSetupRequired";
@@ -24,6 +25,10 @@ import { PERMISSIONS, useAuth } from "../../auth";
 import { useMesaDialogs } from "../hooks/useMesaDialogs";
 import { useMesaCheckout } from "../hooks/useMesaCheckout";
 import { useMesaLogic } from "../hooks/useMesaLogic";
+import {
+  waiterAssignmentsGateway,
+  type AvailableWaiter,
+} from "../api/waiterAssignmentsGateway";
 import {
   type Order,
   type OrderItem,
@@ -53,6 +58,10 @@ export default function TablesPage() {
   }, [retryFetch, retryZone]);
 
   const [isDividirCuentaOpen, setIsDividirCuentaOpen] = useState(false);
+  const [isWaiterDialogOpen, setIsWaiterDialogOpen] = useState(false);
+  const [availableWaiters, setAvailableWaiters] = useState<AvailableWaiter[]>([]);
+  const [isLoadingWaiters, setIsLoadingWaiters] = useState(false);
+  const [isSavingWaiter, setIsSavingWaiter] = useState(false);
 
   useEffect(() => {
     void preloadCheckoutPage().catch((error: unknown) => {
@@ -72,6 +81,47 @@ export default function TablesPage() {
   });
 
   const checkout = useMesaCheckout(restoreFocus);
+
+  const canReassignWaiter = ["admin", "cajero", "cajero_principal", "despachador"].includes(
+    role ?? "",
+  );
+
+  const openWaiterAssignment = useCallback(async () => {
+    setIsWaiterDialogOpen(true);
+    setIsLoadingWaiters(true);
+    try {
+      setAvailableWaiters(await waiterAssignmentsGateway.listActive());
+    } catch (error: unknown) {
+      setIsWaiterDialogOpen(false);
+      window.alert(
+        error instanceof Error
+          ? `No se pudo cargar el listado de meseros: ${error.message}`
+          : "No se pudo cargar el listado de meseros.",
+      );
+    } finally {
+      setIsLoadingWaiters(false);
+    }
+  }, []);
+
+  const confirmWaiterAssignment = useCallback(
+    async (waiterId: string) => {
+      if (!logic.activeOrder) return;
+      setIsSavingWaiter(true);
+      try {
+        await logic.assignOrderWaiter(logic.activeOrder.id, waiterId);
+        setIsWaiterDialogOpen(false);
+      } catch (error: unknown) {
+        window.alert(
+          error instanceof Error
+            ? `No se pudo reasignar el mesero: ${error.message}`
+            : "No se pudo reasignar el mesero.",
+        );
+      } finally {
+        setIsSavingWaiter(false);
+      }
+    },
+    [logic],
+  );
 
   const handleCheckoutTable = useCallback(() => {
     if (!logic.selectedMesaId || !logic.activeOrder) return;
@@ -96,7 +146,25 @@ export default function TablesPage() {
         customerName: `${logic.activeOrder.customerName || "Cliente"} (${selection.accountName})`,
         items: itemsToCheckout,
         total: selection.amount,
-        discountAmount: undefined,
+        discountAmount: (() => {
+          const parentDiscount = logic.activeOrder.discountAmount ?? 0;
+          if (parentDiscount <= 0) return 0;
+          const activeTaxRate = isExonerated
+            ? 0
+            : (taxes ?? []).reduce(
+                (sum, tax) => sum + (Number(tax.percentage) || 0),
+                0,
+              );
+          const taxFactor = 1 + activeTaxRate / 100;
+          const subItemsSubtotal = itemsToCheckout.reduce((sum, item) => {
+            const paidQty = Math.max(0, item.quantity - (item.giftQuantity || 0));
+            return sum + item.price * paidQty;
+          }, 0);
+          return Math.min(
+            parentDiscount,
+            Math.max(0, Number((subItemsSubtotal - selection.amount / taxFactor).toFixed(2))),
+          );
+        })(),
       };
       checkout.openCheckoutPreview(subOrder, {
         isSubAccount: true,
@@ -259,6 +327,9 @@ export default function TablesPage() {
           order={currentOrder}
           discountAmount={logic.activeOrder?.discountAmount}
           cashierName={logic.activeOrder?.cashierName}
+          waiterName={logic.activeOrder?.waiterName}
+          canReassignWaiter={canReassignWaiter}
+          onReassignWaiter={openWaiterAssignment}
           onSalir={handleSalir}
           onReservar={logic.handleReservar}
           isReserved={logic.isReserved}
@@ -305,6 +376,15 @@ export default function TablesPage() {
         }
         disableRestoreFocus
         disableEnforceFocus
+      />
+
+      <WaiterAssignmentDialog
+        open={isWaiterDialogOpen}
+        waiters={availableWaiters}
+        currentWaiterId={logic.activeOrder?.waiterId}
+        submitting={isSavingWaiter || isLoadingWaiters}
+        onClose={() => setIsWaiterDialogOpen(false)}
+        onConfirm={confirmWaiterAssignment}
       />
 
       <SplitBillDialog

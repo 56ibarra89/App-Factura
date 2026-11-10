@@ -50,7 +50,11 @@ export function useMesaCheckout(
   const rehydratedPromotion = useOrderPromotionRehydration(checkoutOrder);
   const checkoutPromotion = promotionRemoved
     ? null
-    : (checkoutPromotionState ?? rehydratedPromotion);
+    : (checkoutPromotionState ??
+        (isSubAccountCheckout &&
+        typeof checkoutOrder?.discountAmount === "number"
+          ? null
+          : rehydratedPromotion));
 
   const setCheckoutPromotion = useCallback(
     (promotion: AppliedPromotion | null) => {

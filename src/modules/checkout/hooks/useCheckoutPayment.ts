@@ -174,7 +174,12 @@ export function useCheckoutPayment({
         amount: Math.round(amount * 100) / 100,
         reference: paymentReferences[method.id]?.trim() || undefined,
         methodConfigId: method.id,
-        originalAmount: Math.round((amount / rate) * 100) / 100,
+        // El importe liquidado se guarda en NIO a dos decimales. Conservamos
+        // cuatro decimales en USD para que amount * exchangeRate mantenga una
+        // diferencia máxima de C$0.01, sin relajar la validación del servidor.
+        originalAmount:
+          Math.round(((Math.round(amount * 100) / 100) / rate) * 10000) /
+          10000,
         exchangeRate: rate,
       };
     };

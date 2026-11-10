@@ -6,6 +6,7 @@ import {
 import type {
   OrderCreationGateway,
   OrderTablesGateway,
+  OrderWaiterGateway,
 } from "../../api/ordersGateway";
 import type { OrderCommands } from "../../model/order-context.types";
 import type { Order } from "../../model/order.types";
@@ -16,6 +17,7 @@ interface UseOrderTableCommandsOptions {
   updateOrders(updater: OrderStateUpdater): void;
   creationGateway: OrderCreationGateway;
   tablesGateway: OrderTablesGateway;
+  waiterGateway: OrderWaiterGateway;
 }
 
 const getTablesToSynchronize = (
@@ -33,6 +35,7 @@ export function useOrderTableCommands({
   updateOrders,
   creationGateway,
   tablesGateway,
+  waiterGateway,
 }: UseOrderTableCommandsOptions) {
   const moveOrder = useCallback<
     OrderCommands["moveOrder"]
@@ -190,8 +193,30 @@ export function useOrderTableCommands({
     ],
   );
 
+  const assignOrderWaiter = useCallback<
+    OrderCommands["assignOrderWaiter"]
+  >(
+    async (orderId, waiterId) => {
+      const updated = await waiterGateway.assignWaiter(orderId, waiterId);
+      updateOrders((current) =>
+        current.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                waiterId: updated.waiterId,
+                waiterName: updated.waiterName,
+                updatedAt: updated.updatedAt ?? order.updatedAt,
+              }
+            : order,
+        ),
+      );
+    },
+    [updateOrders, waiterGateway],
+  );
+
   return {
     moveOrder,
     unirMesas,
+    assignOrderWaiter,
   };
 }

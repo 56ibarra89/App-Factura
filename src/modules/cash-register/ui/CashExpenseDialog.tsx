@@ -31,6 +31,7 @@ import {
 import { cashExpenseGateway } from "../api/cashExpenseGateway";
 import CashExpenseVoucherPrint from "./CashExpenseVoucherPrint";
 import { usePettyCashPolicy } from "../hooks/usePettyCashPolicy";
+import { useCaja } from "../model/CajaContext";
 import { PERMISSIONS, PinValidationDialog, useAuth } from "../../auth";
 import { logService } from "../../audit";
 
@@ -49,6 +50,11 @@ export default function CashExpenseDialog({
 }: CashExpenseDialogProps) {
   const { username, role } = useAuth();
   const { policy, isVoucherRequired, validateExpense } = usePettyCashPolicy();
+  const {
+    currentShift,
+    calculateCurrentShiftExpenses,
+    refreshCurrentShiftExpenses,
+  } = useCaja();
 
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<CashExpenseCategory>("OTROS");
@@ -93,6 +99,10 @@ export default function CashExpenseDialog({
 
   const numAmount = parseFloat(amount);
   const isValidAmount = !isNaN(numAmount) && numAmount > 0;
+  const currentShiftTotal =
+    !shiftId || currentShift?.id === shiftId
+      ? calculateCurrentShiftExpenses()
+      : 0;
 
   // Validación de políticas en tiempo real
   const validation = useMemo(() => {
@@ -109,8 +119,15 @@ export default function CashExpenseDialog({
       }
       return { allowed: true, needsPin: false };
     }
-    return validateExpense(numAmount, category);
-  }, [isValidAmount, numAmount, category, policy.categoryPolicies, validateExpense]);
+    return validateExpense(numAmount, category, currentShiftTotal);
+  }, [
+    isValidAmount,
+    numAmount,
+    category,
+    currentShiftTotal,
+    policy.categoryPolicies,
+    validateExpense,
+  ]);
 
   // Regla de comprobante obligatorio
   const voucherNeeded = useMemo(() => {
@@ -151,6 +168,8 @@ export default function CashExpenseDialog({
         authorizationPin,
       });
 
+      await refreshCurrentShiftExpenses();
+
       if (autoPrint) {
         setPrintedExpense(created);
         setTimeout(() => {
@@ -158,9 +177,7 @@ export default function CashExpenseDialog({
         }, 300);
       }
 
-      if (onSuccess) {
-        onSuccess(created);
-      }
+      onSuccess?.(created);
 
       handleClose();
     } catch (err: unknown) {

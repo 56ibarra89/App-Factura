@@ -49,9 +49,9 @@ import {
   requiresKitchenPreparation,
   type Order,
 } from "../../orders";
-import { customerRepository, type Customer } from "../../customers";
-import { usersGateway, type UserAccount } from "../../accounts";
+import { usersGateway } from "../../accounts";
 import { useServiceSlaConfig } from "../../settings";
+import type { DeliveryDriver } from "../model/delivery.types";
 
 type DeliveryTab = "pending" | "in_transit" | "delivered" | "all";
 type DeliveryStage = Exclude<DeliveryTab, "all">;
@@ -85,11 +85,9 @@ export default function DriverDeliveriesPage() {
   const { config: serviceSlas } = useServiceSlaConfig();
   const [clock, setClock] = useState(() => Date.now());
 
-  const [drivers, setDrivers] = useState<UserAccount[]>([]);
+  const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
   const [orders, setOrders] = useState<Order[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [allUsers, setAllUsers] = useState<UserAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [tabFilter, setTabFilter] = useState<DeliveryTab>("pending");
@@ -114,34 +112,31 @@ export default function DriverDeliveriesPage() {
   const loadInitialData = useCallback(async () => {
     setLoading(true);
     try {
-      const usersRequest =
+      const currentDriverRequest =
         isMotorizado && username
           ? usersGateway
               .findByUsername(username)
-              .then((currentUser) => [currentUser])
-          : (usersGateway.listDirectory ?? usersGateway.list)();
-      const [usersList, customersList] = await Promise.all([
-        usersRequest,
-        customerRepository.getAll().catch(() => [] as Customer[]),
+              .then((currentUser) => currentUser as DeliveryDriver)
+          : Promise.resolve(null);
+      const [availableDrivers, currentDriver] = await Promise.all([
+        deliveryGateway.listAvailableDrivers(),
+        currentDriverRequest,
       ]);
-
-      setAllUsers(usersList);
-      setCustomers(customersList);
-
-      const motorizados = usersList.filter((u) => u.role === "motorizado");
-      setDrivers(motorizados.length > 0 ? motorizados : usersList);
+      const driverMap = new Map(
+        availableDrivers.map((driver) => [driver.id, driver]),
+      );
+      if (currentDriver) driverMap.set(currentDriver.id, currentDriver);
+      const driverList = Array.from(driverMap.values());
+      setDrivers(driverList);
 
       if (isMotorizado) {
-        const myUser = usersList.find(
-          (u) => u.username.toLowerCase() === (username || "").toLowerCase(),
-        );
-        if (myUser) {
-          setSelectedDriverId(myUser.id);
-        } else if (motorizados.length > 0) {
-          setSelectedDriverId(motorizados[0].id);
+        if (currentDriver) {
+          setSelectedDriverId(currentDriver.id);
+        } else if (driverList.length > 0) {
+          setSelectedDriverId(driverList[0].id);
         }
-      } else if (motorizados.length > 0) {
-        setSelectedDriverId((prev) => prev || motorizados[0].id);
+      } else if (driverList.length > 0) {
+        setSelectedDriverId((prev) => prev || "all");
       }
     } catch (err) {
       console.error("Error al cargar datos iniciales:", err);
@@ -162,6 +157,7 @@ export default function DriverDeliveriesPage() {
           ? Promise.resolve([] as Order[])
           : ordersGateway.listCurrent().catch(() => [] as Order[]),
         selectedDriverId
+          && selectedDriverId !== "all"
           ? deliveryGateway.getDriverOrdersToday(selectedDriverId)
           : Promise.resolve([] as Order[]),
       ]);
@@ -208,17 +204,6 @@ export default function DriverDeliveriesPage() {
     }, 12000);
     return () => clearInterval(interval);
   }, [fetchAllDeliveryOrders]);
-
-  const getCustomerPhone = useCallback(
-    (customerName?: string) => {
-      if (!customerName) return null;
-      const match = customers.find(
-        (c) => c.name.toLowerCase() === customerName.toLowerCase(),
-      );
-      return match?.phone || null;
-    },
-    [customers],
-  );
 
   const handleMarkAsDelivered = async (order: Order) => {
     if (!isOrderReadyForDelivery(order)) {
@@ -329,18 +314,19 @@ export default function DriverDeliveriesPage() {
 
   // Identificar el motorizado seleccionado y su username
   const selectedDriverUser = useMemo(() => {
-    return allUsers.find(
+    return drivers.find(
       (u) =>
         u.id === selectedDriverId ||
-        u.username.toLowerCase() === selectedDriverId.toLowerCase(),
+        u.username?.toLowerCase() === selectedDriverId.toLowerCase(),
     );
-  }, [allUsers, selectedDriverId]);
+  }, [drivers, selectedDriverId]);
 
   const selectedDriverName = useMemo(() => {
     if (selectedDriverUser) {
       return (
         `${selectedDriverUser.firstName} ${selectedDriverUser.lastName}`.trim() ||
-        selectedDriverUser.username
+        selectedDriverUser.username ||
+        "Motorizado"
       );
     }
     if (username) return username;
@@ -380,7 +366,7 @@ export default function DriverDeliveriesPage() {
       const matchUser =
         selectedDriverUser &&
         order.driverId?.toLowerCase() ===
-          selectedDriverUser.username.toLowerCase();
+          selectedDriverUser.username?.toLowerCase();
 
       return matchId || matchUser;
     });
@@ -412,9 +398,7 @@ export default function DriverDeliveriesPage() {
           .toLowerCase()
           .includes(query);
         const phoneMatch = (
-          order.customerPhone ||
-          getCustomerPhone(order.customerName) ||
-          ""
+          order.customerPhone || ""
         ).includes(query);
         const itemsMatch = order.items.some((i) =>
           i.name.toLowerCase().includes(query),
@@ -433,7 +417,7 @@ export default function DriverDeliveriesPage() {
 
       return true;
     });
-  }, [stagedOrders, tabFilter, searchTerm, getCustomerPhone]);
+  }, [stagedOrders, tabFilter, searchTerm]);
 
   // Cálculos de liquidación del motorizado
   const completedOrders = useMemo(
@@ -709,8 +693,7 @@ export default function DriverDeliveriesPage() {
           gap={3}
         >
           {filteredOrders.map((order) => {
-            const customerPhone =
-              order.customerPhone || getCustomerPhone(order.customerName);
+            const customerPhone = order.customerPhone;
             const isCompleted = order.status === "paid";
             const routeMinutes = order.deliveryStartedAt
               ? Math.max(

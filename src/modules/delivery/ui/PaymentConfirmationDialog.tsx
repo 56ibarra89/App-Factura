@@ -149,10 +149,13 @@ export function PaymentConfirmationDialog({
         : 1;
     return {
       method: toLegacyPaymentMethod(method),
-      amount,
+      amount: Math.round(amount * 100) / 100,
       methodConfigId: method.id,
       reference: paymentReference?.trim() || undefined,
-      originalAmount: Math.round((amount / exchangeRate) * 100) / 100,
+      originalAmount:
+        Math.round(
+          ((Math.round(amount * 100) / 100) / exchangeRate) * 10000,
+        ) / 10000,
       exchangeRate,
     };
   };

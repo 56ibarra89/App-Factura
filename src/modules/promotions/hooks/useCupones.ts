@@ -16,11 +16,21 @@ export function computeCuponStatus(
   expiresDate: string | null | undefined,
   manualStatus: string
 ): CuponStatus {
-  if (manualStatus === "INACTIVO") return "Inactivo";
+  if (manualStatus.trim().toUpperCase() === "INACTIVO") return "Inactivo";
 
   const isExhausted = maxUses > 0 && currentUses >= maxUses;
-  const isExpired =
-    expiresDate && new Date(expiresDate) < new Date(new Date().toDateString());
+  const expirationYmd = expiresDate?.split("T")[0].trim();
+  const todayParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Managua",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const partsByType = Object.fromEntries(
+    todayParts.map((part) => [part.type, part.value]),
+  );
+  const todayYmd = `${partsByType.year}-${partsByType.month}-${partsByType.day}`;
+  const isExpired = Boolean(expirationYmd && expirationYmd < todayYmd);
 
   if (isExhausted) return "Agotado";
   if (isExpired) return "Vencido";
@@ -41,7 +51,9 @@ function buildExpires(dateISO: string | null | undefined): string {
 }
 
 export function hydrateCuponBackend(raw: CouponRecord): CuponRule {
-  const manualStatusStr = raw.manualStatus || "ACTIVO";
+  const manualStatusStr =
+    raw.manualStatus ||
+    (raw.status?.trim().toUpperCase() === "INACTIVO" ? "INACTIVO" : "ACTIVO");
   const status = computeCuponStatus(
     raw.maxUses,
     raw.currentUses,

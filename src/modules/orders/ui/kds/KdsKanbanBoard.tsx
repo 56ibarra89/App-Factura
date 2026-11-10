@@ -260,7 +260,7 @@ export const KdsKanbanBoard: React.FC<KdsKanbanBoardProps> = ({
 
                 return (
                   <KdsCard
-                    key={order.id}
+                    key={`${order.id}-${new Date(order.timestamp).getTime()}`}
                     order={order}
                     filteredItems={itemsForKitchen}
                     kitchens={kitchens}

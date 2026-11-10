@@ -16,6 +16,7 @@ import {
   type OrderItemsGateway,
   type OrderStatusGateway,
   type OrderTablesGateway,
+  type OrderWaiterGateway,
 } from "../api/ordersGateway";
 import {
   orderPreferencesGateway as defaultPreferencesGateway,
@@ -40,6 +41,7 @@ export interface OrderProviderGateways {
   items: OrderItemsGateway;
   finalization: OrderFinalizationGateway;
   tables: OrderTablesGateway;
+  waiter: OrderWaiterGateway;
   realtime: OrdersRealtimeGateway;
 }
 
@@ -65,6 +67,7 @@ export function OrderProvider({
     items = defaultOrdersGateway,
     finalization = defaultOrdersGateway,
     tables = defaultOrdersGateway,
+    waiter = defaultOrdersGateway,
     realtime = defaultRealtimeGateway,
   } = gateways;
 
@@ -87,6 +90,7 @@ export function OrderProvider({
     itemsGateway: items,
     finalizationGateway: finalization,
     tablesGateway: tables,
+    waiterGateway: waiter,
     preferencesGateway,
   });
 

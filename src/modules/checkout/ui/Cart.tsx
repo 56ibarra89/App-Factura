@@ -78,7 +78,14 @@ const Cart = ({
                 productId: item.productId,
                 categoryId: item.categoryId,
                 name: item.name,
-                price: item.price,
+                price: Math.max(
+                  0,
+                  item.price -
+                    (item.extras ?? []).reduce(
+                      (sum, extra) => sum + Math.max(0, extra.price),
+                      0,
+                    ),
+                ),
                 size: item.size,
                 extras: item.extras,
                 note: item.note,

@@ -47,6 +47,8 @@ export function useDescuentos(
       type: data.type === "Porcentaje" ? "Porcentaje" : "Monto Fijo",
       value: valueNum,
       status: data.status === "Inactivo" ? "Inactivo" : "Activo",
+      productIds: data.productIds,
+      categoryIds: data.categoryIds,
     });
     await fetchDescuentos();
   }, [fetchDescuentos, gateway]);
@@ -58,6 +60,8 @@ export function useDescuentos(
       type: data.type === "Porcentaje" ? "Porcentaje" : "Monto Fijo",
       value: valueNum,
       status: data.status === "Inactivo" ? "Inactivo" : "Activo",
+      productIds: data.productIds,
+      categoryIds: data.categoryIds,
     });
     await fetchDescuentos();
   }, [fetchDescuentos, gateway]);

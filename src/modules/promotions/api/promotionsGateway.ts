@@ -16,6 +16,8 @@ export interface DiscountPayload {
   type: string;
   value: number;
   status: string;
+  productIds?: string[];
+  categoryIds?: string[];
 }
 
 export interface HappyHourRecord {
@@ -54,6 +56,7 @@ export interface CouponRecord {
   currentUses: number;
   expiresDate?: string | null;
   manualStatus?: string;
+  status?: string;
 }
 
 export interface CouponPayload {

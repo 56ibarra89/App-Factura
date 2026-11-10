@@ -64,7 +64,7 @@ export function useMesaOrderActions({
     tableStatusMap,
   ]);
 
-  const handleToggleOccupancy = useCallback(() => {
+  const handleToggleOccupancy = useCallback(async () => {
     if (!selectedMesaId) return;
 
     if (isTableBlocked(selectedMesaId)) {
@@ -85,18 +85,38 @@ export function useMesaOrderActions({
         (!activeOrder.items ||
           activeOrder.items.length === 0)
       ) {
-        updateOrderStatus(
-          activeOrder.id,
-          "cancelled",
-        );
+        try {
+          await updateOrderStatus(
+            activeOrder.id,
+            "cancelled",
+            "Mesa liberada sin consumo",
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            "error-digitacion",
+          );
+        } catch (error: unknown) {
+          window.alert(
+            error instanceof Error
+              ? `No se pudo anular la orden vacía: ${error.message}`
+              : "No se pudo anular la orden vacía. La mesa permanece ocupada.",
+          );
+          return;
+        }
       }
 
-      if (selectedMesaStatus === "reservado") {
-        void releaseTable(selectedMesaId);
-      } else {
-        void setTableStatus(
-          selectedMesaId,
-          "disponible",
+      try {
+        if (selectedMesaStatus === "reservado") {
+          await releaseTable(selectedMesaId);
+        } else {
+          await setTableStatus(selectedMesaId, "disponible");
+        }
+      } catch (error: unknown) {
+        window.alert(
+          error instanceof Error
+            ? `No se pudo liberar la mesa: ${error.message}`
+            : "No se pudo liberar la mesa. Inténtalo nuevamente.",
         );
       }
       return;

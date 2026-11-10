@@ -10,6 +10,7 @@ import {
   syncUpdateOrderItems,
   syncUpdateOrderStatus,
   syncUpdateTables,
+  syncAssignOrderWaiter,
 } from "./backendSync";
 
 export interface UpdateOrderStatusCommand {
@@ -76,13 +77,18 @@ export interface OrderTablesGateway {
   updateTables(orderId: string, linkedTables: string[]): Promise<void>;
 }
 
+export interface OrderWaiterGateway {
+  assignWaiter(orderId: string, waiterId: string): Promise<Order>;
+}
+
 export type OrdersGateway = CurrentOrdersGateway &
   OrderHistoryGateway &
   OrderCreationGateway &
   OrderStatusGateway &
   OrderItemsGateway &
   OrderFinalizationGateway &
-  OrderTablesGateway;
+  OrderTablesGateway &
+  OrderWaiterGateway;
 
 export const ordersGateway: OrdersGateway = {
   listCurrent: fetchOrdersFromBackend,
@@ -113,4 +119,5 @@ export const ordersGateway: OrdersGateway = {
   finalize: syncFinalizeOrder,
   splitCheckout: syncSplitCheckoutOrder,
   updateTables: syncUpdateTables,
+  assignWaiter: syncAssignOrderWaiter,
 };

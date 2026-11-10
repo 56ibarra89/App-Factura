@@ -47,6 +47,7 @@ export interface OrderCommands {
   markAsSentToKitchenByTable(tableId: string): Promise<OrderItem[] | undefined>;
   moveOrder(sourceTableId: string, destinationTableId: string | string[]): void;
   unirMesas(sourceTableId: string, destinationTableId: string | string[]): void;
+  assignOrderWaiter(orderId: string, waiterId: string): Promise<void>;
 }
 
 export type OrderContextValue = OrderQueries & OrderCommands;

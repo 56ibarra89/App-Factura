@@ -93,23 +93,22 @@ export function useKdsAudioAlert(activeOrders: readonly Order[]): UseKdsAudioAle
   }, [isMuted]);
 
   useEffect(() => {
+    const ticketKey = (order: (typeof activeOrders)[number]) =>
+      `${order.id}-${new Date(order.timestamp).getTime()}`;
     if (seenOrderIdsRef.current === null || previousOrdersCountRef.current === null) {
-      seenOrderIdsRef.current = new Set(activeOrders.map((order) => order.id));
+      seenOrderIdsRef.current = new Set(activeOrders.map(ticketKey));
       previousOrdersCountRef.current = activeOrders.length;
       return;
     }
 
     const unseenOrders = activeOrders.filter(
-      (order) => !seenOrderIdsRef.current!.has(order.id),
+      (order) => !seenOrderIdsRef.current!.has(ticketKey(order)),
     );
     for (const order of activeOrders) {
-      seenOrderIdsRef.current.add(order.id);
+      seenOrderIdsRef.current.add(ticketKey(order));
     }
 
-    if (
-      unseenOrders.length > 0 &&
-      activeOrders.length > previousOrdersCountRef.current
-    ) {
+    if (unseenOrders.length > 0) {
       const newestOrder =
         unseenOrders[unseenOrders.length - 1] || unseenOrders[0];
       setNewOrderAlert(newestOrder);

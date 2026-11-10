@@ -118,6 +118,8 @@ export interface Order extends OrderPromotionSelection {
   orderType?: OrderType;
   customerAddress?: string;
   driverId?: string;
+  waiterId?: string;
+  waiterName?: string;
   certificateSerials?: string[];
   tableId?: string;
   customerTendered?: number;

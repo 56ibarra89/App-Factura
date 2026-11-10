@@ -20,15 +20,19 @@ export const productMapper = {
     }
 
     const hasMultipleSizes = product.hasMultipleSizes ?? false;
+    const priceBySize = new Map(
+      product.prices.map((price) => [price.size.toLowerCase(), price.price]),
+    );
+    const baseSizes = ["familiar", "mediana", "personal"];
     return {
       name: product.name,
       description: product.description || "",
       category,
       hasMultipleSizes,
       prices: hasMultipleSizes
-        ? product.prices.map((p: { size: string; price: number }) => ({
-            size: p.size,
-            price: p.price.toString(),
+        ? baseSizes.map((size) => ({
+            size,
+            price: priceBySize.get(size)?.toString() ?? "",
           }))
         : defaults,
       singlePrice: hasMultipleSizes ? "" : product.prices[0]?.price.toString() || "",

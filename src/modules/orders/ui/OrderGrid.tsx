@@ -41,6 +41,7 @@ const OrderGrid: React.FC<OrderGridProps> = ({ orders, selectedKitchenId, kitche
               resolveTableName={resolveTableName}
               onUpdateStatus={onUpdateStatus} 
               onDelete={onDelete}
+              selectedKitchenId={selectedKitchenId || undefined}
             />
           </Grid>
         );

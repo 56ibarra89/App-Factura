@@ -63,8 +63,12 @@ const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
           "error"
         );
       }
-    } catch {
-      setError("Error en la validación");
+    } catch (error: unknown) {
+      setError(
+        error instanceof Error && error.message
+          ? error.message
+          : "Error en la validación",
+      );
     } finally {
       setLoading(false);
     }

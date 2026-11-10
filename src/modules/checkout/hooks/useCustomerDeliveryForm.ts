@@ -228,7 +228,7 @@ export function useCustomerDeliveryForm({
           return trimmedCurrent;
         }
 
-        return trimmedCurrent;
+        return getPreferredOrRecentPhone(customer) || trimmedCurrent;
       });
 
       if (orderType === "delivery") {

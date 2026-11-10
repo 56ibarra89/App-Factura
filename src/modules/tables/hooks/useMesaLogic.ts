@@ -33,6 +33,7 @@ export function useMesaLogic({
   const {
     moveOrder,
     unirMesas,
+    assignOrderWaiter,
     updateOrderStatus,
   } = useOrderCommands();
   const selection = useMesaSelection({
@@ -93,5 +94,6 @@ export function useMesaLogic({
     ...reservationActions,
     ...orderActions,
     ...transferActions,
+    assignOrderWaiter,
   };
 }

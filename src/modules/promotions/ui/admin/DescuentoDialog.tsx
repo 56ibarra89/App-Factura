@@ -73,6 +73,10 @@ const DescuentoDialog = ({ open, onClose, onSave, editingRule }: DescuentoDialog
 
     if (form.name && form.value && form.appliesTo) {
       const finalValue = form.type === "Porcentaje" ? `${form.value}%` : `C$${form.value}`;
+      const selectedCategoryId =
+        form.appliesTo === "Toda la cuenta"
+          ? undefined
+          : categories.find((category) => category.label === form.appliesTo)?.id;
       onSave({
         id: form.id || Date.now(),
         name: form.name,
@@ -80,6 +84,8 @@ const DescuentoDialog = ({ open, onClose, onSave, editingRule }: DescuentoDialog
         value: finalValue,
         status: form.status as "Activo" | "Inactivo",
         appliesTo: form.appliesTo,
+        productIds: selectedCategoryId ? [] : form.productIds,
+        categoryIds: selectedCategoryId ? [selectedCategoryId] : [],
       });
       onClose();
     }

@@ -96,7 +96,7 @@ const DescuentosTab = ({ rules, onAdd, onEdit, onDelete }: DescuentosTabProps) =
                   </Box>
                   <Chip
                     label={desc.status}
-                    color="success"
+                    color={desc.status === "Activo" ? "success" : "default"}
                     size="small"
                     sx={{ fontWeight: 600 }}
                   />

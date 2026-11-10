@@ -69,6 +69,7 @@ interface OrderCardProps {
     itemId?: number | string,
   ) => void;
   onDelete?: (id: string) => void;
+  selectedKitchenId?: string;
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({
@@ -78,6 +79,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   resolveTableName,
   onUpdateStatus,
   onDelete,
+  selectedKitchenId,
 }) => {
   const itemsToUse = filteredItems || order.items;
   const hasPackaging = order.items.some(isPackagingOrderItem);
@@ -369,7 +371,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
                             undefined,
                             undefined,
                             sentAtTimestampMs,
-                            item.kitchenId,
+                            item.kitchenId ?? selectedKitchenId,
+                            item.id,
                           )
                         }
                         sx={{
@@ -393,7 +396,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
                             undefined,
                             undefined,
                             sentAtTimestampMs,
-                            item.kitchenId,
+                            item.kitchenId ?? selectedKitchenId,
+                            item.id,
                           )
                         }
                         startIcon={
@@ -415,7 +419,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
                             undefined,
                             undefined,
                             sentAtTimestampMs,
-                            item.kitchenId,
+                            item.kitchenId ?? selectedKitchenId,
+                            item.id,
                           )
                         }
                         sx={{ minWidth: "80px" }}

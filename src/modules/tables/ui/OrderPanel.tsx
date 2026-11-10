@@ -1,4 +1,4 @@
-import { Paper, Box } from "@mui/material";
+import { Paper, Box, Button, Typography } from "@mui/material";
 import OrderHeader from "./OrderHeader";
 import OrderList from "./OrderList";
 import OrderSummary from "./OrderSummary";
@@ -9,6 +9,9 @@ interface Props {
   order: OrderItem[];
   discountAmount?: number;
   cashierName?: string;
+  waiterName?: string;
+  canReassignWaiter?: boolean;
+  onReassignWaiter?: () => void;
   onSalir: () => void;
   onReservar: () => void;
   isReserved?: boolean;
@@ -29,6 +32,9 @@ export default function OrderPanel({
   order, 
   discountAmount,
   cashierName,
+  waiterName,
+  canReassignWaiter = false,
+  onReassignWaiter,
   onSalir, 
   onReservar, 
   isReserved = false, 
@@ -76,6 +82,18 @@ export default function OrderPanel({
           discountAmount={discountAmount}
           cashierName={cashierName}
         />
+        {hasActiveOrder && (
+          <Box sx={{ mt: 1, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+            <Typography variant="caption" color="text.secondary">
+              Mesero responsable: {waiterName || "Sin asignar"}
+            </Typography>
+            {canReassignWaiter && onReassignWaiter && (
+              <Button size="small" onClick={onReassignWaiter}>
+                Asignar
+              </Button>
+            )}
+          </Box>
+        )}
         <Box sx={{ mt: 1.5 }}>
           <OrderActions 
             onSalir={onSalir} 

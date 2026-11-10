@@ -149,7 +149,10 @@ export const orderMutations = {
           const kitchenStatus = status as KitchenStatus;
           const updatedItems = order.items.map((item) => {
             const matchItemId =
-              itemId !== undefined ? item.id === itemId : true;
+              itemId !== undefined
+                ? item.id === itemId
+                : !item.sentAt ||
+                  new Date(item.sentAt).getTime() === sentAt;
 
             if (
               item.isCombo &&
