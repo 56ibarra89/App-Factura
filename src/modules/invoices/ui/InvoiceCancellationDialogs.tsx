@@ -22,6 +22,7 @@ interface InvoiceCancellationDialogsProps {
   reasonId: string;
   note: string;
   error?: string;
+  cancelling?: boolean;
   onReasonChange(reasonId: string): void;
   onNoteChange(note: string): void;
   onCloseReason(): void;
@@ -37,6 +38,7 @@ export function InvoiceCancellationDialogs({
   reasonId,
   note,
   error,
+  cancelling = false,
   onReasonChange,
   onNoteChange,
   onCloseReason,
@@ -46,7 +48,7 @@ export function InvoiceCancellationDialogs({
 }: InvoiceCancellationDialogsProps) {
   return (
     <>
-      <Dialog open={reasonOpen} onClose={onCloseReason} maxWidth="sm" fullWidth>
+      <Dialog open={reasonOpen} onClose={cancelling ? undefined : onCloseReason} maxWidth="sm" fullWidth>
         <DialogTitle
           sx={{
             fontWeight: "bold",
@@ -91,7 +93,7 @@ export function InvoiceCancellationDialogs({
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button onClick={onCloseReason} color="inherit">
+          <Button onClick={onCloseReason} color="inherit" disabled={cancelling}>
             Cancelar
           </Button>
           <Button
@@ -103,9 +105,9 @@ export function InvoiceCancellationDialogs({
                 bgcolor: LOGIN_COLORS.primaryDark,
               },
             }}
-            disabled={!reasonId}
+            disabled={!reasonId || cancelling}
           >
-            Siguiente
+            {cancelling ? "Anulando…" : "Siguiente"}
           </Button>
         </DialogActions>
       </Dialog>

@@ -61,6 +61,7 @@ const CancelInvoicePage = () => {
         reasonId={cancellation.dialogs.reasonId}
         note={cancellation.dialogs.note}
         error={cancellation.dialogs.error}
+        cancelling={cancellation.dialogs.cancelling}
         onReasonChange={cancellation.dialogs.setReasonId}
         onNoteChange={cancellation.dialogs.setNote}
         onCloseReason={cancellation.dialogs.closeReason}
