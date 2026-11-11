@@ -10,6 +10,38 @@ const projectRoot = path.resolve(__dirname, "..");
 const modulesRoot = path.join(projectRoot, "src", "modules");
 const sharedRoot = path.join(projectRoot, "src", "shared");
 
+test("la respuesta HTTP y el rollback no pisan eventos o comandos posteriores", async () => {
+  const ts = await import("typescript");
+  const source = fs.readFileSync(
+    path.join(modulesRoot, "orders", "model", "orderCommandReconciliation.ts"),
+    "utf8",
+  );
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS },
+  }).outputText;
+  const exports = {};
+  new Function("exports", compiled)(exports);
+
+  const optimistic = { updatedAt: new Date("2026-11-11T12:00:00Z") };
+  const socketUpdate = { updatedAt: new Date("2026-11-11T12:00:02Z") };
+  const secondCommand = { updatedAt: optimistic.updatedAt };
+  const response = { updatedAt: new Date("2026-11-11T12:00:01Z") };
+
+  assert.equal(exports.shouldApplyOrderUpdateResponse(optimistic, optimistic, response), true);
+  assert.equal(exports.shouldApplyOrderUpdateResponse(socketUpdate, optimistic, response), false);
+  assert.equal(exports.shouldApplyOrderUpdateResponse(secondCommand, optimistic, response), false);
+  assert.equal(
+    exports.shouldApplyOrderUpdateResponse(
+      optimistic,
+      optimistic,
+      { updatedAt: new Date("2026-11-11T11:59:59Z") },
+    ),
+    false,
+  );
+  assert.equal(exports.shouldRollbackOrderUpdate(optimistic, optimistic), true);
+  assert.equal(exports.shouldRollbackOrderUpdate(socketUpdate, optimistic), false);
+});
+
 test('la rotación de tokens conserva la sesión y logout invalida su identidad', async () => {
   const ts = await import('typescript');
   const source = fs.readFileSync(path.join(sharedRoot, 'api/accessTokenStore.ts'), 'utf8');

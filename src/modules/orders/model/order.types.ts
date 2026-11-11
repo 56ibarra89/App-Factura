@@ -136,6 +136,7 @@ export interface Order extends OrderPromotionSelection {
   payments?: OrderPaymentDetail[];
   cashierName?: string;
   isSentToKitchen?: boolean;
+  packagingRequested?: boolean;
   linkedTables?: string[];
   invoiceNumber?: string;
 }

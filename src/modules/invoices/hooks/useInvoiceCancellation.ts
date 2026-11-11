@@ -38,6 +38,8 @@ export function useInvoiceCancellation(
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [cancellationError, setCancellationError] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [policyReady, setPolicyReady] = useState(false);
+  const [policyError, setPolicyError] = useState("");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -68,11 +70,24 @@ export function useInvoiceCancellation(
   }, [refresh]);
 
   useEffect(() => {
-    void voidWastePolicyGateway.load().then((loaded) => {
-      setPolicyConfig(loaded);
-      const firstActive = loaded.reasons.find((reason) => reason.isActive);
-      setCancelReasonId((current) => current || firstActive?.id || "");
-    });
+    let active = true;
+    void voidWastePolicyGateway.load()
+      .then((loaded) => {
+        if (!active) return;
+        setPolicyConfig(loaded);
+        setPolicyReady(true);
+        const firstActive = loaded.reasons.find((reason) => reason.isActive);
+        setCancelReasonId((current) => current || firstActive?.id || "");
+      })
+      .catch(() => {
+        if (!active) return;
+        setPolicyError(
+          "No se pudo cargar la política de anulación. Recarga la página e inténtalo de nuevo.",
+        );
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const setSearchQuery = useCallback((query: string) => {
@@ -84,13 +99,15 @@ export function useInvoiceCancellation(
     (order: Invoice) => {
       setOrderToCancel(order);
       setCancelReasonId(
-        policyConfig.reasons.find((reason) => reason.isActive)?.id ?? "",
+        policyReady
+          ? policyConfig.reasons.find((reason) => reason.isActive)?.id ?? ""
+          : "",
       );
       setCancelNote("");
       setCancellationError("");
       setReasonDialogOpen(true);
     },
-    [policyConfig.reasons],
+    [policyConfig.reasons, policyReady],
   );
 
   const closeReasonDialog = useCallback(() => {
@@ -136,7 +153,7 @@ export function useInvoiceCancellation(
   );
 
   const submitReason = useCallback(async () => {
-    if (!cancelReasonId || cancelling) return;
+    if (!cancelReasonId || cancelling || !policyReady) return;
     const selectedReason = policyConfig.reasons.find(
       (reason) => reason.id === cancelReasonId,
     );
@@ -169,7 +186,14 @@ export function useInvoiceCancellation(
         setCancelling(false);
       }
     }
-  }, [cancelReasonId, cancelling, confirmCancellation, orderToCancel, policyConfig]);
+  }, [
+    cancelReasonId,
+    cancelling,
+    confirmCancellation,
+    orderToCancel,
+    policyConfig,
+    policyReady,
+  ]);
 
   const changePage = useCallback((_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -202,7 +226,8 @@ export function useInvoiceCancellation(
     dialogs: {
       reasonOpen: reasonDialogOpen,
       pinOpen: pinDialogOpen,
-      error: cancellationError,
+      error: cancellationError || policyError,
+      policyReady,
       cancelling,
       reasons: policyConfig.reasons.filter((reason) => reason.isActive),
       reasonId: cancelReasonId,

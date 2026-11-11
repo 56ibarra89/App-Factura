@@ -58,7 +58,8 @@ export const KdsCard: React.FC<KdsCardProps> = ({
   onUpdateStatus,
 }) => {
   const itemsToUse = filteredItems || order.items;
-  const hasPackaging = order.items.some(isPackagingOrderItem);
+  const hasPackaging =
+    order.packagingRequested || order.items.some(isPackagingOrderItem);
   const displayItems = itemsToUse.filter(requiresKitchenPreparation);
 
   const { categories } = useCatalog();

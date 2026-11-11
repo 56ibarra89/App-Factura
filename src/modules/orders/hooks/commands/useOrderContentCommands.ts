@@ -6,6 +6,10 @@ import {
 import type { OrderItemsGateway } from "../../api/ordersGateway";
 import type { OrderCommands } from "../../model/order-context.types";
 import type { Order } from "../../model/order.types";
+import {
+  shouldApplyOrderUpdateResponse,
+  shouldRollbackOrderUpdate,
+} from "../../model/orderCommandReconciliation";
 import type { OrderStateUpdater } from "../useOrderStore";
 
 interface UseOrderContentCommandsOptions {
@@ -66,13 +70,16 @@ export function useOrderContentCommands({
       });
 
       if (!modifiedOrder) return;
+      const optimisticOrder = modifiedOrder;
       try {
         const updatedOrder =
-          await gateway.updateItems(modifiedOrder);
+          await gateway.updateItems(optimisticOrder);
         updateOrders((current) =>
           current.map((order) =>
             order.id === orderId
-              ? {
+              ? !shouldApplyOrderUpdateResponse(order, optimisticOrder, updatedOrder)
+                ? order
+                : {
                   ...order,
                   updatedAt: updatedOrder.updatedAt ?? order.updatedAt,
                   items:
@@ -113,7 +120,9 @@ export function useOrderContentCommands({
           updateOrders((current) =>
             current.map((order) =>
               order.id === orderId
-                ? originalOrder
+                ? shouldRollbackOrderUpdate(order, optimisticOrder)
+                  ? originalOrder
+                  : order
                 : order,
             ),
           );

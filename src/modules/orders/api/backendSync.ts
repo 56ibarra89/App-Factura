@@ -12,7 +12,13 @@ import type { SplitCheckoutOrderCommand } from "../model/order-command.types";
 
 interface BackendExtra {
   name: string;
-  price: number | string;
+  price?: number | string;
+}
+
+interface BackendComboSelection
+  extends Omit<SelectedComboOptionItem, "extraPrice" | "extras"> {
+  extraPrice?: number;
+  extras?: BackendExtra[];
 }
 
 interface BackendItem {
@@ -20,7 +26,7 @@ interface BackendItem {
   productId?: string;
   categoryId?: string;
   name: string;
-  price: number | string;
+  price?: number | string;
   size: string;
   quantity: number | string;
   extras: BackendExtra[];
@@ -33,7 +39,7 @@ interface BackendItem {
   kitchenStatus?: string;
   kitchenId?: string;
   isCombo?: boolean;
-  comboSelections?: SelectedComboOptionItem[];
+  comboSelections?: BackendComboSelection[];
 }
 
 const toKitchenModifierPayload = (
@@ -47,7 +53,7 @@ export interface BackendOrder {
   subTotal?: number | string | null;
   discountAmount?: number | string | null;
   taxAmount?: number | string | null;
-  total: number | string;
+  total?: number | string;
   customerTendered?: number | string | null;
   deliveryChange?: number | string | null;
   kitchenReadyAt?: string | Date | null;
@@ -92,6 +98,7 @@ export interface BackendOrder {
   }[];
   cashierSnapshotName?: string;
   isSentToKitchen?: boolean;
+  packagingRequested?: boolean;
   invoice?: { invoiceNumber: string };
   invoiceNumber?: string;
   certificateSerials?: string[] | null;
@@ -112,12 +119,12 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       productId: i.productId,
       categoryId: i.categoryId,
       name: i.name,
-      price: Number(i.price),
+      price: Number(i.price ?? 0),
       size: i.size.toLowerCase(),
       quantity: Number(i.quantity),
       extras: (i.extras || []).map((e: BackendExtra) => ({
         name: e.name,
-        price: Number(e.price),
+        price: Number(e.price ?? 0),
       })),
       note: i.note,
       kitchenModifiers: toKitchenModifierPayload(i.kitchenModifiers),
@@ -130,7 +137,14 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
         : undefined,
       kitchenId: i.kitchenId,
       isCombo: Boolean(i.isCombo),
-      comboSelections: i.comboSelections ? i.comboSelections : undefined,
+      comboSelections: i.comboSelections?.map((selection) => ({
+        ...selection,
+        extraPrice: Number(selection.extraPrice ?? 0),
+        extras: selection.extras?.map((extra) => ({
+          name: extra.name,
+          price: Number(extra.price ?? 0),
+        })),
+      })),
     })),
     subTotal:
       backendOrder.subTotal !== null && backendOrder.subTotal !== undefined
@@ -145,7 +159,8 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
       backendOrder.taxAmount !== null && backendOrder.taxAmount !== undefined
         ? Number(backendOrder.taxAmount)
         : undefined,
-    total: Number(backendOrder.total),
+    total: Number(backendOrder.total ?? 0),
+    packagingRequested: backendOrder.packagingRequested,
     customerTendered:
       backendOrder.customerTendered !== null &&
       backendOrder.customerTendered !== undefined
@@ -419,6 +434,7 @@ export async function syncUpdateOrderItems(order: Order) {
   const response = await apiClient(`/orders/${order.id}/items`, {
     method: "PATCH",
     body: JSON.stringify({
+      expectedUpdatedAt: order.updatedAt?.toISOString(),
       items: order.items.map((i) => ({
         ...(typeof i.id === "number" ? { id: i.id } : {}),
         productId: i.productId,

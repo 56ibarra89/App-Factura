@@ -23,6 +23,7 @@ interface InvoiceCancellationDialogsProps {
   note: string;
   error?: string;
   cancelling?: boolean;
+  policyReady?: boolean;
   onReasonChange(reasonId: string): void;
   onNoteChange(note: string): void;
   onCloseReason(): void;
@@ -39,6 +40,7 @@ export function InvoiceCancellationDialogs({
   note,
   error,
   cancelling = false,
+  policyReady = true,
   onReasonChange,
   onNoteChange,
   onCloseReason,
@@ -105,7 +107,7 @@ export function InvoiceCancellationDialogs({
                 bgcolor: LOGIN_COLORS.primaryDark,
               },
             }}
-            disabled={!reasonId || cancelling}
+            disabled={!reasonId || cancelling || !policyReady}
           >
             {cancelling ? "Anulando…" : "Siguiente"}
           </Button>
