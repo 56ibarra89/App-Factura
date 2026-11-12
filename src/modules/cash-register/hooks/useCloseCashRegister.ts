@@ -1,0 +1,269 @@
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth";
+import { useGeneralSettings } from "../../settings";
+import {
+  shiftRepository as defaultShiftRepository,
+  type IShiftRepository,
+} from "../api/shiftRepository";
+import { useCaja } from "../model/CajaContext";
+import type {
+  CashDenominationCount,
+  Shift,
+  ShiftClosePreview,
+} from "../model/cash-register.types";
+import {
+  receiptPrinter,
+  type ReceiptPrinter,
+} from "../../../shared/printing";
+import { printerDispatcherService } from "../../devices";
+
+export function useCloseCashRegister(
+  printer: ReceiptPrinter = receiptPrinter,
+  repository: IShiftRepository = defaultShiftRepository,
+) {
+  const navigate = useNavigate();
+  const { role, logout } = useAuth();
+  const { currentShift, cerrarCaja } = useCaja();
+  const { config } = useGeneralSettings();
+  const [closeType, setCloseTypeState] = useState<'HANDOVER' | 'END_OF_DAY'>('HANDOVER');
+  const [amount, setAmountState] = useState("");
+  const [declaredCardAmount, setDeclaredCardAmountState] = useState("");
+  const [declaredAppAmount, setDeclaredAppAmountState] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [preflightLoading, setPreflightLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [printShift, setPrintShift] = useState<Shift | null>(null);
+  const [preview, setPreview] = useState<ShiftClosePreview | null>(null);
+  const [blockersOpen, setBlockersOpen] = useState(false);
+  const [requiresAuthorization, setRequiresAuthorization] = useState(false);
+  const [discrepancyReason, setDiscrepancyReason] = useState("");
+  const [authorizationPin, setAuthorizationPin] = useState("");
+  const [denominationBreakdown, setDenominationBreakdown] = useState<
+    CashDenominationCount[] | undefined
+  >();
+
+  const refreshPreview = useCallback(
+    async (
+      counted?: { cash?: number; card?: number; app?: number } | number,
+      typeOverride?: 'HANDOVER' | 'END_OF_DAY',
+    ) => {
+      if (!currentShift?.id) return null;
+      setPreflightLoading(true);
+      const targetCloseType = typeOverride ?? closeType;
+      try {
+        const result = await repository.getClosePreview(
+          currentShift.id,
+          counted,
+          targetCloseType,
+        );
+        setPreview(result);
+        if (targetCloseType === 'END_OF_DAY') {
+          setBlockersOpen(!result.canClose);
+        } else {
+          setBlockersOpen(false);
+        }
+        if (counted !== undefined) {
+          setRequiresAuthorization(result.requiresAuthorization === true);
+        }
+        return result;
+      } catch (caught: unknown) {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "No fue posible validar el turno antes del cierre.",
+        );
+        return null;
+      } finally {
+        setPreflightLoading(false);
+      }
+    },
+    [currentShift?.id, repository, closeType],
+  );
+
+  useEffect(() => {
+    void refreshPreview();
+  }, [refreshPreview]);
+
+  const resetAuthorization = () => {
+    setRequiresAuthorization(false);
+    setDiscrepancyReason("");
+    setAuthorizationPin("");
+  };
+
+  const setCloseType = (type: 'HANDOVER' | 'END_OF_DAY') => {
+    if (type === closeType) return;
+    resetAuthorization();
+    setCloseTypeState(type);
+  };
+
+  const validAmount =
+    amount.trim() !== "" &&
+    Number.isFinite(Number(amount)) &&
+    Number(amount) >= 0 &&
+    (declaredCardAmount.trim() === "" ||
+      (Number.isFinite(Number(declaredCardAmount)) &&
+        Number(declaredCardAmount) >= 0)) &&
+    (declaredAppAmount.trim() === "" ||
+      (Number.isFinite(Number(declaredAppAmount)) &&
+        Number(declaredAppAmount) >= 0));
+
+  const validAuthorization =
+    !requiresAuthorization ||
+    (discrepancyReason.trim().length >= 5 &&
+      /^\d{6}$/.test(authorizationPin));
+  const canSubmit =
+    validAmount &&
+    Boolean(preview?.canClose) &&
+    validAuthorization &&
+    !loading &&
+    !preflightLoading;
+
+  const setAmount = (value: string) => {
+    setAmountState(value);
+    setDenominationBreakdown(undefined);
+    resetAuthorization();
+  };
+
+  const setDeclaredCardAmount = (value: string) => {
+    setDeclaredCardAmountState(value);
+    resetAuthorization();
+  };
+
+  const setDeclaredAppAmount = (value: string) => {
+    setDeclaredAppAmountState(value);
+    resetAuthorization();
+  };
+
+  const applyDenominationBreakdown = (
+    entries: CashDenominationCount[],
+    total: number,
+  ) => {
+    setDenominationBreakdown(entries);
+    setAmountState(total.toFixed(2));
+    resetAuthorization();
+  };
+
+  const completeClose = async (authorizationNeeded: boolean) => {
+    const cardNum = Number(declaredCardAmount) || 0;
+    const appNum = Number(declaredAppAmount) || 0;
+
+    const closedShift = await cerrarCaja({
+      closingAmount: Number(amount) || 0,
+      declaredCardAmount: cardNum,
+      declaredAppAmount: appNum,
+      discrepancyReason: authorizationNeeded
+        ? discrepancyReason.trim()
+        : undefined,
+      authorizationPin: authorizationNeeded ? authorizationPin : undefined,
+      denominationBreakdown,
+      closeType,
+    });
+    setPrintShift(closedShift);
+
+    if (config.autoPrintReceipt) {
+      try {
+        const cashierPrinter =
+          await printerDispatcherService.getCashierPrinter();
+        await printer.print({
+          renderDelayMs: 500,
+          settleDelayMs: 1000,
+          deviceName: cashierPrinter?.windowsDeviceName,
+        });
+      } catch (printError: unknown) {
+        console.error(
+          "La caja cerró, pero no se pudo imprimir el arqueo:",
+          printError,
+        );
+      }
+    }
+
+    if (role === "admin") {
+      navigate("/home", { replace: true });
+    } else {
+      const logoutResult = await logout();
+      navigate(logoutResult.success ? "/" : "/home", { replace: true });
+    }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const latestPreview = await refreshPreview(
+        {
+          cash: Number(amount) || 0,
+          card: Number(declaredCardAmount) || 0,
+          app: Number(declaredAppAmount) || 0,
+        },
+        closeType,
+      );
+      if (!latestPreview?.canClose) {
+        if (closeType === 'END_OF_DAY') {
+          setBlockersOpen(true);
+        }
+        return;
+      }
+
+      const authorizationNeeded =
+        latestPreview.requiresAuthorization === true;
+      setRequiresAuthorization(authorizationNeeded);
+      if (
+        authorizationNeeded &&
+        (discrepancyReason.trim().length < 5 ||
+          !/^\d{6}$/.test(authorizationPin))
+      ) {
+        return;
+      }
+
+      await completeClose(authorizationNeeded);
+    } catch (caught: unknown) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Error al cerrar la caja. Por favor, intenta de nuevo.",
+      );
+      await refreshPreview(
+        {
+          cash: Number(amount) || 0,
+          card: Number(declaredCardAmount) || 0,
+          app: Number(declaredAppAmount) || 0,
+        },
+        closeType,
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    closeType,
+    setCloseType,
+    amount,
+    setAmount,
+    declaredCardAmount,
+    setDeclaredCardAmount,
+    declaredAppAmount,
+    setDeclaredAppAmount,
+    applyDenominationBreakdown,
+    denominationBreakdown,
+    loading,
+    preflightLoading,
+    error,
+    requiresAuthorization,
+    discrepancyReason,
+    setDiscrepancyReason,
+    authorizationPin,
+    setAuthorizationPin,
+    canSubmit,
+    currentShift,
+    printShift,
+    preview,
+    blockersOpen,
+    setBlockersOpen,
+    handleSubmit,
+    handleCancel: () => navigate("/home"),
+    handleReviewOrders: () => navigate("/ordenes"),
+    refreshPreview,
+  };
+}

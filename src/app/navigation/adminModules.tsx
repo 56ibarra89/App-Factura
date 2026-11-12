@@ -1,0 +1,263 @@
+import BusinessIcon from "@mui/icons-material/Business";
+import SettingsIcon from "@mui/icons-material/Settings";
+import PercentIcon from "@mui/icons-material/Percent";
+import PeopleIcon from "@mui/icons-material/People";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import DashboardCustomizeIcon from "@mui/icons-material/DashboardCustomize";
+import PrintIcon from "@mui/icons-material/Print";
+import SecurityIcon from "@mui/icons-material/Security";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import SaveIcon from "@mui/icons-material/Save";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import SpeedIcon from "@mui/icons-material/Speed";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import TuneIcon from "@mui/icons-material/Tune";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import { PERMISSIONS, type PermissionCode } from "../../modules/auth";
+
+export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
+
+export interface AdminModuleItem {
+  id: string;
+  category: AdminCategory;
+  title: string;
+  description: string;
+  icon: JSX.Element;
+  path?: string;
+  action?: () => void;
+  actionId?: string;
+  disabled?: boolean;
+  permission: PermissionCode;
+}
+
+export const adminModules: AdminModuleItem[] = [
+  {
+    id: "empresa",
+    category: "General",
+    title: "Datos de la Empresa",
+    description:
+      "Personaliza el logotipo, nombre de negocio, dirección, teléfono y pie de página de los tickets.",
+    icon: <BusinessIcon fontSize="large" />,
+    path: "/admin/empresa",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
+  },
+  {
+    id: "configuracion",
+    category: "General",
+    title: "Control General",
+    description:
+      "Ajusta las preferencias del sistema, moneda local y comportamiento en la apertura de caja.",
+    icon: <SettingsIcon fontSize="large" />,
+    path: "/admin/configuracion",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
+  },
+  {
+    id: "impuestos",
+    category: "General",
+    title: "Impuestos",
+    description:
+      "Gestiona múltiples tasas impositivas y reglas especiales aisladas de la configuración habitual.",
+    icon: <PercentIcon fontSize="large" />,
+    path: "/admin/impuestos",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
+  },
+  {
+    id: "metodos-pago",
+    category: "General",
+    title: "Métodos de Pago y Bancos",
+    description:
+      "Configura cuentas, terminales POS, referencias obligatorias y comisiones bancarias.",
+    icon: <AccountBalanceIcon fontSize="large" />,
+    path: "/admin/metodos-pago",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
+  },
+
+  {
+    id: "horarios",
+    category: "Operativa",
+    title: "Horarios de Empleados",
+    description:
+      "Gestiona los días de trabajo de cada empleado. Útil para habilitar la lista de motorizados por día.",
+    icon: <CalendarMonthIcon fontSize="large" />,
+    path: "/admin/horarios",
+    permission: PERMISSIONS.USERS_MANAGE,
+  },
+  {
+    id: "zonas-meseros",
+    category: "Operativa",
+    title: "Zonas de Meseros",
+    description:
+      "Asigna en qué planta o área trabajará cada mesero dependiendo del día de la semana.",
+    icon: <LocationOnIcon fontSize="large" />,
+    path: "/admin/zonas-meseros",
+    permission: PERMISSIONS.TABLES_ASSIGN_ZONES,
+  },
+  {
+    id: "usuarios",
+    category: "Operativa",
+    title: "Usuarios",
+    description:
+      "Crea empleados, actualiza sus datos y asigna a cada cuenta un rol de acceso.",
+    icon: <PeopleIcon fontSize="large" />,
+    path: "/admin/cuentas",
+    permission: PERMISSIONS.USERS_MANAGE,
+  },
+  {
+    id: "roles-permisos",
+    category: "Operativa",
+    title: "Roles y Permisos",
+    description:
+      "Crea roles personalizados y define qué módulos y acciones puede utilizar cada uno.",
+    icon: <ManageAccountsIcon fontSize="large" />,
+    path: "/admin/roles-permisos",
+    permission: PERMISSIONS.ROLES_READ,
+  },
+  {
+    id: "clientes",
+    category: "Operativa",
+    title: "Clientes",
+    description:
+      "Consulta, crea, edita y elimina la información de tus clientes: nombre, teléfono y direcciones.",
+    icon: <PeopleAltIcon fontSize="large" />,
+    path: "/admin/clientes",
+    permission: PERMISSIONS.CUSTOMERS_MANAGE,
+  },
+  {
+    id: "promociones",
+    category: "Operativa",
+    title: "Promociones",
+    description:
+      "Configura reglas automáticas de descuento, horas felices (Happy Hour) o cupones manuales.",
+    icon: <LocalOfferIcon fontSize="large" />,
+    path: "/admin/promociones",
+    permission: PERMISSIONS.PROMOTIONS_MANAGE,
+  },
+  {
+    id: "turnos",
+    category: "Operativa",
+    title: "Cajas y Turnos",
+    description:
+      "Define perfiles de turnos laborales y fija los montos de apertura en efectivo predeterminados.",
+    icon: <AccessTimeIcon fontSize="large" />,
+    path: "/admin/cajas",
+    permission: PERMISSIONS.CASH_CONFIGURE,
+  },
+  {
+    id: "mesas",
+    category: "Operativa",
+    title: "Plano de Mesas",
+    description:
+      "Edita visualmente el diseño del restaurante, acomodando identificadores y salas libremente.",
+    icon: <DashboardCustomizeIcon fontSize="large" />,
+    path: "/admin/mesas",
+    permission: PERMISSIONS.TABLES_CONFIGURE,
+  },
+  {
+    id: "cocinas",
+    category: "Operativa",
+    title: "Gestión de Cocinas",
+    description:
+      "Crea y administra diferentes áreas de preparación (Cocina Principal, Bar, etc.) para enrutar los tickets correctamente.",
+    icon: <SoupKitchenIcon fontSize="large" />,
+    path: "/admin/cocinas",
+    permission: PERMISSIONS.KITCHEN_CONFIGURE,
+  },
+  {
+    id: "tarifas-delivery",
+    category: "Operativa",
+    title: "Tarifas de Delivery",
+    description:
+      "Configura las tarifas y precios rápidos de envío a domicilio para los repartidores.",
+    icon: <TwoWheelerIcon fontSize="large" />,
+    actionId: "OPEN_DELIVERY_PRICES",
+    permission: PERMISSIONS.DELIVERY_MANAGE,
+  },
+  {
+    id: "politicas-gastos",
+    category: "Operativa",
+    title: "Políticas de Caja Chica",
+    description:
+      "Establece topes máximos de egreso, comprobantes obligatorios y requerimiento de PIN supervisor.",
+    icon: <AccountBalanceWalletIcon fontSize="large" />,
+    path: "/admin/politicas-gastos",
+    permission: PERMISSIONS.CASH_CONFIGURE,
+  },
+  {
+    id: "tiempos-servicio",
+    category: "Operativa",
+    title: "Tiempos de Servicio y Alertas",
+    description:
+      "Configura el semáforo del KDS, el límite de delivery y consulta métricas de cumplimiento.",
+    icon: <SpeedIcon fontSize="large" />,
+    path: "/admin/tiempos-servicio",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
+  },
+  {
+    id: "politicas-anulacion",
+    category: "Operativa",
+    title: "Anulaciones, Mermas y Cortesías",
+    description:
+      "Define motivos oficiales, reglas de PIN supervisor y consulta las pérdidas operativas.",
+    icon: <ReportProblemIcon fontSize="large" />,
+    path: "/admin/politicas-anulacion",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
+  },
+  {
+    id: "modificadores-cocina",
+    category: "Operativa",
+    title: "Modificadores de Cocina",
+    description:
+      "Crea instrucciones rápidas, asígnalas por categoría y estandariza su lectura en KDS y comandas.",
+    icon: <TuneIcon fontSize="large" />,
+    path: "/admin/modificadores-cocina",
+    permission: PERMISSIONS.KITCHEN_CONFIGURE,
+  },
+
+  {
+    id: "perifericos",
+    category: "Hardware y Sistema",
+    title: "Periféricos",
+    description:
+      "Administra impresoras térmicas (Múltiples) y gavetas de dinero conectadas al sistema.",
+    icon: <PrintIcon fontSize="large" />,
+    path: "/admin/perifericos",
+    permission: PERMISSIONS.DEVICES_MANAGE,
+  },
+  {
+    id: "auditoria",
+    category: "Hardware y Sistema",
+    title: "Bitácora de Auditoría",
+    description:
+      "Revisa el registro de auditoría de arqueos, cancelaciones de factura y movimientos sensibles.",
+    icon: <SecurityIcon fontSize="large" />,
+    path: "/admin/bitacora",
+    permission: PERMISSIONS.AUDIT_READ,
+  },
+  {
+    id: "facturacion_electronica",
+    category: "Hardware y Sistema",
+    title: "Correlativos Factura",
+    description:
+      "Gestiona los números de comprobante, rangos de folio autorizados y secuencias de facturación.",
+    icon: <ReceiptLongIcon fontSize="large" />,
+    path: "/admin/correlativos",
+    permission: PERMISSIONS.SETTINGS_MANAGE,
+  },
+  {
+    id: "respaldos",
+    category: "Hardware y Sistema",
+    title: "Respaldos de Datos",
+    description:
+      "Exporta la configuración, menú e histórico. Crea y restaura copias de seguridad totales.",
+    icon: <SaveIcon fontSize="large" />,
+    path: "/admin/respaldos",
+    permission: PERMISSIONS.BACKUPS_MANAGE,
+  },
+];

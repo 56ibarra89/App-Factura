@@ -1,0 +1,59 @@
+import { Box, Grid, Typography, Divider } from "@mui/material";
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+
+export default function OrderHeader() {
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column" }}>
+      <Box sx={{
+        p: 2.5,
+        display: "flex",
+        alignItems: "center",
+        gap: 1.5,
+        bgcolor: "background.paper",
+        color: "text.primary",
+      }}>
+        <Box sx={{
+          bgcolor: "action.hover",
+          color: "primary.main",
+          p: 1,
+          borderRadius: 2,
+          display: "flex"
+        }}>
+          <ReceiptLongIcon />
+        </Box>
+        <Typography variant="h6" fontWeight="800" color="inherit" sx={{ letterSpacing: 0.5 }}>
+          PEDIDO ACTUAL
+        </Typography>
+      </Box>
+
+      <Divider />
+
+      <Box sx={{
+        bgcolor: "action.hover",
+        color: "text.secondary",
+        py: 1.2,
+        px: 2,
+        borderBottom: "1px solid rgba(0,0,0,0.06)"
+      }}>
+        <Grid container alignItems="center">
+          <Grid size={2} textAlign="center">
+            <Typography variant="overline" fontWeight="700" sx={{ letterSpacing: 1 }}>
+              CANT
+            </Typography>
+          </Grid>
+          <Grid size={7} sx={{ pl: 1 }}>
+            <Typography variant="overline" fontWeight="700" sx={{ letterSpacing: 1 }}>
+              DESCRIPCIÓN
+            </Typography>
+          </Grid>
+          <Grid size={3} textAlign="right">
+            <Typography variant="overline" fontWeight="700" sx={{ letterSpacing: 1 }}>
+              TOTAL
+            </Typography>
+          </Grid>
+        </Grid>
+      </Box>
+    </Box>
+  );
+}
+

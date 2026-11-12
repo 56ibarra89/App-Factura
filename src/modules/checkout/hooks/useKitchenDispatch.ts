@@ -1,0 +1,140 @@
+import { useCallback, useState } from "react";
+import { requiresKitchenPreparation, type OrderItem } from "../../orders";
+import { logService } from "../../audit";
+import { printerDispatcherService } from "../../devices";
+import type { RunExclusiveAction } from "./useExclusiveAction";
+
+interface UseKitchenDispatchOptions {
+  tableId: string | null;
+  activeOrderId?: string;
+  cart: OrderItem[];
+  username: string;
+  role: string | null;
+  saveTableOrder(orderId?: string, tableId?: string): Promise<unknown>;
+  markAsSentToKitchenByTable(
+    tableId: string,
+  ): Promise<OrderItem[] | undefined> | OrderItem[] | undefined;
+  setCart(items: OrderItem[]): void;
+  runExclusive: RunExclusiveAction;
+}
+
+export function useKitchenDispatch({
+  tableId,
+  activeOrderId,
+  cart,
+  username,
+  role,
+  saveTableOrder,
+  markAsSentToKitchenByTable,
+  setCart,
+  runExclusive,
+}: UseKitchenDispatchOptions) {
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+
+  const requestDispatch = useCallback(() => {
+    if (tableId) {
+      setIsConfirmOpen(true);
+    }
+  }, [tableId]);
+
+  const cancelDispatch = useCallback(() => {
+    setIsConfirmOpen(false);
+  }, []);
+
+  const closeSuccess = useCallback(() => {
+    setIsSuccessOpen(false);
+  }, []);
+
+  const confirmDispatch = useCallback(async () => {
+    if (!tableId) return;
+
+    await runExclusive(async () => {
+      const savedResult = await saveTableOrder(activeOrderId, tableId);
+      const resolvedOrderId =
+        typeof savedResult === "string"
+          ? savedResult
+          : (savedResult as { orderId?: string } | undefined)?.orderId ??
+            activeOrderId;
+      const syncedItems = await markAsSentToKitchenByTable(tableId);
+
+      const sentAt = Date.now();
+      setCart(
+        syncedItems ??
+          cart.map((item) => {
+            if (!requiresKitchenPreparation(item)) {
+              return {
+                ...item,
+                isSentToKitchen: false,
+                sentAt: undefined,
+                kitchenStatus: undefined,
+              };
+            }
+
+            return {
+              ...item,
+              isSentToKitchen: true,
+              sentAt: item.isSentToKitchen ? item.sentAt : sentAt,
+              kitchenStatus: item.isSentToKitchen
+                ? item.kitchenStatus
+                : "pending",
+            };
+          }),
+      );
+
+      logService.log(
+        username,
+        role,
+        "KITCHEN_DISPATCH",
+        `Pedido enviado a cocina para Mesa ${tableId.split("-M")[1]}`,
+      );
+
+      const kitchenItems = cart.filter(
+        (item) => requiresKitchenPreparation(item) && !item.isSentToKitchen,
+      );
+      if (kitchenItems.length > 0) {
+        void printerDispatcherService.printKitchenComanda({
+          orderId: resolvedOrderId,
+          tableNumber: tableId
+            ? tableId.replace("T-", "").replace("-M", " ")
+            : undefined,
+          orderType: "MESA",
+          waiterOrCashier: username,
+          items: kitchenItems.map((k) => ({
+            name: k.name,
+            quantity: k.quantity,
+            size: k.size,
+            note: k.note,
+            kitchenModifiers: k.kitchenModifiers,
+            extras: k.extras,
+            isCombo: k.isCombo,
+            comboSelections: k.comboSelections,
+          })),
+          timestamp: sentAt,
+        });
+      }
+
+      setIsSuccessOpen(true);
+      setIsConfirmOpen(false);
+    });
+  }, [
+    activeOrderId,
+    cart,
+    markAsSentToKitchenByTable,
+    role,
+    runExclusive,
+    saveTableOrder,
+    setCart,
+    tableId,
+    username,
+  ]);
+
+  return {
+    isConfirmOpen,
+    isSuccessOpen,
+    requestDispatch,
+    cancelDispatch,
+    closeSuccess,
+    confirmDispatch,
+  };
+}

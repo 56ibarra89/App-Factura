@@ -1,0 +1,166 @@
+import { Box, Typography, Divider, Button } from "@mui/material";
+import CartItem from "./CartItem";
+import { isSplitBillCreditOrderItem, type OrderItem } from "../../orders";
+import type { KitchenModifierSelection } from "../../settings";
+import { formatItemName } from "../../../shared/format";
+
+interface CartProps {
+  cartItems: OrderItem[];
+  subTotal: number;
+  taxAmount: number;
+  total: number;
+  onAddItem: (item: Omit<OrderItem, "quantity">) => void;
+  onRemoveItem: (index: number) => void;
+  onChangeQuantity: (index: number, quantity: number) => void;
+  onChangeGiftQuantity: (index: number, quantity: number) => void;
+  onChangeKitchenInstructions: (
+    index: number,
+    modifiers: KitchenModifierSelection[],
+    note: string,
+  ) => void;
+  onPreviewClick: () => void;
+  onOpenCertificado?: () => void;
+  onSendToKitchen?: () => void;
+  isTableOrder?: boolean;
+}
+
+const Cart = ({
+  cartItems,
+  subTotal,
+  taxAmount,
+  total,
+  onAddItem,
+  onRemoveItem,
+  onChangeQuantity,
+  onChangeGiftQuantity,
+  onChangeKitchenInstructions,
+  onPreviewClick,
+  onOpenCertificado,
+  onSendToKitchen,
+  isTableOrder,
+}: CartProps) => {
+  return (
+    <Box
+      width="350px"
+      p={2}
+      bgcolor="background.paper"
+      display="flex"
+      flexDirection="column"
+      maxHeight="100%"
+      borderLeft="1px solid"
+      borderColor="divider"
+    >
+      <Typography variant="h6" fontWeight="bold" mb={1}>
+        Tu pedido
+      </Typography>
+
+      <Divider />
+
+      <Box flex={1} overflow="auto" pr={1} my={1}>
+        {cartItems.map((item, i) => {
+          const isProtectedCredit = isSplitBillCreditOrderItem(item);
+          return (
+          <CartItem
+            key={`${item.name}-${item.size}-${i}`}
+            name={formatItemName(item.name, item.size)}
+            price={item.price}
+            quantity={item.quantity}
+            extras={item.extras}
+            note={item.note}
+            categoryId={item.categoryId}
+            kitchenModifiers={item.kitchenModifiers}
+            giftQuantity={item.giftQuantity}
+            isCombo={item.isCombo}
+            comboSelections={item.comboSelections}
+            locked={isProtectedCredit}
+            onAdd={() =>
+              onAddItem({
+                productId: item.productId,
+                categoryId: item.categoryId,
+                name: item.name,
+                price: Math.max(
+                  0,
+                  item.price -
+                    (item.extras ?? []).reduce(
+                      (sum, extra) => sum + Math.max(0, extra.price),
+                      0,
+                    ),
+                ),
+                size: item.size,
+                extras: item.extras,
+                note: item.note,
+                kitchenModifiers: item.kitchenModifiers,
+                isCombo: item.isCombo,
+                comboSelections: item.comboSelections,
+                kitchenId: item.kitchenId,
+              })
+            }
+            onRemove={() => onRemoveItem(i)}
+            onChangeQuantity={(qty) => onChangeQuantity(i, qty)}
+            onChangeGiftQuantity={(qty) => onChangeGiftQuantity(i, qty)}
+            onChangeKitchenInstructions={(modifiers, note) =>
+              onChangeKitchenInstructions(i, modifiers, note)
+            }
+          />
+          );
+        })}
+      </Box>
+
+      <Divider sx={{ my: 1 }} />
+      <Box position="sticky" bottom={0} bgcolor="background.paper" pt={1}>
+        <Box display="flex" justifyContent="space-between" mb={0.5}>
+          <Typography variant="body2" color="text.secondary">
+            Subtotal:
+          </Typography>
+          <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>C${subTotal.toFixed(2)}</Typography>
+        </Box>
+        <Box display="flex" justifyContent="space-between" mb={1}>
+          <Typography variant="body2" color="text.secondary">
+            Impuestos:
+          </Typography>
+          <Typography variant="body2" sx={{ fontVariantNumeric: "tabular-nums" }}>C${taxAmount.toFixed(2)}</Typography>
+        </Box>
+        <Typography fontWeight="bold" mb={1} textAlign="right" variant="h6" sx={{ fontVariantNumeric: "tabular-nums" }}>
+          Total: C${total.toFixed(2)}
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          disabled={cartItems.length === 0}
+          onClick={onPreviewClick}
+          sx={{ mb: 1, py: 1.25, fontWeight: 700 }}
+        >
+          Vista previa
+        </Button>
+
+        {onOpenCertificado && (
+          <Button
+            variant="outlined"
+            color="secondary"
+            fullWidth
+            onClick={onOpenCertificado}
+            sx={{ mb: 1, py: 0.75 }}
+          >
+            Canjear Vale
+          </Button>
+        )}
+
+        {isTableOrder && onSendToKitchen && (
+          <Button
+            variant="contained"
+            color="success"
+            fullWidth
+            disabled={cartItems.length === 0}
+            onClick={onSendToKitchen}
+          sx={{ py: 1.25, fontWeight: 700 }}
+          >
+            Enviar a Cocina
+          </Button>
+        )}
+      </Box>
+    </Box>
+  );
+};
+
+export default Cart;

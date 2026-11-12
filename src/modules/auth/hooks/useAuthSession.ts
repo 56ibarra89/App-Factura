@@ -1,0 +1,101 @@
+import { useCallback, useEffect, useState } from "react";
+import type {
+  AuthenticatedUser,
+  AuthSessionState,
+} from "../model/auth-session.types";
+import { EMPTY_AUTH_SESSION } from "../model/auth-session.types";
+import type { AuthSessionGateway } from "../api/authSessionGateway";
+import { authSessionGateway, SESSION_KEYS } from "../api/authSessionGateway";
+import type { PermissionCode } from "../model/permission.types";
+
+export interface AuthSessionController {
+  state: AuthSessionState;
+  signIn(user: AuthenticatedUser): void;
+  signOut(): void;
+  updateUsername(username: string): void;
+  updateAuthorization(authorization: {
+    accessRoleId?: string;
+    accessRoleName?: string;
+    permissions: PermissionCode[];
+  }): void;
+}
+
+export function useAuthSession(
+  gateway: AuthSessionGateway = authSessionGateway,
+): AuthSessionController {
+  const [state, setState] = useState<AuthSessionState>(
+    gateway.load,
+  );
+
+  const signIn = useCallback(
+    (user: AuthenticatedUser) => {
+      gateway.save(user);
+      setState({
+        isLoggedIn: true,
+        ...user,
+      });
+    },
+    [gateway],
+  );
+
+  const signOut = useCallback(() => {
+    gateway.clear();
+    setState(EMPTY_AUTH_SESSION);
+  }, [gateway]);
+
+  const updateUsername = useCallback(
+    (username: string) => {
+      gateway.updateUsername(username);
+      setState((current) => ({
+        ...current,
+        username,
+      }));
+    },
+    [gateway],
+  );
+
+  const updateAuthorization = useCallback(
+    (authorization: {
+      accessRoleId?: string;
+      accessRoleName?: string;
+      permissions: PermissionCode[];
+    }) => {
+      gateway.updateAuthorization(authorization);
+      setState((current) => ({ ...current, ...authorization }));
+    },
+    [gateway],
+  );
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (
+        !event.key ||
+        event.key === SESSION_KEYS.loggedIn ||
+        event.key === SESSION_KEYS.username ||
+        event.key === SESSION_KEYS.role ||
+        event.key === SESSION_KEYS.permissions
+      ) {
+        setState(gateway.load());
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [gateway]);
+
+  useEffect(() => {
+    const onExpired = () => {
+      signOut();
+    };
+    window.addEventListener("appfactura:session-expired", onExpired);
+    return () => window.removeEventListener("appfactura:session-expired", onExpired);
+  }, [signOut]);
+
+  return {
+    state,
+    signIn,
+    signOut,
+    updateUsername,
+    updateAuthorization,
+  };
+}

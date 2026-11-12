@@ -1,0 +1,93 @@
+import { Box, Grid, Typography } from "@mui/material";
+import type { OrderItem } from "../../orders";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { formatItemName } from "../../../shared/format";
+
+interface OrderItemWithTimestamp extends OrderItem {
+  timestamp?: string;
+}
+
+interface Props {
+  item: OrderItemWithTimestamp;
+}
+
+export default function OrderItemRow({ item }: Props) {
+  return (
+    <Box
+      sx={{
+        p: 1.5,
+        mb: 1,
+        borderRadius: 2,
+        transition: "all 0.2s",
+        "&:hover": {
+          bgcolor: "action.hover",
+        },
+      }}
+    >
+      <Grid container alignItems="flex-start">
+        <Grid size={2} textAlign="center">
+          <Typography
+            fontWeight="800"
+            variant="body1"
+            sx={{
+              bgcolor: "rgba(0,0,0,0.05)",
+              display: "inline-block",
+              width: 32,
+              height: 32,
+              lineHeight: "32px",
+              borderRadius: "50%",
+              color: "text.secondary",
+            }}
+          >
+            {item.quantity}
+          </Typography>
+        </Grid>
+
+        <Grid size={7} sx={{ pl: 1 }}>
+          <Typography fontWeight="700" variant="body1" color="text.primary">
+            {formatItemName(item.name, item.size)}
+          </Typography>
+
+          {item.comboSelections && item.comboSelections.length > 0 && (
+            <Box
+              sx={{
+                my: 0.5,
+                pl: 1,
+                borderLeft: "2px solid",
+                borderColor: "primary.main",
+              }}
+            >
+              {item.comboSelections.map((sel, sIdx) => (
+                <Typography
+                  key={sIdx}
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "block" }}
+                >
+                  • {sel.quantity}x {sel.productName}
+                  {sel.size && sel.size !== "único" ? ` (${sel.size})` : ""}
+                  {sel.extras?.length
+                    ? ` — Extras: ${sel.extras.map((extra) => extra.name).join(", ")}`
+                    : ""}
+                </Typography>
+              ))}
+            </Box>
+          )}
+
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+            <AccessTimeIcon sx={{ fontSize: 14, color: "text.disabled" }} />
+            <Typography variant="caption" color="text.disabled" fontWeight="500">
+              {item.timestamp || "Recién añadido"}
+            </Typography>
+          </Box>
+        </Grid>
+
+        <Grid size={3} textAlign="right">
+          <Typography fontWeight="800" variant="body1" color="text.primary">
+            C${(item.price * item.quantity).toFixed(2)}
+          </Typography>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}

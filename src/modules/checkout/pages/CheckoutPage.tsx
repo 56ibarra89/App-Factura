@@ -1,0 +1,244 @@
+import Box from "@mui/material/Box";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
+import BillingDialogs from "../ui/BillingDialogs";
+import Cart from "../ui/Cart";
+import { CategoryTabs, ProductGrid, useCatalog } from "../../catalog";
+import { useAuth } from "../../auth";
+import { useOrderCommands, useOrderQueries } from "../../orders";
+import { useBillingFlow } from "../hooks/useBillingFlow";
+import { useCertificateRedemption } from "../../promotions";
+import { useExclusiveAction } from "../hooks/useExclusiveAction";
+import { useKitchenDispatch } from "../hooks/useKitchenDispatch";
+import useCart from "../hooks/useCart";
+import type { Customer } from "../../customers";
+import type { DeliveryZone } from "../../delivery";
+
+interface BillingLocationState {
+  fromDeliveryPage?: boolean;
+  deliveryCustomer?: Customer | null;
+  deliveryPhone?: string;
+  deliveryAddress?: string;
+  deliveryCost?: number;
+  deliveryDriverId?: string;
+  deliveryCustomerTendered?: number;
+  deliveryZone?: DeliveryZone | null;
+  deliveryDriverPayout?: number;
+}
+
+const CheckoutPage = () => {
+  const { categories } = useCatalog();
+  const { username, role } = useAuth();
+  const location = useLocation();
+  const state = location.state as BillingLocationState | null;
+
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [certificateOpen, setCertificateOpen] = useState(false);
+  const [deliveryCustomer, setDeliveryCustomer] = useState<Customer | null>(
+    state?.deliveryCustomer || null,
+  );
+  const [deliveryPhone, setDeliveryPhone] = useState(
+    state?.deliveryPhone || "",
+  );
+  const [deliveryAddress, setDeliveryAddress] = useState(
+    state?.deliveryAddress || "",
+  );
+
+  const [searchParams] = useSearchParams();
+  const tableId = searchParams.get("tableId");
+  const isCheckoutMode = searchParams.get("checkout") === "true";
+  const { getOrderByTable } = useOrderQueries();
+  const { markAsSentToKitchenByTable } = useOrderCommands();
+  const activeOrder = tableId ? getOrderByTable(tableId) : null;
+
+  const {
+    cart,
+    promotion,
+    subTotal,
+    discountAmount,
+    taxAmount,
+    total,
+    selectedProduct,
+    setSelectedProduct,
+    selectedComboProduct,
+    pendingItem,
+    handleChangeQuantity,
+    handleAddToCartItem,
+    handleAddToCart,
+    handleSelectSize,
+    handleConfirmExtras,
+    handleCancelExtras,
+    handleConfirmCombo,
+    handleCloseComboDialog,
+    handleRemoveItem,
+    handleConfirmFactura,
+    handleChangeGiftQuantity,
+    handleChangeKitchenInstructions,
+    handleSaveTableOrder,
+    handleFinalizeTableOrder,
+    handleSendToKitchen,
+    handleSetCart,
+    handleClearCart,
+    handleApplyPromotion,
+    handleRemovePromotion,
+  } = useCart(activeOrder);
+
+  const hydratedOrderIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!tableId) {
+      hydratedOrderIdRef.current = null;
+      return;
+    }
+    if (!activeOrder) return;
+    if (hydratedOrderIdRef.current === activeOrder.id) return;
+
+    hydratedOrderIdRef.current = activeOrder.id;
+    handleSetCart(activeOrder.items);
+  }, [activeOrder, handleSetCart, tableId]);
+
+  const closePreview = useCallback(() => {
+    setPreviewOpen(false);
+  }, []);
+
+  const resetDelivery = useCallback(() => {
+    setDeliveryCustomer(null);
+    setDeliveryPhone("");
+    setDeliveryAddress("");
+  }, []);
+
+  const { runExclusive } = useExclusiveAction();
+  const billing = useBillingFlow({
+    tableId,
+    isCheckoutMode,
+    activeOrder,
+    deliveryDriverId: state?.deliveryDriverId,
+    fromDeliveryPage: Boolean(
+      state?.fromDeliveryPage || role === "despachador",
+    ),
+    confirmInvoice: handleConfirmFactura,
+    sendOrderToKitchen: handleSendToKitchen,
+    saveTableOrder: handleSaveTableOrder,
+    finalizeTableOrder: handleFinalizeTableOrder,
+    clearCart: handleClearCart,
+    resetDelivery,
+    closePreview,
+    runExclusive,
+  });
+  const kitchen = useKitchenDispatch({
+    tableId,
+    activeOrderId: activeOrder?.id,
+    cart,
+    username,
+    role,
+    saveTableOrder: handleSaveTableOrder,
+    markAsSentToKitchenByTable,
+    setCart: handleSetCart,
+    runExclusive,
+  });
+  const applyCertificate = useCertificateRedemption({
+    categories,
+    cart,
+    addItem: handleAddToCartItem,
+  });
+
+  const categoriesByRevenue = useMemo(
+    () =>
+      [...categories].sort(
+        (a, b) =>
+          (b.totalRevenue ?? 0) - (a.totalRevenue ?? 0) ||
+          a.label.localeCompare(b.label, "es"),
+      ),
+    [categories],
+  );
+  const currentProducts = categoriesByRevenue[selectedTab]?.items || [];
+
+  return (
+    <Box display="flex" height="100vh" overflow="hidden">
+      <CategoryTabs
+        categories={categoriesByRevenue}
+        selectedTab={selectedTab}
+        onTabChange={(_, newValue) => setSelectedTab(newValue)}
+      />
+
+      <ProductGrid
+        products={currentProducts}
+        onProductClick={(product) =>
+          handleAddToCart(product, categoriesByRevenue[selectedTab]?.kitchenId)
+        }
+      />
+
+      <Cart
+        cartItems={cart}
+        subTotal={subTotal}
+        taxAmount={taxAmount}
+        total={total}
+        onAddItem={handleAddToCartItem}
+        onRemoveItem={handleRemoveItem}
+        onChangeQuantity={handleChangeQuantity}
+        onChangeGiftQuantity={handleChangeGiftQuantity}
+        onChangeKitchenInstructions={handleChangeKitchenInstructions}
+        onPreviewClick={() => setPreviewOpen(true)}
+        onOpenCertificado={() => setCertificateOpen(true)}
+        onSendToKitchen={kitchen.requestDispatch}
+        isTableOrder={!!tableId}
+      />
+
+      <BillingDialogs
+        products={{
+          selectedProduct,
+          selectedComboProduct,
+          pendingItem,
+          closeSizeDialog: () => setSelectedProduct(null),
+          closeComboDialog: handleCloseComboDialog,
+          confirmCombo: handleConfirmCombo,
+          selectSize: handleSelectSize,
+          cancelExtras: handleCancelExtras,
+          confirmExtras: handleConfirmExtras,
+        }}
+        invoice={{
+          open: previewOpen,
+          cart,
+          promotion,
+          subTotal,
+          discountAmount,
+          taxAmount,
+          total,
+          tableId,
+          isCheckoutMode,
+          hasActiveOrder: !!activeOrder,
+          initialCustomer: deliveryCustomer,
+          initialPhone: deliveryPhone,
+          initialAddress:
+            deliveryAddress ||
+            (deliveryCustomer?.addresses?.[0]?.address ?? ""),
+          initialDriverId: state?.deliveryDriverId,
+          initialDeliveryCost: state?.deliveryCost,
+          initialDeliveryZone: state?.deliveryZone,
+          initialCustomerTendered: state?.deliveryCustomerTendered,
+          invoiceNumber: billing.createdInvoiceNumber,
+          cashierName: activeOrder?.cashierName,
+          close: closePreview,
+          confirm: billing.handleFinalConfirm,
+          applyPromotion: handleApplyPromotion,
+          removePromotion: handleRemovePromotion,
+        }}
+        kitchen={{
+          confirmOpen: kitchen.isConfirmOpen,
+          successOpen: kitchen.isSuccessOpen,
+          cancel: kitchen.cancelDispatch,
+          confirm: kitchen.confirmDispatch,
+          closeSuccess: kitchen.closeSuccess,
+        }}
+        certificate={{
+          open: certificateOpen,
+          close: () => setCertificateOpen(false),
+          apply: applyCertificate,
+        }}
+      />
+    </Box>
+  );
+};
+
+export default CheckoutPage;

@@ -1,0 +1,207 @@
+import React, { useCallback, useRef, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Badge, Box, Fab, Tooltip } from "@mui/material";
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
+import { AccountMenu } from "../../modules/accounts";
+import MenuCard from "../ui/MenuCard";
+import { PageHeader } from "../../shared/ui";
+import { getMenuItems } from "../navigation/menuItems";
+import { ADMIN_PANEL_PERMISSIONS } from "../navigation/adminPermissions";
+import logoImg from "../../assets/images/logo.png";
+import { PERMISSIONS, useAuth } from "../../modules/auth";
+import { useCaja } from "../../modules/cash-register";
+import { DriverDeliveriesModal } from "../../modules/delivery";
+import { ordersGateway } from "../../modules/orders";
+
+const HomePage = () => {
+  const navigate = useNavigate();
+  const { username, hasPermission } = useAuth();
+  const { currentShift } = useCaja();
+  const allMenuItems = getMenuItems();
+
+  const menuItems = React.useMemo(() => {
+    return allMenuItems.filter((item) =>
+      item.route === "/admin"
+        ? ADMIN_PANEL_PERMISSIONS.some((permission) => hasPermission(permission))
+        : hasPermission(item.permission),
+    );
+  }, [allMenuItems, hasPermission]);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [pendingDeliveredCount, setPendingDeliveredCount] = useState(0);
+  const navigationStartedRef = useRef(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  const navigateOnce = useCallback(
+    (route: string) => {
+      if (navigationStartedRef.current) return;
+
+      navigationStartedRef.current = true;
+      setIsNavigating(true);
+      navigate(route);
+    },
+    [navigate],
+  );
+
+  const canManageDrivers = hasPermission(PERMISSIONS.DELIVERY_MANAGE);
+
+  // Monitoreo de entregas pendientes de liquidar (status === 'delivered')
+  useEffect(() => {
+    if (!canManageDrivers) return;
+    let isMounted = true;
+
+    const checkDeliveredOrders = async () => {
+      try {
+        const currentOrders = await ordersGateway.listCurrent().catch(() => []);
+        if (isMounted) {
+          const count = (currentOrders || []).filter(
+            (o) => o.orderType === "delivery" && o.status === "delivered"
+          ).length;
+          setPendingDeliveredCount(count);
+        }
+      } catch (error) {
+        console.error("Error verificando entregas de motorizados:", error);
+      }
+    };
+
+    void checkDeliveredOrders();
+    const interval = setInterval(checkDeliveredOrders, 12000); // Consulta cada 12 segundos
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [canManageDrivers]);
+
+  const isCajaAbierta = Boolean(currentShift);
+
+  return (
+    <Box
+      minHeight="100vh"
+      boxSizing="border-box"
+      sx={{
+        bgcolor: "background.default",
+        pt: 4,
+        pb: 4,
+        px: { xs: 2, md: 6 },
+      }}
+    >
+      <PageHeader
+        title={`Bienvenido, ${username || "Usuario"}`}
+        startContent={
+          <Box
+            component="img"
+            src={logoImg}
+            alt="Pizza To Go"
+            sx={{
+              width: 45,
+              height: 45,
+              borderRadius: "20%",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              objectFit: "cover",
+              bgcolor: "background.paper",
+            }}
+          />
+        }
+        actions={<AccountMenu />}
+      />
+
+      {/* Cuadrícula de menú */}
+      <Box
+        display="grid"
+        gridTemplateColumns={{
+          xs: "repeat(2, 1fr)",
+          sm: "repeat(3, 1fr)",
+          lg: "repeat(4, 1fr)",
+        }}
+        gap={3}
+        px={2}
+      >
+        {menuItems.map((item) => {
+          let isDisabled = false;
+
+          if (item.label === "Abrir Caja") {
+            // Si ya hay una caja abierta, nadie puede abrir otra
+            isDisabled = isCajaAbierta;
+          } else if (item.label === "Cerrar Caja") {
+            // Solo se puede cerrar si existe una caja abierta
+            isDisabled = !isCajaAbierta;
+          }
+
+          return (
+            <MenuCard
+              key={item.label}
+              label={item.label}
+              icon={item.icon}
+              onClick={
+                item.route
+                  ? () => navigateOnce(item.route!)
+                  : item.action ?? (() => {})
+              }
+              disabled={isDisabled || isNavigating}
+            />
+          );
+        })}
+      </Box>
+
+      {/* Acceso fijo al control de motorizados */}
+      {canManageDrivers && (
+        <Tooltip
+          title={
+            pendingDeliveredCount > 0
+              ? `¡Atención! ${pendingDeliveredCount} ${
+                  pendingDeliveredCount === 1
+                    ? "entrega lista para liquidar"
+                    : "entregas listas para liquidar"
+                }`
+              : "Control Motorizados"
+          }
+          placement="left"
+        >
+          <Box
+            sx={{
+              position: "fixed",
+              bottom: 32,
+              right: 32,
+              zIndex: 1000,
+            }}
+          >
+            <Badge badgeContent={pendingDeliveredCount} color="error" max={99}>
+              <Fab
+                color="secondary"
+                aria-label="motorizados"
+                onClick={() => setModalOpen(true)}
+                sx={{
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                  transition: "box-shadow 120ms ease-out",
+                  "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,0.24)" },
+                }}
+              >
+                <TwoWheelerIcon />
+              </Fab>
+            </Badge>
+          </Box>
+        </Tooltip>
+      )}
+
+      {/* Modal de Control de Motorizados */}
+      {canManageDrivers && (
+        <DriverDeliveriesModal
+          open={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            // Revalidar conteo al cerrar el modal tras cobrar
+            void ordersGateway.listCurrent().then((currentOrders) => {
+              const count = (currentOrders || []).filter(
+                (o) => o.orderType === "delivery" && o.status === "delivered"
+              ).length;
+              setPendingDeliveredCount(count);
+            });
+          }}
+        />
+      )}
+    </Box>
+  );
+};
+
+export default HomePage;

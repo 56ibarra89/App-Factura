@@ -1,0 +1,142 @@
+import type { ProductSize, SelectedExtra } from "../../catalog";
+import type { KitchenModifierSelection } from "../../settings";
+
+export type OrderStatus =
+  | "pending"
+  | "preparing"
+  | "ready"
+  | "delivered"
+  | "paid"
+  | "cancelled";
+export type KitchenStatus = "pending" | "preparing" | "ready" | "delivered";
+
+export type PaymentMethod = "EFECTIVO" | "TARJETA" | "APP" | "MIXTO";
+export type OrderType = "local" | "llevar" | "delivery";
+export type OrderPromotionSource =
+  | "none"
+  | "coupon"
+  | "discount"
+  | "happy-hour";
+
+export interface OrderPromotionSelection {
+  promotionSource?: OrderPromotionSource;
+  promotionCode?: string;
+  couponId?: number;
+  discountId?: number;
+  happyHourId?: number;
+}
+
+export interface SelectedComboOptionItem {
+  groupId: string;
+  groupName: string;
+  productId: string;
+  productName: string;
+  size?: string;
+  quantity: number;
+  extraPrice: number;
+  extras?: SelectedExtra[];
+  kitchenId?: string;
+  categoryId?: string;
+  categoryName?: string;
+  kitchenStatus?: KitchenStatus;
+}
+
+export interface OrderItem {
+  id?: number | string;
+  productId?: string;
+  categoryId?: string;
+  name: string;
+  price: number;
+  size: ProductSize;
+  quantity: number;
+  extras: SelectedExtra[];
+  note?: string;
+  kitchenModifiers?: KitchenModifierSelection[];
+  giftQuantity?: number;
+  giftReason?: string;
+  isSentToKitchen?: boolean;
+  sentAt?: number;
+  kitchenStatus?: KitchenStatus;
+  kitchenId?: string;
+  certificateSerial?: string;
+  isCombo?: boolean;
+  comboSelections?: SelectedComboOptionItem[];
+}
+
+export type OrderItemInput = Pick<
+  OrderItem,
+  "name" | "price" | "size" | "extras"
+> &
+  Partial<
+    Pick<
+      OrderItem,
+      | "productId"
+      | "note"
+      | "kitchenModifiers"
+      | "giftQuantity"
+      | "giftReason"
+      | "kitchenId"
+      | "certificateSerial"
+      | "categoryId"
+      | "isCombo"
+      | "comboSelections"
+    >
+  >;
+
+export interface OrderPaymentDetail {
+  method: "EFECTIVO" | "TARJETA" | "APP";
+  amount: number;
+  reference?: string;
+  methodConfigId?: string;
+  methodSnapshotName?: string;
+  methodType?: string;
+  currency?: string;
+  originalAmount?: number;
+  exchangeRate?: number;
+  commissionRate?: number;
+  commissionAmount?: number;
+  cashierSnapshotName?: string;
+}
+
+export interface Order extends OrderPromotionSelection {
+  id: string;
+  items: OrderItem[];
+  subTotal?: number;
+  discountAmount?: number;
+  taxAmount?: number;
+  total: number;
+  status: OrderStatus;
+  timestamp: Date;
+  updatedAt?: Date;
+  paidAt?: Date;
+  parentOrderId?: string;
+  splitAccountName?: string;
+  splitMode?: "items" | "equal" | "custom";
+  customerName?: string;
+  customerPhone?: string;
+  customerId?: string;
+  orderType?: OrderType;
+  customerAddress?: string;
+  driverId?: string;
+  waiterId?: string;
+  waiterName?: string;
+  certificateSerials?: string[];
+  tableId?: string;
+  customerTendered?: number;
+  deliveryChange?: number;
+  kitchenReadyAt?: Date;
+  deliveryStartedAt?: Date;
+  deliveredAt?: Date;
+  paymentMethod?: PaymentMethod;
+  splitAmounts?: {
+    efectivo?: number;
+    tarjeta?: number;
+    app?: number;
+  };
+  payments?: OrderPaymentDetail[];
+  cashierName?: string;
+  isSentToKitchen?: boolean;
+  packagingRequested?: boolean;
+  linkedTables?: string[];
+  invoiceNumber?: string;
+}

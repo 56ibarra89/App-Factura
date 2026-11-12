@@ -1,0 +1,114 @@
+import {
+  useCallback,
+  useMemo,
+} from "react";
+import type { ReactNode } from "react";
+import { useAuth } from "../../auth";
+import type {
+  OrderQueries,
+} from "./order-context.types";
+import { orderSelectors } from "./orderDomain";
+import {
+  ordersGateway as defaultOrdersGateway,
+  type CurrentOrdersGateway,
+  type OrderCreationGateway,
+  type OrderFinalizationGateway,
+  type OrderItemsGateway,
+  type OrderStatusGateway,
+  type OrderTablesGateway,
+  type OrderWaiterGateway,
+} from "../api/ordersGateway";
+import {
+  orderPreferencesGateway as defaultPreferencesGateway,
+  type OrderPreferencesGateway,
+} from "../api/orderPreferencesGateway";
+import { useOrderStore } from "../hooks/useOrderStore";
+import { useOrderSynchronization } from "../hooks/useOrderSynchronization";
+import { useOrderCommandHandlers } from "../hooks/useOrderCommandHandlers";
+import {
+  ordersRealtimeGateway as defaultRealtimeGateway,
+  type OrdersRealtimeGateway,
+} from "../api/ordersRealtimeGateway";
+import {
+  OrderCommandsContext,
+  OrderQueriesContext,
+} from "./OrderContext";
+
+export interface OrderProviderGateways {
+  currentOrders: CurrentOrdersGateway;
+  creation: OrderCreationGateway;
+  status: OrderStatusGateway;
+  items: OrderItemsGateway;
+  finalization: OrderFinalizationGateway;
+  tables: OrderTablesGateway;
+  waiter: OrderWaiterGateway;
+  realtime: OrdersRealtimeGateway;
+}
+
+interface OrderProviderProps {
+  children: ReactNode;
+  gateways?: Partial<OrderProviderGateways>;
+  preferencesGateway?: OrderPreferencesGateway;
+  pollIntervalMs?: number;
+}
+
+export function OrderProvider({
+  children,
+  gateways = {},
+  preferencesGateway = defaultPreferencesGateway,
+  pollIntervalMs,
+}: OrderProviderProps) {
+  const { username, isLoggedIn, hasPermission } = useAuth();
+  const { orders, ordersRef, updateOrders } = useOrderStore();
+  const {
+    currentOrders = defaultOrdersGateway,
+    creation = defaultOrdersGateway,
+    status = defaultOrdersGateway,
+    items = defaultOrdersGateway,
+    finalization = defaultOrdersGateway,
+    tables = defaultOrdersGateway,
+    waiter = defaultOrdersGateway,
+    realtime = defaultRealtimeGateway,
+  } = gateways;
+
+  useOrderSynchronization({
+    isLoggedIn: isLoggedIn && hasPermission("orders.read"),
+    ordersRef,
+    updateOrders,
+    gateway: currentOrders,
+    preferencesGateway,
+    realtimeGateway: realtime,
+    pollIntervalMs,
+  });
+
+  const commands = useOrderCommandHandlers({
+    username,
+    ordersRef,
+    updateOrders,
+    creationGateway: creation,
+    statusGateway: status,
+    itemsGateway: items,
+    finalizationGateway: finalization,
+    tablesGateway: tables,
+    waiterGateway: waiter,
+    preferencesGateway,
+  });
+
+  const getOrderByTable = useCallback<OrderQueries["getOrderByTable"]>(
+    (tableId) => orderSelectors.getActiveOrderByTable(orders, tableId),
+    [orders],
+  );
+
+  const queries = useMemo<OrderQueries>(
+    () => ({ orders, getOrderByTable }),
+    [getOrderByTable, orders],
+  );
+
+  return (
+    <OrderQueriesContext.Provider value={queries}>
+      <OrderCommandsContext.Provider value={commands}>
+        {children}
+      </OrderCommandsContext.Provider>
+    </OrderQueriesContext.Provider>
+  );
+}

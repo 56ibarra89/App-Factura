@@ -21,7 +21,46 @@ declare namespace NodeJS {
   }
 }
 
+interface ElectronSystemPrinter {
+  name: string;
+  displayName: string;
+  description: string;
+  status: number;
+  isDefault: boolean;
+}
+
+interface ElectronNativeOperationResult {
+  success: boolean;
+  error?: string;
+}
+
 // Used in Renderer process, expose in `preload.ts`
 interface Window {
-  ipcRenderer: import('electron').IpcRenderer
+  printAPI?: {
+    printSilent: (
+      options?: { deviceName?: string },
+    ) => Promise<ElectronNativeOperationResult>;
+    getSystemPrinters: () => Promise<ElectronSystemPrinter[]>;
+    testNetworkPrinter: (options: {
+      host: string;
+      port?: number;
+      timeoutMs?: number;
+    }) => Promise<{ success: boolean; latencyMs?: number; error?: string }>;
+    printNetworkTicket: (options: {
+      host: string;
+      port?: number;
+      data: number[] | Uint8Array;
+      timeoutMs?: number;
+    }) => Promise<ElectronNativeOperationResult>;
+    openNetworkCashDrawer: (options: {
+      host: string;
+      port?: number;
+      timeoutMs?: number;
+    }) => Promise<ElectronNativeOperationResult>;
+  };
+  authAPI?: {
+    setToken: (token: string) => Promise<boolean>;
+    clearToken: () => Promise<void>;
+    hasToken: () => Promise<boolean>;
+  };
 }

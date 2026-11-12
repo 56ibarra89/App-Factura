@@ -1,0 +1,1 @@
+export { blockInvalidChar } from "./inputUtils";

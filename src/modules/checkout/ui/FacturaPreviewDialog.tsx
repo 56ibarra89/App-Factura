@@ -1,0 +1,301 @@
+import {
+  Alert,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Snackbar,
+} from "@mui/material";
+import type { OrderItem } from "../../orders";
+import type { CheckoutFormValues } from "../model/checkout.types";
+import type { Customer } from "../../customers";
+import type { OrderType } from "../../orders";
+import { PromocionesSelector, type AppliedPromotion } from "../../promotions";
+import { buildSupplementalCartItems } from "../model/checkoutDomain";
+import { useCheckoutDialog } from "../hooks/useCheckoutDialog";
+import CustomerDeliverySection from "./CustomerDeliverySection";
+import CustomerMatchDialog from "./CustomerMatchDialog";
+import InvoiceSummary from "./InvoiceSummary";
+import PackagingSection from "./PackagingSection";
+import PaymentMethodSelector from "./PaymentMethodSelector";
+import { TicketPrint } from "../../invoices";
+import type { DeliveryZone } from "../../delivery";
+
+interface FacturaPreviewDialogProps {
+  open: boolean;
+  cart: OrderItem[];
+  promotion?: AppliedPromotion | null;
+  subTotal: number;
+  discountAmount?: number;
+  taxAmount: number;
+  total: number;
+  invoiceNumber?: string;
+  onApplyPromotion?: (promotion: AppliedPromotion) => void;
+  onRemovePromotion?: () => void;
+  onClose: () => void;
+  onConfirm: (values: CheckoutFormValues) => void | Promise<void>;
+  title?: string;
+  confirmText?: string;
+  isTableMode?: boolean;
+  disableRestoreFocus?: boolean;
+  disableEnforceFocus?: boolean;
+  initialCustomer?: Customer | null;
+  initialPhone?: string;
+  initialAddress?: string;
+  initialOrderType?: OrderType;
+  initialDriverId?: string;
+  initialDeliveryCost?: number;
+  initialDeliveryZone?: DeliveryZone | null;
+  initialCustomerTendered?: number;
+  lockOrderType?: boolean;
+  hideDeliveryOption?: boolean;
+  cashierName?: string;
+}
+
+export default function FacturaPreviewDialog({
+  open,
+  cart,
+  promotion,
+  subTotal,
+  discountAmount = 0,
+  taxAmount,
+  total,
+  onApplyPromotion,
+  onRemovePromotion,
+  onClose,
+  onConfirm,
+  title = "Resumen de Factura",
+  confirmText = "Confirmar pedido",
+  isTableMode = false,
+  disableRestoreFocus = false,
+  disableEnforceFocus = false,
+  initialCustomer = null,
+  initialPhone = "",
+  initialAddress = "",
+  initialOrderType = "local",
+  initialDriverId = "",
+  initialDeliveryCost = 0,
+  initialDeliveryZone,
+  initialCustomerTendered,
+  lockOrderType = false,
+  hideDeliveryOption = false,
+  invoiceNumber,
+  cashierName,
+}: FacturaPreviewDialogProps) {
+  const isPrintRetry = Boolean(invoiceNumber);
+  const checkout = useCheckoutDialog({
+    open,
+    items: cart,
+    total,
+    orderSubTotal: subTotal,
+    promotion,
+    fallbackDiscountAmount: promotion ? undefined : discountAmount,
+    isTableMode,
+    initialCustomer,
+    initialPhone,
+    initialAddress,
+    initialOrderType,
+    initialDriverId,
+    initialDeliveryCost,
+    initialDeliveryZone,
+    initialCustomerTendered,
+    onConfirm,
+  });
+  const supplementalCart = buildSupplementalCartItems(
+    checkout.packagingItems,
+    checkout.orderType === "delivery" ? checkout.deliveryCost : undefined,
+    checkout.orderType === "delivery" ? checkout.selectedZone?.name : undefined,
+    checkout.orderType === "delivery" ? checkout.driverPayout : undefined,
+    checkout.orderType === "delivery" ? checkout.isFreeDelivery : false,
+  );
+  const printableCart = [...cart, ...supplementalCart];
+
+  return (
+    <>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        disableRestoreFocus={disableRestoreFocus}
+        disableEnforceFocus={disableEnforceFocus}
+      >
+        <DialogTitle>{title}</DialogTitle>
+        <DialogContent
+          sx={isPrintRetry ? { pointerEvents: "none", opacity: 0.8 } : undefined}
+        >
+          {isPrintRetry && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              La factura ya fue emitida. Reintenta la impresión para completar el envío a cocina.
+            </Alert>
+          )}
+          <InvoiceSummary
+            cart={cart}
+            subTotal={subTotal}
+            discountAmount={discountAmount}
+            taxAmount={taxAmount}
+            extraCostsTax={checkout.extraCostsTax}
+            totalPackagingCost={checkout.totalPackagingCost}
+            deliveryCost={checkout.deliveryCost}
+            showDeliveryCost={checkout.orderType === "delivery"}
+            finalTotal={checkout.finalTotal}
+            finalTotalSecondary={checkout.finalTotalSecondary}
+            exchangeRate={checkout.exchangeRate}
+            config={checkout.config}
+          />
+
+          {onApplyPromotion && onRemovePromotion && (
+            <PromocionesSelector
+              currentPromotion={promotion ?? null}
+              onApply={onApplyPromotion}
+              onRemove={onRemovePromotion}
+            />
+          )}
+
+          {!isTableMode && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <CustomerDeliverySection
+                customerName={checkout.customerName}
+                onCustomerNameChange={checkout.setCustomerName}
+                customerPhone={checkout.customerPhone}
+                onCustomerPhoneChange={checkout.setCustomerPhone}
+                onCustomerSelect={checkout.handleCustomerSelect}
+                savedPhones={checkout.savedPhones}
+                orderType={checkout.orderType}
+                onOrderTypeChange={checkout.setOrderType}
+                lockOrderType={lockOrderType}
+                hideDeliveryOption={hideDeliveryOption}
+                customerAddress={checkout.customerAddress}
+                onCustomerAddressChange={checkout.setCustomerAddress}
+                savedAddresses={checkout.savedAddresses}
+                drivers={checkout.drivers}
+                driverStats={checkout.driverStats}
+                selectedDriverId={checkout.selectedDriverId}
+                onDriverChange={checkout.setSelectedDriverId}
+                deliveryCost={checkout.deliveryCost}
+                onDeliveryCostChange={checkout.setDeliveryCost}
+                deliveryPrices={checkout.deliveryPrices}
+                subTotal={subTotal}
+                selectedZone={checkout.selectedZone}
+                onZoneChange={checkout.setSelectedZone}
+                activeZones={checkout.activeZones}
+                deliveryRules={checkout.deliveryRules}
+                isFreeDelivery={checkout.isFreeDelivery}
+              />
+              {(checkout.orderType === "llevar" ||
+                checkout.orderType === "delivery") && (
+                <PackagingSection
+                  packaging={checkout.packagingConfig}
+                  quantities={checkout.packagingQuantities}
+                  onChange={(name, quantity) =>
+                    checkout.setPackagingQuantities((current) => ({
+                      ...current,
+                      [name]: quantity,
+                    }))
+                  }
+                />
+              )}
+              <Divider sx={{ my: 2 }} />
+              <PaymentMethodSelector
+                total={checkout.finalTotal}
+                methods={checkout.methods}
+                paymentMethod={checkout.paymentMethod}
+                setPaymentMethod={checkout.setPaymentMethod}
+                selectedMethodId={checkout.selectedMethodId}
+                setSelectedMethodId={checkout.setSelectedMethodId}
+                mixedMethodIds={checkout.mixedMethodIds}
+                setMixedMethodIds={checkout.setMixedMethodIds}
+                paymentReferences={checkout.paymentReferences}
+                setPaymentReferences={checkout.setPaymentReferences}
+                mixedAmounts={checkout.mixedAmounts}
+                setMixedAmounts={checkout.setMixedAmounts}
+                receivedLocal={checkout.receivedLocal}
+                setReceivedLocal={checkout.setReceivedLocal}
+                receivedSecondary={checkout.receivedSecondary}
+                setReceivedSecondary={checkout.setReceivedSecondary}
+                currencySymbol={checkout.config.currencySymbol}
+                secondaryCurrencySymbol={
+                  checkout.config.secondaryCurrencySymbol
+                }
+                exchangeRate={checkout.exchangeRate}
+              />
+            </>
+          )}
+          {checkout.submitError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {checkout.submitError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ "@media print": { display: "none" } }}>
+          <Button
+            onClick={onClose}
+            sx={{ color: "error.main" }}
+          >
+            {isPrintRetry ? "Cerrar" : "Cancelar"}
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => void checkout.handleConfirm()}
+            disabled={!checkout.canConfirm || checkout.isSubmitting}
+          >
+            {checkout.isSubmitting
+              ? "Procesando..."
+              : isPrintRetry
+                ? "Reintentar impresión"
+                : confirmText}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <CustomerMatchDialog
+        open={checkout.matchDialogOpen}
+        existingCustomer={checkout.matchedCustomer}
+        newCustomerData={{
+          name: checkout.customerName,
+          phone: checkout.customerPhone,
+          address: checkout.customerAddress,
+        }}
+        onConfirmAsNew={() => void checkout.handleConfirmAsNewCustomer()}
+        onConfirmAsExisting={() =>
+          void checkout.handleConfirmAsExistingCustomer()
+        }
+        onCancel={() => checkout.setMatchDialogOpen(false)}
+        loading={checkout.isSubmitting}
+      />
+
+      <Snackbar
+        open={checkout.toastOpen}
+        autoHideDuration={3000}
+        onClose={() => checkout.setToastOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => checkout.setToastOpen(false)}
+          severity="success"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          ¡Cliente guardado exitosamente!
+        </Alert>
+      </Snackbar>
+
+      <TicketPrint
+        cart={printableCart}
+        subTotal={subTotal + checkout.extraCostsSubtotal}
+        discountAmount={discountAmount}
+        taxAmount={taxAmount + checkout.extraCostsTax}
+        total={checkout.finalTotal}
+        customerName={checkout.customerName}
+        customerAddress={checkout.customerAddress}
+        orderType={checkout.orderType}
+        invoiceNumber={invoiceNumber}
+        cashierName={cashierName}
+      />
+    </>
+  );
+}

@@ -1,0 +1,177 @@
+import React, { useState } from "react";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useAuth } from "../model/AuthContext";
+import { LOGIN_COLORS } from "../../../shared/theme";
+import { logService } from "../../audit";
+import {
+  PERMISSIONS,
+  type PermissionCode,
+} from "../model/permission.types";
+
+interface PinValidationDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: (pin?: string) => void | Promise<void>;
+  title?: string;
+  requiredPermission?: PermissionCode;
+}
+
+const PinValidationDialog: React.FC<PinValidationDialogProps> = ({
+  open,
+  onClose,
+  onSuccess,
+  title = "Autorización Requerida",
+  requiredPermission = PERMISSIONS.AUTHORIZATIONS_APPROVE,
+}) => {
+  const { validatePinForAction, lockoutTime, username, role } = useAuth();
+  const [pin, setPin] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleValidation = async () => {
+    if (pin.length !== 6) {
+      setError("Ingresa los 6 dígitos del PIN");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await validatePinForAction(pin, requiredPermission);
+
+      if (result.success) {
+        const validPin = pin;
+        setPin("");
+        await onSuccess(validPin);
+      } else {
+        setPin("");
+        setError(result.error || "Error en la validación");
+
+        logService.log(
+          username || "unknown",
+          role || "unknown",
+          "FAILED_PIN_ATTEMPT",
+          `Intento fallido de PIN para la acción: "${title}"`,
+          "error"
+        );
+      }
+    } catch (error: unknown) {
+      setError(
+        error instanceof Error && error.message
+          ? error.message
+          : "Error en la validación",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    setPin("");
+    setError("");
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+      <DialogTitle sx={{ fontWeight: 'bold', color: LOGIN_COLORS.primary }}>
+        {title}
+      </DialogTitle>
+      <DialogContent>
+        <Typography variant="body2" color="text.secondary" mb={3} mt={1}>
+          Ingresa el PIN de un usuario autorizado para continuar.
+        </Typography>
+
+        <Box display="flex" flexDirection="column" gap={2}>
+          <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={1}>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+              <Button
+                key={num}
+                variant="outlined"
+                onClick={() => {
+                  if (pin.length < 6 && lockoutTime === 0) {
+                    setPin(p => p + num.toString());
+                    setError("");
+                  }
+                }}
+                disabled={loading || lockoutTime > 0}
+                sx={{ height: 60, fontSize: 24, borderRadius: 2 }}
+              >
+                {num}
+              </Button>
+            ))}
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => setPin(p => p.slice(0, -1))}
+              disabled={loading || pin.length === 0 || lockoutTime > 0}
+              sx={{ height: 60, borderRadius: 2 }}
+            >
+              Borrar
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                if (pin.length < 6 && lockoutTime === 0) {
+                  setPin(p => p + "0");
+                  setError("");
+                }
+              }}
+              disabled={loading || lockoutTime > 0}
+              sx={{ height: 60, fontSize: 24, borderRadius: 2 }}
+            >
+              0
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleValidation}
+              disabled={loading || pin.length !== 6 || lockoutTime > 0}
+              sx={{ height: 60, borderRadius: 2, bgcolor: lockoutTime > 0 ? "grey.400" : LOGIN_COLORS.primary }}
+            >
+              {loading ? <CircularProgress size={24} color="inherit" /> : lockoutTime > 0 ? "❌" : "OK"}
+            </Button>
+          </Box>
+
+          <Box display="flex" justifyContent="center" height={24}>
+            {}
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Box
+                key={i}
+                sx={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  bgcolor: i < pin.length ? LOGIN_COLORS.primary : "grey.300",
+                  mx: 1,
+                  mt: 2
+                }}
+              />
+            ))}
+          </Box>
+
+          {error && (
+            <Typography color="error" variant="body2" textAlign="center" mt={1} fontWeight={lockoutTime > 0 ? "bold" : "normal"}>
+              {lockoutTime > 0 ? `PAUSA DE SEGURIDAD: Intenta en ${lockoutTime}s` : error}
+            </Typography>
+          )}
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} color="inherit">
+          Cancelar
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export default PinValidationDialog;

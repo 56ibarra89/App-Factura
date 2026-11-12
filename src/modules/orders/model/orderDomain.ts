@@ -1,0 +1,565 @@
+import type { OrderItem } from "./order.types";
+import { requiresKitchenPreparation } from "./orderItemDomain";
+import { KitchenStatus, Order, OrderStatus } from "./order.types";
+import type {
+  CreateOrderCommand,
+  FinalizeOrderCommand,
+} from "./order-command.types";
+
+export const orderSelectors = {
+  getActiveOrderByTable(orders: Order[], tableId: string): Order | undefined {
+    const tableOrders = orders.filter(
+      (order) =>
+        (order.tableId === tableId ||
+          (order.linkedTables && order.linkedTables.includes(tableId))) &&
+        order.status !== "paid" &&
+        order.status !== "cancelled",
+    );
+
+    return (
+      tableOrders.find((order) => order.items.length > 0) ?? tableOrders[0]
+    );
+  },
+};
+
+type UpdateResult = { orders: Order[]; modified?: Order };
+
+function updateOne(
+  orders: Order[],
+  predicate: (order: Order) => boolean,
+  updater: (order: Order) => Order,
+): UpdateResult {
+  let modified: Order | undefined;
+  const next = orders.map((order) => {
+    if (!predicate(order)) return order;
+    const updated = updater(order);
+    if (!modified && updated !== order) modified = updated;
+    return updated;
+  });
+  return { orders: next, modified };
+}
+
+export function createOrder(
+  params: CreateOrderCommand & {
+    username?: string | null;
+  },
+): Order {
+  const {
+    items,
+    total,
+    username,
+    customerId,
+    customerName,
+    customerPhone,
+    orderType,
+    customerAddress,
+    driverId,
+    tableId,
+    paymentMethod,
+    splitAmounts,
+    payments,
+    subTotal,
+    taxAmount,
+    discountAmount,
+    promotionSource,
+    promotionCode,
+    couponId,
+    discountId,
+    happyHourId,
+    certificateSerials,
+    customerTendered,
+    isSentToKitchen,
+  } = params;
+
+  const nowMs = Date.now();
+  let deliveryChange: number | undefined = undefined;
+  if (customerTendered !== undefined && customerTendered > total) {
+    deliveryChange = customerTendered - total;
+  }
+
+  const isDelivery = orderType === "delivery";
+
+  const baseOrder: Order = {
+    id: `ORD-${nowMs}`,
+    items: [...items],
+    subTotal,
+    discountAmount,
+    taxAmount,
+    total,
+    status: isDelivery ? "pending" : paymentMethod ? "paid" : "pending",
+    timestamp: new Date(nowMs),
+    customerId,
+    customerName,
+    customerPhone,
+    orderType,
+    customerAddress,
+    driverId,
+    customerTendered,
+    deliveryChange,
+    promotionCode,
+    couponId,
+    promotionSource: promotionSource ?? "none",
+    discountId,
+    happyHourId,
+    certificateSerials,
+    tableId,
+    paymentMethod,
+    splitAmounts,
+    payments,
+    cashierName: username || "Sistema",
+    isSentToKitchen: isSentToKitchen ?? !tableId,
+  };
+
+  if (!baseOrder.isSentToKitchen) return baseOrder;
+
+  return {
+    ...baseOrder,
+    items: baseOrder.items.map((item) =>
+      requiresKitchenPreparation(item)
+        ? {
+            ...item,
+            isSentToKitchen: true,
+            sentAt: nowMs,
+            kitchenStatus: "pending",
+          }
+        : {
+            ...item,
+            isSentToKitchen: false,
+            sentAt: undefined,
+            kitchenStatus: undefined,
+          },
+    ),
+  };
+}
+
+export const orderMutations = {
+  updateOrderStatus(
+    prev: Order[],
+    orderId: string,
+    status: OrderStatus,
+    sentAt?: number,
+    kitchenId?: string,
+    itemId?: number | string,
+  ): UpdateResult {
+    return updateOne(
+      prev,
+      (order) => order.id === orderId,
+      (order) => {
+        if (sentAt) {
+          const kitchenStatus = status as KitchenStatus;
+          const updatedItems = order.items.map((item) => {
+            const matchItemId =
+              itemId !== undefined
+                ? item.id === itemId
+                : !item.sentAt ||
+                  new Date(item.sentAt).getTime() === sentAt;
+
+            if (
+              item.isCombo &&
+              Array.isArray(item.comboSelections) &&
+              matchItemId
+            ) {
+              const updatedSelections = item.comboSelections.map((sel) => {
+                if (!kitchenId || sel.kitchenId === kitchenId) {
+                  return { ...sel, kitchenStatus };
+                }
+                return sel;
+              });
+
+              const allDelivered = updatedSelections.every(
+                (s) => s.kitchenStatus === "delivered",
+              );
+              const allReadyOrDelivered = updatedSelections.every(
+                (s) =>
+                  s.kitchenStatus === "ready" ||
+                  s.kitchenStatus === "delivered",
+              );
+              const anyPreparingOrReady = updatedSelections.some(
+                (s) =>
+                  s.kitchenStatus === "preparing" ||
+                  s.kitchenStatus === "ready",
+              );
+
+              let overallStatus: KitchenStatus = "pending";
+              if (allDelivered) overallStatus = "delivered";
+              else if (allReadyOrDelivered) overallStatus = "ready";
+              else if (anyPreparingOrReady) overallStatus = "preparing";
+
+              return {
+                ...item,
+                kitchenStatus: overallStatus,
+                comboSelections: updatedSelections,
+              };
+            }
+
+            const matchKitchenId = kitchenId
+              ? item.kitchenId === kitchenId
+              : true;
+
+            if (
+              requiresKitchenPreparation(item) &&
+              matchKitchenId &&
+              matchItemId
+            ) {
+              return { ...item, kitchenStatus };
+            }
+            return item;
+          });
+
+          const isDelivery = order.orderType === "delivery";
+          const sentItems = updatedItems.filter(
+            (item) => requiresKitchenPreparation(item) && item.isSentToKitchen,
+          );
+          const allDelivered =
+            sentItems.length > 0 &&
+            sentItems.every((item) => item.kitchenStatus === "delivered");
+          const allReadyOrDelivered =
+            sentItems.length > 0 &&
+            sentItems.every(
+              (item) =>
+                item.kitchenStatus === "ready" ||
+                item.kitchenStatus === "delivered",
+            );
+          const anyPreparingOrReady = sentItems.some(
+            (item) =>
+              item.kitchenStatus === "preparing" ||
+              item.kitchenStatus === "ready",
+          );
+
+          let globalStatus = order.status;
+          if (globalStatus !== "paid" && globalStatus !== "cancelled") {
+            if (allDelivered) globalStatus = isDelivery ? "ready" : "delivered";
+            else if (allReadyOrDelivered) globalStatus = "ready";
+            else if (anyPreparingOrReady) globalStatus = "preparing";
+            else globalStatus = "pending";
+          }
+
+          return { ...order, status: globalStatus, items: updatedItems };
+        }
+
+        const kitchenStatus = status as KitchenStatus;
+
+        const nextStatus =
+          order.status === "paid" || order.status === "cancelled"
+            ? order.status
+            : status;
+
+        return {
+          ...order,
+          status: nextStatus,
+          items: order.items.map((item) =>
+            requiresKitchenPreparation(item)
+              ? { ...item, kitchenStatus }
+              : item,
+          ),
+        };
+      },
+    );
+  },
+
+  updateOrderItems(
+    prev: Order[],
+    orderId: string,
+    items: OrderItem[],
+    total: number,
+  ): UpdateResult {
+    return updateOne(
+      prev,
+      (order) => order.id === orderId,
+      (order) => {
+        const hasNewItems = items.some(
+          (item) => requiresKitchenPreparation(item) && !item.isSentToKitchen,
+        );
+
+        const sentItems = items.filter(
+          (item) => requiresKitchenPreparation(item) && item.isSentToKitchen,
+        );
+        const allDelivered =
+          sentItems.length > 0 &&
+          sentItems.every((item) => item.kitchenStatus === "delivered");
+        const anyPreparing = sentItems.some(
+          (item) => item.kitchenStatus === "preparing",
+        );
+        const anyReady = sentItems.some(
+          (item) => item.kitchenStatus === "ready",
+        );
+
+        const isDelivery = order.orderType === "delivery";
+        let newStatus = order.status;
+        if (hasNewItems) newStatus = "pending";
+        else if (allDelivered) newStatus = isDelivery ? "ready" : "delivered";
+        else if (anyReady) newStatus = "ready";
+        else if (anyPreparing) newStatus = "preparing";
+
+        const certificateSerials = Array.from(
+          new Set(
+            items
+              .flatMap((item) => {
+                if (item.certificateSerial) return [item.certificateSerial];
+                if (item.note?.startsWith("Vale: ")) {
+                  return [item.note.slice("Vale: ".length)];
+                }
+                return [];
+              })
+              .map((serial) => serial.trim().toUpperCase())
+              .filter(Boolean),
+          ),
+        );
+
+        return {
+          ...order,
+          items: [...items],
+          total,
+          status: newStatus,
+          certificateSerials,
+        };
+      },
+    );
+  },
+
+  finalizeOrder(
+    prev: Order[],
+    orderId: string,
+    params: FinalizeOrderCommand,
+  ): UpdateResult {
+    const {
+      paymentMethod,
+      splitAmounts,
+      payments,
+      customerId,
+      customerName,
+      customerPhone,
+      orderType,
+      customerAddress,
+      total,
+      subTotal,
+      taxAmount,
+      discountAmount,
+      promotionSource,
+      promotionCode,
+      couponId,
+      discountId,
+      happyHourId,
+      certificateSerials,
+    } = params;
+
+    return updateOne(
+      prev,
+      (order) => order.id === orderId,
+      (order) => {
+        const nowMs = Date.now();
+        const updatedItems = order.items.map((item) => {
+          if (!requiresKitchenPreparation(item)) {
+            return {
+              ...item,
+              isSentToKitchen: false,
+              sentAt: undefined,
+              kitchenStatus: undefined,
+            };
+          }
+
+          if (!item.isSentToKitchen) {
+            return {
+              ...item,
+              isSentToKitchen: true,
+              sentAt: nowMs,
+              kitchenStatus: "pending" as KitchenStatus,
+            };
+          }
+          return item;
+        });
+
+        return {
+          ...order,
+          status: "paid" as OrderStatus,
+          paidAt: new Date(nowMs),
+          paymentMethod,
+          splitAmounts,
+          payments,
+          customerId: customerId || order.customerId,
+          customerName: customerName || order.customerName,
+          customerPhone: customerPhone || order.customerPhone,
+          orderType: orderType || order.orderType,
+          customerAddress: customerAddress || order.customerAddress,
+          promotionSource: promotionSource ?? order.promotionSource,
+          promotionCode:
+            promotionSource === "coupon"
+              ? promotionCode
+              : promotionSource
+                ? undefined
+                : order.promotionCode,
+          couponId:
+            promotionSource === "coupon"
+              ? couponId
+              : promotionSource
+                ? undefined
+                : order.couponId,
+          discountId:
+            promotionSource === "discount"
+              ? discountId
+              : promotionSource
+                ? undefined
+                : order.discountId,
+          happyHourId:
+            promotionSource === "happy-hour"
+              ? happyHourId
+              : promotionSource
+                ? undefined
+                : order.happyHourId,
+          certificateSerials: certificateSerials ?? order.certificateSerials,
+          total,
+          subTotal: typeof subTotal === "number" ? subTotal : order.subTotal,
+          discountAmount:
+            typeof discountAmount === "number"
+              ? discountAmount
+              : order.discountAmount,
+          taxAmount:
+            typeof taxAmount === "number" ? taxAmount : order.taxAmount,
+          isSentToKitchen: true,
+          items: updatedItems,
+        };
+      },
+    );
+  },
+
+  markAsSentToKitchen(
+    prev: Order[],
+    orderId: string,
+    nowMs: number,
+  ): UpdateResult {
+    return updateOne(
+      prev,
+      (order) => order.id === orderId,
+      (order) => ({
+        ...order,
+        isSentToKitchen: true,
+        items: order.items.map((item) =>
+          requiresKitchenPreparation(item)
+            ? {
+                ...item,
+                isSentToKitchen: true,
+                sentAt: item.isSentToKitchen ? item.sentAt : nowMs,
+                kitchenStatus: item.isSentToKitchen
+                  ? item.kitchenStatus
+                  : "pending",
+              }
+            : {
+                ...item,
+                isSentToKitchen: false,
+                sentAt: undefined,
+                kitchenStatus: undefined,
+              },
+        ),
+      }),
+    );
+  },
+
+  markAsSentToKitchenByTable(
+    prev: Order[],
+    tableId: string,
+    nowMs: number,
+  ): UpdateResult {
+    return updateOne(
+      prev,
+      (order) =>
+        (order.tableId === tableId ||
+          Boolean(order.linkedTables && order.linkedTables.includes(tableId))) &&
+        order.status !== "paid" &&
+        order.status !== "cancelled",
+      (order) => ({
+        ...order,
+        isSentToKitchen: true,
+        items: order.items.map((item) =>
+          requiresKitchenPreparation(item)
+            ? {
+                ...item,
+                isSentToKitchen: true,
+                sentAt: item.isSentToKitchen ? item.sentAt : nowMs,
+                kitchenStatus: item.isSentToKitchen
+                  ? item.kitchenStatus
+                  : "pending",
+              }
+            : {
+                ...item,
+                isSentToKitchen: false,
+                sentAt: undefined,
+                kitchenStatus: undefined,
+              },
+        ),
+      }),
+    );
+  },
+
+  moveOrder(
+    prev: Order[],
+    sourceTableId: string,
+    destTableId: string | string[],
+  ): UpdateResult {
+    return updateOne(
+      prev,
+      (order) =>
+        (order.tableId === sourceTableId ||
+          !!(
+            order.linkedTables && order.linkedTables.includes(sourceTableId)
+          )) &&
+        order.status !== "paid" &&
+        order.status !== "cancelled",
+      (order) => {
+        if (Array.isArray(destTableId)) {
+          return {
+            ...order,
+            tableId: destTableId[0],
+            linkedTables: destTableId.slice(1),
+          };
+        }
+        return {
+          ...order,
+          tableId: destTableId,
+          linkedTables: [], // Al mover a una sola mesa, liberamos todas las anteriores
+        };
+      },
+    );
+  },
+
+  unirMesas(
+    prev: Order[],
+    sourceTableId: string,
+    destTableId: string | string[],
+  ): UpdateResult {
+    return updateOne(
+      prev,
+      (order) =>
+        (order.tableId === sourceTableId ||
+          !!(
+            order.linkedTables && order.linkedTables.includes(sourceTableId)
+          )) &&
+        order.status !== "paid" &&
+        order.status !== "cancelled",
+      (order) => {
+        const linkedTables = order.linkedTables || [];
+        const newTables = Array.isArray(destTableId)
+          ? destTableId
+          : [destTableId];
+
+        const updatedLinkedTables = [...linkedTables];
+        newTables.forEach((tableId) => {
+          if (
+            !updatedLinkedTables.includes(tableId) &&
+            order.tableId !== tableId
+          ) {
+            updatedLinkedTables.push(tableId);
+          }
+        });
+
+        return { ...order, linkedTables: updatedLinkedTables };
+      },
+    );
+  },
+
+  clearHistory(prev: Order[]): UpdateResult {
+    const next = prev.filter(
+      (order) => order.status !== "paid" && order.status !== "cancelled",
+    );
+    return { orders: next };
+  },
+};

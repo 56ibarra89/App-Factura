@@ -1,0 +1,427 @@
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { customerRepository, type Customer } from "../../customers";
+import type { CheckoutFormValues } from "../model/checkout.types";
+import type { OrderItem, OrderType } from "../../orders";
+import type { AppliedPromotion } from "../../promotions";
+import { checkoutGateway, type CheckoutGateway } from "../api/checkoutGateway";
+import { canSubmitCheckout } from "../model/checkoutFormDomain";
+import { buildSupplementalCartItems } from "../model/checkoutDomain";
+import { calculateCartTotals } from "../model/cartTotals";
+import { useCheckoutPayment } from "./useCheckoutPayment";
+import { useCustomerDeliveryForm } from "./useCustomerDeliveryForm";
+import { usePackagingSelection } from "./usePackagingSelection";
+import { useGeneralSettings, useTaxConfig } from "../../settings";
+import type { DeliveryZone } from "../../delivery";
+
+interface UseCheckoutDialogOptions {
+  open: boolean;
+  items: OrderItem[];
+  total: number;
+  orderSubTotal?: number;
+  promotion?: AppliedPromotion | null;
+  fallbackDiscountAmount?: number;
+  isTableMode: boolean;
+  initialCustomer: Customer | null;
+  initialPhone: string;
+  initialAddress?: string;
+  initialOrderType: OrderType;
+  initialDriverId: string;
+  initialDeliveryCost: number;
+  initialDeliveryZone?: DeliveryZone | null;
+  initialCustomerTendered?: number;
+  onConfirm: (values: CheckoutFormValues) => void | Promise<void>;
+  gateway?: CheckoutGateway;
+}
+
+export function useCheckoutDialog({
+  open,
+  items,
+  total,
+  orderSubTotal,
+  promotion,
+  fallbackDiscountAmount,
+  isTableMode,
+  initialCustomer,
+  initialPhone,
+  initialAddress,
+  initialOrderType,
+  initialDriverId,
+  initialDeliveryCost,
+  initialDeliveryZone,
+  initialCustomerTendered,
+  onConfirm,
+  gateway = checkoutGateway,
+}: UseCheckoutDialogOptions) {
+  const [toastOpen, setToastOpen] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submissionLock = useRef(false);
+  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
+  const [matchedCustomer, setMatchedCustomer] = useState<Customer | null>(null);
+
+  const { config } = useGeneralSettings();
+  const { taxes, isExonerated } = useTaxConfig();
+  const exchangeRate = config.exchangeRate > 0 ? config.exchangeRate : 36.5;
+
+  const customerDelivery = useCustomerDeliveryForm({
+    open,
+    initialCustomer,
+    initialPhone,
+    initialAddress,
+    initialOrderType,
+    initialDriverId,
+    initialDeliveryCost,
+    initialDeliveryZone,
+    orderSubTotal: orderSubTotal ?? total,
+    gateway,
+  });
+  const packaging = usePackagingSelection({
+    open,
+    orderType: customerDelivery.orderType,
+    gateway,
+  });
+
+  const costs = useMemo(
+    () => {
+      const supplementalItems = buildSupplementalCartItems(
+      packaging.packagingItems,
+      customerDelivery.orderType === "delivery"
+        ? customerDelivery.deliveryCost
+        : undefined,
+      customerDelivery.selectedZone?.name,
+      customerDelivery.driverPayout,
+      customerDelivery.isFreeDelivery,
+    );
+    const baseTotals = calculateCartTotals(
+      items,
+      taxes,
+      isExonerated,
+      promotion,
+      fallbackDiscountAmount,
+    );
+    const finalTotals = calculateCartTotals(
+      [...items, ...supplementalItems],
+      taxes,
+      isExonerated,
+      promotion,
+      fallbackDiscountAmount,
+    );
+    const deliveryCharge =
+      customerDelivery.orderType === "delivery"
+        ? customerDelivery.deliveryCost
+        : 0;
+
+      return {
+        deliveryCharge,
+        extraCostsSubtotal: supplementalItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        ),
+        extraCostsTax: Math.max(0, finalTotals.taxAmount - baseTotals.taxAmount),
+        finalTotal: finalTotals.total,
+        finalTotalSecondary: finalTotals.total / exchangeRate,
+      };
+    },
+    [
+      customerDelivery.deliveryCost,
+      customerDelivery.driverPayout,
+      customerDelivery.isFreeDelivery,
+      customerDelivery.orderType,
+      customerDelivery.selectedZone?.name,
+      exchangeRate,
+      fallbackDiscountAmount,
+      isExonerated,
+      items,
+      packaging.packagingItems,
+      promotion,
+      taxes,
+    ],
+  );
+  const payment = useCheckoutPayment({
+    open,
+    baseTotal: total,
+    finalTotal: costs.finalTotal,
+    exchangeRate,
+    isTableMode,
+    initialCustomerTendered,
+  });
+
+  const canConfirm = useMemo(
+    () =>
+      canSubmitCheckout({
+        isPaymentValid: payment.isPaymentValid,
+        orderType: customerDelivery.orderType,
+        customerAddress: customerDelivery.customerAddress,
+        selectedDriverId: customerDelivery.selectedDriverId,
+        deliveryCost: customerDelivery.deliveryCost,
+        isFreeDelivery: customerDelivery.isFreeDelivery,
+        hasAvailableDrivers: customerDelivery.drivers.length > 0,
+        packagingIsConfigured: packaging.packagingConfig.length > 0,
+        hasSelectedPackaging: packaging.packagingItems.length > 0,
+      }),
+    [
+      customerDelivery.customerAddress,
+      customerDelivery.deliveryCost,
+      customerDelivery.drivers.length,
+      customerDelivery.isFreeDelivery,
+      customerDelivery.orderType,
+      customerDelivery.selectedDriverId,
+      packaging.packagingConfig.length,
+      packaging.packagingItems.length,
+      payment.isPaymentValid,
+    ],
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    setSubmitError("");
+    setIsSubmitting(false);
+    setMatchDialogOpen(false);
+    setMatchedCustomer(null);
+  }, [open]);
+
+  const executeFinalSubmission = useCallback(
+    async (
+      targetCustomerId?: string,
+      targetCustomerName?: string,
+      targetCustomerPhone?: string,
+      targetCustomerAddress?: string,
+    ) => {
+      await onConfirm({
+        paymentMethod: payment.paymentMethod,
+        splitAmounts:
+          payment.paymentMethod === "MIXTO" ? payment.splitAmounts : undefined,
+        payments: payment.payments,
+        customerId: targetCustomerId,
+        customerName:
+          targetCustomerName?.trim() ||
+          customerDelivery.customerName.trim() ||
+          (customerDelivery.customerPhone.trim()
+            ? `Cliente ${customerDelivery.customerPhone.trim()}`
+            : undefined),
+        customerPhone:
+          targetCustomerPhone?.trim() ||
+          customerDelivery.customerPhone.trim() ||
+          undefined,
+        orderType: customerDelivery.orderType,
+        customerAddress:
+          customerDelivery.orderType === "delivery"
+            ? targetCustomerAddress || customerDelivery.customerAddress
+            : undefined,
+        packagingItems: packaging.packagingItems,
+        customerTendered:
+          payment.payments.some((detail) => detail.method === "EFECTIVO")
+            ? Number(payment.receivedLocal || 0) +
+                Number(payment.receivedSecondary || 0) * exchangeRate ||
+              payment.payments.find((detail) => detail.method === "EFECTIVO")
+                ?.amount
+            : undefined,
+        driverId:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.selectedDriverId
+            : undefined,
+        deliveryCost:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.deliveryCost
+            : undefined,
+        deliveryZoneId:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.selectedZone?.id
+            : undefined,
+        deliveryZoneName:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.selectedZone?.name
+            : undefined,
+        deliveryDriverPayout:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.driverPayout
+            : undefined,
+        isFreeDelivery:
+          customerDelivery.orderType === "delivery"
+            ? customerDelivery.isFreeDelivery
+            : false,
+      });
+    },
+    [
+      customerDelivery.customerAddress,
+      customerDelivery.customerName,
+      customerDelivery.customerPhone,
+      customerDelivery.deliveryCost,
+      customerDelivery.orderType,
+      customerDelivery.selectedDriverId,
+      customerDelivery.selectedZone,
+      customerDelivery.driverPayout,
+      customerDelivery.isFreeDelivery,
+      exchangeRate,
+      onConfirm,
+      packaging.packagingItems,
+      payment.paymentMethod,
+      payment.payments,
+      payment.receivedLocal,
+      payment.receivedSecondary,
+      payment.splitAmounts,
+    ],
+  );
+
+  const handleConfirm = useCallback(async () => {
+    if (!canConfirm || submissionLock.current) return;
+    submissionLock.current = true;
+    setIsSubmitting(true);
+
+    setSubmitError("");
+    const name = customerDelivery.customerName.trim();
+    const phone = customerDelivery.customerPhone.trim();
+
+    // Detección de homónimos / coincidencia de cliente
+    if (name.length >= 2) {
+      try {
+        const matches = await customerRepository.searchByName(name);
+        const exactMatch = matches.find(
+          (c) => c.name.trim().toLowerCase() === name.toLowerCase(),
+        );
+
+        if (exactMatch) {
+          const knownPhones = [
+            exactMatch.phone,
+            ...(exactMatch.phones?.map((p) => p.phone) ?? []),
+          ]
+            .filter(Boolean)
+            .map((p) => p!.trim());
+
+          const isKnownPhone = !phone || knownPhones.includes(phone);
+
+          if (!isKnownPhone) {
+            // Existe un cliente registrado con ese nombre, pero el teléfono es nuevo
+            setMatchedCustomer(exactMatch);
+            setMatchDialogOpen(true);
+            submissionLock.current = false;
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error verificando coincidencia de cliente:", err);
+      }
+    }
+
+    setIsSubmitting(true);
+    try {
+      const persisted = await customerDelivery.persistCustomer();
+      if (persisted?.isNew) setToastOpen(true);
+
+      await executeFinalSubmission(persisted?.customer.id ?? customerDelivery.selectedCustomer?.id);
+    } catch (error: unknown) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo completar el cobro. Inténtalo nuevamente.",
+      );
+    } finally {
+      submissionLock.current = false;
+      setIsSubmitting(false);
+    }
+  }, [canConfirm, customerDelivery, executeFinalSubmission]);
+
+  const handleConfirmAsNewCustomer = useCallback(async () => {
+    if (!matchedCustomer || submissionLock.current) return;
+    submissionLock.current = true;
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      const name = customerDelivery.customerName.trim();
+      const phone = customerDelivery.customerPhone.trim();
+      const address = customerDelivery.customerAddress?.trim();
+
+      const newCustomer = await customerRepository.createCustomer(
+        name,
+        customerDelivery.orderType === "delivery" ? address : undefined,
+        phone || undefined,
+      );
+
+      setToastOpen(true);
+      setMatchDialogOpen(false);
+      await executeFinalSubmission(
+        newCustomer.id,
+        newCustomer.name,
+        phone,
+        address,
+      );
+    } catch (error: unknown) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo crear el nuevo cliente. Inténtalo de nuevo.",
+      );
+    } finally {
+      submissionLock.current = false;
+      setIsSubmitting(false);
+    }
+  }, [
+    customerDelivery.customerAddress,
+    customerDelivery.customerName,
+    customerDelivery.customerPhone,
+    customerDelivery.orderType,
+    executeFinalSubmission,
+    matchedCustomer,
+  ]);
+
+  const handleConfirmAsExistingCustomer = useCallback(async () => {
+    if (!matchedCustomer || submissionLock.current) return;
+    submissionLock.current = true;
+    setSubmitError("");
+    setIsSubmitting(true);
+    try {
+      const name = customerDelivery.customerName.trim();
+      const phone = customerDelivery.customerPhone.trim();
+      const address = customerDelivery.customerAddress?.trim();
+
+      await customerRepository.update({
+        id: matchedCustomer.id,
+        name,
+        phone: phone || undefined,
+        address:
+          customerDelivery.orderType === "delivery" ? address : undefined,
+      });
+
+      setToastOpen(true);
+      setMatchDialogOpen(false);
+      await executeFinalSubmission(matchedCustomer.id, name, phone, address);
+    } catch (error: unknown) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo actualizar el cliente existente.",
+      );
+    } finally {
+      submissionLock.current = false;
+      setIsSubmitting(false);
+    }
+  }, [
+    customerDelivery.customerAddress,
+    customerDelivery.customerName,
+    customerDelivery.customerPhone,
+    customerDelivery.orderType,
+    executeFinalSubmission,
+    matchedCustomer,
+  ]);
+
+  return {
+    ...payment,
+    ...customerDelivery,
+    ...packaging,
+    ...costs,
+    config,
+    exchangeRate,
+    canConfirm,
+    submitError,
+    isSubmitting,
+    toastOpen,
+    setToastOpen,
+    handleConfirm,
+    matchDialogOpen,
+    setMatchDialogOpen,
+    matchedCustomer,
+    handleConfirmAsNewCustomer,
+    handleConfirmAsExistingCustomer,
+  };
+}

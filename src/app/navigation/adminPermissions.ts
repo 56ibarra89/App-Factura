@@ -1,0 +1,19 @@
+import { PERMISSIONS, type PermissionCode } from "../../modules/auth";
+
+// Keep route authorization independent from the visual admin catalog. Importing
+// adminModules here would eagerly load every administration icon at startup.
+export const ADMIN_PANEL_PERMISSIONS: PermissionCode[] = [
+  PERMISSIONS.SETTINGS_MANAGE,
+  PERMISSIONS.USERS_MANAGE,
+  PERMISSIONS.TABLES_ASSIGN_ZONES,
+  PERMISSIONS.ROLES_READ,
+  PERMISSIONS.CUSTOMERS_MANAGE,
+  PERMISSIONS.PROMOTIONS_MANAGE,
+  PERMISSIONS.CASH_CONFIGURE,
+  PERMISSIONS.TABLES_CONFIGURE,
+  PERMISSIONS.KITCHEN_CONFIGURE,
+  PERMISSIONS.DELIVERY_MANAGE,
+  PERMISSIONS.DEVICES_MANAGE,
+  PERMISSIONS.AUDIT_READ,
+  PERMISSIONS.BACKUPS_MANAGE,
+];
