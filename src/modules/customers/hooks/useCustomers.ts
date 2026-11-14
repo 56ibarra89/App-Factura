@@ -62,10 +62,36 @@ export const useCustomers = (options: UseCustomersOptions = {}) => {
   const createCustomer = useCallback(
     async (data: CustomerFormData): Promise<void> => {
       const name = data.name.trim();
-      const defaultPhone = data.phones.find((p) => p.isDefault)?.phone || data.phones[0]?.phone || data.phone?.trim();
-      const defaultAddress = data.addresses.find((a) => a.isDefault)?.address || data.addresses[0]?.address?.trim();
+      const phones = data.phones
+        .map((item) => ({
+          id: item.id,
+          phone: item.phone.trim(),
+          isDefault: Boolean(item.isDefault),
+          lastUsed: item.lastUsed,
+        }))
+        .filter((item) => Boolean(item.phone));
+      const addresses = data.addresses
+        .map((item) => ({
+          id: item.id,
+          address: item.address.trim(),
+          isDefault: Boolean(item.isDefault),
+          lastUsed: item.lastUsed,
+        }))
+        .filter((item) => Boolean(item.address));
+      const defaultPhone =
+        phones.find((p) => p.isDefault)?.phone ||
+        phones[0]?.phone ||
+        data.phone?.trim() ||
+        undefined;
+      const defaultAddress =
+        addresses.find((a) => a.isDefault)?.address ||
+        addresses[0]?.address ||
+        undefined;
 
-      await repository.createCustomer(name, defaultAddress, defaultPhone);
+      await repository.createCustomer(name, defaultAddress, defaultPhone, {
+        ...(phones.length > 0 ? { phones } : {}),
+        ...(addresses.length > 0 ? { addresses } : {}),
+      });
       await loadCustomers();
     },
     [repository, loadCustomers],

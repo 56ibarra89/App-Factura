@@ -141,7 +141,7 @@ export const CatalogProvider = ({
       oldName: string,
       newName: string,
       icon?: string,
-      kitchenId?: string,
+      kitchenId?: string | null,
     ) => {
       try {
         const cat = categories.find((c) => c.label === oldName);

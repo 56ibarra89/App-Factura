@@ -25,7 +25,14 @@ class LogRepository implements ILogRepository {
     level: LogLevel = "info",
   ): Promise<void> {
     if (!hasAccessToken()) {
-      return;
+      const authApi =
+        typeof window !== "undefined" ? window.authAPI : undefined;
+      const hasElectronToken = authApi
+        ? await authApi.hasToken().catch(() => false)
+        : false;
+      if (!hasElectronToken) {
+        return;
+      }
     }
 
     try {

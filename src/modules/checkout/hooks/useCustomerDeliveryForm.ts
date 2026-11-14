@@ -5,13 +5,13 @@ import {
   type Customer,
 } from "../../customers";
 import type { OrderType } from "../../orders";
-import type { UserAccount } from "../../accounts";
 import type {
   CheckoutGateway,
   DeliveryDriverStats,
 } from "../api/checkoutGateway";
 import {
   useDeliveryRules,
+  type DeliveryDriver,
   type DeliveryZone,
 } from "../../delivery";
 
@@ -88,7 +88,7 @@ export function useCustomerDeliveryForm({
     initialCustomer,
   );
 
-  const [drivers, setDrivers] = useState<UserAccount[]>([]);
+  const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
   const [deliveryPrices, setDeliveryPrices] = useState<string[]>([]);
   const [driverStats, setDriverStats] = useState<DeliveryDriverStats[]>([]);
   const [loadingDrivers, setLoadingDrivers] = useState(false);

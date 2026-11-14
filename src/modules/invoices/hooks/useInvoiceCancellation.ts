@@ -5,21 +5,21 @@ import type { InvoiceGateway } from "../api/invoiceGateway";
 import { invoiceGateway } from "../api/invoiceGateway";
 import type { Invoice } from "../model/invoice.types";
 import {
+  getBusinessDateString,
+  parseBusinessDayEnd,
+  parseBusinessDayStart,
+} from "../../../shared/format";
+import {
   DEFAULT_VOID_WASTE_POLICY_CONFIG,
   voidWastePolicyGateway,
   type VoidWastePolicyConfig,
 } from "../../settings";
 
-const toLocalDateInput = (date: Date) =>
-  new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .split("T")[0];
-
 export function useInvoiceCancellation(
   historyGateway: InvoiceGateway = invoiceGateway,
 ) {
   const { updateOrderStatus } = useOrderCommands();
-  const today = useMemo(() => toLocalDateInput(new Date()), []);
+  const today = useMemo(() => getBusinessDateString(new Date()), []);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [orders, setOrders] = useState<Invoice[]>([]);
@@ -42,9 +42,22 @@ export function useInvoiceCancellation(
   const [policyError, setPolicyError] = useState("");
 
   const refresh = useCallback(async () => {
+    if (!startDate || !endDate) {
+      setOrders([]);
+      setTotalRows(0);
+      setLoading(false);
+      return;
+    }
+    const start = parseBusinessDayStart(startDate);
+    const end = parseBusinessDayEnd(endDate);
+    if (!start || !end || start > end) {
+      setOrders([]);
+      setTotalRows(0);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    const start = new Date(`${startDate}T00:00:00`);
-    const end = new Date(`${endDate}T23:59:59`);
 
     try {
       const result = await historyGateway.listHistory({

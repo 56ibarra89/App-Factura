@@ -1,16 +1,23 @@
 import { useState, useEffect, useRef } from "react";
 import {
+  Alert,
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Typography, Box, InputAdornment
 } from "@mui/material";
 import EventSeatIcon from "@mui/icons-material/EventSeat";
 import { LOGIN_COLORS } from "../../../shared/theme";
+import { getBusinessDateString, parseBusinessDayStart, formatBusinessTime } from "../../../shared/format";
 
 interface Props {
   open: boolean;
   mesaId: string | null;
   onClose: () => void;
-  onConfirm: (nombre: string, monto: number, resTime: string, expTime: string) => void;
+  onConfirm: (
+    nombre: string,
+    monto: number,
+    resTime?: string,
+    expTime?: string,
+  ) => Promise<void> | void;
   disableRestoreFocus?: boolean;
   disableEnforceFocus?: boolean;
 }
@@ -27,6 +34,8 @@ export default function ReservationDialog({
   const [monto, setMonto] = useState("");
   const [reservationTime, setReservationTime] = useState("");
   const [expirationTime, setExpirationTime] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -38,7 +47,7 @@ export default function ReservationDialog({
 
       const exp = new Date(roundedNow.getTime() + 30 * 60000);
 
-      const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
+      const formatTime = (d: Date) => formatBusinessTime(d, { hour: "2-digit", minute: "2-digit", hour12: false });
 
       setReservationTime(formatTime(roundedNow));
       setExpirationTime(formatTime(exp));
@@ -50,16 +59,17 @@ export default function ReservationDialog({
     if (!newTime) return;
 
     const [hours, minutes] = newTime.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-    date.setMinutes(date.getMinutes() + 30);
+    const date = parseBusinessDayStart(getBusinessDateString()) ?? new Date();
+    date.setTime(date.getTime() + (hours * 60 + minutes + 30) * 60000);
 
-    const formatTime = (d: Date) => d.toTimeString().slice(0, 5);
+    const formatTime = (d: Date) => formatBusinessTime(d, { hour: "2-digit", minute: "2-digit", hour12: false });
     setExpirationTime(formatTime(date));
   };
 
   useEffect(() => {
     if (open) {
+      setErrorMessage(null);
+      setSubmitting(false);
       const timer = setTimeout(() => {
         nameInputRef.current?.focus();
       }, 150);
@@ -67,33 +77,54 @@ export default function ReservationDialog({
     }
   }, [open]);
 
-  const handleConfirm = () => {
-    if (!nombre.trim()) return;
+  const handleConfirm = async () => {
+    if (!nombre.trim() || submitting) return;
 
     const parsedMonto = parseFloat(monto) || 0;
 
-    const createIsoDate = (timeStr: string) => {
-      if (!timeStr) return "";
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      const date = new Date();
-      date.setHours(hours, minutes, 0, 0);
-      return date.toISOString();
+    const parseTimeOnDay = (timeStr: string, baseDate = new Date()): Date | null => {
+      if (!timeStr) return null;
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+      const baseDay = getBusinessDateString(baseDate);
+      const start = parseBusinessDayStart(baseDay);
+      return start ? new Date(start.getTime() + (hours * 60 + minutes) * 60000) : null;
     };
 
-    onConfirm(
-      nombre,
-      parsedMonto,
-      createIsoDate(reservationTime),
-      createIsoDate(expirationTime)
-    );
+    const resDate = parseTimeOnDay(reservationTime);
+    const expDate = parseTimeOnDay(expirationTime, resDate ?? new Date());
+    if (resDate && expDate && expDate.getTime() <= resDate.getTime()) {
+      expDate.setTime(expDate.getTime() + 24 * 60 * 60000);
+    }
 
-    setNombre("");
-    setMonto("");
-    setReservationTime("");
-    setExpirationTime("");
+    setSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await onConfirm(
+        nombre,
+        parsedMonto,
+        resDate ? resDate.toISOString() : undefined,
+        expDate ? expDate.toISOString() : undefined,
+      );
+
+      setNombre("");
+      setMonto("");
+      setReservationTime("");
+      setExpirationTime("");
+    } catch (error: unknown) {
+      setErrorMessage(
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : "No se pudo registrar la reserva.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
+    if (submitting) return;
+    setErrorMessage(null);
     setNombre("");
     setMonto("");
     onClose();
@@ -164,21 +195,27 @@ export default function ReservationDialog({
               InputLabelProps={{ shrink: true }}
             />
           </Box>
+          {errorMessage && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {errorMessage}
+            </Alert>
+          )}
         </Box>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 3 }}>
         <Button
           onClick={handleCancel}
+          disabled={submitting}
           variant="text"
           sx={{ fontWeight: "bold", textTransform: "none", color: "text.secondary" }}
         >
           Cancelar
         </Button>
         <Button
-          onClick={handleConfirm}
+          onClick={() => void handleConfirm()}
           variant="contained"
-          disabled={!nombre.trim()}
+          disabled={!nombre.trim() || submitting}
           sx={{
             bgcolor: LOGIN_COLORS.primary,
             fontWeight: "bold",

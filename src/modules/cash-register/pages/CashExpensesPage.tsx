@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Box,
   Typography,
   Paper,
@@ -34,11 +35,15 @@ import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import { BackButton, PageHeader } from "../../../shared/ui";
+import { formatBusinessDateTime } from "../../../shared/format";
+import { receiptPrinter } from "../../../shared/printing";
+import { printerDispatcherService } from "../../devices";
 import { useCashExpenses } from "../hooks/useCashExpenses";
 import {
   CASH_EXPENSE_CATEGORY_LABELS,
   type CashExpense,
   type CashExpenseCategory,
+  type ListCashExpensesQuery,
 } from "../model/cash-expense.types";
 import CashExpenseDialog from "../ui/CashExpenseDialog";
 import CashExpenseVoucherPrint from "../ui/CashExpenseVoucherPrint";
@@ -50,32 +55,63 @@ export default function CashExpensesPage() {
   const [endDate, setEndDate] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPrintExpense, setSelectedPrintExpense] = useState<CashExpense | null>(null);
+  const [printError, setPrintError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
 
-  const { expenses, loading, fetchExpenses } = useCashExpenses();
-
-  const handleRefresh = () => {
-    void fetchExpenses({
-      category: categoryFilter !== "all" ? (categoryFilter as CashExpenseCategory) : undefined,
+  const hasInvalidDateRange = Boolean(
+    startDate && endDate && startDate > endDate,
+  );
+  const activeFilters = useMemo<ListCashExpensesQuery>(
+    () => ({
+      category:
+        categoryFilter !== "all"
+          ? (categoryFilter as CashExpenseCategory)
+          : undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
-    });
+    }),
+    [categoryFilter, startDate, endDate],
+  );
+
+  const { expenses, loading, error, fetchExpenses } =
+    useCashExpenses(activeFilters);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const handleRefresh = () => {
+    if (hasInvalidDateRange) {
+      return;
+    }
+    void fetchExpenses(activeFilters);
   };
 
-  const handlePrintExpense = (expense: CashExpense) => {
+  const handlePrintExpense = useCallback(async (expense: CashExpense) => {
     setSelectedPrintExpense(expense);
-    setTimeout(() => {
-      window.print();
-    }, 300);
-  };
+    setPrintError(null);
+    try {
+      const cashierPrinter = await printerDispatcherService.getCashierPrinter();
+      if (!isMountedRef.current) return;
+      await receiptPrinter.print({
+        renderDelayMs: 300,
+        deviceName: cashierPrinter?.windowsDeviceName,
+      });
+    } catch (err: unknown) {
+      if (!isMountedRef.current) return;
+      setPrintError(
+        err instanceof Error
+          ? `No se pudo imprimir el comprobante de gasto: ${err.message}`
+          : "No se pudo imprimir el comprobante de gasto.",
+      );
+    }
+  }, []);
 
   const formatDate = (date: Date | string) => {
-    return new Intl.DateTimeFormat("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(date));
+    return formatBusinessDateTime(date);
   };
 
   const filteredExpenses = useMemo(() => {
@@ -273,6 +309,7 @@ export default function CashExpensesPage() {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
+            error={hasInvalidDateRange}
             sx={{ minWidth: 160 }}
           />
 
@@ -284,6 +321,7 @@ export default function CashExpensesPage() {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
+            error={hasInvalidDateRange}
             sx={{ minWidth: 160 }}
           />
 
@@ -295,6 +333,26 @@ export default function CashExpensesPage() {
           </Tooltip>
         </Stack>
       </Paper>
+
+      {hasInvalidDateRange && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Rango de fechas inválido: la fecha &quot;Desde&quot; no puede ser posterior a &quot;Hasta&quot;.
+        </Alert>
+      )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {printError && (
+        <Alert
+          severity="error"
+          onClose={() => setPrintError(null)}
+          sx={{ mb: 2 }}
+        >
+          {printError}
+        </Alert>
+      )}
 
       {/* Tabla de Movimientos */}
       <Paper
@@ -419,8 +477,9 @@ export default function CashExpensesPage() {
       <CashExpenseDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
+        onPrintExpense={handlePrintExpense}
         onSuccess={() => {
-          void fetchExpenses();
+          void fetchExpenses(activeFilters);
         }}
       />
 

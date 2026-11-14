@@ -40,7 +40,9 @@ export function useMesaTransferActions({
     (tablesToClear: string[]) => {
       tablesToClear.forEach((tableId) => {
         if (tableStatusMap[tableId] === "ocupado") {
-          void setTableStatus(tableId, "disponible");
+          void setTableStatus(tableId, "disponible").catch((error: unknown) => {
+            console.error("Error liberando mesa tras traslado:", error);
+          });
         }
       });
     },
@@ -63,7 +65,9 @@ export function useMesaTransferActions({
     (tableIds: string[]) => {
       tableIds.forEach((tableId) => {
         if (tableStatusMap[tableId] !== "ocupado") {
-          void setTableStatus(tableId, "ocupado");
+          void setTableStatus(tableId, "ocupado").catch((error: unknown) => {
+            console.error("Error ocupando mesas tras unión/traslado:", error);
+          });
         }
       });
     },

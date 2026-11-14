@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Alert, Box, Typography, Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { BackButton, ConfirmDialog, PageHeader } from "../../../shared/ui";
 import { useCorrelativos } from "../hooks/useCorrelativos";
@@ -13,6 +13,8 @@ const FiscalSequencesPage: React.FC = () => {
   const [openModal, setOpenModal] = useState(false);
   const [editingCorrelativo, setEditingCorrelativo] = useState<Partial<Correlativo> | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleOpenModal = (correlativo?: Partial<Correlativo>) => {
     setEditingCorrelativo(correlativo || null);
@@ -33,6 +35,7 @@ const FiscalSequencesPage: React.FC = () => {
       handleCloseModal();
     } catch (error) {
       console.error("Error al guardar correlativo en UI:", error);
+      throw error;
     }
   };
 
@@ -64,6 +67,15 @@ const FiscalSequencesPage: React.FC = () => {
 
       {}
       <Box sx={{ mt: 5 }}>
+        {deleteError && (
+          <Alert
+            severity="error"
+            onClose={() => setDeleteError(null)}
+            sx={{ mb: 2 }}
+          >
+            {deleteError}
+          </Alert>
+        )}
         <Typography variant="h6" fontWeight={600} gutterBottom>
           Historial de Talonarios
         </Typography>
@@ -88,11 +100,28 @@ const FiscalSequencesPage: React.FC = () => {
         open={!!deleteId}
         title="Eliminar Talonario"
         message="¿Estás seguro de eliminar este historial de talonario? Esto no eliminará las facturas emitidas, pero afectará el registro del correlativo. Esta acción no se puede deshacer."
-        onConfirm={() => {
-          if (deleteId) deleteCorrelativo(deleteId);
-          setDeleteId(null);
+        loading={deleting}
+        onConfirm={async () => {
+          if (!deleteId || deleting) return;
+          setDeleting(true);
+          setDeleteError(null);
+          try {
+            await deleteCorrelativo(deleteId);
+            setDeleteId(null);
+          } catch (error) {
+            setDeleteId(null);
+            setDeleteError(
+              error instanceof Error
+                ? error.message
+                : "No se pudo eliminar el talonario.",
+            );
+          } finally {
+            setDeleting(false);
+          }
         }}
-        onClose={() => setDeleteId(null)}
+        onClose={() => {
+          if (!deleting) setDeleteId(null);
+        }}
       />
     </Box>
   );

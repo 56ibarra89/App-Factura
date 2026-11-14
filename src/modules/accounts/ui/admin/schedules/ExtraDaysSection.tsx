@@ -89,6 +89,7 @@ export default function ExtraDaysSection({
                 const formattedDate = new Date(extraDay.date).toLocaleDateString(
                   "es-ES",
                   {
+                    timeZone: "UTC",
                     weekday: "long",
                     year: "numeric",
                     month: "long",

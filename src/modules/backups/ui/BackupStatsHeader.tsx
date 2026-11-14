@@ -19,6 +19,7 @@ import {
   type BackupItem,
   type BackupConfig,
 } from "../api/backupGateway";
+import { formatBusinessDateTime } from "../../../shared/format";
 
 interface BackupStatsHeaderProps {
   backups: BackupItem[];
@@ -44,8 +45,7 @@ export const BackupStatsHeader: React.FC<BackupStatsHeaderProps> = ({
   const formatLatestDate = (dateStr?: string) => {
     if (!dateStr) return "Sin copias aún";
     try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString("es-ES", {
+      return formatBusinessDateTime(dateStr, {
         day: "2-digit",
         month: "short",
         hour: "2-digit",

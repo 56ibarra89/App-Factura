@@ -77,6 +77,7 @@ export function useTableReservations({
           }
           return { ...prev, [tableId]: prevStatus };
         });
+        throw err;
       }
     },
     [state],
@@ -118,6 +119,7 @@ export function useTableReservations({
           }
           return { ...prev, [tableId]: prevReservation };
         });
+        throw err;
       }
     },
     [reservation],
@@ -141,8 +143,12 @@ export function useTableReservations({
         await reservation.reserve(tableId, {
           reservationName: info.nombre,
           reservationAmount: info.monto,
-          reservationTime: info.reservationTime,
-          expirationTime: info.expirationTime,
+          ...(info.reservationTime
+            ? { reservationTime: info.reservationTime }
+            : {}),
+          ...(info.expirationTime
+            ? { expirationTime: info.expirationTime }
+            : {}),
         });
       } catch (err) {
         console.error("Error reserving table:", err);
@@ -162,6 +168,7 @@ export function useTableReservations({
           }
           return { ...prev, [tableId]: prevReservation };
         });
+        throw err;
       }
     },
     [reservation],

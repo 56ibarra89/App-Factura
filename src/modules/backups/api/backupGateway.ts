@@ -1,4 +1,4 @@
-import { accessTokenStore, apiClient } from "../../../shared/api";
+import { apiClient, authorizedFetch } from "../../../shared/api";
 
 export const MAX_BACKUP_UPLOAD_BYTES = 100 * 1024 * 1024;
 export const MAX_BACKUP_UPLOAD_MB = MAX_BACKUP_UPLOAD_BYTES / (1024 * 1024);
@@ -63,6 +63,7 @@ export const backupGateway: BackupGateway = {
   async generate(): Promise<BackupItem> {
     return apiClient("/backups/generate", {
       method: "POST",
+      timeoutMs: 120_000,
     });
   },
 
@@ -78,18 +79,12 @@ export const backupGateway: BackupGateway = {
   },
 
   async download(filename: string): Promise<void> {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "";
-    const token = accessTokenStore.get();
-    const response = await fetch(
-      `${baseUrl}/backups/${encodeURIComponent(filename)}/download`,
+    const response = await authorizedFetch(
+      `/backups/${encodeURIComponent(filename)}/download`,
       {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      }
+        timeoutMs: 120_000,
+      },
     );
-
-    if (!response.ok) {
-      throw new Error("No se pudo descargar el archivo de respaldo del servidor.");
-    }
 
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
@@ -99,13 +94,16 @@ export const backupGateway: BackupGateway = {
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     document.body.removeChild(downloadAnchor);
-    window.URL.revokeObjectURL(blobUrl);
+    window.setTimeout(() => {
+      window.URL.revokeObjectURL(blobUrl);
+    }, 1000);
   },
 
   async restore(filename: string): Promise<RestoreResult> {
     return apiClient("/backups/restore", {
       method: "POST",
       body: JSON.stringify({ filename }),
+      timeoutMs: 120_000,
     });
   },
 
@@ -118,6 +116,7 @@ export const backupGateway: BackupGateway = {
     return apiClient("/backups/restore", {
       method: "POST",
       body: formData,
+      timeoutMs: 120_000,
     });
   },
 

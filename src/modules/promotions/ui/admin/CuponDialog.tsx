@@ -54,7 +54,7 @@ interface CuponDialogProps {
   open: boolean;
   onClose: () => void;
 
-  onSave: (data: CuponFormOutput) => void;
+  onSave: (data: CuponFormOutput) => Promise<void> | void;
   editingCupon?: CuponRule | null;
 }
 
@@ -66,6 +66,8 @@ const CuponDialog = ({
 }: CuponDialogProps) => {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [submitError, setSubmitError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -86,6 +88,8 @@ const CuponDialog = ({
         setForm({ ...DEFAULT_FORM, code: generateCode() });
       }
       setErrors({});
+      setSubmitError("");
+      setSaving(false);
     }
   }, [open, editingCupon]);
 
@@ -112,21 +116,33 @@ const CuponDialog = ({
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (saving || !validate()) return;
 
-    onSave({
-      id: editingCupon?.id ?? 0,
-      code: form.code.trim().toUpperCase(),
-      discountType: form.discountType,
-      discountValue: form.discountValue,
-      maxUses: form.maxUses === "" ? 0 : parseInt(form.maxUses, 10),
-      currentUses: editingCupon?.currentUses ?? 0,
-      expiresDate: form.expiresDate,
-      manualStatus: form.manualStatus,
-    });
-    onClose();
+    setSaving(true);
+    setSubmitError("");
+    try {
+      await onSave({
+        id: editingCupon?.id ?? 0,
+        code: form.code.trim().toUpperCase(),
+        discountType: form.discountType,
+        discountValue: form.discountValue,
+        maxUses: form.maxUses === "" ? 0 : parseInt(form.maxUses, 10),
+        currentUses: editingCupon?.currentUses ?? 0,
+        expiresDate: form.expiresDate,
+        manualStatus: form.manualStatus,
+      });
+      onClose();
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error && err.message
+          ? err.message
+          : "No se pudo guardar el cupón.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const isEditing = !!editingCupon;
@@ -268,15 +284,16 @@ const CuponDialog = ({
               calculan automáticamente. Solo puedes activar o desactivar el cupón
               manualmente.
             </Alert>
+            {submitError && <Alert severity="error">{submitError}</Alert>}
           </Stack>
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
-          <Button fullWidth variant="outlined" onClick={onClose}>
+          <Button fullWidth variant="outlined" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button fullWidth variant="contained" color="primary" type="submit">
-            {isEditing ? "Actualizar" : "Crear Cupón"}
+          <Button fullWidth variant="contained" color="primary" type="submit" disabled={saving}>
+            {saving ? "Guardando..." : isEditing ? "Actualizar" : "Crear Cupón"}
           </Button>
         </DialogActions>
       </form>

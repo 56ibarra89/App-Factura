@@ -116,7 +116,7 @@ export function useCupones(
         discountType: data.discountType === "porcentaje" ? "porcentaje" : "monto_fijo",
         discountValue: parseFloat(data.discountValue),
         maxUses: data.maxUses,
-        expiresDate: data.expiresDate || undefined,
+        expiresDate: data.expiresDate?.trim() || undefined,
         manualStatus: data.manualStatus === "Inactivo" ? "Inactivo" : "Activo",
       });
       await fetchCupones();
@@ -126,12 +126,13 @@ export function useCupones(
 
   const editCupon = useCallback(
     async (data: Omit<CuponRule, "discount" | "usage" | "expires" | "status"> & { manualStatus?: CuponStatus }) => {
+      const normalizedExpires = data.expiresDate?.trim();
       await gateway.updateCoupon(data.id, {
         code: data.code,
         discountType: data.discountType === "porcentaje" ? "porcentaje" : "monto_fijo",
         discountValue: parseFloat(data.discountValue),
         maxUses: data.maxUses,
-        expiresDate: data.expiresDate || undefined,
+        expiresDate: normalizedExpires ? normalizedExpires : null,
         manualStatus: data.manualStatus === "Inactivo" ? "Inactivo" : "Activo",
       });
       await fetchCupones();

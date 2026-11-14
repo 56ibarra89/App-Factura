@@ -171,7 +171,7 @@ export function useAccountSettings(
 
       setSuccess("Datos actualizados correctamente");
       if (passwordChanged || Boolean(data.pin)) {
-        await logout();
+        await logout({ localOnly: true });
       }
     } catch (err: unknown) {
       console.error("Error actualizando perfil", err);

@@ -76,7 +76,7 @@ const CorrelativoTable: React.FC<CorrelativoTableProps> = ({
                 <TableCell>{row.prefix}</TableCell>
                 <TableCell>{row.startNumber} - {row.endNumber}</TableCell>
                 <TableCell>{row.currentNumber}</TableCell>
-                <TableCell>{new Date(row.issueDate).toLocaleDateString()}</TableCell>
+                <TableCell>{new Date(row.issueDate).toLocaleDateString("es-NI", { timeZone: "UTC" })}</TableCell>
                 <TableCell>
                   <Chip
                     label={row.status}

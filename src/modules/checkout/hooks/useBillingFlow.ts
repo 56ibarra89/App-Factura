@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CheckoutFormValues } from "../model/checkout.types";
 import type { Order, OrderCreationResult } from "../../orders";
@@ -9,6 +9,7 @@ import type { RunExclusiveAction } from "./useExclusiveAction";
 interface UseBillingFlowOptions {
   tableId: string | null;
   isCheckoutMode: boolean;
+  isPreviewOpen: boolean;
   activeOrder?: Order | null;
   deliveryDriverId?: string;
   fromDeliveryPage?: boolean;
@@ -30,11 +31,14 @@ type PendingPrint = OrderCreationResult & {
   isCash: boolean;
   printed: boolean;
   sendToKitchen: boolean;
+  drawerOpened: boolean;
+  afterPath: string;
 };
 
 export function useBillingFlow({
   tableId,
   isCheckoutMode,
+  isPreviewOpen,
   activeOrder,
   deliveryDriverId,
   fromDeliveryPage = false,
@@ -54,11 +58,43 @@ export function useBillingFlow({
   >();
   const pendingPrintRef = useRef<PendingPrint | null>(null);
 
+  useEffect(() => {
+    // Al cerrar la vista previa tras un fallo de impresión después de emitir el cobro,
+    // finalizamos la limpieza del carrito/cliente y navegamos para no dejar la orden cobrada en pantalla.
+    if (!isPreviewOpen) {
+      const pending = pendingPrintRef.current;
+      pendingPrintRef.current = null;
+      setCreatedInvoiceNumber(undefined);
+      if (pending) {
+        if (pending.sendToKitchen) {
+          pending.sendToKitchen = false;
+          void sendOrderToKitchen(pending.orderId).catch(() => {});
+        }
+        clearCart();
+        if (pending.afterPath !== "/mesas") {
+          resetDelivery();
+        }
+        navigate(pending.afterPath);
+      }
+    }
+  }, [clearCart, isPreviewOpen, navigate, resetDelivery, sendOrderToKitchen]);
+
   const completeAndPrint = useCallback(
     async (pending: PendingPrint) => {
       const { orderId, invoiceNumber, isCash } = pending;
       setCreatedInvoiceNumber(invoiceNumber || `PED-${orderId.slice(-6).toUpperCase()}`);
+
+      if (pending.sendToKitchen) {
+        await sendOrderToKitchen(orderId);
+        pending.sendToKitchen = false;
+      }
+
       const cashierPrinter = await printerDispatcherService.getCashierPrinter();
+
+      if (isCash && !pending.drawerOpened) {
+        pending.drawerOpened = true;
+        void printerDispatcherService.openCashDrawer(cashierPrinter);
+      }
 
       if (!pending.printed) {
         await printer.print({
@@ -68,19 +104,16 @@ export function useBillingFlow({
         });
         pending.printed = true;
       }
-      if (pending.sendToKitchen) {
-        await sendOrderToKitchen(orderId);
-      }
-
-      if (isCash) {
-        void printerDispatcherService.openCashDrawer(cashierPrinter);
-      }
 
       pendingPrintRef.current = null;
       clearCart();
       closePreview();
+      if (pending.afterPath !== "/mesas") {
+        resetDelivery();
+      }
+      navigate(pending.afterPath);
     },
-    [clearCart, closePreview, printer, sendOrderToKitchen],
+    [clearCart, closePreview, navigate, printer, resetDelivery, sendOrderToKitchen],
   );
 
   const handleFinalConfirm = useCallback(
@@ -92,12 +125,6 @@ export function useBillingFlow({
       await runExclusive(async () => {
         if (pendingPrintRef.current) {
           await completeAndPrint(pendingPrintRef.current);
-          if (tableId) {
-            navigate("/mesas");
-          } else {
-            resetDelivery();
-            navigate(fromDeliveryPage ? "/delivery" : "/home");
-          }
           return;
         }
 
@@ -117,9 +144,10 @@ export function useBillingFlow({
               isCash,
               printed: false,
               sendToKitchen: false,
+              drawerOpened: false,
+              afterPath: "/mesas",
             };
             await completeAndPrint(pendingPrintRef.current);
-            navigate("/mesas");
             return;
           }
 
@@ -143,16 +171,11 @@ export function useBillingFlow({
           isCash: isCash && !isPendingDelivery,
           printed: false,
           sendToKitchen: true,
+          drawerOpened: false,
+          afterPath: fromDeliveryPage ? "/delivery" : "/home",
         };
 
         await completeAndPrint(pendingPrintRef.current);
-
-        resetDelivery();
-        if (fromDeliveryPage) {
-          navigate("/delivery");
-        } else {
-          navigate("/home");
-        }
       });
     },
     [
@@ -166,7 +189,6 @@ export function useBillingFlow({
       fromDeliveryPage,
       isCheckoutMode,
       navigate,
-      resetDelivery,
       runExclusive,
       saveTableOrder,
       tableId,

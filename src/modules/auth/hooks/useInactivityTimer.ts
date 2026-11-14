@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from "react";
-import { logService } from "../../audit";
 import { UserRole } from "../model/user.types";
 import type { AuthSessionGateway } from "../api/authSessionGateway";
 import { authSessionGateway } from "../api/authSessionGateway";
@@ -22,7 +21,6 @@ const ACTIVITY_EVENTS = [
 
 interface UseInactivityTimerOptions {
   isLoggedIn: boolean;
-  username: string;
   role: UserRole | null;
   onExpire: () => Promise<LogoutResult>;
 }
@@ -30,7 +28,6 @@ interface UseInactivityTimerOptions {
 export function useInactivityTimer(
   {
     isLoggedIn,
-    username,
     role,
     onExpire,
   }: UseInactivityTimerOptions,
@@ -73,14 +70,7 @@ export function useInactivityTimer(
       }
       if (Date.now() - last > INACTIVITY_LIMIT_MS) {
         void onExpire().then((result) => {
-          if (result.success) {
-            logService.log(
-              username,
-              role,
-              "SESSION_EXPIRED",
-              "Cierre de sesión automático por inactividad",
-            );
-          } else {
+          if (!result.success) {
             gateway.touch();
           }
         });
@@ -107,5 +97,5 @@ export function useInactivityTimer(
       window.removeEventListener("hashchange", handleHashChange);
       clearInterval(interval);
     };
-  }, [gateway, isLoggedIn, username, role, onExpire, resetTimer]);
+  }, [gateway, isLoggedIn, role, onExpire, resetTimer]);
 }

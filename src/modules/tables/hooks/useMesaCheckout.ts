@@ -17,6 +17,8 @@ import { receiptPrinter, type ReceiptPrinter } from "../../../shared/printing";
 import { printerDispatcherService } from "../../devices";
 
 interface PendingMesaPrint {
+  orderId: string;
+  splitAccountId: string | null;
   invoiceNumber: string;
   isCash: boolean;
   printed: boolean;
@@ -120,6 +122,8 @@ export function useMesaCheckout(
         parentOrderId?: string;
       },
     ) => {
+      pendingPrintRef.current = null;
+      setCompletedSplitCheckout(null);
       setCheckoutOrder(order);
       setIsSubAccountCheckout(Boolean(options?.isSubAccount));
       setSplitSelection(options?.splitSelection ?? null);
@@ -133,6 +137,7 @@ export function useMesaCheckout(
   );
 
   const closeCheckoutPreview = useCallback(() => {
+    pendingPrintRef.current = null;
     setIsPreviewOpen(false);
     setCheckoutOrder(null);
     setIsSubAccountCheckout(false);
@@ -152,6 +157,10 @@ export function useMesaCheckout(
         setCreatedInvoiceNumber(pending.invoiceNumber);
         const cashierPrinter =
           await printerDispatcherService.getCashierPrinter();
+        if (pending.isCash) {
+          void printerDispatcherService.openCashDrawer(cashierPrinter);
+          pending.isCash = false;
+        }
         if (!pending.printed) {
           await printer.print({
             renderDelayMs: 500,
@@ -160,17 +169,32 @@ export function useMesaCheckout(
           });
           pending.printed = true;
         }
-        if (pending.isCash) {
-          await printerDispatcherService.openCashDrawer(cashierPrinter);
-        }
         pendingPrintRef.current = null;
       };
 
-      if (pendingPrintRef.current) {
-        await completePendingPrint(pendingPrintRef.current);
+      const finishCheckoutUi = () => {
         setIsPreviewOpen(false);
+        setCheckoutOrder(null);
+        setIsSubAccountCheckout(false);
+        setSplitSelection(null);
+        setParentOrderId(null);
+        setCheckoutPromotionState(null);
+        setPromotionRemoved(false);
+        setCreatedInvoiceNumber(undefined);
         restoreFocus();
-        return;
+      };
+
+      const currentSplitAccountId = splitSelection?.accountId ?? null;
+      if (pendingPrintRef.current) {
+        if (
+          pendingPrintRef.current.orderId === checkoutOrder.id &&
+          pendingPrintRef.current.splitAccountId === currentSplitAccountId
+        ) {
+          await completePendingPrint(pendingPrintRef.current);
+          finishCheckoutUi();
+          return;
+        }
+        pendingPrintRef.current = null;
       }
 
       const supplementalItems = buildSupplementalCartItems(
@@ -270,6 +294,8 @@ export function useMesaCheckout(
         });
       }
       pendingPrintRef.current = {
+        orderId: checkoutOrder.id,
+        splitAccountId: splitSelection?.accountId ?? null,
         invoiceNumber,
         isCash:
           form.payments?.some((payment) => payment.method === "EFECTIVO") ??
@@ -277,12 +303,7 @@ export function useMesaCheckout(
         printed: false,
       };
       await completePendingPrint(pendingPrintRef.current);
-      setIsPreviewOpen(false);
-      setCheckoutOrder(null);
-      setIsSubAccountCheckout(false);
-      setSplitSelection(null);
-      setParentOrderId(null);
-      restoreFocus();
+      finishCheckoutUi();
     },
     [
       checkoutOrder,

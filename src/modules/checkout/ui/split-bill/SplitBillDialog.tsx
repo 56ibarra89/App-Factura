@@ -16,7 +16,7 @@ import {
   Tabs,
   Typography,
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   isSplitBillCreditOrderItem,
   type Order,
@@ -59,7 +59,9 @@ function SplitBillDialogContent({
     taxAmount: order.taxAmount,
   });
   const { completeCheckout, mode, setMode } = splitBill;
-  const appliedCompletion = useRef<SplitBillCheckoutSelection | null>(null);
+  const appliedCompletion = useRef<SplitBillCheckoutSelection | null>(
+    completedSelection ?? null,
+  );
   const hasAmountCredits = order.items.some(isSplitBillCreditOrderItem);
 
   useEffect(() => {
@@ -160,12 +162,7 @@ export default function SplitBillDialog({
   onCheckout,
   completedSelection,
 }: SplitBillDialogProps) {
-  const [openedOrderId, setOpenedOrderId] = useState<string | null>(null);
-  useEffect(() => {
-    if (open && order) setOpenedOrderId(order.id);
-  }, [open, order]);
-
-  if (!order || openedOrderId !== order.id) return null;
+  if (!order) return null;
 
   const tableNumber = tableId ? tableId.split("-M")[1] || tableId : "";
 

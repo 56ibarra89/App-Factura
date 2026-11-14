@@ -6,7 +6,8 @@ import { logService } from "../../audit";
 import type { LoginLockoutState } from "./useLoginLockout";
 import type { PinLockoutState } from "./usePinLockout";
 import type { AuthSessionController } from "./useAuthSession";
-import type { LogoutResult } from "../model/auth-service.types";
+import type { LogoutOptions, LogoutResult } from "../model/auth-service.types";
+export type { LogoutOptions };
 import {
   PERMISSIONS,
   type PermissionCode,
@@ -57,38 +58,61 @@ export function useAuthOperations({
     setError("");
   }, []);
 
-  const completeLogout = useCallback(async () => {
-    const { username, role } = sessionState;
-    if (username) {
-      logService.log(
-        username,
-        role,
-        "LOGOUT",
-        "Cierre de sesión de usuario",
-      );
-    }
+  const recordLogoutAudit = useCallback(
+    async (options?: LogoutOptions) => {
+      const { username, role } = sessionState;
+      if (username) {
+        await logService.log(
+          username,
+          role,
+          options?.auditAction ?? "LOGOUT",
+          options?.auditDetails ?? "Cierre de sesión de usuario",
+        );
+      }
+    },
+    [sessionState],
+  );
 
-    await tokenGateway.clear();
-    signOut();
-  }, [
-    sessionState,
-    signOut,
-    tokenGateway,
-  ]);
+  const completeLogout = useCallback(
+    async (options?: LogoutOptions & { skipAudit?: boolean }) => {
+      if (!options?.skipAudit) {
+        await recordLogoutAudit(options);
+      }
 
-  const logout = useCallback(async (): Promise<LogoutResult> => {
-    const result = await service.logout();
-    await completeLogout();
-    return result.success ? result : { success: true };
-  }, [completeLogout, service]);
+      await tokenGateway.clear();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("appfactura:auth-session-changed"));
+      }
+      signOut();
+    },
+    [recordLogoutAudit, signOut, tokenGateway],
+  );
+
+  const logout = useCallback(
+    async (options?: LogoutOptions): Promise<LogoutResult> => {
+      if (options?.localOnly) {
+        await completeLogout({ ...options, skipAudit: true });
+        return { success: true };
+      }
+      // Auditar antes de /auth/logout porque el servidor revoca tokenVersion inmediatamente
+      await recordLogoutAudit(options);
+      const result = await service.logout();
+      await completeLogout({ ...options, skipAudit: true });
+      return result.success ? result : { success: true };
+    },
+    [completeLogout, recordLogoutAudit, service],
+  );
 
   const logoutAllDevices = useCallback(async (): Promise<LogoutResult> => {
+    await recordLogoutAudit({
+      auditDetails: "Cierre de sesión en todos los dispositivos",
+    });
     const result = await service.logoutAllDevices();
     if (!result.success) return result;
 
-    await completeLogout();
+    await completeLogout({ skipAudit: true });
     return result;
-  }, [completeLogout, service]);
+  }, [completeLogout, recordLogoutAudit, service]);
 
   const login = useCallback(
     async (
@@ -132,6 +156,11 @@ export function useAuthOperations({
             remember,
           );
           loginLockout.resetLoginAttempts();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("appfactura:auth-session-changed"),
+            );
+          }
           signIn({
             username: actualUsername,
             role: result.role,
@@ -209,6 +238,11 @@ export function useAuthOperations({
               : "light",
           );
           resetPinAttempts();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("appfactura:auth-session-changed"),
+            );
+          }
           signIn({
             username: result.username,
             role: result.role,

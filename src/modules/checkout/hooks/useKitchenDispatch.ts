@@ -49,7 +49,8 @@ export function useKitchenDispatch({
   const confirmDispatch = useCallback(async () => {
     if (!tableId) return;
 
-    await runExclusive(async () => {
+    try {
+      await runExclusive(async () => {
       const savedResult = await saveTableOrder(activeOrderId, tableId);
       const resolvedOrderId =
         typeof savedResult === "string"
@@ -111,12 +112,16 @@ export function useKitchenDispatch({
             comboSelections: k.comboSelections,
           })),
           timestamp: sentAt,
-        });
+        }).catch((error) => console.error("No se pudo imprimir la comanda de cocina", error));
       }
 
       setIsSuccessOpen(true);
       setIsConfirmOpen(false);
-    });
+      });
+    } catch (error) {
+      console.error("No se pudo enviar el pedido a cocina", error);
+      throw error;
+    }
   }, [
     activeOrderId,
     cart,

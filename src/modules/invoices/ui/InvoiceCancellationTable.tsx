@@ -15,7 +15,11 @@ import {
 import type { ChangeEvent } from "react";
 import { statusColors, statusLabels } from "../../orders";
 import type { Invoice } from "../model/invoice.types";
-import { formatTableName } from "../../../shared/format";
+import {
+  formatBusinessDate,
+  formatBusinessTime,
+  formatTableName,
+} from "../../../shared/format";
 import PaymentMethodBadge from "./PaymentMethodBadge";
 import PaymentBreakdownCell from "./PaymentBreakdownCell";
 
@@ -115,17 +119,14 @@ export function InvoiceCancellationTable({
                   >
                     {/* 1. Fecha / Hora */}
                     <TableCell>
-                      {dateObj.toLocaleDateString()}{" "}
+                      {formatBusinessDate(dateObj)}{" "}
                       <Typography
                         component="span"
                         variant="caption"
                         color="text.secondary"
                         sx={{ ml: 0.5 }}
                       >
-                        {dateObj.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {formatBusinessTime(dateObj)}
                       </Typography>
                     </TableCell>
 

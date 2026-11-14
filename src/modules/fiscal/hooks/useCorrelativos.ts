@@ -13,6 +13,15 @@ interface UseCorrelativosOptions {
   repository?: ICorrelativoRepository;
 }
 
+const parseCorrelativoDate = (value?: Date | string): Date => {
+  if (!value) return new Date();
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+    return new Date(`${value.trim()}T12:00:00-06:00`);
+  }
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+};
+
 export const useCorrelativos = (options: UseCorrelativosOptions = {}) => {
   const repository = options.repository ?? correlativoRepository;
   const [correlativos, setCorrelativos] = useState<Correlativo[]>([]);
@@ -44,8 +53,8 @@ export const useCorrelativos = (options: UseCorrelativosOptions = {}) => {
         startNumber: Number(formData.startNumber),
         endNumber: Number(formData.endNumber),
         currentNumber: Number(formData.currentNumber || formData.startNumber),
-        issueDate: new Date(formData.issueDate || new Date()),
-        expirationDate: new Date(formData.expirationDate || new Date()),
+        issueDate: parseCorrelativoDate(formData.issueDate),
+        expirationDate: parseCorrelativoDate(formData.expirationDate),
         status: formData.status as CorrelativoStatus,
         createdAt: new Date(),
       };
@@ -69,12 +78,13 @@ export const useCorrelativos = (options: UseCorrelativosOptions = {}) => {
   };
 
   const deleteCorrelativo = async (id: string) => {
-      try {
-        await repository.delete(id);
-        await loadCorrelativos();
-      } catch (error) {
-        console.error("Error eliminando correlativo:", error);
-      }
+    try {
+      await repository.delete(id);
+      await loadCorrelativos();
+    } catch (error) {
+      console.error("Error eliminando correlativo:", error);
+      throw error;
+    }
   };
 
   const activeFactura = correlativos.find(

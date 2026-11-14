@@ -64,7 +64,7 @@ export interface CouponPayload {
   discountType: "porcentaje" | "monto_fijo";
   discountValue: number;
   maxUses: number;
-  expiresDate?: string;
+  expiresDate?: string | null;
   manualStatus: "Activo" | "Inactivo";
 }
 

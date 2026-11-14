@@ -57,10 +57,22 @@ interface Window {
       port?: number;
       timeoutMs?: number;
     }) => Promise<ElectronNativeOperationResult>;
+    printHtml: (options: {
+      html: string;
+      deviceName?: string;
+    }) => Promise<ElectronNativeOperationResult>;
+    openUsbCashDrawer: (options: {
+      deviceName: string;
+      timeoutMs?: number;
+    }) => Promise<ElectronNativeOperationResult>;
   };
   authAPI?: {
     setToken: (token: string) => Promise<boolean>;
     clearToken: () => Promise<void>;
     hasToken: () => Promise<boolean>;
+  };
+  runtimeConfig?: {
+    getApiBaseUrlSync: () => string;
+    getApiBaseUrl: () => Promise<string>;
   };
 }

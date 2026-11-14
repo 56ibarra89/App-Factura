@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -34,11 +34,14 @@ import { usePettyCashPolicy } from "../hooks/usePettyCashPolicy";
 import { useCaja } from "../model/CajaContext";
 import { PERMISSIONS, PinValidationDialog, useAuth } from "../../auth";
 import { logService } from "../../audit";
+import { receiptPrinter } from "../../../shared/printing";
+import { printerDispatcherService } from "../../devices";
 
 interface CashExpenseDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: (expense: CashExpense) => void;
+  onPrintExpense?: (expense: CashExpense) => void;
   shiftId?: string;
 }
 
@@ -46,6 +49,7 @@ export default function CashExpenseDialog({
   open,
   onClose,
   onSuccess,
+  onPrintExpense,
   shiftId,
 }: CashExpenseDialogProps) {
   const { username, role } = useAuth();
@@ -66,6 +70,14 @@ export default function CashExpenseDialog({
   const [error, setError] = useState("");
   const [printedExpense, setPrintedExpense] = useState<CashExpense | null>(null);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Sincronizar preferencia de impresión térmica según políticas
   useEffect(() => {
@@ -171,15 +183,31 @@ export default function CashExpenseDialog({
       await refreshCurrentShiftExpenses();
 
       if (autoPrint) {
-        setPrintedExpense(created);
-        setTimeout(() => {
-          window.print();
-        }, 300);
+        if (onPrintExpense) {
+          onPrintExpense(created);
+        } else {
+          setPrintedExpense(created);
+          try {
+            const cashierPrinter =
+              await printerDispatcherService.getCashierPrinter();
+            await receiptPrinter.print({
+              renderDelayMs: 300,
+              deviceName: cashierPrinter?.windowsDeviceName,
+            });
+          } catch (printErr: unknown) {
+            console.error(
+              "Gasto registrado, pero no se pudo imprimir el comprobante:",
+              printErr,
+            );
+          }
+        }
       }
 
       onSuccess?.(created);
 
-      handleClose();
+      if (isMountedRef.current) {
+        handleClose();
+      }
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error

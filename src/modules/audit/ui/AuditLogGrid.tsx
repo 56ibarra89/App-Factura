@@ -13,8 +13,7 @@ import {
   type GridColDef,
   type GridRenderCellParams,
 } from "@mui/x-data-grid";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { formatBusinessDateTime } from "../../../shared/format";
 import type { SystemLog, LogLevel } from "../model/audit.types";
 import { LOGIN_COLORS } from "../../../shared/theme";
 import { getActionMetadata } from "../utils/logFormatter";
@@ -41,9 +40,7 @@ export default function AuditLogGrid({
           params: GridRenderCellParams<SystemLog, string | number | Date>,
         ) => (
           <Typography variant="body2" fontWeight={500}>
-            {format(new Date(params.value ?? 0), "dd MMM yyyy, HH:mm:ss", {
-              locale: es,
-            })}
+            {formatBusinessDateTime(params.value ?? 0, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
           </Typography>
         ),
       },

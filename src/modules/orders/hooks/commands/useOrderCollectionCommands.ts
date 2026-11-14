@@ -104,28 +104,47 @@ export function useOrderCollectionCommands({
 
   const clearHistory = useCallback<
     OrderCommands["clearHistory"]
-  >(() => {
-    const orderIdsToHide = ordersRef.current
-      .filter(
-        (order) =>
-          order.status === "paid" ||
-          order.status === "cancelled",
-      )
-      .map((order) => order.id);
+  >(async () => {
+    const ordersToRestore = ordersRef.current.filter(
+      (order) =>
+        order.status === "paid" ||
+        order.status === "cancelled",
+    );
+    const orderIdsToHide = ordersToRestore.map(
+      (order) => order.id,
+    );
+
+    if (orderIdsToHide.length === 0) {
+      updateOrders(
+        (current) =>
+          orderMutations.clearHistory(current).orders,
+      );
+      return;
+    }
 
     updateOrders(
       (current) =>
         orderMutations.clearHistory(current).orders,
     );
-    if (orderIdsToHide.length > 0) {
-      void preferencesGateway
-        .hideOrderIds(orderIdsToHide)
-        .catch((error: unknown) =>
-          console.error(
-            "Error saving order history preferences",
-            error,
-          ),
+
+    try {
+      await preferencesGateway.hideOrderIds(orderIdsToHide);
+    } catch (error: unknown) {
+      const hiddenIdSet = new Set(orderIdsToHide);
+      const restoreById = new Map(
+        ordersToRestore.map((order) => [order.id, order] as const),
+      );
+      updateOrders((current) => {
+        const existingIds = new Set(current.map((order) => order.id));
+        const restored = ordersToRestore.filter(
+          (order) =>
+            hiddenIdSet.has(order.id) &&
+            !existingIds.has(order.id) &&
+            restoreById.has(order.id),
         );
+        return restored.length > 0 ? [...current, ...restored] : current;
+      });
+      throw error;
     }
   }, [ordersRef, preferencesGateway, updateOrders]);
 

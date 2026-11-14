@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import type { UserRole } from "./user.types";
-import type { LogoutResult } from "./auth-service.types";
+import type { LogoutOptions, LogoutResult } from "./auth-service.types";
 import type { PermissionCode } from "./permission.types";
 
 export interface AuthContextValue {
@@ -22,7 +22,7 @@ export interface AuthContextValue {
     remember?: boolean,
   ): Promise<boolean>;
   loginWithPin(pin: string): Promise<boolean>;
-  logout(): Promise<LogoutResult>;
+  logout(options?: LogoutOptions): Promise<LogoutResult>;
   logoutAllDevices(): Promise<LogoutResult>;
   clearError(): void;
   validatePinForAction(

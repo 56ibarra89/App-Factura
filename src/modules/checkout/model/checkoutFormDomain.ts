@@ -122,3 +122,73 @@ export function canSubmitCheckout({
 
   return true;
 }
+
+export interface MixedCashMethodDescriptor {
+  type?: string;
+  currency?: string;
+}
+
+export interface MixedCashEntry {
+  currency: "NIO" | "USD";
+  due: number;
+  received: number;
+  isSufficient: boolean;
+}
+
+export interface MixedCashSummary {
+  entries: MixedCashEntry[];
+  isAllCashSufficient: boolean;
+}
+
+interface SummarizeMixedCashInput {
+  mixedMethods: ReadonlyArray<MixedCashMethodDescriptor | undefined>;
+  mixedAmounts: SplitPaymentAmounts;
+  receivedLocal: number | "";
+  receivedSecondary: number | "";
+  exchangeRate: number;
+}
+
+export function summarizeMixedCashPayments({
+  mixedMethods,
+  mixedAmounts,
+  receivedLocal,
+  receivedSecondary,
+  exchangeRate,
+}: SummarizeMixedCashInput): MixedCashSummary {
+  const slotDues = [mixedAmounts.efectivo, mixedAmounts.tarjeta];
+  const entriesByCurrency = new Map<"NIO" | "USD", MixedCashEntry>();
+
+  mixedMethods.forEach((method, index) => {
+    if (method?.type !== "CASH") {
+      return;
+    }
+
+    const currency: "NIO" | "USD" = method.currency === "USD" ? "USD" : "NIO";
+    const due = slotDues[index] ?? 0;
+    const received =
+      currency === "USD"
+        ? Number(receivedSecondary || 0) * exchangeRate
+        : Number(receivedLocal || 0);
+
+    const existing = entriesByCurrency.get(currency);
+    if (existing) {
+      const combinedDue = existing.due + due;
+      existing.due = combinedDue;
+      existing.isSufficient = existing.received >= combinedDue - 0.01;
+      return;
+    }
+
+    entriesByCurrency.set(currency, {
+      currency,
+      due,
+      received,
+      isSufficient: received >= due - 0.01,
+    });
+  });
+
+  const entries = Array.from(entriesByCurrency.values());
+  return {
+    entries,
+    isAllCashSufficient: entries.every((entry) => entry.isSufficient),
+  };
+}

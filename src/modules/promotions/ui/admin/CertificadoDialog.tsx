@@ -37,18 +37,22 @@ interface CertificadoDialogProps {
   open: boolean;
   onClose: () => void;
 
-  onEmit: (data: CertificadoInput) => void;
+  onEmit: (data: CertificadoInput) => Promise<void> | void;
 }
 
 const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) => {
   const { categories } = useCatalog();
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [submitError, setSubmitError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
       setForm(DEFAULT_FORM);
       setErrors({});
+      setSubmitError("");
+      setSaving(false);
     }
   }, [open]);
 
@@ -64,20 +68,32 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (saving || !validate()) return;
 
     const product = allProducts.find(p => p.id === form.productId);
     const productName = product ? product.name : "";
 
-    onEmit({
-      origin: form.origin.trim(),
-      product: form.productId,
-      productName: productName,
-      notes: form.notes.trim() || undefined,
-    });
-    onClose();
+    setSaving(true);
+    setSubmitError("");
+    try {
+      await onEmit({
+        origin: form.origin.trim(),
+        product: form.productId,
+        productName: productName,
+        notes: form.notes.trim() || undefined,
+      });
+      onClose();
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error && err.message
+          ? err.message
+          : "No se pudo emitir el certificado.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -157,15 +173,16 @@ const CertificadoDialog = ({ open, onClose, onEmit }: CertificadoDialogProps) =>
               El <strong>serial único</strong> (VC-XXXXXX) y la{" "}
               <strong>fecha de emisión</strong> se generan automáticamente al emitir.
             </Alert>
+            {submitError && <Alert severity="error">{submitError}</Alert>}
           </Stack>
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
-          <Button fullWidth variant="outlined" onClick={onClose}>
+          <Button fullWidth variant="outlined" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button fullWidth variant="contained" color="error" type="submit">
-            Emitir Certificado
+          <Button fullWidth variant="contained" color="error" type="submit" disabled={saving}>
+            {saving ? "Emitiendo..." : "Emitir Certificado"}
           </Button>
         </DialogActions>
       </form>

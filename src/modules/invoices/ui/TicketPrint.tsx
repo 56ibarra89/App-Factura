@@ -2,7 +2,10 @@ import { Box, Typography, GlobalStyles } from "@mui/material";
 import type { OrderItem } from "../../orders";
 import { useCompanySettings, useGeneralSettings } from "../../settings";
 import { useDgiConfig } from "../../fiscal";
-import { formatItemName } from "../../../shared/format";
+import {
+  BUSINESS_TIME_ZONE,
+  formatItemName,
+} from "../../../shared/format";
 import { useAuth } from "../../auth";
 
 interface TicketPrintProps {
@@ -17,6 +20,7 @@ interface TicketPrintProps {
   tableId?: string | null;
   invoiceNumber?: string;
   cashierName?: string;
+  timestamp?: Date | string;
 }
 
 const TicketPrint = ({
@@ -31,6 +35,7 @@ const TicketPrint = ({
   tableId,
   invoiceNumber = "000001",
   cashierName,
+  timestamp,
 }: TicketPrintProps) => {
   const { config: empresa } = useCompanySettings();
   const { config: general } = useGeneralSettings();
@@ -42,12 +47,16 @@ const TicketPrint = ({
   const isFiscalInvoice = Boolean(invoiceNumber && invoiceNumber !== "000001" && invoiceNumber !== "Sin Factura" && !invoiceNumber.startsWith("PED-"));
 
   const formatDate = () => {
-    const d = new Date();
-    return (
-      d.toLocaleDateString() +
-      " " +
-      d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    );
+    const parsed = timestamp ? new Date(timestamp) : new Date();
+    const d = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    return d.toLocaleString("es-NI", {
+      timeZone: BUSINESS_TIME_ZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (

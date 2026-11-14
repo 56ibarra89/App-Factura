@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  Alert,
   Card,
   CardContent,
   Box,
@@ -24,7 +25,11 @@ import {
 import type { Kitchen } from "../../../kitchens";
 import { useCatalog } from "../../../catalog";
 import { getTicketUrgency } from "../../utils/timeUrgency";
-import { formatItemName, formatTableName } from "../../../../shared/format";
+import {
+  formatBusinessTime,
+  formatItemName,
+  formatTableName,
+} from "../../../../shared/format";
 import { LOGIN_COLORS } from "../../../../shared/theme";
 import KitchenModifierChips from "../KitchenModifierChips";
 
@@ -57,6 +62,20 @@ export const KdsCard: React.FC<KdsCardProps> = ({
   criticalThresholdMinutes = 18,
   onUpdateStatus,
 }) => {
+  const [statusError, setStatusError] = React.useState<string | null>(null);
+  const statusInFlight = React.useRef(false);
+  const runStatus = async (...args: Parameters<KdsCardProps["onUpdateStatus"]>) => {
+    if (statusInFlight.current) return;
+    statusInFlight.current = true;
+    setStatusError(null);
+    try {
+      await onUpdateStatus(...args);
+    } catch (error) {
+      setStatusError(error instanceof Error ? error.message : "No se pudo actualizar la cocina.");
+    } finally {
+      statusInFlight.current = false;
+    }
+  };
   const itemsToUse = filteredItems || order.items;
   const hasPackaging =
     order.packagingRequested || order.items.some(isPackagingOrderItem);
@@ -200,14 +219,12 @@ export const KdsCard: React.FC<KdsCardProps> = ({
           color="text.secondary"
           sx={{ fontFamily: "monospace" }}
         >
-          {new Date(order.timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          {formatBusinessTime(order.timestamp)}
         </Typography>
       </Box>
 
       <CardContent sx={{ flexGrow: 1, p: 2.5, "&:last-child": { pb: 2.5 } }}>
+        {statusError && <Alert severity="error" onClose={() => setStatusError(null)}>{statusError}</Alert>}
         {/* Encabezado del ticket */}
         <Box
           display="flex"
@@ -542,7 +559,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                             size="medium"
                             variant="contained"
                             onClick={() =>
-                              onUpdateStatus(
+                              void runStatus(
                                 order.id,
                                 "preparing",
                                 undefined,
@@ -573,7 +590,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                             variant="contained"
                             color="success"
                             onClick={() =>
-                              onUpdateStatus(
+                              void runStatus(
                                 order.id,
                                 "ready",
                                 undefined,
@@ -602,7 +619,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                             variant="outlined"
                             color="info"
                             onClick={() =>
-                              onUpdateStatus(
+                              void runStatus(
                                 order.id,
                                 "delivered",
                                 undefined,
@@ -879,7 +896,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                           size="medium"
                           variant="contained"
                           onClick={() =>
-                            onUpdateStatus(
+                            void runStatus(
                               order.id,
                               "preparing",
                               undefined,
@@ -910,7 +927,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                           variant="contained"
                           color="success"
                           onClick={() =>
-                            onUpdateStatus(
+                            void runStatus(
                               order.id,
                               "ready",
                               undefined,
@@ -939,7 +956,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                           variant="outlined"
                           color="info"
                           onClick={() =>
-                            onUpdateStatus(
+                            void runStatus(
                               order.id,
                               "delivered",
                               undefined,
@@ -1083,7 +1100,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                         size="medium"
                         variant="contained"
                         onClick={() =>
-                          onUpdateStatus(
+                          void runStatus(
                             order.id,
                             "preparing",
                             undefined,
@@ -1114,7 +1131,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                         variant="contained"
                         color="success"
                         onClick={() =>
-                          onUpdateStatus(
+                          void runStatus(
                             order.id,
                             "ready",
                             undefined,
@@ -1143,7 +1160,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                         variant="outlined"
                         color="info"
                         onClick={() =>
-                          onUpdateStatus(
+                          void runStatus(
                             order.id,
                             "delivered",
                             undefined,

@@ -25,7 +25,7 @@ export interface OrderCommands {
     cancelReasonId?: string,
   ): Promise<void>;
   removeOrder(orderId: string): void;
-  clearHistory(): void;
+  clearHistory(): Promise<void>;
   updateOrderItems(
     orderId: string,
     items: OrderItem[],

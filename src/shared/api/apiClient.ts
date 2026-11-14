@@ -3,9 +3,26 @@ import {
   accessTokenStore,
   isJwtTokenExpiringSoon,
 } from "./accessTokenStore";
+import { getApiBaseUrl } from "./apiBaseUrl";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const DEFAULT_REQUEST_TIMEOUT_MS = 20_000;
+let missingApiBaseUrlWarned = false;
+
+function warnIfMissingApiBaseUrl(baseUrl: string): void {
+  if (
+    baseUrl ||
+    missingApiBaseUrlWarned ||
+    typeof window === "undefined" ||
+    window.location?.protocol !== "file:"
+  ) {
+    return;
+  }
+  missingApiBaseUrlWarned = true;
+  console.error(
+    "⚠️ [API Client] No se encontró URL del backend (VITE_API_BASE_URL ni runtimeConfig). " +
+      "Configura VITE_API_BASE_URL o runtime-config.json antes de realizar peticiones.",
+  );
+}
 
 export type ResponseValidator<T> = (data: unknown) => T;
 
@@ -32,13 +49,6 @@ export class ApiClientError extends Error {
     super(message);
     this.name = "ApiClientError";
   }
-}
-
-if (!API_BASE_URL) {
-  console.error(
-    "⚠️ [API Client] La variable de entorno VITE_API_BASE_URL no está definida en el archivo .env. " +
-      "Asegúrate de crear el archivo .env en la raíz del proyecto con: VITE_API_BASE_URL=http://localhost:3000",
-  );
 }
 
 const AUTH_KEYS = [
@@ -140,7 +150,8 @@ export async function attemptTokenRefresh(): Promise<string | null> {
   refreshSession = session;
   refreshPromise = (async () => {
     try {
-      const baseUrl = API_BASE_URL || "";
+      const baseUrl = getApiBaseUrl();
+      warnIfMissingApiBaseUrl(baseUrl);
       const url = `${baseUrl}/auth/refresh`;
       const currentRefreshToken =
         accessTokenStore.getRefreshToken?.() ?? null;
@@ -179,6 +190,9 @@ export async function attemptTokenRefresh(): Promise<string | null> {
           await window.authAPI.setToken(newToken);
         }
         if (accessTokenStore.getRevision() !== committedRevision) return null;
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("appfactura:auth-session-changed"));
+        }
         return newToken;
       }
       return null;
@@ -192,17 +206,21 @@ export async function attemptTokenRefresh(): Promise<string | null> {
   return refreshPromise;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const apiClient = async <T = any>(
+export type AuthorizedFetchOptions = Omit<
+  ApiRequestOptions<unknown>,
+  "validateResponse"
+>;
+
+export const authorizedFetch = async (
   endpoint: string,
-  options: ApiRequestOptions<T> = {},
-): Promise<T> => {
-  const baseUrl = API_BASE_URL || "";
+  options: AuthorizedFetchOptions = {},
+): Promise<Response> => {
+  const baseUrl = getApiBaseUrl();
+  warnIfMissingApiBaseUrl(baseUrl);
   const url = `${baseUrl}${endpoint}`;
   const {
     timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
     trackUserActivity = false,
-    validateResponse,
     ...requestOptions
   } = options;
   const hasMultipartBody = requestOptions.body instanceof FormData;
@@ -311,6 +329,17 @@ export const apiClient = async <T = any>(
   if (trackUserActivity) {
     localStore.setItem("lastActivity", Date.now().toString());
   }
+
+  return response;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const apiClient = async <T = any>(
+  endpoint: string,
+  options: ApiRequestOptions<T> = {},
+): Promise<T> => {
+  const { validateResponse, ...requestOptions } = options;
+  const response = await authorizedFetch(endpoint, requestOptions);
 
   if (response.status === 204) {
     return (validateResponse ? validateResponse(null) : null) as T;

@@ -1,4 +1,5 @@
 import { apiClient } from "../../../shared/api";
+import { getBusinessDateString } from "../../../shared/format";
 import type { DeliveryDriver, DeliveryStat } from "../model/delivery.types";
 import {
   mapBackendOrderToFrontend,
@@ -6,18 +7,11 @@ import {
   type OrderPaymentDetail,
 } from "../../orders";
 
-function toLocalDateKey(date: Date): string {
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0"),
-  ].join("-");
-}
-
 export interface DeliveryGateway {
   listAvailableDrivers(date?: Date): Promise<DeliveryDriver[]>;
   getStats(date: Date): Promise<DeliveryStat[]>;
   getDriverOrdersToday(driverId: string): Promise<Order[]>;
+  getMyDeliveries(): Promise<Order[]>;
   finalizeOrder(
     orderId: string,
     paymentMethod: string,
@@ -25,23 +19,30 @@ export interface DeliveryGateway {
     splitAmounts?: { efectivo?: number; tarjeta?: number; app?: number },
     customPayments?: OrderPaymentDetail[],
     certificateSerials?: string[],
+    expectedUpdatedAt?: Date,
   ): Promise<void>;
 }
 
 export const deliveryGateway: DeliveryGateway = {
   async listAvailableDrivers(date = new Date()) {
-    return apiClient(`/users/drivers?date=${toLocalDateKey(date)}`);
+    return apiClient(`/users/drivers?date=${getBusinessDateString(date)}`);
   },
 
   getStats(date) {
     return apiClient(
-      `/users/motorizados/delivery-stats?date=${toLocalDateKey(date)}`,
+      `/users/motorizados/delivery-stats?date=${getBusinessDateString(date)}`,
     );
   },
 
   async getDriverOrdersToday(driverId) {
     const orders: Parameters<typeof mapBackendOrderToFrontend>[0][] =
       await apiClient(`/orders/driver/${driverId}/today`);
+    return orders.map(mapBackendOrderToFrontend);
+  },
+
+  async getMyDeliveries() {
+    const orders: Parameters<typeof mapBackendOrderToFrontend>[0][] =
+      await apiClient("/orders/my-deliveries");
     return orders.map(mapBackendOrderToFrontend);
   },
 
@@ -52,6 +53,7 @@ export const deliveryGateway: DeliveryGateway = {
     splitAmounts,
     customPayments,
     certificateSerials,
+    expectedUpdatedAt,
   ) {
     let payments: OrderPaymentDetail[] = [];
     if (customPayments && customPayments.length > 0) {
@@ -74,6 +76,7 @@ export const deliveryGateway: DeliveryGateway = {
     await apiClient(`/orders/${orderId}/finalize`, {
       method: "PATCH",
       body: JSON.stringify({
+        expectedUpdatedAt: expectedUpdatedAt?.toISOString(),
         status: "paid",
         payments,
         certificateSerials,

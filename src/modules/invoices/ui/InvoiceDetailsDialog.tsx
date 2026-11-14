@@ -28,6 +28,7 @@ interface InvoiceDetailsDialogProps {
   cashierName?: string;
   tableId?: string;
   discountAmount?: number;
+  timestamp?: Date | string;
   onClose: () => void;
   onConfirm: () => void;
   title?: string;
@@ -53,14 +54,18 @@ export default function InvoiceDetailsDialog({
   invoiceNumber,
   cashierName,
   tableId,
+  timestamp,
 }: InvoiceDetailsDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <List>
-          {cart.map((item) => (
-            <ListItem key={`${item.name}-${item.size}`} disableGutters>
+          {cart.map((item, idx) => (
+            <ListItem
+              key={`${item.id ?? item.name}-${item.size}-${idx}`}
+              disableGutters
+            >
               <ListItemText
                 primary={`${formatItemName(item.name, item.size)} x${item.quantity}`}
                 secondary={
@@ -159,6 +164,7 @@ export default function InvoiceDetailsDialog({
       <TicketPrint
         cart={cart}
         subTotal={subTotal}
+        discountAmount={discountAmount}
         taxAmount={taxAmount}
         total={total}
         customerName={customerName}
@@ -167,6 +173,7 @@ export default function InvoiceDetailsDialog({
         invoiceNumber={invoiceNumber}
         cashierName={cashierName}
         tableId={tableId}
+        timestamp={timestamp}
       />
     </Dialog>
   );

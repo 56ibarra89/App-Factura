@@ -27,7 +27,7 @@ export function useMesaReservationActions({
   releaseTable,
   openReservation,
 }: UseMesaReservationActionsOptions) {
-  const handleReservar = useCallback(() => {
+  const handleReservar = useCallback(async () => {
     if (!selectedMesaId) return;
 
     if (getOrderByTable(selectedMesaId)) {
@@ -38,15 +38,23 @@ export function useMesaReservationActions({
     }
 
     if (isReserved) {
-      void releaseTable(selectedMesaId);
-      void logService.log(
-        username,
-        role,
-        "CANCEL_RESERVATION",
-        `Reserva cancelada para Mesa ${
-          selectedMesaId.split("-M")[1]
-        }`,
-      );
+      try {
+        await releaseTable(selectedMesaId);
+        void logService.log(
+          username,
+          role,
+          "CANCEL_RESERVATION",
+          `Reserva cancelada para Mesa ${
+            selectedMesaId.split("-M")[1]
+          }`,
+        );
+      } catch (error: unknown) {
+        window.alert(
+          error instanceof Error && error.message.trim().length > 0
+            ? `No se pudo cancelar la reserva: ${error.message}`
+            : "No se pudo cancelar la reserva.",
+        );
+      }
       return;
     }
 
@@ -62,16 +70,16 @@ export function useMesaReservationActions({
   ]);
 
   const handleConfirmReservation = useCallback(
-    (
+    async (
       nombre: string,
       monto: number,
-      reservationTime: string,
-      expirationTime: string,
+      reservationTime: string | undefined,
+      expirationTime: string | undefined,
       onDialogClose: () => void,
     ) => {
       if (!selectedMesaId) return;
 
-      void reserveTable(selectedMesaId, {
+      await reserveTable(selectedMesaId, {
         nombre,
         monto,
         reservationTime,

@@ -21,6 +21,10 @@ export interface ICustomerRepository {
     name: string,
     address?: string,
     phone?: string,
+    extras?: {
+      phones?: CustomerPhone[];
+      addresses?: CustomerAddress[];
+    },
   ): Promise<Customer>;
   upsertCustomer(
     name: string,
@@ -50,10 +54,20 @@ class CustomerRepository implements ICustomerRepository {
     name: string,
     address?: string,
     phone?: string,
+    extras?: {
+      phones?: CustomerPhone[];
+      addresses?: CustomerAddress[];
+    },
   ): Promise<Customer> {
     return await apiClient("/customers", {
       method: "POST",
-      body: JSON.stringify({ name, address, phone }),
+      body: JSON.stringify({
+        name,
+        address,
+        phone,
+        ...(extras?.phones ? { phones: extras.phones } : {}),
+        ...(extras?.addresses ? { addresses: extras.addresses } : {}),
+      }),
     });
   }
 

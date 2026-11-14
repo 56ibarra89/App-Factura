@@ -92,6 +92,48 @@ export function validateDeviceName(value: unknown): string | undefined | null {
   return deviceName;
 }
 
+export function normalizeConfiguredApiBaseUrl(rawUrl: unknown): string | null {
+  if (typeof rawUrl !== "string") return null;
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    const normalizedPath = parsed.pathname.replace(/\/+$/, "");
+    return normalizedPath === "" || normalizedPath === "/"
+      ? parsed.origin
+      : `${parsed.origin}${normalizedPath}`;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveRuntimeApiBaseUrl(options: {
+  env?: Record<string, string | undefined>;
+  configFileContent?: string | null;
+  builtInUrl?: string;
+}): string | null {
+  const fromPosEnv = normalizeConfiguredApiBaseUrl(options.env?.POS_API_BASE_URL);
+  if (fromPosEnv) return fromPosEnv;
+
+  const fromViteEnv = normalizeConfiguredApiBaseUrl(options.env?.VITE_API_BASE_URL);
+  if (fromViteEnv) return fromViteEnv;
+
+  if (options.configFileContent) {
+    try {
+      const parsed: unknown = JSON.parse(options.configFileContent);
+      if (isRecord(parsed)) {
+        const fromConfig = normalizeConfiguredApiBaseUrl(parsed.apiBaseUrl);
+        if (fromConfig) return fromConfig;
+      }
+    } catch {
+      // Ignorar archivo JSON inválido y continuar con valor empaquetado
+    }
+  }
+
+  return normalizeConfiguredApiBaseUrl(options.builtInUrl);
+}
+
 export function configuredApiOrigin(apiUrl: string | undefined): string | null {
   if (!apiUrl) return null;
   try {
@@ -101,4 +143,28 @@ export function configuredApiOrigin(apiUrl: string | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+export function buildElectronCspHeader(apiOrigin: string | null): string {
+  const connectSources = ["'self'", "ws://localhost:*", "http://localhost:*"];
+  if (apiOrigin) {
+    connectSources.push(apiOrigin);
+    if (apiOrigin.startsWith("https://")) {
+      connectSources.push(apiOrigin.replace("https://", "wss://"));
+    } else if (apiOrigin.startsWith("http://")) {
+      connectSources.push(apiOrigin.replace("http://", "ws://"));
+    }
+  }
+
+  return [
+    "default-src 'self'",
+    "script-src 'self'",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "frame-src 'none'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data:",
+    `connect-src ${connectSources.join(" ")}`,
+  ].join("; ");
 }

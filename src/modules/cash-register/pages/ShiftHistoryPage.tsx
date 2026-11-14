@@ -7,6 +7,7 @@ import { useShiftHistory } from "../hooks/useShiftHistory";
 import { useAuth, type UserRole } from "../../auth";
 import ShiftTicketPrint from "../ui/ShiftTicketPrint";
 import { receiptPrinter } from "../../../shared/printing";
+import { printerDispatcherService } from "../../devices";
 import type { Shift, CashDenominationCount } from "../model/cash-register.types";
 import { ShiftHistoryFilters } from "../ui/ShiftHistoryFilters";
 import { ShiftHistoryTable } from "../ui/ShiftHistoryTable";
@@ -34,6 +35,7 @@ export default function ShiftHistoryPage() {
     CashDenominationCount[] | null
   >(null);
   const [printShift, setPrintShift] = useState<Shift | null>(null);
+  const [printError, setPrintError] = useState<string | null>(null);
 
   const getUserInfo = useCallback(
     (cashierName: string) => {
@@ -168,10 +170,20 @@ export default function ShiftHistoryPage() {
 
   const handleDirectPrint = async (shift: Shift) => {
     setPrintShift(shift);
+    setPrintError(null);
     try {
-      await receiptPrinter.print({ renderDelayMs: 400, settleDelayMs: 800 });
-    } catch {
-      window.print();
+      const cashierPrinter = await printerDispatcherService.getCashierPrinter();
+      await receiptPrinter.print({
+        renderDelayMs: 400,
+        settleDelayMs: 800,
+        deviceName: cashierPrinter?.windowsDeviceName,
+      });
+    } catch (err: unknown) {
+      setPrintError(
+        err instanceof Error
+          ? `No se pudo imprimir el ticket de turno: ${err.message}`
+          : "No se pudo imprimir el ticket de turno.",
+      );
     }
   };
 
@@ -205,6 +217,15 @@ export default function ShiftHistoryPage() {
       {error && (
         <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }}>
           {error}
+        </Alert>
+      )}
+      {printError && (
+        <Alert
+          severity="error"
+          onClose={() => setPrintError(null)}
+          sx={{ mb: 2.5, borderRadius: 2 }}
+        >
+          {printError}
         </Alert>
       )}
 

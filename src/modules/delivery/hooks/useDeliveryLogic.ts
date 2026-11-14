@@ -126,7 +126,16 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
+      const target = e.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        (target instanceof HTMLElement && target.isContentEditable) ||
+        Boolean(document.querySelector('[role="dialog"], [aria-modal="true"]'))
+      ) {
+        return;
+      }
 
       if (e.key >= "0" && e.key <= "9") {
         handleKeypadPress(e.key);

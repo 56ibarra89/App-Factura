@@ -1,13 +1,14 @@
 import { io, type Socket } from "socket.io-client";
-import { accessTokenStore } from "../../../shared/api";
+import { accessTokenStore, getApiBaseUrl } from "../../../shared/api";
 import type { Order } from "../model/order.types";
 import {
   mapBackendOrderToFrontend,
   type BackendOrder,
 } from "./backendSync";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-const ORDERS_NAMESPACE = `${API_BASE_URL.replace(/\/$/, "")}/orders`;
+function getOrdersNamespace(): string {
+  return `${getApiBaseUrl().replace(/\/$/, "")}/orders`;
+}
 
 export type OrderRealtimeMutation = "created" | "updated";
 
@@ -42,10 +43,12 @@ function isRealtimeEvent(
   );
 }
 
+const AUTH_SESSION_CHANGED_EVENT = "appfactura:auth-session-changed";
+
 export const ordersRealtimeGateway: OrdersRealtimeGateway = {
   subscribe(handlers) {
     let manualReconnectTimer: number | undefined;
-    const socket: Socket = io(ORDERS_NAMESPACE, {
+    const socket: Socket = io(getOrdersNamespace(), {
       auth: (callback) => {
         callback({ token: accessTokenStore.get() });
       },
@@ -105,10 +108,30 @@ export const ordersRealtimeGateway: OrdersRealtimeGateway = {
       });
     };
 
+    const handleAuthSessionChanged = () => {
+      const token = accessTokenStore.get();
+      if (!token) {
+        clearManualReconnect();
+        socket.disconnect();
+        return;
+      }
+
+      if (socket.connected) {
+        socket.emit("auth:refresh", { token });
+      } else {
+        clearManualReconnect();
+        socket.connect();
+      }
+    };
+
     socket.on("orders:changed", handleChanged);
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
+    window.addEventListener(
+      AUTH_SESSION_CHANGED_EVENT,
+      handleAuthSessionChanged,
+    );
 
     return () => {
       clearManualReconnect();
@@ -116,6 +139,10 @@ export const ordersRealtimeGateway: OrdersRealtimeGateway = {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
       socket.off("connect_error", handleConnectError);
+      window.removeEventListener(
+        AUTH_SESSION_CHANGED_EVENT,
+        handleAuthSessionChanged,
+      );
       socket.disconnect();
     };
   },

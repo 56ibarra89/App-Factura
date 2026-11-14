@@ -48,6 +48,7 @@ export function PaymentConfirmationDialog({
     DEFAULT_PAYMENT_METHODS_CONFIG.methods,
   );
   const [selectedId, setSelectedId] = useState("cash-nio");
+  const [cashMethodId, setCashMethodId] = useState("cash-nio");
   const [otherId, setOtherId] = useState("card-generic");
   const [mixed, setMixed] = useState(false);
   const [cashAmount, setCashAmount] = useState("");
@@ -59,17 +60,21 @@ export function PaymentConfirmationDialog({
   useEffect(() => {
     if (!open) return;
     setError("");
-    void paymentMethodsGateway.load().then((config) => {
-      const active = config.methods.filter((method) => method.isActive);
+    void paymentMethodsGateway.load().then((loadedConfig) => {
+      const active = loadedConfig.methods.filter((method) => method.isActive);
       if (!active.length) return;
-      const cashMethod =
+      const defaultCash =
         active.find(
           (method) => method.type === "CASH" && method.currency === "NIO",
         ) ??
         active.find((method) => method.type === "CASH") ??
         active[0];
       const electronic =
-        active.find((method) => method.type !== "CASH") ?? active[0];
+        active.find(
+          (method) => method.id !== defaultCash.id && method.type !== "CASH",
+        ) ??
+        active.find((method) => method.id !== defaultCash.id) ??
+        active[0];
       setMethods(active);
 
       const orderPayments = order?.payments ?? [];
@@ -80,24 +85,42 @@ export function PaymentConfirmationDialog({
         const cashPayment = orderPayments.find(
           (payment) => payment.method === "EFECTIVO",
         );
+        const matchedCash =
+          (cashPayment?.methodConfigId &&
+            active.find(
+              (m) => m.id === cashPayment.methodConfigId && m.type === "CASH",
+            )) ||
+          defaultCash;
         const otherPayment =
-          orderPayments.find((payment) => payment.method !== "EFECTIVO") ??
+          orderPayments.find((payment) => payment !== cashPayment) ??
           orderPayments[1];
         const matchedOther =
           (otherPayment?.methodConfigId &&
-            active.find((m) => m.id === otherPayment.methodConfigId)) ||
+            active.find(
+              (m) =>
+                m.id === otherPayment.methodConfigId && m.id !== matchedCash.id,
+            )) ||
           (otherPayment &&
             active.find(
               (m) =>
-                m.id !== cashMethod.id &&
+                m.id !== matchedCash.id &&
                 toLegacyPaymentMethod(m) === otherPayment.method,
             )) ||
+          active.find((m) => m.id !== matchedCash.id && m.type !== "CASH") ||
           electronic;
+
+        const rate = config.exchangeRate > 0 ? config.exchangeRate : 1;
         const initialCash =
-          cashPayment?.amount ?? order?.splitAmounts?.efectivo ?? 0;
+          matchedCash.currency === "USD"
+            ? (cashPayment?.originalAmount ??
+              (cashPayment?.amount
+                ? Math.round((cashPayment.amount / rate) * 100) / 100
+                : 0))
+            : (cashPayment?.amount ?? order?.splitAmounts?.efectivo ?? 0);
 
         setMixed(true);
-        setSelectedId(cashMethod.id);
+        setSelectedId(matchedCash.id);
+        setCashMethodId(matchedCash.id);
         setOtherId(matchedOther.id);
         setCashAmount(initialCash > 0 ? String(initialCash) : "");
         setReference(otherPayment?.reference ?? "");
@@ -110,24 +133,44 @@ export function PaymentConfirmationDialog({
             active.find(
               (m) => toLegacyPaymentMethod(m) === order.paymentMethod,
             )) ||
-          cashMethod;
+          defaultCash;
 
         setMixed(false);
         setSelectedId(matchedSingle.id);
+        setCashMethodId(defaultCash.id);
         setOtherId(electronic.id);
         setCashAmount("");
         setReference(singlePayment?.reference ?? "");
       }
     });
-  }, [open, order]);
+  }, [config.exchangeRate, open, order]);
 
-  const selected = methods.find((method) => method.id === selectedId);
+  const exchangeRate = config.exchangeRate > 0 ? config.exchangeRate : 1;
+  const cashMethods = useMemo(
+    () => methods.filter((method) => method.type === "CASH"),
+    [methods],
+  );
+  const defaultCash =
+    cashMethods.find((method) => method.currency === "NIO") ?? cashMethods[0];
   const cash =
-    methods.find(
-      (method) => method.type === "CASH" && method.currency === "NIO",
-    ) ?? methods.find((method) => method.type === "CASH");
-  const other = methods.find((method) => method.id === otherId);
-  const otherAmount = Math.max(0, total - (Number(cashAmount) || 0));
+    cashMethods.find((method) => method.id === cashMethodId) ?? defaultCash;
+  const secondaryMethods = useMemo(
+    () => methods.filter((method) => method.id !== cash?.id),
+    [cash?.id, methods],
+  );
+  const selected = methods.find((method) => method.id === selectedId);
+  const other =
+    secondaryMethods.find((method) => method.id === otherId) ??
+    secondaryMethods[0];
+  const parsedCashInput = Number(cashAmount) || 0;
+  const cashNioAmount =
+    cash?.currency === "USD"
+      ? Math.round(parsedCashInput * exchangeRate * 100) / 100
+      : Math.round(parsedCashInput * 100) / 100;
+  const otherAmount = Math.max(
+    0,
+    Math.round((total - cashNioAmount) * 100) / 100,
+  );
   const referenceRequired = mixed
     ? other?.requiresReference
     : selected?.requiresReference;
@@ -140,23 +183,26 @@ export function PaymentConfirmationDialog({
 
   const buildPayment = (
     method: ConfiguredPaymentMethod,
-    amount: number,
+    amountNio: number,
     paymentReference?: string,
+    explicitOriginalAmount?: number,
   ): OrderPaymentDetail => {
-    const exchangeRate =
+    const rate =
       method.currency === "USD" && config.exchangeRate > 0
         ? config.exchangeRate
         : 1;
+    const roundedNio = Math.round(amountNio * 100) / 100;
+    const originalAmount =
+      explicitOriginalAmount !== undefined && method.currency === "USD"
+        ? Math.round(explicitOriginalAmount * 10000) / 10000
+        : Math.round((roundedNio / rate) * 10000) / 10000;
     return {
       method: toLegacyPaymentMethod(method),
-      amount: Math.round(amount * 100) / 100,
+      amount: roundedNio,
       methodConfigId: method.id,
       reference: paymentReference?.trim() || undefined,
-      originalAmount:
-        Math.round(
-          ((Math.round(amount * 100) / 100) / exchangeRate) * 10000,
-        ) / 10000,
-      exchangeRate,
+      originalAmount,
+      exchangeRate: rate,
     };
   };
 
@@ -168,17 +214,40 @@ export function PaymentConfirmationDialog({
       let payments: OrderPaymentDetail[];
       let label: string;
       if (mixed) {
-        const cashValue = Number(cashAmount) || 0;
-        if (!cash || !other || cashValue <= 0 || otherAmount <= 0) {
+        if (
+          (cash?.currency === "USD" || other?.currency === "USD") &&
+          config.exchangeRate <= 0
+        ) {
+          throw new Error(
+            "Configura una tasa de cambio USD válida antes de cobrar en dólares.",
+          );
+        }
+        if (
+          !cash ||
+          !other ||
+          parsedCashInput <= 0 ||
+          cashNioAmount <= 0 ||
+          otherAmount <= 0
+        ) {
           throw new Error("Ingresa dos montos válidos para el pago mixto.");
         }
         payments = [
-          buildPayment(cash, cashValue),
+          buildPayment(
+            cash,
+            cashNioAmount,
+            undefined,
+            cash.currency === "USD" ? parsedCashInput : undefined,
+          ),
           buildPayment(other, otherAmount, reference),
         ];
         label = `${cash.name} + ${other.name}`;
       } else {
         if (!selected) throw new Error("Selecciona un método de pago.");
+        if (selected.currency === "USD" && config.exchangeRate <= 0) {
+          throw new Error(
+            "Configura una tasa de cambio USD válida antes de cobrar en dólares.",
+          );
+        }
         payments = [buildPayment(selected, total, reference)];
         label = selected.name;
       }
@@ -194,11 +263,6 @@ export function PaymentConfirmationDialog({
       setLoading(false);
     }
   };
-
-  const electronicMethods = useMemo(
-    () => methods.filter((method) => method.id !== cash?.id),
-    [cash?.id, methods],
-  );
 
   if (!order) return null;
   return (
@@ -244,7 +308,7 @@ export function PaymentConfirmationDialog({
               </Button>
             </Grid>
           ))}
-          {cash && electronicMethods.length > 0 && (
+          {cash && secondaryMethods.length > 0 && (
             <Grid size={{ xs: 6, sm: 4 }} sx={{ display: "flex" }}>
               <Button
                 fullWidth
@@ -262,6 +326,33 @@ export function PaymentConfirmationDialog({
         {mixed && cash && (
           <Grid container spacing={2} mb={2}>
             <Grid size={{ xs: 12, sm: 6 }}>
+              {cashMethods.length > 1 && (
+                <Select
+                  fullWidth
+                  size="small"
+                  sx={{ mb: 1 }}
+                  value={cash.id}
+                  onChange={(event) => {
+                    const nextCashId = event.target.value;
+                    setCashMethodId(nextCashId);
+                    if (otherId === nextCashId) {
+                      const nextOther = methods.find(
+                        (method) => method.id !== nextCashId,
+                      );
+                      if (nextOther) {
+                        setOtherId(nextOther.id);
+                        setReference("");
+                      }
+                    }
+                  }}
+                >
+                  {cashMethods.map((method) => (
+                    <MenuItem key={method.id} value={method.id}>
+                      {method.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
               <TextField
                 fullWidth
                 size="small"
@@ -271,29 +362,39 @@ export function PaymentConfirmationDialog({
                 onChange={(event) => setCashAmount(event.target.value)}
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">C$</InputAdornment>
+                    <InputAdornment position="start">
+                      {cash.currency === "USD" ? "$" : "C$"}
+                    </InputAdornment>
                   ),
                 }}
               />
+              {cash.currency === "USD" && parsedCashInput > 0 && (
+                <Typography variant="caption" color="text.secondary">
+                  Equivale a C${cashNioAmount.toFixed(2)} (T/C{" "}
+                  {exchangeRate.toFixed(2)})
+                </Typography>
+              )}
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <Select
                 fullWidth
                 size="small"
-                value={otherId}
+                value={other?.id ?? ""}
                 onChange={(event) => {
                   setOtherId(event.target.value);
                   setReference("");
                 }}
               >
-                {electronicMethods.map((method) => (
+                {secondaryMethods.map((method) => (
                   <MenuItem key={method.id} value={method.id}>
                     {method.name}
                   </MenuItem>
                 ))}
               </Select>
               <Typography variant="caption" color="text.secondary">
-                Monto restante: C${otherAmount.toFixed(2)}
+                {other?.currency === "USD"
+                  ? `Monto restante: $${(otherAmount / exchangeRate).toFixed(2)} (C$${otherAmount.toFixed(2)})`
+                  : `Monto restante: C$${otherAmount.toFixed(2)}`}
               </Typography>
             </Grid>
           </Grid>

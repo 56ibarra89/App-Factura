@@ -87,7 +87,10 @@ interface KitchenDialogs {
 interface CertificateDialog {
   open: boolean;
   close(): void;
-  apply(certificate: RedeemableCertificate): void;
+  apply(
+    certificate: RedeemableCertificate,
+    selectedSizes?: Record<string, string>,
+  ): void;
 }
 
 interface BillingDialogsProps {

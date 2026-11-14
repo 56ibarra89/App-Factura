@@ -15,6 +15,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAuth } from "../../auth";
+import { formatBusinessDateTime } from "../../../shared/format";
 
 export default function NotificationsMenu() {
   const { role } = useAuth();
@@ -115,7 +116,7 @@ export default function NotificationsMenu() {
                           {notif.message}
                         </Typography>
                         <Typography component="span" variant="caption" color="text.secondary" sx={{ display: 'block', mb: notif.isRead ? 0 : 1 }}>
-                          {new Date(notif.createdAt).toLocaleString()}
+                          {formatBusinessDateTime(notif.createdAt)}
                         </Typography>
                         {!notif.isRead && (
                           <Typography

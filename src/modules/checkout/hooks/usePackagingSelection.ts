@@ -33,8 +33,28 @@ export function usePackagingSelection({
         console.error("Error loading packaging configuration:", error);
       });
 
+    const handleSizesUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent<PackagingSizeConfig[]>;
+      if (Array.isArray(customEvent.detail)) {
+        setPackagingConfig(customEvent.detail);
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener(
+        "appfactura:packaging-sizes-updated",
+        handleSizesUpdated,
+      );
+    }
+
     return () => {
       active = false;
+      if (typeof window !== "undefined") {
+        window.removeEventListener(
+          "appfactura:packaging-sizes-updated",
+          handleSizesUpdated,
+        );
+      }
     };
   }, [gateway]);
 

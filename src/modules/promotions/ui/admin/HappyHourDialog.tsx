@@ -71,7 +71,7 @@ const DEFAULT_FORM: FormState = {
 interface HappyHourDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (rule: HappyHourRule) => void;
+  onSave: (rule: HappyHourRule) => Promise<void> | void;
   editingRule?: HappyHourRule | null;
 }
 
@@ -86,6 +86,7 @@ const HappyHourDialog = ({
 
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errorMsg, setErrorMsg] = useState("");
+  const [saving, setSaving] = useState(false);
 
   // Pre-llenar al editar
   useEffect(() => {
@@ -105,6 +106,7 @@ const HappyHourDialog = ({
         setForm(DEFAULT_FORM);
       }
       setErrorMsg("");
+      setSaving(false);
     }
   }, [open, editingRule]);
 
@@ -116,8 +118,9 @@ const HappyHourDialog = ({
     setErrorMsg("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
 
     if (!form.name.trim()) {
       setErrorMsg("El nombre es obligatorio.");
@@ -157,19 +160,31 @@ const HappyHourDialog = ({
       form.appliesTo
     );
 
-    onSave({
-      id: editingRule?.id ?? Date.now(),
-      name: form.name,
-      daysOfWeek: form.daysOfWeek,
-      startTime: form.startTime,
-      endTime: form.endTime,
-      promotionType: form.promotionType,
-      promotionValue: form.promotionValue,
-      status: form.status,
-      appliesTo: form.promotionType === "2x1" ? form.appliesTo : undefined,
-      ...derived,
-    });
-    onClose();
+    setSaving(true);
+    setErrorMsg("");
+    try {
+      await onSave({
+        id: editingRule?.id ?? Date.now(),
+        name: form.name,
+        daysOfWeek: form.daysOfWeek,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        promotionType: form.promotionType,
+        promotionValue: form.promotionValue,
+        status: form.status,
+        appliesTo: form.promotionType === "2x1" ? form.appliesTo : undefined,
+        ...derived,
+      });
+      onClose();
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error && err.message
+          ? err.message
+          : "No se pudo guardar la regla de Happy Hour.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const needsValue = form.promotionType !== "2x1";
@@ -361,11 +376,17 @@ const HappyHourDialog = ({
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
-          <Button fullWidth variant="outlined" onClick={onClose}>
+          <Button fullWidth variant="outlined" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button fullWidth variant="contained" color="secondary" type="submit">
-            {editingRule ? "Actualizar" : "Guardar"}
+          <Button
+            fullWidth
+            variant="contained"
+            color="secondary"
+            type="submit"
+            disabled={saving}
+          >
+            {saving ? "Guardando..." : editingRule ? "Actualizar" : "Guardar"}
           </Button>
         </DialogActions>
       </form>

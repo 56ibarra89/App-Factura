@@ -19,7 +19,7 @@ export interface CatalogContextValue {
     oldName: string,
     newName: string,
     icon?: string,
-    kitchenId?: string,
+    kitchenId?: string | null,
   ): Promise<void>;
   deleteCategory(categoryName: string): Promise<void>;
   saveCategoryExtra(categoryId: string, extra: ExtraIngredientDef): Promise<void>;

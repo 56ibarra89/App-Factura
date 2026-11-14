@@ -30,3 +30,15 @@ export interface AccessRoleDraft {
   isSystem?: boolean;
   code?: string;
 }
+
+export type CreateAccessRoleInput = Pick<
+  AccessRoleDraft,
+  "name" | "description" | "baseRole" | "permissionCodes"
+>;
+
+export type UpdateAccessRoleInput = Partial<
+  Pick<
+    AccessRoleDraft,
+    "name" | "description" | "isActive" | "permissionCodes"
+  >
+>;

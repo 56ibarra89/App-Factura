@@ -19,9 +19,9 @@ import {
   type Customer,
 } from "../../customers";
 import type { OrderType } from "../../orders";
-import type { UserAccount } from "../../accounts";
 import type { DeliveryDriverStats } from "../api/checkoutGateway";
 import type {
+  DeliveryDriver,
   DeliveryZone,
   DeliveryRulesConfig,
 } from "../../delivery";
@@ -40,7 +40,7 @@ interface CustomerDeliverySectionProps {
   customerAddress: string;
   onCustomerAddressChange: (value: string) => void;
   savedAddresses: string[];
-  drivers: UserAccount[];
+  drivers: DeliveryDriver[];
   driverStats: DeliveryDriverStats[];
   selectedDriverId: string;
   onDriverChange: (value: string) => void;

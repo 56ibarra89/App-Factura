@@ -15,17 +15,20 @@ import { ordersGateway } from "../../modules/orders";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { username, hasPermission } = useAuth();
+  const { username, role, hasPermission } = useAuth();
   const { currentShift } = useCaja();
   const allMenuItems = getMenuItems();
 
   const menuItems = React.useMemo(() => {
-    return allMenuItems.filter((item) =>
-      item.route === "/admin"
+    return allMenuItems.filter((item) => {
+      if (item.allowedRoles && (!role || !item.allowedRoles.includes(role))) {
+        return false;
+      }
+      return item.route === "/admin"
         ? ADMIN_PANEL_PERMISSIONS.some((permission) => hasPermission(permission))
-        : hasPermission(item.permission),
-    );
-  }, [allMenuItems, hasPermission]);
+        : hasPermission(item.permission);
+    });
+  }, [allMenuItems, hasPermission, role]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [pendingDeliveredCount, setPendingDeliveredCount] = useState(0);

@@ -2,6 +2,7 @@ import {
   accessTokenStore,
   apiClient,
   attemptTokenRefresh,
+  getApiBaseUrl,
 } from "../../../shared/api";
 
 export interface NotificationItem {
@@ -19,8 +20,6 @@ export interface NotificationsGateway {
   markAsRead(id: string): Promise<void>;
   subscribe(onNotification: (notification: NotificationItem) => void): () => void;
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 export const notificationsGateway: NotificationsGateway = {
   list: () => apiClient("/notifications", { method: "GET" }),
@@ -43,7 +42,7 @@ export const notificationsGateway: NotificationsGateway = {
       controller = new AbortController();
       const token = accessTokenStore.get();
       try {
-        const response = await fetch(`${API_BASE_URL}/notifications/stream`, {
+        const response = await fetch(`${getApiBaseUrl()}/notifications/stream`, {
           cache: "no-store",
           headers: token ? { Authorization: `Bearer ${token}` } : {},
           signal: controller.signal,

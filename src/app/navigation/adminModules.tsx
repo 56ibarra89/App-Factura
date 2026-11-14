@@ -20,7 +20,11 @@ import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import TuneIcon from "@mui/icons-material/Tune";
 import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
-import { PERMISSIONS, type PermissionCode } from "../../modules/auth";
+import {
+  PERMISSIONS,
+  type PermissionCode,
+  type UserRole,
+} from "../../modules/auth";
 
 export type AdminCategory = "General" | "Operativa" | "Hardware y Sistema";
 
@@ -35,6 +39,7 @@ export interface AdminModuleItem {
   actionId?: string;
   disabled?: boolean;
   permission: PermissionCode;
+  allowedRoles?: UserRole[];
 }
 
 export const adminModules: AdminModuleItem[] = [
@@ -177,7 +182,8 @@ export const adminModules: AdminModuleItem[] = [
       "Configura las tarifas y precios rápidos de envío a domicilio para los repartidores.",
     icon: <TwoWheelerIcon fontSize="large" />,
     actionId: "OPEN_DELIVERY_PRICES",
-    permission: PERMISSIONS.DELIVERY_MANAGE,
+    permission: PERMISSIONS.SETTINGS_MANAGE,
+    allowedRoles: ["admin"],
   },
   {
     id: "politicas-gastos",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { ApiClientError } from "../../../shared/api";
 import {
   Dialog,
   DialogTitle,
@@ -37,7 +38,7 @@ import {
   type Order,
   type OrderPaymentDetail,
 } from "../../orders";
-import { useAuth } from "../../auth";
+import { PERMISSIONS, useAuth } from "../../auth";
 import {
   deliveryGateway,
   type DeliveryGateway,
@@ -80,7 +81,7 @@ export default function DriverDeliveriesModal({
   onClose,
   gateway = deliveryGateway,
 }: DriverDeliveriesModalProps) {
-  const { role } = useAuth();
+  const { hasPermission } = useAuth();
   const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -92,7 +93,7 @@ export default function DriverDeliveriesModal({
   const fetchDrivers = useCallback(async () => {
     setLoadingDrivers(true);
     try {
-      const usersList: DeliveryDriver[] = await apiClient("/users/directory").catch(() => []);
+      const usersList: DeliveryDriver[] = await apiClient("/users/directory");
       const motorizados = usersList.filter((u) => u.role === "motorizado");
       const listToUse = motorizados.length > 0 ? motorizados : usersList;
       setDrivers(listToUse);
@@ -103,6 +104,7 @@ export default function DriverDeliveriesModal({
       }
     } catch (e) {
       console.error(e);
+      setErrorMessage("No se pudo cargar el directorio de motorizados.");
     } finally {
       setLoadingDrivers(false);
     }
@@ -112,8 +114,8 @@ export default function DriverDeliveriesModal({
     setLoadingOrders(true);
     try {
       const [data, currentOrders] = await Promise.all([
-        gateway.getDriverOrdersToday(driverId).catch(() => [] as Order[]),
-        ordersGateway.listCurrent().catch(() => [] as Order[]),
+        gateway.getDriverOrdersToday(driverId),
+        ordersGateway.listCurrent(),
       ]);
       const orderMap = new Map<string, Order>();
       data.forEach((o) => orderMap.set(o.id, o));
@@ -157,8 +159,9 @@ export default function DriverDeliveriesModal({
     payments: OrderPaymentDetail[],
     paymentMethodLabel: string,
   ) => {
+    if (!payingOrder) return;
+    setErrorMessage(null);
     try {
-      if (!payingOrder) return;
       await gateway.finalizeOrder(
         payingOrder.id,
         paymentMethodLabel,
@@ -166,13 +169,23 @@ export default function DriverDeliveriesModal({
         undefined,
         payments,
         payingOrder.certificateSerials,
+        payingOrder.updatedAt,
       );
       setPayingOrder(null);
       if (selectedDriverId) {
         await fetchOrders(selectedDriverId);
       }
-    } catch {
-      setErrorMessage("No se pudo marcar la orden como pagada.");
+    } catch (err: unknown) {
+      if (err instanceof ApiClientError && err.status === 409 && selectedDriverId) {
+        await fetchOrders(selectedDriverId);
+        setPayingOrder(null);
+      }
+      const message =
+        err instanceof Error && err.message.trim().length > 0
+          ? err.message
+          : "No se pudo marcar la orden como pagada.";
+      setErrorMessage(message);
+      throw err instanceof Error ? err : new Error(message);
     }
   };
 
@@ -351,7 +364,8 @@ export default function DriverDeliveriesModal({
                                       size="small"
                                       sx={{ fontWeight: "bold" }}
                                     />
-                                    {order.status === "delivered" && role !== "despachador" && (
+                                    {order.status === "delivered" &&
+                                      hasPermission(PERMISSIONS.ORDERS_FINALIZE) && (
                                       <Button
                                         variant="outlined"
                                         size="small"

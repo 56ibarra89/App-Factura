@@ -51,6 +51,7 @@ export interface SplitCheckoutOrderCommand extends FinalizeOrderCommand {
 
 export interface FinalizeOrderCommand
   extends OrderTotals, OrderPromotionSelection {
+  expectedUpdatedAt?: string;
   paymentMethod: PaymentMethod;
   splitAmounts?: SplitPaymentAmounts;
   payments?: OrderPaymentDetail[];

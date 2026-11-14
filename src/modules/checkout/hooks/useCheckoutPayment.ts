@@ -11,7 +11,10 @@ import {
   toLegacyPaymentMethod,
   type ConfiguredPaymentMethod,
 } from "../../settings";
-import { isCheckoutPaymentValid } from "../model/checkoutFormDomain";
+import {
+  isCheckoutPaymentValid,
+  summarizeMixedCashPayments,
+} from "../model/checkoutFormDomain";
 
 interface UseCheckoutPaymentOptions {
   open: boolean;
@@ -100,24 +103,24 @@ export function useCheckoutPayment({
 
   const selectedMethod =
     methods.find((method) => method.id === selectedMethodId) ?? methods[0];
-  const mixedMethods = mixedMethodIds.map(
-    (id) => methods.find((method) => method.id === id) ?? methods[0],
+  const mixedMethods = useMemo(
+    () =>
+      mixedMethodIds.map(
+        (id) => methods.find((method) => method.id === id) ?? methods[0],
+      ),
+    [methods, mixedMethodIds],
   );
-  const mixedCashIndex = mixedMethods.findIndex(
-    (method) => method?.type === "CASH",
+  const mixedCashSummary = useMemo(
+    () =>
+      summarizeMixedCashPayments({
+        mixedMethods,
+        mixedAmounts,
+        receivedLocal,
+        receivedSecondary,
+        exchangeRate,
+      }),
+    [exchangeRate, mixedAmounts, mixedMethods, receivedLocal, receivedSecondary],
   );
-  const mixedCashMethod =
-    mixedCashIndex >= 0 ? mixedMethods[mixedCashIndex] : undefined;
-  const mixedCashDue =
-    mixedCashIndex === 0
-      ? mixedAmounts.efectivo
-      : mixedCashIndex === 1
-        ? mixedAmounts.tarjeta
-        : 0;
-  const mixedCashReceived =
-    mixedCashMethod?.currency === "USD"
-      ? Number(receivedSecondary || 0) * exchangeRate
-      : Number(receivedLocal || 0);
 
   const referencesValid = useMemo(() => {
     const selected =
@@ -135,9 +138,7 @@ export function useCheckoutPayment({
   const isPaymentValid = useMemo(
     () =>
       referencesValid &&
-      (paymentMethod !== "MIXTO" ||
-        !mixedCashMethod ||
-        mixedCashReceived >= mixedCashDue - 0.01) &&
+      (paymentMethod !== "MIXTO" || mixedCashSummary.isAllCashSufficient) &&
       isCheckoutPaymentValid({
         isTableMode,
         paymentMethod,
@@ -151,14 +152,12 @@ export function useCheckoutPayment({
       exchangeRate,
       finalTotal,
       isTableMode,
+      mixedAmounts,
+      mixedCashSummary.isAllCashSufficient,
       paymentMethod,
-      mixedCashDue,
-      mixedCashMethod,
-      mixedCashReceived,
       receivedLocal,
       receivedSecondary,
       referencesValid,
-      mixedAmounts,
     ],
   );
 

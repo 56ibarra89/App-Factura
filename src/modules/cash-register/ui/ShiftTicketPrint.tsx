@@ -1,4 +1,5 @@
 import { Box, Typography, GlobalStyles } from "@mui/material";
+import { formatBusinessDateTime } from "../../../shared/format";
 import type { Shift } from "../model/cash-register.types";
 import { useCompanySettings, useGeneralSettings } from "../../settings";
 
@@ -12,12 +13,7 @@ const ShiftTicketPrint = ({ shift }: ShiftTicketPrintProps) => {
 
   const formatDate = (dateValue: Date | string | number | undefined | null) => {
     if (!dateValue) return "N/A";
-    const d = new Date(dateValue);
-    return (
-      d.toLocaleDateString("es-ES") +
-      " " +
-      d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    );
+    return formatBusinessDateTime(dateValue) || "N/A";
   };
 
   const totalExpenses =

@@ -44,14 +44,16 @@ const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) 
   </Box>
 );
 
+import { useEffect, useState } from "react";
+
 interface CertificadoDetailDialogProps {
   open: boolean;
   onClose: () => void;
   certificado: CertificadoRule | null;
 
-  onMarkDelivered?: (id: number) => void;
+  onMarkDelivered?: (id: number) => Promise<void> | void;
 
-  onCancel?: (id: number) => void;
+  onCancel?: (id: number) => Promise<void> | void;
 }
 
 const CertificadoDetailDialog = ({
@@ -61,18 +63,54 @@ const CertificadoDetailDialog = ({
   onMarkDelivered,
   onCancel,
 }: CertificadoDetailDialogProps) => {
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setSaving(false);
+      setSubmitError("");
+    }
+  }, [open, certificado?.id]);
+
   if (!certificado) return null;
 
   const isAvailable = certificado.status === "Disponible";
 
-  const handleMarkDelivered = () => {
-    onMarkDelivered?.(certificado.id);
-    onClose();
+  const handleMarkDelivered = async () => {
+    if (saving || !onMarkDelivered) return;
+    setSaving(true);
+    setSubmitError("");
+    try {
+      await onMarkDelivered(certificado.id);
+      onClose();
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error && err.message
+          ? err.message
+          : "No se pudo marcar el certificado como entregado.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleCancel = () => {
-    onCancel?.(certificado.id);
-    onClose();
+  const handleCancel = async () => {
+    if (saving || !onCancel) return;
+    setSaving(true);
+    setSubmitError("");
+    try {
+      await onCancel(certificado.id);
+      onClose();
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error && err.message
+          ? err.message
+          : "No se pudo anular el certificado.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -152,14 +190,16 @@ const CertificadoDetailDialog = ({
           {}
           {isAvailable && (
             <Stack spacing={1.5}>
+              {submitError && <Alert severity="error">{submitError}</Alert>}
               {onMarkDelivered && (
                 <Button
                   fullWidth
                   variant="contained"
                   color="success"
                   startIcon={<CheckCircleOutlineIcon />}
-                  onClick={handleMarkDelivered}
+                  onClick={() => void handleMarkDelivered()}
                   size="large"
+                  disabled={saving}
                 >
                   Marcar como Entregado (Canjear)
                 </Button>
@@ -170,7 +210,8 @@ const CertificadoDetailDialog = ({
                   variant="outlined"
                   color="error"
                   startIcon={<CancelOutlinedIcon />}
-                  onClick={handleCancel}
+                  onClick={() => void handleCancel()}
+                  disabled={saving}
                 >
                   Anular Certificado
                 </Button>
@@ -193,7 +234,7 @@ const CertificadoDetailDialog = ({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button fullWidth variant="outlined" onClick={onClose}>
+        <Button fullWidth variant="outlined" onClick={onClose} disabled={saving}>
           Cerrar
         </Button>
       </DialogActions>

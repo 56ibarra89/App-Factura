@@ -23,7 +23,10 @@ export function useCertificateRedemption({
   addItem,
 }: UseCertificateRedemptionOptions) {
   return useCallback(
-    (certificate: RedeemableCertificate) => {
+    (
+      certificate: RedeemableCertificate,
+      selectedSizes?: Record<string, string>,
+    ) => {
       const normalizedSerial = normalizeSerial(certificate.serial);
       const alreadyApplied = cart.some(
         (item) =>
@@ -43,6 +46,15 @@ export function useCertificateRedemption({
           (candidate) =>
             candidate.id === certificateItem.productId,
         );
+        const requestedSize = selectedSizes?.[certificateItem.productId];
+        const matchedSize =
+          requestedSize &&
+          product?.prices.find(
+            (priceOption) =>
+              priceOption.size.toLowerCase() === requestedSize.toLowerCase(),
+          )?.size;
+        const resolvedSize =
+          matchedSize ?? product?.prices?.[0]?.size ?? "único";
 
         addItem({
           productId: certificateItem.productId,
@@ -50,11 +62,13 @@ export function useCertificateRedemption({
             product?.name ??
             `Producto ${certificateItem.productId}`,
           price: 0,
-          size: "único",
+          size: resolvedSize,
           extras: [],
           note: `Vale: ${certificate.serial}`,
           giftQuantity: certificateItem.quantity,
           certificateSerial: certificate.serial,
+          ...(product?.categoryId ? { categoryId: product.categoryId } : {}),
+          ...(product?.isCombo ? { isCombo: true } : {}),
         });
       });
     },

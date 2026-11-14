@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useAuth } from "../../auth";
 import {
   notificationsGateway,
@@ -13,7 +13,10 @@ export function useNotifications(
 ) {
   const { role } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.isRead).length,
+    [notifications],
+  );
 
   const fetchUnread = useCallback(async () => {
     if (
@@ -28,8 +31,10 @@ export function useNotifications(
     try {
       const data = await gateway.list();
       if (Array.isArray(data)) {
-        setNotifications(data);
-        setUnreadCount(data.filter(n => !n.isRead).length);
+        const deduplicated = Array.from(
+          new Map(data.map((item) => [item.id, item])).values(),
+        );
+        setNotifications(deduplicated);
       }
     } catch (e) {
       console.error('Error fetching notifications', e);
@@ -52,15 +57,20 @@ export function useNotifications(
       return;
 
     return gateway.subscribe((notification) => {
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
+      setNotifications((prev) => {
+        if (prev.some((item) => item.id === notification.id)) {
+          return prev.map((item) =>
+            item.id === notification.id ? notification : item,
+          );
+        }
+        return [notification, ...prev];
+      });
     });
   }, [gateway, role]);
   const removeNotification = async (id: string) => {
     try {
       await gateway.remove(id);
       setNotifications(prev => prev.filter(n => n.id !== id));
-      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (e) {
       console.error('Error removing notification', e);
     }
@@ -70,7 +80,6 @@ export function useNotifications(
     try {
       await gateway.markAsRead(id);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (e) {
       console.error('Error marking notification as read', e);
     }

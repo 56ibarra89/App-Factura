@@ -22,6 +22,12 @@ export interface LogoutResult {
   message?: string;
 }
 
+export interface LogoutOptions {
+  auditAction?: "LOGOUT" | "SESSION_EXPIRED";
+  auditDetails?: string;
+  localOnly?: boolean;
+}
+
 export interface AuthPinLoginSuccess {
   success: true;
   username: string;

@@ -44,7 +44,14 @@ export function useMesaOrderActions({
 
     window.setTimeout(() => {
       if (isReserved) {
-        void releaseTable(selectedMesaId);
+        void releaseTable(selectedMesaId).catch((error: unknown) => {
+          console.error("Error liberando reserva al abrir pedido:", error);
+          window.alert(
+            error instanceof Error && error.message.trim().length > 0
+              ? `No se pudo liberar la reserva de la mesa: ${error.message}`
+              : "No se pudo liberar la reserva de la mesa.",
+          );
+        });
         return;
       }
 
@@ -52,7 +59,16 @@ export function useMesaOrderActions({
         !tableStatusMap[selectedMesaId] ||
         tableStatusMap[selectedMesaId] === "disponible"
       ) {
-        void setTableStatus(selectedMesaId, "ocupado");
+        void setTableStatus(selectedMesaId, "ocupado").catch(
+          (error: unknown) => {
+            console.error("Error ocupando mesa al abrir pedido:", error);
+            window.alert(
+              error instanceof Error && error.message.trim().length > 0
+                ? `No se pudo ocupar la mesa: ${error.message}`
+                : "No se pudo ocupar la mesa.",
+            );
+          },
+        );
       }
     }, 0);
   }, [
@@ -124,7 +140,16 @@ export function useMesaOrderActions({
 
     openOrderEditor();
     window.setTimeout(() => {
-      void setTableStatus(selectedMesaId, "ocupado");
+      void setTableStatus(selectedMesaId, "ocupado").catch(
+        (error: unknown) => {
+          console.error("Error ocupando mesa:", error);
+          window.alert(
+            error instanceof Error && error.message.trim().length > 0
+              ? `No se pudo ocupar la mesa: ${error.message}`
+              : "No se pudo ocupar la mesa.",
+          );
+        },
+      );
     }, 0);
   }, [
     getOrderByTable,

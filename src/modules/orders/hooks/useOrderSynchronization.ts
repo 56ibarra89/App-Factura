@@ -146,6 +146,7 @@ export function reconcileRealtimeOrder(
 
 interface UseOrderSynchronizationOptions {
   isLoggedIn: boolean;
+  canReadHiddenOrders?: boolean;
   ordersRef: MutableRefObject<Order[]>;
   updateOrders: (updater: OrderStateUpdater) => void;
   gateway: CurrentOrdersGateway;
@@ -156,6 +157,7 @@ interface UseOrderSynchronizationOptions {
 
 export function useOrderSynchronization({
   isLoggedIn,
+  canReadHiddenOrders = true,
   ordersRef,
   updateOrders,
   gateway,
@@ -192,17 +194,19 @@ export function useOrderSynchronization({
       const requestStartSeq = realtimeMutationSeq;
 
       try {
-        const hiddenOrderIdsPromise = preferencesGateway
-          .getHiddenOrderIds()
-          .catch(() => {
-            if (!preferencesWarningShown) {
-              console.warn(
-                "Preferencias de órdenes ocultas no disponibles.",
-              );
-              preferencesWarningShown = true;
-            }
-            return [];
-          });
+        const hiddenOrderIdsPromise = canReadHiddenOrders
+          ? preferencesGateway
+              .getHiddenOrderIds()
+              .catch(() => {
+                if (!preferencesWarningShown) {
+                  console.warn(
+                    "Preferencias de órdenes ocultas no disponibles.",
+                  );
+                  preferencesWarningShown = true;
+                }
+                return [];
+              })
+          : Promise.resolve([] as string[]);
         const [backendOrders, loadedHiddenOrderIds] = await Promise.all([
           gateway.listCurrent(),
           hiddenOrderIdsPromise,
@@ -303,6 +307,7 @@ export function useOrderSynchronization({
       unsubscribe();
     };
   }, [
+    canReadHiddenOrders,
     gateway,
     isLoggedIn,
     ordersRef,

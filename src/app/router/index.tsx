@@ -301,7 +301,7 @@ const AppRoutes = () => (
                 "cocinero",
                 "despachador",
               ]}
-              requiredPermissions={[PERMISSIONS.KITCHEN_READ]}
+              requiredPermissions={[PERMISSIONS.ORDERS_READ, PERMISSIONS.KITCHEN_READ, PERMISSIONS.ORDERS_STATUS, PERMISSIONS.KITCHEN_UPDATE]}
             />
           }
         />
@@ -316,7 +316,7 @@ const AppRoutes = () => (
                 "cajero_principal",
                 "despachador",
               ]}
-              requiredPermissions={[PERMISSIONS.INVOICES_CANCEL]}
+              requiredPermissions={[PERMISSIONS.INVOICES_CANCEL, PERMISSIONS.ORDERS_CANCEL]}
             />
           }
         />
@@ -331,7 +331,7 @@ const AppRoutes = () => (
                 "cajero_principal",
                 "despachador",
               ]}
-              requiredPermissions={[PERMISSIONS.INVOICES_READ]}
+              requiredPermissions={[PERMISSIONS.INVOICES_READ, PERMISSIONS.ORDERS_READ]}
             />
           }
         />
@@ -340,6 +340,7 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<Reportes />}
+              allowedRoles={["admin"]}
               requiredPermissions={[PERMISSIONS.REPORTS_READ]}
             />
           }

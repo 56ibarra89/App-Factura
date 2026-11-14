@@ -37,7 +37,10 @@ import {
 export default function TablesPage() {
   const { floorsConfig, isLoading: isLoadingConfig, error, retryFetch } = useMesasConfig();
   const { assignedFloorId, loadingZone, zoneError, retryZone } = useMyTodayZone();
-  const { username, role, hasPermission } = useAuth();
+  const { username, firstName, lastName, role, hasPermission } = useAuth();
+  const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+  const canManageOrders = hasPermission(PERMISSIONS.ORDERS_MANAGE);
+  const canOperateTables = hasPermission(PERMISSIONS.TABLES_OPERATE);
   const { taxes, isExonerated } = useTaxConfig();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,6 +78,8 @@ export default function TablesPage() {
     floorsConfig,
     role,
     username,
+    fullName,
+    canManageOrders,
     assignedFloorId,
     openReservation: dialogs.openReservation,
     openTableSelect: dialogs.openTableSelect,
@@ -82,9 +87,7 @@ export default function TablesPage() {
 
   const checkout = useMesaCheckout(restoreFocus);
 
-  const canReassignWaiter = ["admin", "cajero", "cajero_principal", "despachador"].includes(
-    role ?? "",
-  );
+  const canReassignWaiter = canOperateTables;
 
   const openWaiterAssignment = useCallback(async () => {
     setIsWaiterDialogOpen(true);
@@ -218,8 +221,10 @@ export default function TablesPage() {
   const hasConfiguredTables = floorsConfig.some(
     (floor) => floor.tableCount > 0,
   );
-  const canCheckoutOrder =
+  const hasActiveTableOrder =
     !!logic.activeOrder && logic.activeOrder.items.length > 0;
+  const canCheckoutOrder =
+    hasActiveTableOrder && hasPermission(PERMISSIONS.ORDERS_FINALIZE);
 
   // Memoize current order format for OrderPanel
   const currentOrder = useMemo(() => logic.activeOrder ? logic.activeOrder.items : [], [logic.activeOrder]);
@@ -338,11 +343,12 @@ export default function TablesPage() {
           onUnirMesas={logic.handleUnirMesas}
           onMoverPedido={logic.handleMoverPedido}
           onDividirCuenta={handleOpenDividirCuenta}
-          hasActiveOrder={canCheckoutOrder}
+          hasActiveOrder={hasActiveTableOrder}
           canCheckoutOrder={canCheckoutOrder}
           canModifyOrder={logic.canModifyOrder}
+          canOperateTables={canOperateTables}
           onToggleOccupancy={logic.handleToggleOccupancy}
-          isOccupied={logic.selectedMesaStatus === "ocupado" || canCheckoutOrder || (logic.selectedMesaId ? logic.isTableBlocked(logic.selectedMesaId) : false)}
+          isOccupied={logic.selectedMesaStatus === "ocupado" || hasActiveTableOrder || (logic.selectedMesaId ? logic.isTableBlocked(logic.selectedMesaId) : false)}
           cannotReleaseTable={logic.selectedMesaId ? logic.isTableBlocked(logic.selectedMesaId) : false}
         />
       </Box>

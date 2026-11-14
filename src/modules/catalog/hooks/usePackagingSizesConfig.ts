@@ -66,6 +66,13 @@ export function usePackagingSizesConfig(
       }
 
       await gateway.save(finalSizes);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("appfactura:packaging-sizes-updated", {
+            detail: finalSizes,
+          }),
+        );
+      }
       setSnackbar({
         open: true,
         msg: "Empaques guardados correctamente.",
@@ -73,7 +80,6 @@ export function usePackagingSizesConfig(
       });
       setTimeout(() => {
         onClose();
-        window.location.reload();
       }, 1000);
     } catch {
       setSnackbar({

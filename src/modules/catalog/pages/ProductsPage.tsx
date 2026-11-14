@@ -24,7 +24,9 @@ import { LOGIN_COLORS } from "../../../shared/theme";
 
 const ProductsPage = () => {
   const { categories, addProduct, updateProduct, deleteProduct } = useCatalog();
-  const { username, role } = useAuth();
+  const { username, role, hasPermission } = useAuth();
+  const canManageOperationalSettings =
+    role === "admin" && hasPermission(PERMISSIONS.SETTINGS_MANAGE);
   const addButtonRef = useRef<HTMLButtonElement>(null);
 
   const blurActiveElement = () => {
@@ -178,40 +180,44 @@ const ProductsPage = () => {
               >
                 Gestionar Categorías
               </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  blurActiveElement();
-                  setShowDeliveryPrices(true);
-                }}
-                startIcon={<TwoWheelerIcon />}
-                sx={{
-                  borderRadius: 2,
-                  borderColor: LOGIN_COLORS.primary,
-                  color: LOGIN_COLORS.primary,
-                  '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
-                }}
-              >
-                Precios Delivery
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  blurActiveElement();
-                  setShowPackagingSizes(true);
-                }}
-                startIcon={<Inventory2OutlinedIcon />}
-                sx={{
-                  borderRadius: 2,
-                  borderColor: LOGIN_COLORS.primary,
-                  color: LOGIN_COLORS.primary,
-                  '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
-                }}
-              >
-                Gestionar Empaques
-              </Button>
+              {canManageOperationalSettings && (
+                <>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      blurActiveElement();
+                      setShowDeliveryPrices(true);
+                    }}
+                    startIcon={<TwoWheelerIcon />}
+                    sx={{
+                      borderRadius: 2,
+                      borderColor: LOGIN_COLORS.primary,
+                      color: LOGIN_COLORS.primary,
+                      '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
+                    }}
+                  >
+                    Precios Delivery
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      blurActiveElement();
+                      setShowPackagingSizes(true);
+                    }}
+                    startIcon={<Inventory2OutlinedIcon />}
+                    sx={{
+                      borderRadius: 2,
+                      borderColor: LOGIN_COLORS.primary,
+                      color: LOGIN_COLORS.primary,
+                      '&:hover': { borderColor: LOGIN_COLORS.primaryDark, bgcolor: 'rgba(0,0,0,0.02)' }
+                    }}
+                  >
+                    Gestionar Empaques
+                  </Button>
+                </>
+              )}
               <Button
                 variant="outlined"
                 size="small"
@@ -285,14 +291,18 @@ const ProductsPage = () => {
         onClose={() => setShowCategoryManager(false)}
       />
 
-      <DeliveryPricesDialog
-        open={showDeliveryPrices}
-        onClose={() => setShowDeliveryPrices(false)}
-      />
-      <PackagingSizesDialog
-        open={showPackagingSizes}
-        onClose={() => setShowPackagingSizes(false)}
-      />
+      {canManageOperationalSettings && (
+        <>
+          <DeliveryPricesDialog
+            open={showDeliveryPrices}
+            onClose={() => setShowDeliveryPrices(false)}
+          />
+          <PackagingSizesDialog
+            open={showPackagingSizes}
+            onClose={() => setShowPackagingSizes(false)}
+          />
+        </>
+      )}
 
       <Snackbar
         open={snackbar.open}

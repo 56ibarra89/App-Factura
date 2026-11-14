@@ -14,17 +14,21 @@ import {
   type AdminCategory,
 } from "../navigation/adminModules";
 import { DeliveryPricesDialog } from "../../modules/delivery";
-import { useAuth } from "../../modules/auth";
+import { PERMISSIONS, useAuth } from "../../modules/auth";
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
   const [openDeliveryDialog, setOpenDeliveryDialog] = useState(false);
-  const { hasPermission } = useAuth();
+  const { hasPermission, role } = useAuth();
+  const canManageDeliverySettings =
+    role === "admin" && hasPermission(PERMISSIONS.SETTINGS_MANAGE);
 
   const renderCategory = (categoryName: AdminCategory) => {
     const modules = adminModules.filter(
       (module) =>
-        module.category === categoryName && hasPermission(module.permission),
+        module.category === categoryName &&
+        hasPermission(module.permission) &&
+        (!module.allowedRoles || (role !== null && module.allowedRoles.includes(role))),
     );
     if (modules.length === 0) return null;
 
@@ -92,10 +96,12 @@ const AdminDashboardPage = () => {
         </Container>
       </Box>
 
-      <DeliveryPricesDialog
-        open={openDeliveryDialog}
-        onClose={() => setOpenDeliveryDialog(false)}
-      />
+      {canManageDeliverySettings && (
+        <DeliveryPricesDialog
+          open={openDeliveryDialog}
+          onClose={() => setOpenDeliveryDialog(false)}
+        />
+      )}
     </Box>
   );
 };

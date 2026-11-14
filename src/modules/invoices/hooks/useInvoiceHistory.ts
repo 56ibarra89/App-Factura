@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
+import {
+  getBusinessDateString,
+  getPreviousBusinessMonthDateString,
+  parseBusinessDayEnd,
+  parseBusinessDayStart,
+} from "../../../shared/format";
 import type { InvoiceGateway } from "../api/invoiceGateway";
 import { invoiceGateway } from "../api/invoiceGateway";
 import type { Invoice } from "../model/invoice.types";
@@ -8,11 +14,6 @@ export interface PaymentFilterOption {
   id: string;
   name: string;
 }
-
-const toLocalDateInput = (date: Date) =>
-  new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .split("T")[0];
 
 interface AppliedFilters {
   startDate: string;
@@ -26,14 +27,9 @@ export const useInvoiceHistory = (
 ) => {
   const initialFilters = useMemo<AppliedFilters>(() => {
     const today = new Date();
-    const lastMonth = new Date(
-      today.getFullYear(),
-      today.getMonth() - 1,
-      today.getDate(),
-    );
     return {
-      startDate: toLocalDateInput(lastMonth),
-      endDate: toLocalDateInput(today),
+      startDate: getPreviousBusinessMonthDateString(today),
+      endDate: getBusinessDateString(today),
       search: "",
       paymentMethodId: "ALL",
     };
@@ -57,9 +53,9 @@ export const useInvoiceHistory = (
   const [error, setError] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
-    const start = new Date(`${appliedFilters.startDate}T00:00:00`);
-    const end = new Date(`${appliedFilters.endDate}T23:59:59.999`);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
+    const start = parseBusinessDayStart(appliedFilters.startDate);
+    const end = parseBusinessDayEnd(appliedFilters.endDate);
+    if (!start || !end) return;
 
     setLoading(true);
     setError(null);

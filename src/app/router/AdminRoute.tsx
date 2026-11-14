@@ -12,13 +12,13 @@ const AdminRoute = ({
   requiredPermissions,
   matchAny = false,
 }: AdminRouteProps) => {
-  const { isLoggedIn, hasPermission } = useAuth();
+  const { isLoggedIn, hasPermission, role } = useAuth();
 
   if (!isLoggedIn) return <Navigate to="/" replace />;
   const allowed = matchAny
     ? requiredPermissions.some((permission) => hasPermission(permission))
     : hasPermission(...requiredPermissions);
-  if (!allowed) {
+  if (role !== "admin" || !allowed) {
     return <Navigate to="/home" replace />;
   }
 

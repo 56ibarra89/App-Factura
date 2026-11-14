@@ -50,7 +50,12 @@ export function useAccessControl(
             isActive: draft.isActive,
             permissionCodes: draft.permissionCodes,
           })
-        : await gateway.createRole(draft);
+        : await gateway.createRole({
+            name: draft.name,
+            description: draft.description,
+            baseRole: draft.baseRole,
+            permissionCodes: draft.permissionCodes,
+          });
       setRoles((current) =>
         draft.id
           ? current.map((role) => (role.id === saved.id ? saved : role))

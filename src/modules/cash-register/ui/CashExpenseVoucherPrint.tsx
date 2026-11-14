@@ -1,4 +1,5 @@
 import { Box, Typography, GlobalStyles } from "@mui/material";
+import { formatBusinessDateTime } from "../../../shared/format";
 import type { CashExpense } from "../model/cash-expense.types";
 import { CASH_EXPENSE_CATEGORY_LABELS } from "../model/cash-expense.types";
 import { useCompanySettings } from "../../settings";
@@ -14,12 +15,7 @@ export default function CashExpenseVoucherPrint({
 
   const formatDate = (dateValue: Date | string | undefined | null) => {
     if (!dateValue) return "N/A";
-    const d = new Date(dateValue);
-    return (
-      d.toLocaleDateString("es-ES") +
-      " " +
-      d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    );
+    return formatBusinessDateTime(dateValue) || "N/A";
   };
 
   const categoryInfo =

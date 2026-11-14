@@ -58,7 +58,9 @@ export function useOrderStatusCommands({
   const markAsSentToKitchen = useCallback<OrderCommands["markAsSentToKitchen"]>(
     async (orderId) => {
       let modifiedOrder: Order | undefined;
+      let previousOrder: Order | undefined;
       updateOrders((current) => {
+        previousOrder = current.find((order) => order.id === orderId);
         const result = orderMutations.markAsSentToKitchen(
           current,
           orderId,
@@ -69,7 +71,20 @@ export function useOrderStatusCommands({
       });
 
       if (modifiedOrder) {
-        await itemsGateway.updateItems(modifiedOrder);
+        try {
+          const saved = await itemsGateway.updateItems(modifiedOrder);
+          updateOrders((current) => current.map((order) =>
+            order.id === saved.id && order === modifiedOrder ? saved : order,
+          ));
+        } catch (error) {
+          if (previousOrder) {
+            const snapshot = previousOrder;
+            updateOrders((current) => current.map((order) =>
+              order.id === snapshot.id && order === modifiedOrder ? snapshot : order,
+            ));
+          }
+          throw error;
+        }
       }
     },
     [itemsGateway, updateOrders],
@@ -80,6 +95,7 @@ export function useOrderStatusCommands({
   >(
     async (tableId) => {
       let modifiedOrder: Order | undefined;
+      let previousOrder: Order | undefined;
       updateOrders((current) => {
         const result = orderMutations.markAsSentToKitchenByTable(
           current,
@@ -87,6 +103,11 @@ export function useOrderStatusCommands({
           Date.now(),
         );
         modifiedOrder = result.modified;
+        if (result.modified) {
+          previousOrder = current.find(
+            (order) => order.id === result.modified?.id,
+          );
+        }
         return result.orders;
       });
 
@@ -97,18 +118,24 @@ export function useOrderStatusCommands({
         if (updatedOrder.items) {
           updateOrders((current) =>
             current.map((order) =>
-              order.id === modifiedOrder?.id
-                ? {
-                    ...order,
-                    items: updatedOrder.items || order.items,
-                  }
+              order.id === modifiedOrder?.id && order === modifiedOrder
+                ? updatedOrder
                 : order,
             ),
           );
           return updatedOrder.items;
         }
       } catch (error: unknown) {
+        if (previousOrder) {
+          const snapshot = previousOrder;
+          updateOrders((current) =>
+            current.map((order) =>
+              order.id === snapshot.id && order === modifiedOrder ? snapshot : order,
+            ),
+          );
+        }
         console.error("Error marking table order for kitchen", error);
+        throw error;
       }
 
       return modifiedOrder.items;

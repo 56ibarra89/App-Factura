@@ -31,6 +31,7 @@ interface Props {
   hasActiveOrder?: boolean;
   canCheckoutOrder?: boolean;
   canModifyOrder?: boolean;
+  canOperateTables?: boolean;
   onToggleOccupancy?: () => void;
   isOccupied?: boolean;
   cannotReleaseTable?: boolean;
@@ -48,6 +49,7 @@ export default function OrderActions({
   hasActiveOrder = false,
   canCheckoutOrder = false,
   canModifyOrder = true,
+  canOperateTables = true,
   onToggleOccupancy,
   isOccupied = false,
   cannotReleaseTable = false,
@@ -85,7 +87,7 @@ export default function OrderActions({
             transition: "background-color 120ms ease-out",
           }}
           onClick={onEditOrder}
-          disabled={!onEditOrder || (!canModifyOrder && hasActiveOrder)}
+          disabled={!onEditOrder || !canModifyOrder}
         >
           Pedir / Agregar Ítems
         </Button>
@@ -188,7 +190,7 @@ export default function OrderActions({
               handleCloseMenu();
               if (onUnirMesas) onUnirMesas();
             }}
-            disabled={!canModifyOrder}
+            disabled={!canOperateTables || (hasActiveOrder && !canModifyOrder)}
             sx={{ py: 1, borderRadius: 1.5 }}
           >
             <ListItemIcon>
@@ -206,7 +208,7 @@ export default function OrderActions({
               handleCloseMenu();
               if (onMoverPedido) onMoverPedido();
             }}
-            disabled={!canModifyOrder}
+            disabled={!canOperateTables || !canModifyOrder}
             sx={{ py: 1, borderRadius: 1.5 }}
           >
             <ListItemIcon>
@@ -226,7 +228,7 @@ export default function OrderActions({
               handleCloseMenu();
               onReservar();
             }}
-            disabled={hasActiveOrder && !isReserved}
+            disabled={!canOperateTables || (hasActiveOrder && !isReserved)}
             sx={{ py: 1, borderRadius: 1.5 }}
           >
             <ListItemIcon>
@@ -244,7 +246,7 @@ export default function OrderActions({
               handleCloseMenu();
               if (onToggleOccupancy) onToggleOccupancy();
             }}
-            disabled={cannotReleaseTable && isOccupied}
+            disabled={!canOperateTables || (cannotReleaseTable && isOccupied)}
             sx={{ py: 1, borderRadius: 1.5 }}
           >
             <ListItemIcon>

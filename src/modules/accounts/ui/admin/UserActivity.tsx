@@ -18,8 +18,7 @@ import {
   getActionMetadata,
   FormattedLogDetails,
 } from "../../../audit";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { formatBusinessDateTime } from "../../../../shared/format";
 
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import LoginIcon from "@mui/icons-material/Login";
@@ -188,9 +187,7 @@ export function UserActivity({ user }: UserActivityProps) {
                       color="text.secondary"
                       sx={{ display: "block", mt: 0.2 }}
                     >
-                      {format(step.timestamp, "dd MMM yyyy, hh:mm a", {
-                        locale: es,
-                      })}
+                      {formatBusinessDateTime(step.timestamp, { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}
                     </Typography>
                   </StepLabel>
                   <StepContent>

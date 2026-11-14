@@ -23,6 +23,8 @@ interface UseMesaAvailabilityOptions {
   reservationDetails: Record<string, ReservationInfo>;
   role: string | null;
   username: string;
+  fullName?: string;
+  canManageOrders?: boolean;
 }
 
 export function useMesaAvailability({
@@ -35,6 +37,8 @@ export function useMesaAvailability({
   reservationDetails,
   role,
   username,
+  fullName = "",
+  canManageOrders = true,
 }: UseMesaAvailabilityOptions) {
   const blockedTableIds = useMemo(() => {
     const blocked = new Set<string>();
@@ -98,12 +102,32 @@ export function useMesaAvailability({
     [getOrderByTable, selectedMesaId],
   );
   const canModifyOrder = useMemo(() => {
+    if (!canManageOrders) return false;
     if (!activeOrder || activeOrder.items.length === 0) return true;
-    if (role === "admin" || role === "cajero") {
+    if (
+      role === "admin" ||
+      role === "cajero" ||
+      role === "cajero_principal" ||
+      role === "despachador"
+    ) {
       return true;
     }
-    return activeOrder.cashierName === username;
-  }, [activeOrder, role, username]);
+    const normalizedUser = username.trim().toLowerCase();
+    const normalizedFullName = fullName.trim().toLowerCase();
+    const cashier = (activeOrder.cashierName || "").trim().toLowerCase();
+    const waiter = (activeOrder.waiterName || "").trim().toLowerCase();
+    if (cashier && cashier === normalizedUser) {
+      return true;
+    }
+    if (
+      waiter &&
+      (waiter === normalizedUser ||
+        (normalizedFullName && waiter === normalizedFullName))
+    ) {
+      return true;
+    }
+    return false;
+  }, [activeOrder, canManageOrders, fullName, role, username]);
 
   return {
     mesas,

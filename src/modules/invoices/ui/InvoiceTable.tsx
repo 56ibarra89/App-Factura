@@ -17,7 +17,11 @@ import type { Invoice } from "../model/invoice.types";
 import type { ChangeEvent } from "react";
 import { statusLabels, statusColors } from "../../orders";
 import { useMesasConfig } from "../../tables";
-import { formatTableName } from "../../../shared/format";
+import {
+  formatBusinessDate,
+  formatBusinessTime,
+  formatTableName,
+} from "../../../shared/format";
 import PaymentMethodBadge from "./PaymentMethodBadge";
 import PaymentBreakdownCell from "./PaymentBreakdownCell";
 
@@ -115,16 +119,13 @@ const InvoiceTable = ({
                     }}
                   >
                     <TableCell>
-                      {order.timestamp.toLocaleDateString()}{" "}
+                      {formatBusinessDate(order.timestamp)}{" "}
                       <Typography
                         component="span"
                         variant="caption"
                         color="text.secondary"
                       >
-                        {order.timestamp.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {formatBusinessTime(order.timestamp)}
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>

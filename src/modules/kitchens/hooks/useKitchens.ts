@@ -7,11 +7,15 @@ import {
 
 export type { Kitchen } from '../api/kitchensGateway';
 
-export function useKitchens(gateway: KitchensGateway = kitchensGateway) {
+export function useKitchens(gateway: KitchensGateway = kitchensGateway, enabled = true) {
   const [kitchens, setKitchens] = useState<Kitchen[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchKitchens = useCallback(async () => {
+    if (!enabled) {
+      setKitchens([]);
+      return;
+    }
     setIsLoading(true);
     try {
       const data = await gateway.list();
@@ -21,10 +25,10 @@ export function useKitchens(gateway: KitchensGateway = kitchensGateway) {
     } finally {
       setIsLoading(false);
     }
-  }, [gateway]);
+  }, [gateway, enabled]);
 
   useEffect(() => {
-    fetchKitchens();
+    void fetchKitchens();
   }, [fetchKitchens]);
 
   const addKitchen = async (name: string, isActive: boolean = true) => {

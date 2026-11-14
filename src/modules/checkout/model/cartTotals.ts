@@ -4,7 +4,10 @@ import {
   isSplitBillOrderItem,
   type OrderItem,
 } from "../../orders";
-import type { AppliedPromotion } from "../../promotions";
+import type {
+  ActiveTwoForOnePromotion,
+  AppliedPromotion,
+} from "../../promotions";
 
 export interface TaxLike {
   percentage: number;
@@ -96,5 +99,133 @@ export function calculateCartTotals(
   const taxAmount = calculateTaxAmount(subTotalAfterDiscount, taxes, isExonerated);
 
   return { subTotal, discountAmount, taxAmount, total: Math.max(0, subTotalAfterDiscount + taxAmount) };
+}
+
+export function matchesTwoForOneRule(
+  item: OrderItem,
+  rule: ActiveTwoForOnePromotion,
+): boolean {
+  if (
+    item.note?.startsWith("Vale: ") ||
+    isPackagingOrderItem(item) ||
+    isDeliveryChargeOrderItem(item) ||
+    isSplitBillOrderItem(item)
+  ) {
+    return false;
+  }
+
+  const hasStructuredTargets = Boolean(
+    rule.productIds?.length || rule.categoryIds?.length,
+  );
+  if (hasStructuredTargets) {
+    return Boolean(
+      (item.productId !== undefined &&
+        rule.productIds?.includes(item.productId)) ||
+        (item.categoryId !== undefined &&
+          rule.categoryIds?.includes(item.categoryId)),
+    );
+  }
+
+  return Boolean(
+    !rule.appliesTo || rule.appliesTo === "Todos" || item.name === rule.appliesTo,
+  );
+}
+
+function toAppliedTwoForOnePromotion(
+  rule: ActiveTwoForOnePromotion,
+): AppliedPromotion {
+  return {
+    source: "happy-hour",
+    id: rule.id,
+    code: `AUTO-${rule.name.toUpperCase().replace(/\s+/g, "")}`,
+    discountType: "2x1",
+    discountValue: 0,
+    productIds: rule.productIds,
+    categoryIds: rule.categoryIds,
+  };
+}
+
+export function resolveAutomaticHappyHourSelection(
+  items: readonly OrderItem[],
+  active2x1Rules: readonly ActiveTwoForOnePromotion[],
+  activeDiscountHappyHours: readonly AppliedPromotion[],
+): {
+  twoForOneRule: ActiveTwoForOnePromotion | null;
+  promotion: AppliedPromotion | null;
+} {
+  let best2x1Rule: ActiveTwoForOnePromotion | null = null;
+  let best2x1Savings = 0;
+
+  for (const rule of active2x1Rules) {
+    const savings = items.reduce((sum, item) => {
+      if (!matchesTwoForOneRule(item, rule)) return sum;
+      return sum + Math.floor(item.quantity / 2) * item.price;
+    }, 0);
+    if (savings > best2x1Savings) {
+      best2x1Savings = savings;
+      best2x1Rule = rule;
+    }
+  }
+
+  let bestDiscountPromo: AppliedPromotion | null = null;
+  let bestDiscountSavings = 0;
+
+  for (const promo of activeDiscountHappyHours) {
+    const discountableSubtotal = items.reduce((sum, item) => {
+      if (
+        item.note?.startsWith("Vale: ") ||
+        isPackagingOrderItem(item) ||
+        isDeliveryChargeOrderItem(item) ||
+        isSplitBillOrderItem(item) ||
+        !isPromotionEligible(item, promo)
+      ) {
+        return sum;
+      }
+      const nonPromoGiftQty =
+        item.giftReason === "happy-hour-2x1" ? 0 : item.giftQuantity || 0;
+      const qty = Math.max(0, item.quantity - nonPromoGiftQty);
+      return sum + item.price * qty;
+    }, 0);
+
+    const savings =
+      promo.discountType === "porcentaje"
+        ? discountableSubtotal * (promo.discountValue / 100)
+        : Math.min(promo.discountValue, discountableSubtotal);
+
+    if (savings > bestDiscountSavings) {
+      bestDiscountSavings = savings;
+      bestDiscountPromo = promo;
+    }
+  }
+
+  if (best2x1Rule && best2x1Savings > 0 && best2x1Savings >= bestDiscountSavings) {
+    return {
+      twoForOneRule: best2x1Rule,
+      promotion: toAppliedTwoForOnePromotion(best2x1Rule),
+    };
+  }
+
+  if (bestDiscountPromo && bestDiscountSavings > 0) {
+    return {
+      twoForOneRule: null,
+      promotion: bestDiscountPromo,
+    };
+  }
+
+  if (activeDiscountHappyHours.length > 0) {
+    return {
+      twoForOneRule: null,
+      promotion: activeDiscountHappyHours[0],
+    };
+  }
+
+  if (active2x1Rules.length > 0) {
+    return {
+      twoForOneRule: active2x1Rules[0],
+      promotion: toAppliedTwoForOnePromotion(active2x1Rules[0]),
+    };
+  }
+
+  return { twoForOneRule: null, promotion: null };
 }
 

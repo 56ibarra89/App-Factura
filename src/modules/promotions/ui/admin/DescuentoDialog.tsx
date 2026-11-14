@@ -1,4 +1,5 @@
 import {
+  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -20,13 +21,15 @@ import { useCatalog } from "../../../catalog";
 interface DescuentoDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (rule: DescuentoRule) => void;
+  onSave: (rule: DescuentoRule) => Promise<void> | void;
   editingRule?: DescuentoRule | null;
 }
 
 const DescuentoDialog = ({ open, onClose, onSave, editingRule }: DescuentoDialogProps) => {
   const { categories } = useCatalog();
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [submitError, setSubmitError] = useState<string>("");
+  const [saving, setSaving] = useState(false);
   
   const [form, setForm] = useState<Partial<DescuentoRule>>({
     name: "",
@@ -53,19 +56,22 @@ const DescuentoDialog = ({ open, onClose, onSave, editingRule }: DescuentoDialog
         });
       }
       setErrorMsg("");
+      setSubmitError("");
+      setSaving(false);
     }
   }, [open, editingRule]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (saving) return;
+
     const numericValue = parseFloat(form.value || "0");
-    
+
     if (form.type === "Porcentaje" && (numericValue <= 0 || numericValue > 100)) {
       setErrorMsg("El porcentaje debe ser un valor entre 1 y 100.");
       return;
     }
-    
+
     if (form.type === "Monto Fijo" && numericValue <= 0) {
       setErrorMsg("El monto fijo debe ser mayor a 0.");
       return;
@@ -77,17 +83,29 @@ const DescuentoDialog = ({ open, onClose, onSave, editingRule }: DescuentoDialog
         form.appliesTo === "Toda la cuenta"
           ? undefined
           : categories.find((category) => category.label === form.appliesTo)?.id;
-      onSave({
-        id: form.id || Date.now(),
-        name: form.name,
-        type: form.type as string,
-        value: finalValue,
-        status: form.status as "Activo" | "Inactivo",
-        appliesTo: form.appliesTo,
-        productIds: selectedCategoryId ? [] : form.productIds,
-        categoryIds: selectedCategoryId ? [selectedCategoryId] : [],
-      });
-      onClose();
+      setSaving(true);
+      setSubmitError("");
+      try {
+        await onSave({
+          id: form.id || Date.now(),
+          name: form.name,
+          type: form.type as string,
+          value: finalValue,
+          status: form.status as "Activo" | "Inactivo",
+          appliesTo: form.appliesTo,
+          productIds: selectedCategoryId ? [] : form.productIds,
+          categoryIds: selectedCategoryId ? [selectedCategoryId] : [],
+        });
+        onClose();
+      } catch (err) {
+        setSubmitError(
+          err instanceof Error && err.message
+            ? err.message
+            : "No se pudo guardar el descuento.",
+        );
+      } finally {
+        setSaving(false);
+      }
     }
   };
 
@@ -168,11 +186,17 @@ const DescuentoDialog = ({ open, onClose, onSave, editingRule }: DescuentoDialog
             </Select>
           </FormControl>
 
+          {submitError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {submitError}
+            </Alert>
+          )}
+
           <Stack direction="row" spacing={2}>
-            <Button type="submit" variant="contained" fullWidth>
-              {editingRule ? "Actualizar" : "Guardar"}
+            <Button type="submit" variant="contained" fullWidth disabled={saving}>
+              {saving ? "Guardando..." : editingRule ? "Actualizar" : "Guardar"}
             </Button>
-            <Button fullWidth variant="outlined" onClick={onClose}>
+            <Button fullWidth variant="outlined" onClick={onClose} disabled={saving}>
               Cancelar
             </Button>
           </Stack>

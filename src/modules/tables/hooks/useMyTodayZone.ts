@@ -1,17 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../auth";
 import { useUserDirectory } from "../../accounts";
+import { getBusinessDateTimeParts } from "../../../shared/format";
 import { waiterZonesGateway } from "../api/waiterZonesGateway";
-
-const DAYS_MAP: Record<number, string> = {
-  0: "SUNDAY",
-  1: "MONDAY",
-  2: "TUESDAY",
-  3: "WEDNESDAY",
-  4: "THURSDAY",
-  5: "FRIDAY",
-  6: "SATURDAY",
-};
 
 export function useMyTodayZone() {
   const { username, role } = useAuth();
@@ -62,8 +53,7 @@ export function useMyTodayZone() {
       try {
         setLoading(true);
         setError(null);
-        const todayIndex = new Date().getDay();
-        const todayStr = DAYS_MAP[todayIndex];
+        const todayStr = getBusinessDateTimeParts().weekday;
 
         const zones = await waiterZonesGateway.getZonesByUserId(currentUser.id);
 

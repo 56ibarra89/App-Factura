@@ -64,14 +64,14 @@ export function createDeliveryRulesGateway(
     },
 
     async save(config: DeliveryRulesConfig): Promise<void> {
+      // Sincronizar con backend AppConfig primero para evitar falso éxito offline si falla o devuelve 403
+      await runtime.save(DELIVERY_RULES_KEY, config);
+
       try {
         localStore.setItem(DELIVERY_RULES_KEY, JSON.stringify(config));
       } catch {
         // ignore
       }
-
-      // Sincronizar con backend AppConfig
-      await runtime.save(DELIVERY_RULES_KEY, config);
 
       // Mantener sincronizado el gateway clásico de 6 precios para compatibilidad con vistas legacy
       try {

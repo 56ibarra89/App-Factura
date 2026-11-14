@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -29,6 +29,13 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SaveIcon from "@mui/icons-material/Save";
 import { BackButton, PageHeader } from "../../../shared/ui";
+import { useAuth } from "../../auth";
+import {
+  getBusinessDateString,
+  getBusinessMonthStartString,
+  parseBusinessDayEnd,
+  parseBusinessDayStart,
+} from "../../../shared/format";
 import { paymentMethodsGateway } from "../api/paymentMethodsGateway";
 import {
   DEFAULT_PAYMENT_METHODS_CONFIG,
@@ -47,13 +54,12 @@ const money = new Intl.NumberFormat("es-NI", {
   style: "currency",
   currency: "NIO",
 });
-const inputDate = (date: Date) =>
-  new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 10);
 
 export default function PaymentMethodsSettingsPage() {
-  const today = useMemo(() => new Date(), []);
+  const { role, hasPermission } = useAuth();
+  const canReadMetrics = role === "admin" && hasPermission("reports.read", "orders.read");
+  const initialStart = getBusinessMonthStartString();
+  const initialEnd = getBusinessDateString();
   const [config, setConfig] = useState<PaymentMethodsConfig>(
     DEFAULT_PAYMENT_METHODS_CONFIG,
   );
@@ -62,27 +68,18 @@ export default function PaymentMethodsSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<PaymentMethodType>("CARD_POS");
-  const [startDate, setStartDate] = useState(
-    inputDate(new Date(today.getFullYear(), today.getMonth(), 1)),
-  );
-  const [endDate, setEndDate] = useState(inputDate(today));
+  const [startDate, setStartDate] = useState(initialStart);
+  const [endDate, setEndDate] = useState(initialEnd);
   const [message, setMessage] = useState<{
     text: string;
     severity: "success" | "error";
   } | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      paymentMethodsGateway.load(),
-      paymentMethodsGateway.metrics(
-        new Date(today.getFullYear(), today.getMonth(), 1),
-        today,
-      ),
-    ])
-      .then(([saved, report]) => {
-        setConfig(saved);
-        setMetrics(report);
-      })
+    const start = parseBusinessDayStart(initialStart) ?? new Date();
+    const end = parseBusinessDayEnd(initialEnd) ?? new Date();
+    paymentMethodsGateway.load()
+      .then(setConfig)
       .catch(() =>
         setMessage({
           text: "No se pudo cargar la configuración.",
@@ -90,7 +87,12 @@ export default function PaymentMethodsSettingsPage() {
         }),
       )
       .finally(() => setLoading(false));
-  }, [today]);
+    if (canReadMetrics) {
+      void paymentMethodsGateway.metrics(start, end)
+        .then(setMetrics)
+        .catch(() => setMetrics(null));
+    }
+  }, [canReadMetrics, initialEnd, initialStart]);
 
   const update = (id: string, changes: Partial<ConfiguredPaymentMethod>) =>
     setConfig((current) => ({
@@ -145,13 +147,18 @@ export default function PaymentMethodsSettingsPage() {
   };
 
   const refreshReport = async () => {
+    if (!canReadMetrics) return;
+    const start = parseBusinessDayStart(startDate);
+    const end = parseBusinessDayEnd(endDate);
+    if (!start || !end) {
+      setMessage({
+        text: "Rango de fechas inválido.",
+        severity: "error",
+      });
+      return;
+    }
     try {
-      setMetrics(
-        await paymentMethodsGateway.metrics(
-          new Date(`${startDate}T00:00:00`),
-          new Date(`${endDate}T23:59:59.999`),
-        ),
-      );
+      setMetrics(await paymentMethodsGateway.metrics(start, end));
     } catch {
       setMessage({
         text: "No se pudo actualizar el reporte.",
@@ -350,7 +357,7 @@ export default function PaymentMethodsSettingsPage() {
             </CardContent>
           </Card>
 
-          <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+          {canReadMetrics && <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
             <CardContent>
               <Stack
                 direction={{ xs: "column", md: "row" }}
@@ -487,7 +494,7 @@ export default function PaymentMethodsSettingsPage() {
                 </Table>
               </TableContainer>
             </CardContent>
-          </Card>
+          </Card>}
         </Stack>
       )}
       <Snackbar

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { getBusinessDateTimeParts } from "../../../shared/format";
 import { useAuth } from "../../auth";
 import {
   kitchensGateway,
@@ -16,25 +17,15 @@ export type WeekDay =
   | "SATURDAY"
   | "SUNDAY";
 
-const WEEK_DAYS: readonly WeekDay[] = [
-  "SUNDAY",
-  "MONDAY",
-  "TUESDAY",
-  "WEDNESDAY",
-  "THURSDAY",
-  "FRIDAY",
-  "SATURDAY",
-];
-
 export function getWeekDay(date: Date = new Date()): WeekDay {
-  return WEEK_DAYS[date.getDay()];
+  return getBusinessDateTimeParts(date).weekday as WeekDay;
 }
 
 export function useAccessibleKitchens(
   gateway: KitchensGateway = kitchensGateway,
 ) {
-  const { role } = useAuth();
-  const kitchenState = useKitchens(gateway);
+  const { role, hasPermission } = useAuth();
+  const kitchenState = useKitchens(gateway, hasPermission("kitchen.read"));
   const isCook = role === "cocinero";
   const [assignments, setAssignments] = useState<CookKitchenAssignment[]>([]);
   const [isAssignmentLoading, setIsAssignmentLoading] = useState(isCook);

@@ -16,7 +16,7 @@ export interface ProductPayload {
 export interface CategoryPayload {
   label: string;
   icon?: string;
-  kitchenId?: string;
+  kitchenId?: string | null;
 }
 
 export interface CategoryExtraPayload {

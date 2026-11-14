@@ -22,6 +22,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import PhoneIcon from "@mui/icons-material/Phone";
 import StarIcon from "@mui/icons-material/Star";
 import type { Customer } from "../../model/customer.types";
+import { formatBusinessDate } from "../../../../shared/format";
 
 interface Props {
   page: number;
@@ -45,7 +46,7 @@ const CustomerTable: React.FC<Props> = ({
   const paginated = customers;
 
   const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("es", {
+    formatBusinessDate(iso, {
       day: "2-digit",
       month: "short",
       year: "numeric",

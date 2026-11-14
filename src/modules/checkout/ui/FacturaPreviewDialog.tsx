@@ -101,6 +101,7 @@ export default function FacturaPreviewDialog({
     initialDeliveryCost,
     initialDeliveryZone,
     initialCustomerTendered,
+    isPrintRetry,
     onConfirm,
   });
   const supplementalCart = buildSupplementalCartItems(
@@ -128,7 +129,7 @@ export default function FacturaPreviewDialog({
         >
           {isPrintRetry && (
             <Alert severity="warning" sx={{ mb: 2 }}>
-              La factura ya fue emitida. Reintenta la impresión para completar el envío a cocina.
+              La factura ya fue emitida y registrada. Reintenta la impresión o cierra esta ventana para continuar.
             </Alert>
           )}
           <InvoiceSummary
@@ -241,7 +242,7 @@ export default function FacturaPreviewDialog({
             variant="contained"
             color="error"
             onClick={() => void checkout.handleConfirm()}
-            disabled={!checkout.canConfirm || checkout.isSubmitting}
+            disabled={checkout.isSubmitting || (!isPrintRetry && !checkout.canConfirm)}
           >
             {checkout.isSubmitting
               ? "Procesando..."

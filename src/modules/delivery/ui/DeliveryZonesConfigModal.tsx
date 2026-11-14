@@ -151,11 +151,11 @@ export default function DeliveryZonesConfigModal({
       ...localConfig,
       zones: updatedZones,
     };
-    setLocalConfig(updatedConfig);
-    setZoneModalOpen(false);
 
     try {
       await saveRules(updatedConfig);
+      setLocalConfig(updatedConfig);
+      setZoneModalOpen(false);
       setSnackbar({
         open: true,
         message: editingZoneId
@@ -163,11 +163,14 @@ export default function DeliveryZonesConfigModal({
           : "Nueva zona agregada y guardada en el backend.",
         severity: "success",
       });
-    } catch {
+    } catch (err) {
       setSnackbar({
         open: true,
-        message: "Zona guardada localmente. Haz clic en 'Guardar Cambios' para sincronizar con el backend.",
-        severity: "info",
+        message:
+          err instanceof Error && err.message
+            ? err.message
+            : "No se pudo guardar la zona en el servidor.",
+        severity: "error",
       });
     }
   };
@@ -178,17 +181,24 @@ export default function DeliveryZonesConfigModal({
       ...localConfig,
       zones: localConfig.zones.filter((z) => z.id !== id),
     };
-    setLocalConfig(updatedConfig);
 
     try {
       await saveRules(updatedConfig);
+      setLocalConfig(updatedConfig);
       setSnackbar({
         open: true,
         message: `Zona "${targetZone?.name || ""}" eliminada del sistema.`,
         severity: "info",
       });
-    } catch {
-      // ignore
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message:
+          err instanceof Error && err.message
+            ? err.message
+            : "No se pudo eliminar la zona en el servidor.",
+        severity: "error",
+      });
     }
   };
 
@@ -201,19 +211,22 @@ export default function DeliveryZonesConfigModal({
         z.id === id ? { ...z, isActive: !z.isActive } : z,
       ),
     };
-    setLocalConfig(updatedConfig);
 
     try {
       await saveRules(updatedConfig);
+      setLocalConfig(updatedConfig);
       setSnackbar({
         open: true,
         message: `Zona "${targetZone?.name || ""}" ${newStatus ? "activada" : "desactivada"} en el backend.`,
         severity: "success",
       });
-    } catch {
+    } catch (err) {
       setSnackbar({
         open: true,
-        message: "Error al actualizar estado en el backend. Pulsa 'Guardar Cambios'.",
+        message:
+          err instanceof Error && err.message
+            ? err.message
+            : "Error al actualizar estado de la zona en el servidor.",
         severity: "error",
       });
     }

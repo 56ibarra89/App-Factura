@@ -29,6 +29,7 @@ interface UseCheckoutDialogOptions {
   initialDeliveryCost: number;
   initialDeliveryZone?: DeliveryZone | null;
   initialCustomerTendered?: number;
+  isPrintRetry?: boolean;
   onConfirm: (values: CheckoutFormValues) => void | Promise<void>;
   gateway?: CheckoutGateway;
 }
@@ -49,6 +50,7 @@ export function useCheckoutDialog({
   initialDeliveryCost,
   initialDeliveryZone,
   initialCustomerTendered,
+  isPrintRetry = false,
   onConfirm,
   gateway = checkoutGateway,
 }: UseCheckoutDialogOptions) {
@@ -264,6 +266,26 @@ export function useCheckoutDialog({
   );
 
   const handleConfirm = useCallback(async () => {
+    if (isPrintRetry) {
+      if (submissionLock.current) return;
+      submissionLock.current = true;
+      setSubmitError("");
+      setIsSubmitting(true);
+      try {
+        await executeFinalSubmission();
+      } catch (error: unknown) {
+        setSubmitError(
+          error instanceof Error
+            ? error.message
+            : "No se pudo reintentar la impresión. Inténtalo nuevamente.",
+        );
+      } finally {
+        submissionLock.current = false;
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     if (!canConfirm || submissionLock.current) return;
     submissionLock.current = true;
     setIsSubmitting(true);
@@ -320,7 +342,7 @@ export function useCheckoutDialog({
       submissionLock.current = false;
       setIsSubmitting(false);
     }
-  }, [canConfirm, customerDelivery, executeFinalSubmission]);
+  }, [canConfirm, customerDelivery, executeFinalSubmission, isPrintRetry]);
 
   const handleConfirmAsNewCustomer = useCallback(async () => {
     if (!matchedCustomer || submissionLock.current) return;

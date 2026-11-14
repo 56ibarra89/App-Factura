@@ -24,6 +24,8 @@ interface UseSplitBillOptions {
   taxAmount?: number;
 }
 
+const MAX_EQUAL_SPLIT_ACCOUNTS = 12;
+
 function deriveEqualAccountIdentities(
   items: readonly OrderItem[],
   totalAmount: number,
@@ -42,26 +44,53 @@ function deriveEqualAccountIdentities(
   const creditBaseAmounts = credits
     .map((item) => Math.abs(item.price * item.quantity))
     .filter((amount) => amount > 0.01);
-  const representativeCredit = creditBaseAmounts[0];
+  const allCreditsEqual =
+    creditBaseAmounts.length > 0 &&
+    Math.max(...creditBaseAmounts) - Math.min(...creditBaseAmounts) <= 0.05;
+  const representativeCredit = creditBaseAmounts[0] ?? 0;
   const taxableBase = Math.max(0, subTotalAmount - discountAmount);
   const taxFactor = taxableBase > 0 ? 1 + taxAmount / taxableBase : 1;
   const installmentAmount = representativeCredit * taxFactor;
-  const remainingCount =
-    installmentAmount > 0
-      ? Math.max(1, Math.round(totalAmount / installmentAmount))
-      : 2;
-  const highestPaidNumber = credits.reduce((highest, item) => {
+  const rawRatio =
+    installmentAmount > 0 ? totalAmount / installmentAmount : Number.NaN;
+  const roundedRatio = Math.round(rawRatio);
+  const looksLikeEqualSplit =
+    allCreditsEqual &&
+    Number.isFinite(rawRatio) &&
+    Math.abs(rawRatio - roundedRatio) <= 0.08 &&
+    roundedRatio >= 1 &&
+    roundedRatio <= MAX_EQUAL_SPLIT_ACCOUNTS;
+  // Si los abonos previos fueron personalizados/desiguales, reiniciar en 2 subcuentas en lugar de dividir por un abono arbitrario.
+  const remainingCount = looksLikeEqualSplit ? roundedRatio : 2;
+  const paidNumbers = new Set<number>();
+  for (const item of credits) {
     const match = item.name.match(/persona\s+(\d+)/i);
-    return Math.max(highest, match ? Number(match[1]) : 0);
-  }, 0);
+    if (match) {
+      const parsed = Number(match[1]);
+      if (Number.isInteger(parsed) && parsed > 0) {
+        paidNumbers.add(parsed);
+      }
+    }
+  }
 
-  return Array.from({ length: remainingCount }, (_, index) => {
-    const accountNumber = highestPaidNumber + index + 1;
-    return {
-      id: `equal-account-${accountNumber}`,
-      name: `Persona ${accountNumber}`,
-    };
-  });
+  // Preservar los números de Persona pendientes aunque se haya cobrado antes una cuenta intermedia o superior (ej. Persona 3 antes que Persona 1).
+  const totalSlotsNeeded = paidNumbers.size + remainingCount;
+  const remainingIdentities: Array<{ id: string; name: string }> = [];
+  for (
+    let accountNumber = 1;
+    remainingIdentities.length < remainingCount &&
+    accountNumber <= totalSlotsNeeded + MAX_EQUAL_SPLIT_ACCOUNTS;
+    accountNumber += 1
+  ) {
+    if (!paidNumbers.has(accountNumber)) {
+      remainingIdentities.push({
+        id: `equal-account-${accountNumber}`,
+        name: `Persona ${accountNumber}`,
+      });
+    }
+  }
+
+  return remainingIdentities;
 }
 
 function isSameSplitItem(a: OrderItem, b: OrderItem): boolean {
@@ -180,9 +209,9 @@ export function useSplitBill({
       ),
     [discountAmount, items, subTotalAmount, taxAmount, totalAmount],
   );
-  const highestInitialEqualAccount = initialEqualIdentities.reduce(
-    (highest, account) => {
-      const match = account.name.match(/persona\s+(\d+)/i);
+  const highestInitialEqualAccount = [...initialEqualIdentities, ...items.filter(isSplitBillCreditOrderItem)].reduce(
+    (highest, entry) => {
+      const match = entry.name.match(/persona\s+(\d+)/i);
       return Math.max(highest, match ? Number(match[1]) : 0);
     },
     0,

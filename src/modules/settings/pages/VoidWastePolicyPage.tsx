@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Box,
@@ -31,6 +31,12 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SaveIcon from "@mui/icons-material/Save";
 import { BackButton, PageHeader } from "../../../shared/ui";
+import {
+  getBusinessDateString,
+  getBusinessMonthStartString,
+  parseBusinessDayEnd,
+  parseBusinessDayStart,
+} from "../../../shared/format";
 import { useVoidWastePolicy } from "../hooks/useVoidWastePolicy";
 import {
   CANCELLATION_CATEGORIES,
@@ -39,11 +45,6 @@ import {
   type CancellationCategory,
 } from "../model/voidWastePolicy.types";
 
-const toInputDate = (date: Date) =>
-  new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 10);
-
 const money = new Intl.NumberFormat("es-NI", {
   style: "currency",
   currency: "NIO",
@@ -51,11 +52,10 @@ const money = new Intl.NumberFormat("es-NI", {
 
 export default function VoidWastePolicyPage() {
   const policy = useVoidWastePolicy();
-  const now = useMemo(() => new Date(), []);
-  const [startDate, setStartDate] = useState(
-    toInputDate(new Date(now.getFullYear(), now.getMonth(), 1)),
+  const [startDate, setStartDate] = useState(() =>
+    getBusinessMonthStartString(),
   );
-  const [endDate, setEndDate] = useState(toInputDate(now));
+  const [endDate, setEndDate] = useState(() => getBusinessDateString());
   const [newLabel, setNewLabel] = useState("");
   const [newCategory, setNewCategory] = useState<CancellationCategory>("OTHER");
   const [message, setMessage] = useState<{
@@ -121,11 +121,17 @@ export default function VoidWastePolicyPage() {
   };
 
   const refreshMetrics = async () => {
+    const start = parseBusinessDayStart(startDate);
+    const end = parseBusinessDayEnd(endDate);
+    if (!start || !end) {
+      setMessage({
+        text: "Rango de fechas inválido.",
+        severity: "error",
+      });
+      return;
+    }
     try {
-      await policy.loadMetrics(
-        new Date(`${startDate}T00:00:00`),
-        new Date(`${endDate}T23:59:59.999`),
-      );
+      await policy.loadMetrics(start, end);
     } catch {
       setMessage({
         text: "No se pudo actualizar el reporte.",
@@ -165,6 +171,12 @@ export default function VoidWastePolicyPage() {
         reporte usa el valor de venta de la orden afectada; no representa el
         costo contable de ingredientes.
       </Typography>
+
+      {policy.loadError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {policy.loadError}
+        </Alert>
+      )}
 
       {policy.isLoading ? (
         <Box display="flex" justifyContent="center" py={10}>
@@ -350,7 +362,7 @@ export default function VoidWastePolicyPage() {
             </CardContent>
           </Card>
 
-          <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+          {policy.canReadMetrics && <Card elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
             <CardContent>
               <Stack
                 direction={{ xs: "column", md: "row" }}
@@ -450,7 +462,7 @@ export default function VoidWastePolicyPage() {
                 </Table>
               </TableContainer>
             </CardContent>
-          </Card>
+          </Card>}
         </Stack>
       )}
 

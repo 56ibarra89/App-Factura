@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { ApiClientError } from "../../../../shared/api";
 import type { MutableRefObject } from "react";
 import {
   orderMutations,
@@ -123,6 +124,7 @@ export function useOrderFinalizationCommand({
         const resolvedTotal = modifiedOrder.total;
         const orderToFinalize: Order = {
           ...modifiedOrder,
+          updatedAt: originalOrder?.updatedAt ?? modifiedOrder.updatedAt,
           payments: reconcileFinalizationPayments(
             modifiedOrder,
             resolvedTotal,
@@ -134,7 +136,7 @@ export function useOrderFinalizationCommand({
           );
         updateOrders((current) =>
           current.map((order) =>
-            order.id === modifiedOrder?.id
+            order.id === modifiedOrder?.id && order === modifiedOrder
               ? {
                   ...order,
                   status: "paid",
@@ -169,11 +171,22 @@ export function useOrderFinalizationCommand({
         if (originalOrder) {
           updateOrders((current) =>
             current.map((order) =>
-              order.id === orderId
+              order.id === orderId && order === modifiedOrder
                 ? originalOrder
                 : order,
             ),
           );
+        }
+        if (error instanceof ApiClientError && error.status === 409 && finalizationGateway.getById) {
+          try {
+            const refreshed = await finalizationGateway.getById(orderId);
+            updateOrders((current) => current.map((order) =>
+              order.id === orderId && order === originalOrder
+                ? refreshed : order,
+            ));
+          } catch (refreshError) {
+            console.error("No se pudo actualizar la orden tras el conflicto de cobro", refreshError);
+          }
         }
         throw error;
       }
@@ -192,15 +205,32 @@ export function useOrderFinalizationCommand({
       if (!finalizationGateway.splitCheckout) {
         return finalizeOrder(parentOrderId, command);
       }
+      const initialParent = ordersRef.current.find((order) => order.id === parentOrderId);
 
-      const result = await finalizationGateway.splitCheckout(
-        parentOrderId,
-        command,
-      );
+      let result: Awaited<ReturnType<NonNullable<OrderFinalizationGateway["splitCheckout"]>>>;
+      try {
+        result = await finalizationGateway.splitCheckout(parentOrderId, {
+          ...command,
+          expectedUpdatedAt: initialParent?.updatedAt?.toISOString(),
+        });
+      } catch (error) {
+        if (error instanceof ApiClientError && error.status === 409 && finalizationGateway.getById) {
+          try {
+            const refreshed = await finalizationGateway.getById(parentOrderId);
+            updateOrders((current) => current.map((order) =>
+              order.id === parentOrderId && order === initialParent
+                ? refreshed : order,
+            ));
+          } catch (refreshError) {
+            console.error("No se pudo actualizar la mesa tras el conflicto de división", refreshError);
+          }
+        }
+        throw error;
+      }
 
       updateOrders((current) => {
         const updatedList = current.map((order) =>
-          order.id === result.parentOrder.id
+          order.id === result.parentOrder.id && (!initialParent || order === initialParent)
             ? result.parentOrder
             : order.id === result.paidOrder.id
               ? result.paidOrder
@@ -216,7 +246,7 @@ export function useOrderFinalizationCommand({
 
       return result.paidOrder.invoiceNumber;
     },
-    [finalizationGateway, finalizeOrder, updateOrders],
+    [finalizationGateway, finalizeOrder, ordersRef, updateOrders],
   );
 
   return { finalizeOrder, splitCheckoutOrder };

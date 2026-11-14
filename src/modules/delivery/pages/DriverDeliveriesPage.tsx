@@ -23,6 +23,8 @@ import {
   alpha,
 } from "@mui/material";
 import { BackButton, PageHeader } from "../../../shared/ui";
+import { ApiClientError } from "../../../shared/api";
+import { formatBusinessTime } from "../../../shared/format";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import PhoneIcon from "@mui/icons-material/Phone";
@@ -38,7 +40,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { useAuth } from "../../auth";
+import { PERMISSIONS, useAuth } from "../../auth";
 import { deliveryGateway } from "../api/deliveryGateway";
 import { PaymentConfirmationDialog } from "../ui/PaymentConfirmationDialog";
 import {
@@ -49,7 +51,6 @@ import {
   requiresKitchenPreparation,
   type Order,
 } from "../../orders";
-import { usersGateway } from "../../accounts";
 import { useServiceSlaConfig } from "../../settings";
 import type { DeliveryDriver } from "../model/delivery.types";
 
@@ -81,7 +82,7 @@ function getDeliveryStage(order: Order): DeliveryStage | null {
 }
 
 export default function DriverDeliveriesPage() {
-  const { role, username } = useAuth();
+  const { role, username, hasPermission } = useAuth();
   const { config: serviceSlas } = useServiceSlaConfig();
   const [clock, setClock] = useState(() => Date.now());
 
@@ -112,30 +113,14 @@ export default function DriverDeliveriesPage() {
   const loadInitialData = useCallback(async () => {
     setLoading(true);
     try {
-      const currentDriverRequest =
-        isMotorizado && username
-          ? usersGateway
-              .findByUsername(username)
-              .then((currentUser) => currentUser as DeliveryDriver)
-          : Promise.resolve(null);
-      const [availableDrivers, currentDriver] = await Promise.all([
-        deliveryGateway.listAvailableDrivers(),
-        currentDriverRequest,
-      ]);
-      const driverMap = new Map(
-        availableDrivers.map((driver) => [driver.id, driver]),
-      );
-      if (currentDriver) driverMap.set(currentDriver.id, currentDriver);
-      const driverList = Array.from(driverMap.values());
-      setDrivers(driverList);
-
       if (isMotorizado) {
-        if (currentDriver) {
-          setSelectedDriverId(currentDriver.id);
-        } else if (driverList.length > 0) {
-          setSelectedDriverId(driverList[0].id);
-        }
-      } else if (driverList.length > 0) {
+        setDrivers([]);
+        setSelectedDriverId("");
+        return;
+      }
+      const driverList = await deliveryGateway.listAvailableDrivers();
+      setDrivers(driverList);
+      if (driverList.length > 0) {
         setSelectedDriverId((prev) => prev || "all");
       }
     } catch (err) {
@@ -148,15 +133,16 @@ export default function DriverDeliveriesPage() {
     } finally {
       setLoading(false);
     }
-  }, [isMotorizado, username]);
+  }, [isMotorizado]);
 
   const fetchAllDeliveryOrders = useCallback(async () => {
     try {
       const [allCurrentOrders, driverOrders] = await Promise.all([
         isMotorizado
-          ? Promise.resolve([] as Order[])
+          ? deliveryGateway.getMyDeliveries()
           : ordersGateway.listCurrent().catch(() => [] as Order[]),
         selectedDriverId
+          && !isMotorizado
           && selectedDriverId !== "all"
           ? deliveryGateway.getDriverOrdersToday(selectedDriverId)
           : Promise.resolve([] as Order[]),
@@ -284,6 +270,7 @@ export default function DriverDeliveriesPage() {
         undefined,
         payments,
         payingOrder.certificateSerials,
+        payingOrder.updatedAt,
       );
       setSnackbar({
         open: true,
@@ -294,9 +281,15 @@ export default function DriverDeliveriesPage() {
       await fetchAllDeliveryOrders();
     } catch (err) {
       console.error("Error al finalizar pago:", err);
+      if (err instanceof ApiClientError && err.status === 409) {
+        await fetchAllDeliveryOrders();
+        setPayingOrder(null);
+      }
       setSnackbar({
         open: true,
-        message: "No se pudo registrar el pago del pedido.",
+        message: err instanceof ApiClientError && err.status === 409
+          ? "La orden cambió. Revisa el pedido actualizado antes de cobrar."
+          : "No se pudo registrar el pago del pedido.",
         severity: "error",
       });
       throw err;
@@ -336,25 +329,10 @@ export default function DriverDeliveriesPage() {
   // Filtrar las órdenes para el motorizado activo o vista general
   const driverOrders = useMemo(() => {
     return orders.filter((order) => {
-      // Si el usuario es motorizado, ve las órdenes asignadas a su id, username, nombre completo o entregas delivery
+      // El endpoint propio ya devuelve exclusivamente entregas asignadas.
       if (isMotorizado) {
-        const myUserId = selectedDriverUser?.id || selectedDriverId;
-        const myUsername = username?.toLowerCase();
-        const myFullName = selectedDriverUser
-          ? `${selectedDriverUser.firstName} ${selectedDriverUser.lastName}`
-              .trim()
-              .toLowerCase()
-          : "";
-
-        const orderDriver = (order.driverId || "").toLowerCase();
-
-        const matchId = Boolean(myUserId && order.driverId === myUserId);
-        const matchUser = Boolean(myUsername && orderDriver === myUsername);
-        const matchFullName = Boolean(myFullName && orderDriver === myFullName);
-        const unassignedDelivery =
-          !order.driverId && order.orderType === "delivery";
-
-        return matchId || matchUser || matchFullName || unassignedDelivery;
+        // /orders/my-deliveries ya restringe la lista al usuario autenticado.
+        return order.orderType === "delivery";
       }
 
       // Si es admin/cajero/despachador:
@@ -370,7 +348,7 @@ export default function DriverDeliveriesPage() {
 
       return matchId || matchUser;
     });
-  }, [orders, isMotorizado, selectedDriverUser, username, selectedDriverId]);
+  }, [orders, isMotorizado, selectedDriverUser, selectedDriverId]);
 
   const stagedOrders = useMemo(
     () => driverOrders.filter((order) => getDeliveryStage(order) !== null),
@@ -759,10 +737,7 @@ export default function DriverDeliveriesPage() {
                         sx={{ fontSize: "0.85rem", color: "text.secondary" }}
                       />
                       <Typography variant="caption" color="text.secondary">
-                        {new Date(order.timestamp).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {formatBusinessTime(order.timestamp)}
                       </Typography>
                     </Stack>
                   </Box>
@@ -1188,7 +1163,8 @@ export default function DriverDeliveriesPage() {
                         buttonContent
                       );
                     })()
-                  ) : order.status === "delivered" ? (
+                  ) : order.status === "delivered" &&
+                    hasPermission(PERMISSIONS.ORDERS_FINALIZE) ? (
                     <Button
                       fullWidth
                       variant="contained"

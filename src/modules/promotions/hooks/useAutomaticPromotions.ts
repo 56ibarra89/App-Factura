@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { getBusinessDateTimeParts } from "../../../shared/format";
 import type { AppliedPromotion } from "../model/promotion.types";
 import {
   promotionsGateway,
@@ -8,9 +9,7 @@ import {
   type PromotionsGateway,
 } from "../api/promotionsGateway";
 
-const DAYS_MAP = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-
-interface ActiveTwoForOnePromotion {
+export interface ActiveTwoForOnePromotion {
   id: number;
   name: string;
   appliesTo?: string;
@@ -36,9 +35,12 @@ export interface OrderPromotionSnapshot {
 export function useAutomaticPromotions(
   gateway: PromotionsGateway = promotionsGateway,
 ) {
-  const [activeHappyHour, setActiveHappyHour] = useState<AppliedPromotion | null>(null);
-  const [active2x1, setActive2x1] =
-    useState<ActiveTwoForOnePromotion | null>(null);
+  const [activeDiscountHappyHours, setActiveDiscountHappyHours] = useState<
+    AppliedPromotion[]
+  >([]);
+  const [active2x1Rules, setActive2x1Rules] = useState<
+    ActiveTwoForOnePromotion[]
+  >([]);
   const [happyHours, setHappyHours] = useState<HappyHourRecord[]>([]);
 
   const fetchHappyHours = useCallback(async () => {
@@ -58,11 +60,10 @@ export function useAutomaticPromotions(
 
   useEffect(() => {
     const checkHappyHour = () => {
-      const now = new Date();
-      const currentDay = DAYS_MAP[now.getDay()];
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const { weekday: currentDay, totalMinutes: currentMinutes } =
+        getBusinessDateTimeParts();
 
-      const activeRule = happyHours.find((rule) => {
+      const matchingRules = happyHours.filter((rule) => {
         if (rule.status !== "Activo" && rule.status !== "ACTIVO") return false;
         if (!rule.daysOfWeek.includes(currentDay)) return false;
 
@@ -82,10 +83,21 @@ export function useAutomaticPromotions(
         return currentMinutes >= ruleStartMinutes && currentMinutes <= ruleEndMinutes;
       });
 
-      if (activeRule) {
-        if (activeRule.promotionType === "2x1" || activeRule.promotionType === "DOSXUNO") {
+      const next2x1: ActiveTwoForOnePromotion[] = [];
+      const nextDiscounts: AppliedPromotion[] = [];
+      const typeMap: Record<string, AppliedPromotion["discountType"]> = {
+        porcentaje: "porcentaje",
+        monto_fijo: "monto_fijo",
+        PORCENTAJE: "porcentaje",
+        MONTO_FIJO: "monto_fijo",
+      };
 
-          setActive2x1({
+      for (const activeRule of matchingRules) {
+        if (
+          activeRule.promotionType === "2x1" ||
+          activeRule.promotionType === "DOSXUNO"
+        ) {
+          next2x1.push({
             id: activeRule.id,
             name: activeRule.name,
             appliesTo: activeRule.appliesTo,
@@ -93,17 +105,8 @@ export function useAutomaticPromotions(
             productIds: activeRule.productIds,
             categoryIds: activeRule.categoryIds,
           });
-          setActiveHappyHour(null);
         } else {
-          setActive2x1(null);
-
-          const typeMap: Record<string, AppliedPromotion["discountType"]> = {
-            porcentaje: "porcentaje",
-            monto_fijo: "monto_fijo",
-            PORCENTAJE: "porcentaje",
-            MONTO_FIJO: "monto_fijo"
-          };
-          setActiveHappyHour({
+          nextDiscounts.push({
             source: "happy-hour",
             id: activeRule.id,
             code: `AUTO-${activeRule.name.toUpperCase().replace(/\s+/g, "")}`,
@@ -115,10 +118,10 @@ export function useAutomaticPromotions(
             categoryIds: activeRule.categoryIds,
           });
         }
-      } else {
-        setActiveHappyHour(null);
-        setActive2x1(null);
       }
+
+      setActive2x1Rules(next2x1);
+      setActiveDiscountHappyHours(nextDiscounts);
     };
 
     checkHappyHour();
@@ -126,7 +129,13 @@ export function useAutomaticPromotions(
     return () => clearInterval(interval);
   }, [happyHours]);
 
-  return { activeHappyHour, active2x1, happyHours };
+  return {
+    activeHappyHour: activeDiscountHappyHours[0] ?? null,
+    active2x1: active2x1Rules[0] ?? null,
+    activeDiscountHappyHours,
+    active2x1Rules,
+    happyHours,
+  };
 }
 
 export function useOrderPromotionRehydration(

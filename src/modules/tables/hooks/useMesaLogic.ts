@@ -15,6 +15,8 @@ interface UseMesaLogicProps {
   floorsConfig: FloorConfig[];
   role: string | null;
   username: string;
+  fullName?: string;
+  canManageOrders?: boolean;
   assignedFloorId: number | null;
   openReservation(): void;
   openTableSelect(mode: TableSelectMode): void;
@@ -24,6 +26,8 @@ export function useMesaLogic({
   floorsConfig,
   role,
   username,
+  fullName,
+  canManageOrders = true,
   assignedFloorId,
   openReservation,
   openTableSelect,
@@ -52,6 +56,8 @@ export function useMesaLogic({
       reservations.reservationDetails,
     role,
     username,
+    fullName,
+    canManageOrders,
   });
   const reservationActions =
     useMesaReservationActions({

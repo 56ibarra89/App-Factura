@@ -15,41 +15,138 @@ import { StatCard } from "../ui/StatCard";
 import { TopProductsList } from "../ui/TopProductsList";
 import { SalesChart } from "../ui/SalesChart";
 import { SalesChannelsCard } from "../ui/SalesChannelsCard";
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, format } from "date-fns";
+import { differenceInDays } from "date-fns";
+import { getBusinessDateString } from "../../../shared/format";
 
 type FilterType = "today" | "week" | "month" | "custom";
+
+const YMD_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+function parseYmdParts(ymd: string): { year: number; month: number; day: number } | null {
+  if (!YMD_REGEX.test(ymd)) return null;
+  const [year, month, day] = ymd.split("-").map(Number);
+  const utc = new Date(Date.UTC(year, month - 1, day));
+  if (
+    Number.isNaN(utc.getTime()) ||
+    utc.getUTCFullYear() !== year ||
+    utc.getUTCMonth() !== month - 1 ||
+    utc.getUTCDate() !== day
+  ) {
+    return null;
+  }
+  return { year, month, day };
+}
+
+function toManaguaStart(ymd: string): Date | null {
+  if (!parseYmdParts(ymd)) return null;
+  return new Date(`${ymd}T00:00:00.000-06:00`);
+}
+
+function toManaguaEnd(ymd: string): Date | null {
+  if (!parseYmdParts(ymd)) return null;
+  return new Date(`${ymd}T23:59:59.999-06:00`);
+}
+
+function shiftYmd(ymd: string, deltaDays: number): string {
+  const parts = parseYmdParts(ymd);
+  if (!parts) return ymd;
+  const utc = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + deltaDays));
+  return utc.toISOString().slice(0, 10);
+}
 
 const SalesReportsPage = () => {
   const [privacyMode, setPrivacyMode] = useState(false);
   const [filterType, setFilterType] = useState<FilterType>("today");
 
-  const [customStart, setCustomStart] = useState<string>(format(new Date(), "yyyy-MM-dd"));
-  const [customEnd, setCustomEnd] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+  const [customStart, setCustomStart] = useState<string>(() =>
+    getBusinessDateString(),
+  );
+  const [customEnd, setCustomEnd] = useState<string>(() =>
+    getBusinessDateString(),
+  );
 
-  const { startDate, endDate } = useMemo(() => {
-    const now = new Date();
+  const { startDate, endDate, dateError } = useMemo(() => {
+    const todayYmd = getBusinessDateString();
+    const parts = parseYmdParts(todayYmd);
+
     switch (filterType) {
       case "today":
-        return { startDate: startOfDay(now), endDate: endOfDay(now) };
-      case "week":
-        return { startDate: startOfWeek(now, { weekStartsOn: 1 }), endDate: endOfWeek(now, { weekStartsOn: 1 }) };
-      case "month":
-        return { startDate: startOfMonth(now), endDate: endOfMonth(now) };
-      case "custom":
         return {
-          startDate: startOfDay(new Date(customStart + "T00:00:00")),
-          endDate: endOfDay(new Date(customEnd + "T00:00:00"))
+          startDate: toManaguaStart(todayYmd),
+          endDate: toManaguaEnd(todayYmd),
+          dateError: null as string | null,
         };
+      case "week": {
+        const utcToday = parts
+          ? new Date(Date.UTC(parts.year, parts.month - 1, parts.day))
+          : new Date();
+        const dayOfWeek = utcToday.getUTCDay(); // 0=Dom .. 6=Sáb
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const weekStartYmd = shiftYmd(todayYmd, diffToMonday);
+        const weekEndYmd = shiftYmd(weekStartYmd, 6);
+        return {
+          startDate: toManaguaStart(weekStartYmd),
+          endDate: toManaguaEnd(weekEndYmd),
+          dateError: null as string | null,
+        };
+      }
+      case "month": {
+        if (!parts) {
+          return {
+            startDate: null,
+            endDate: null,
+            dateError: "No se pudo calcular el rango mensual.",
+          };
+        }
+        const mm = String(parts.month).padStart(2, "0");
+        const lastDay = new Date(Date.UTC(parts.year, parts.month, 0)).getUTCDate();
+        const monthStartYmd = `${parts.year}-${mm}-01`;
+        const monthEndYmd = `${parts.year}-${mm}-${String(lastDay).padStart(2, "0")}`;
+        return {
+          startDate: toManaguaStart(monthStartYmd),
+          endDate: toManaguaEnd(monthEndYmd),
+          dateError: null as string | null,
+        };
+      }
+      case "custom": {
+        const start = toManaguaStart(customStart.trim());
+        const end = toManaguaEnd(customEnd.trim());
+        if (!start || !end) {
+          return {
+            startDate: null,
+            endDate: null,
+            dateError: "Selecciona ambas fechas en formato válido para generar el reporte.",
+          };
+        }
+        if (start > end) {
+          return {
+            startDate: null,
+            endDate: null,
+            dateError: "La fecha inicial no puede ser mayor a la fecha final.",
+          };
+        }
+        return {
+          startDate: start,
+          endDate: end,
+          dateError: null as string | null,
+        };
+      }
       default:
-        return { startDate: startOfDay(now), endDate: endOfDay(now) };
+        return {
+          startDate: toManaguaStart(todayYmd),
+          endDate: toManaguaEnd(todayYmd),
+          dateError: null as string | null,
+        };
     }
   }, [filterType, customStart, customEnd]);
 
   const { data, isLoading, error } = useSalesReport(startDate, endDate);
+  const effectiveError = dateError ?? error;
   const averageTicket =
     data && data.totalOrders > 0 ? data.totalSales / data.totalOrders : 0;
 
-  const daysDiff = differenceInDays(endDate, startDate);
+  const daysDiff =
+    startDate && endDate ? differenceInDays(endDate, startDate) : 0;
   const groupByDay = daysDiff >= 1;
 
   const getReportTitle = () => {
@@ -115,7 +212,7 @@ const SalesReportsPage = () => {
               </>
             )}
 
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={1} sx={{ "@media print": { display: "none" } }}>
               <IconButton
                 onClick={() => setPrivacyMode(!privacyMode)}
                 sx={{ bgcolor: "background.paper", boxShadow: 1 }}
@@ -123,7 +220,12 @@ const SalesReportsPage = () => {
               >
                 {privacyMode ? <VisibilityIcon color="primary" /> : <VisibilityOffIcon color="primary" />}
               </IconButton>
-              <IconButton sx={{ bgcolor: "background.paper", boxShadow: 1 }}>
+              <IconButton
+                onClick={() => window.print()}
+                disabled={Boolean(effectiveError) || isLoading || !data}
+                title="Imprimir reporte"
+                sx={{ bgcolor: "background.paper", boxShadow: 1 }}
+              >
                 <LocalPrintshopIcon color="primary" />
               </IconButton>
             </Box>
@@ -135,9 +237,9 @@ const SalesReportsPage = () => {
         <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
           <CircularProgress color="primary" />
         </Box>
-      ) : error ? (
+      ) : effectiveError ? (
         <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
-          <Typography color="error" variant="h6">{error}</Typography>
+          <Typography color="error" variant="h6">{effectiveError}</Typography>
         </Box>
       ) : data ? (
         <Grid container spacing={3} sx={{ mt: 1 }}>

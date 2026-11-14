@@ -112,6 +112,7 @@ const CheckoutPage = () => {
   const billing = useBillingFlow({
     tableId,
     isCheckoutMode,
+    isPreviewOpen: previewOpen,
     activeOrder,
     deliveryDriverId: state?.deliveryDriverId,
     fromDeliveryPage: Boolean(

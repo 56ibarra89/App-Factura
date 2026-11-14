@@ -14,7 +14,11 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import SoupKitchenIcon from "@mui/icons-material/SoupKitchen";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
-import { PERMISSIONS, type PermissionCode } from "../../modules/auth";
+import {
+  PERMISSIONS,
+  type PermissionCode,
+  type UserRole,
+} from "../../modules/auth";
 
 export interface MenuItem {
   label: string;
@@ -23,6 +27,7 @@ export interface MenuItem {
   action?: () => void;
   disabled?: boolean;
   permission: PermissionCode;
+  allowedRoles?: UserRole[];
 }
 
 export const getMenuItems = (): MenuItem[] => [
@@ -67,6 +72,7 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <AssessmentIcon fontSize="large" color="success" />,
     route: "/reporte",
     permission: PERMISSIONS.REPORTS_READ,
+    allowedRoles: ["admin"],
   },
   {
     label: "Ingresar Producto",
@@ -116,6 +122,7 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <AdminPanelSettingsIcon fontSize="large" color="primary" />,
     route: "/admin/cajas",
     permission: PERMISSIONS.CASH_CONFIGURE,
+    allowedRoles: ["admin"],
   },
 
   {
@@ -123,5 +130,6 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <SettingsIcon fontSize="large" color="success" />,
     route: "/admin",
     permission: PERMISSIONS.SETTINGS_READ,
+    allowedRoles: ["admin"],
   },
 ];

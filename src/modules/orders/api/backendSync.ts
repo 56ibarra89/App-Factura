@@ -273,6 +273,11 @@ export async function fetchOrdersFromBackend(): Promise<Order[]> {
   return data.map(mapBackendOrderToFrontend);
 }
 
+export async function fetchOrderById(orderId: string): Promise<Order> {
+  const data: BackendOrder = await apiClient(`/orders/${orderId}`);
+  return mapBackendOrderToFrontend(data);
+}
+
 export async function fetchOrderHistory(query: {
   startDate: Date;
   endDate: Date;
@@ -347,7 +352,6 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     taxAmount: order.taxAmount,
     discountAmount: order.discountAmount,
     status: order.status.toLowerCase(),
-    timestamp: order.timestamp.toISOString(),
     customerId: order.customerId,
     customerSnapshotName: order.customerName,
     customerPhone: order.customerPhone,
@@ -362,7 +366,6 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     discountId: order.discountId,
     happyHourId: order.happyHourId,
     certificateSerials: order.certificateSerials,
-    cashierSnapshotName: order.cashierName,
     isSentToKitchen: order.isSentToKitchen,
     linkedTables:
       order.linkedTables && order.linkedTables.length > 0
@@ -491,6 +494,7 @@ export async function syncFinalizeOrder(order: Order): Promise<Order> {
   const response = await apiClient(`/orders/${order.id}/finalize`, {
     method: "PATCH",
     body: JSON.stringify({
+      expectedUpdatedAt: order.updatedAt?.toISOString(),
       payments: paymentsPayload,
       customerId: order.customerId,
       customerSnapshotName: order.customerName,
@@ -535,6 +539,7 @@ export async function syncSplitCheckoutOrder(
     await apiClient(`/orders/${parentOrderId}/split-checkout`, {
       method: "POST",
       body: JSON.stringify({
+        expectedUpdatedAt: command.expectedUpdatedAt,
         mode: command.mode,
         accountName: command.accountName,
         subAccountAmount: command.subAccountAmount,

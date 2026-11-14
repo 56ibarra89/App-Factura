@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { format } from "date-fns";
+import {
+  formatBusinessCsvTimestamp,
+  getBusinessDateString,
+  getBusinessMonthStartString,
+  parseBusinessDayEnd,
+  parseBusinessDayStart,
+  shiftBusinessDateString,
+} from "../../../shared/format";
 import { logService } from "../api/logService";
 import type {
   SystemLog,
@@ -27,31 +34,28 @@ function parseDateBoundary(
   if (!dateStr || !dateStr.trim()) return null;
   const trimmed = dateStr.trim();
 
-  let year: number;
-  let month: number;
-  let day: number;
+  let ymd: string | null = null;
 
   if (trimmed.includes("-")) {
     const parts = trimmed.split("-").map(Number);
     if (parts.length !== 3 || parts.some(isNaN)) return null;
-    [year, month, day] = parts;
+    const [year, month, day] = parts;
+    ymd = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   } else if (trimmed.includes("/")) {
     const parts = trimmed.split("/").map(Number);
     if (parts.length !== 3 || parts.some(isNaN)) return null;
-    [day, month, year] = parts;
+    const [day, month, year] = parts;
+    ymd = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   } else {
     const d = new Date(trimmed);
     if (isNaN(d.getTime())) return null;
-    year = d.getFullYear();
-    month = d.getMonth() + 1;
-    day = d.getDate();
+    ymd = getBusinessDateString(d);
   }
 
-  const result = isEndOfDay
-    ? new Date(year, month - 1, day, 23, 59, 59, 999)
-    : new Date(year, month - 1, day, 0, 0, 0, 0);
-
-  return isNaN(result.getTime()) ? null : result.getTime();
+  const boundary = isEndOfDay
+    ? parseBusinessDayEnd(ymd)
+    : parseBusinessDayStart(ymd);
+  return boundary ? boundary.getTime() : null;
 }
 
 function getLogEpoch(ts: string | number | Date | undefined | null): number {
@@ -81,7 +85,7 @@ function downloadAuditCsv(logs: SystemLog[], isFiltered = false) {
     "ID Solicitud",
   ];
   const rows = logs.map((log) => [
-    format(new Date(log.timestamp), "yyyy-MM-dd HH:mm:ss"),
+    formatBusinessCsvTimestamp(log.timestamp),
     log.user,
     log.role || "N/A",
     log.module || "N/A",
@@ -109,7 +113,10 @@ function downloadAuditCsv(logs: SystemLog[], isFiltered = false) {
   const link = document.createElement("a");
   link.href = url;
   const suffix = isFiltered ? "_filtrada" : "";
-  link.download = `bitacora_auditoria${suffix}_${format(new Date(), "yyyyMMdd_HHmmss")}.csv`;
+  const timestampToken = formatBusinessCsvTimestamp(new Date())
+    .replace(/[-:]/g, "")
+    .replace(" ", "_");
+  link.download = `bitacora_auditoria${suffix}_${timestampToken}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -153,33 +160,29 @@ export function useAuditLog() {
 
   const setDatePreset = useCallback(
     (preset: "today" | "yesterday" | "7days" | "month" | "all") => {
-      const now = new Date();
+      const todayStr = getBusinessDateString(new Date());
       if (preset === "today") {
-        const todayStr = format(now, "yyyy-MM-dd");
         setFilters((prev) => ({
           ...prev,
           startDate: todayStr,
           endDate: todayStr,
         }));
       } else if (preset === "yesterday") {
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yStr = format(yesterday, "yyyy-MM-dd");
+        const yStr = shiftBusinessDateString(todayStr, -1);
         setFilters((prev) => ({ ...prev, startDate: yStr, endDate: yStr }));
       } else if (preset === "7days") {
-        const d = new Date(now);
-        d.setDate(d.getDate() - 7);
+        const sevenDaysAgo = shiftBusinessDateString(todayStr, -7);
         setFilters((prev) => ({
           ...prev,
-          startDate: format(d, "yyyy-MM-dd"),
-          endDate: format(now, "yyyy-MM-dd"),
+          startDate: sevenDaysAgo,
+          endDate: todayStr,
         }));
       } else if (preset === "month") {
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const firstDay = getBusinessMonthStartString();
         setFilters((prev) => ({
           ...prev,
-          startDate: format(firstDay, "yyyy-MM-dd"),
-          endDate: format(now, "yyyy-MM-dd"),
+          startDate: firstDay,
+          endDate: todayStr,
         }));
       } else if (preset === "all") {
         setFilters((prev) => ({ ...prev, startDate: "", endDate: "" }));

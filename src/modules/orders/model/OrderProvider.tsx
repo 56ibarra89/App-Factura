@@ -73,6 +73,7 @@ export function OrderProvider({
 
   useOrderSynchronization({
     isLoggedIn: isLoggedIn && hasPermission("orders.read"),
+    canReadHiddenOrders: hasPermission("orders.read"),
     ordersRef,
     updateOrders,
     gateway: currentOrders,

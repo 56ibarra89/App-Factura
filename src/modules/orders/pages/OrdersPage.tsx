@@ -40,11 +40,15 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
   const { activeOrders, finishedOrders, updateOrderStatus, clearHistory } =
     useOrderManagement();
 
-  const { username, role: userRole } = useAuth();
+  const { username, role: userRole, hasPermission } = useAuth();
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [clearError, setClearError] = useState<string | null>(null);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [reasonDialogOpen, setReasonDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [cancelReasonId, setCancelReasonId] = useState("");
   const [cancelNote, setCancelNote] = useState("");
   const [voidPolicy, setVoidPolicy] = useState<VoidWastePolicyConfig>(
@@ -88,7 +92,9 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
   }, [isCook, isKitchenAccessLoading, isValidKitchen]);
 
   useEffect(() => {
-    void voidWastePolicyGateway.load().then(setVoidPolicy);
+    void voidWastePolicyGateway.load().then(setVoidPolicy).catch((error) => {
+      setCancelError(error instanceof Error ? error.message : "No se pudo cargar la política de anulación.");
+    });
   }, []);
 
   const handleKitchenChange = (
@@ -140,22 +146,35 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
             ? "La cocina asignada para hoy no está activa. Solicita al administrador que revise la configuración."
             : null;
 
-  const handleClearHistory = () => {
-    clearHistory();
+  const handleClearHistory = async () => {
+    setClearError(null);
+    setIsClearing(true);
+    try {
+      await clearHistory();
     logService.log(
       username,
       userRole,
       "CLEAR_HISTORY",
       "Vaciado manual de todo el historial de órdenes",
     );
-    setIsClearConfirmOpen(false);
+      setIsClearConfirmOpen(false);
+    } catch (error: unknown) {
+      setClearError(
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : "No se pudo limpiar el historial de órdenes.",
+      );
+      throw error;
+    }
+    finally { setIsClearing(false); }
   };
 
   const handleDeleteOrder = (id: string) => {
     const order = [...activeOrders, ...finishedOrders].find(
       (candidate) => candidate.id === id,
     );
-    if (!order) return;
+    if (!order || order.status === "cancelled" || !hasPermission(PERMISSIONS.ORDERS_CANCEL)) return;
+    setCancelError(null);
     setOrderToDelete(order);
     setCancelReasonId(
       voidPolicy.reasons.find((reason) => reason.isActive)?.id ?? "",
@@ -164,9 +183,12 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
     setReasonDialogOpen(true);
   };
 
-  const handleCancelSuccess = (pin?: string) => {
-    if (orderToDelete) {
-      updateOrderStatus(
+  const handleCancelSuccess = async (pin?: string) => {
+    if (!orderToDelete || isCancelling) return;
+    setIsCancelling(true);
+    setCancelError(null);
+    try {
+      await updateOrderStatus(
         orderToDelete.id,
         "cancelled",
         cancelNote,
@@ -176,14 +198,19 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
         undefined,
         cancelReasonId,
       );
+      setPinDialogOpen(false);
+      setReasonDialogOpen(false);
+      setOrderToDelete(null);
+    } catch (error) {
+      setCancelError(error instanceof Error ? error.message : "No se pudo anular la orden.");
+      if (pin) { setPinDialogOpen(false); setReasonDialogOpen(true); }
+    } finally {
+      setIsCancelling(false);
     }
-    setPinDialogOpen(false);
-    setOrderToDelete(null);
   };
 
   const submitCancellationReason = () => {
     if (!orderToDelete || !cancelReasonId) return;
-    setReasonDialogOpen(false);
     const selectedReason = voidPolicy.reasons.find(
       (reason) => reason.id === cancelReasonId,
     );
@@ -197,8 +224,8 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
       (voidPolicy.requireSupervisorForPaidOrders &&
         orderToDelete.status === "paid") ||
       (voidPolicy.requireSupervisorWhenPreparationStarted && wasPrepared);
-    if (requiresPin) setPinDialogOpen(true);
-    else handleCancelSuccess();
+    if (requiresPin) { setReasonDialogOpen(false); setPinDialogOpen(true); }
+    else void handleCancelSuccess();
   };
 
   return (
@@ -237,7 +264,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
                   {visibleActiveOrders.length} activas
                 </Typography>
               </Stack>
-              <PermissionGuard permissions={[PERMISSIONS.ORDERS_MANAGE]}>
+              <PermissionGuard permissions={[PERMISSIONS.ORDERS_READ, PERMISSIONS.KITCHEN_UPDATE]}>
                 <Button
                   variant="outlined"
                   size="small"
@@ -279,6 +306,16 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
         </Box>
       )}
 
+      {clearError && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          onClose={() => setClearError(null)}
+        >
+          {clearError}
+        </Alert>
+      )}
+
       {accessMessage ? (
         <Alert severity={assignmentError ? "error" : "info"}>
           {accessMessage}
@@ -299,7 +336,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
                   kitchens={kitchens}
                   resolveTableName={resolveTableName}
                   onUpdateStatus={updateOrderStatus}
-                  onDelete={handleDeleteOrder}
+                  onDelete={hasPermission(PERMISSIONS.ORDERS_CANCEL) ? handleDeleteOrder : undefined}
                 />
               )}
             </>
@@ -329,7 +366,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
                   kitchens={kitchens}
                   resolveTableName={resolveTableName}
                   onUpdateStatus={updateOrderStatus}
-                  onDelete={isCook ? undefined : handleDeleteOrder}
+                  onDelete={!isCook && hasPermission(PERMISSIONS.ORDERS_CANCEL) ? handleDeleteOrder : undefined}
                 />
               )}
             </>
@@ -343,6 +380,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
         message="¿Estás seguro de que quieres limpiar todo el historial de hoy? Esta acción no se puede deshacer."
         onClose={() => setIsClearConfirmOpen(false)}
         onConfirm={handleClearHistory}
+        loading={isClearing}
         disableRestoreFocus
         disableEnforceFocus
       />
@@ -354,6 +392,8 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
           reasons={voidPolicy.reasons.filter((reason) => reason.isActive)}
           reasonId={cancelReasonId}
           note={cancelNote}
+          error={cancelError ?? undefined}
+          cancelling={isCancelling}
           onReasonChange={setCancelReasonId}
           onNoteChange={setCancelNote}
           onCloseReason={() => {

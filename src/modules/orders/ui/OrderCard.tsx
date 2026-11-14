@@ -1,5 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -17,7 +18,11 @@ import RestaurantIcon from "@mui/icons-material/Restaurant";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import { Order, OrderStatus } from "../model/order.types";
 import { LOGIN_COLORS } from "../../../shared/theme";
-import { formatItemName, formatTableName } from "../../../shared/format";
+import {
+  formatBusinessTime,
+  formatItemName,
+  formatTableName,
+} from "../../../shared/format";
 import type { Kitchen } from "../../kitchens";
 import { getTicketUrgency } from "../utils/timeUrgency";
 import {
@@ -81,6 +86,20 @@ const OrderCard: React.FC<OrderCardProps> = ({
   onDelete,
   selectedKitchenId,
 }) => {
+  const [statusError, setStatusError] = React.useState<string | null>(null);
+  const statusInFlight = React.useRef(false);
+  const runStatus = async (...args: Parameters<OrderCardProps["onUpdateStatus"]>) => {
+    if (statusInFlight.current) return;
+    statusInFlight.current = true;
+    setStatusError(null);
+    try {
+      await onUpdateStatus(...args);
+    } catch (error) {
+      setStatusError(error instanceof Error ? error.message : "No se pudo actualizar la orden.");
+    } finally {
+      statusInFlight.current = false;
+    }
+  };
   const itemsToUse = filteredItems || order.items;
   const hasPackaging = order.items.some(isPackagingOrderItem);
   const displayItems = itemsToUse.filter(requiresKitchenPreparation);
@@ -122,6 +141,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       }}
     >
       <CardContent sx={{ flexGrow: 1 }}>
+        {statusError && <Alert severity="error" onClose={() => setStatusError(null)}>{statusError}</Alert>}
         <Box
           display="flex"
           justifyContent="space-between"
@@ -161,7 +181,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               color="text.secondary"
               display="block"
             >
-              Hora: {new Date(order.timestamp).toLocaleTimeString()}
+              Hora: {formatBusinessTime(order.timestamp)}
             </Typography>
 
             {(order.customerName ||
@@ -245,7 +265,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               </Stack>
             )}
           </Box>
-          {onDelete && (
+          {onDelete && order.status !== "cancelled" && (
             <IconButton
               size="small"
               color="error"
@@ -365,7 +385,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                         size="small"
                         variant="contained"
                         onClick={() =>
-                          onUpdateStatus(
+                          void runStatus(
                             order.id,
                             "preparing",
                             undefined,
@@ -390,7 +410,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                         variant="contained"
                         color="success"
                         onClick={() =>
-                          onUpdateStatus(
+                          void runStatus(
                             order.id,
                             "ready",
                             undefined,
@@ -413,7 +433,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                         size="small"
                         variant="outlined"
                         onClick={() =>
-                          onUpdateStatus(
+                          void runStatus(
                             order.id,
                             "delivered",
                             undefined,

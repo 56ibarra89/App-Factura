@@ -8,6 +8,7 @@ import {
   requiresKitchenPreparation,
 } from "../model/orderItemDomain";
 import { useState, useCallback, useEffect } from "react";
+import { useAuth } from "../../auth";
 import {
   kitchenTicketPreferencesGateway,
   type KitchenTicketPreferencesGateway,
@@ -73,13 +74,20 @@ const splitIntoKitchenTickets = (order: Order): Order[] => {
 export const useOrderManagement = (
   preferencesGateway: KitchenTicketPreferencesGateway = kitchenTicketPreferencesGateway
 ) => {
+  const { isLoggedIn, hasPermission } = useAuth();
   const { orders } = useOrderQueries();
   const { updateOrderStatus, removeOrder } = useOrderCommands();
+  const canReadHiddenTickets = isLoggedIn && hasPermission("orders.read", "kitchen.read");
+  const canHideTickets = isLoggedIn && hasPermission("orders.read", "kitchen.update");
 
   const [hiddenTickets, setHiddenTickets] = useState<string[]>([]);
 
   // Fetch initial hidden tickets from backend
   useEffect(() => {
+    if (!canReadHiddenTickets) {
+      setHiddenTickets([]);
+      return;
+    }
     let isMounted = true;
     preferencesGateway
       .getHiddenTicketIds()
@@ -93,7 +101,7 @@ export const useOrderManagement = (
     return () => {
       isMounted = false;
     };
-  }, [preferencesGateway]);
+  }, [canReadHiddenTickets, preferencesGateway]);
 
   // Dividir todas las órdenes en tickets virtuales
   const allTickets = useMemo(() => {
@@ -125,21 +133,30 @@ export const useOrderManagement = (
     [allTickets, hiddenTickets]
   );
 
-  const clearKitchenHistory = useCallback(() => {
+  const clearKitchenHistory = useCallback(async () => {
+    if (!canHideTickets) throw new Error("No tienes permiso para limpiar el historial de cocina.");
     const toHide = finishedOrders.map(
       (t) => `${t.id}-${t.timestamp.getTime()}`
     );
     if (toHide.length === 0) return;
 
+    let newlyAddedIds: string[] = [];
     setHiddenTickets((prev) => {
-      const next = Array.from(new Set([...prev, ...toHide]));
-      return next;
+      const prevSet = new Set(prev);
+      newlyAddedIds = toHide.filter((id) => !prevSet.has(id));
+      return Array.from(new Set([...prev, ...toHide]));
     });
 
-    preferencesGateway
-      .hideTicketIds(toHide)
-      .catch((e) => console.error("Error saving hidden kitchen tickets:", e));
-  }, [finishedOrders, preferencesGateway]);
+    try {
+      await preferencesGateway.hideTicketIds(toHide);
+    } catch (error: unknown) {
+      if (newlyAddedIds.length > 0) {
+        const rollbackSet = new Set(newlyAddedIds);
+        setHiddenTickets((prev) => prev.filter((id) => !rollbackSet.has(id)));
+      }
+      throw error;
+    }
+  }, [canHideTickets, finishedOrders, preferencesGateway]);
 
   return {
     activeOrders,

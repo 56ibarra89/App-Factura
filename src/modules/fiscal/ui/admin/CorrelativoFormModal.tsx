@@ -8,9 +8,37 @@ import {
   Divider,
   Button,
   Box,
+  Alert,
   MenuItem,
 } from "@mui/material";
 import type { Correlativo } from "../../model/fiscal.types";
+
+const MANAGUA_TIMEZONE = "America/Managua";
+
+const toManaguaDateInput = (value?: Date | string): string => {
+  if (!value) return "";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim())) {
+    return value.trim();
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: MANAGUA_TIMEZONE,
+  }).format(date);
+};
+
+const fromManaguaDateInput = (value: string): Date | undefined => {
+  const clean = value.trim();
+  if (!clean) return undefined;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    return new Date(`${clean}T12:00:00-06:00`);
+  }
+  const parsed = new Date(clean);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
+const todayManaguaDate = (): Date =>
+  fromManaguaDateInput(toManaguaDateInput(new Date())) ?? new Date();
 
 interface CorrelativoFormModalProps {
   open: boolean;
@@ -32,13 +60,18 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
     startNumber: 1,
     endNumber: 100000,
     currentNumber: 1,
-    issueDate: new Date(),
-    expirationDate: new Date("2099-12-31"),
+    issueDate: todayManaguaDate(),
+    expirationDate: new Date("2099-12-31T12:00:00-06:00"),
     status: "Activo",
   });
 
+  const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   useEffect(() => {
     if (open) {
+      setErrorMessage(null);
+      setSaving(false);
       if (initialData) {
         setFormData({ ...initialData });
       } else {
@@ -49,8 +82,8 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
           startNumber: 1,
           endNumber: 100000,
           currentNumber: 1,
-          issueDate: new Date(),
-          expirationDate: new Date("2099-12-31"),
+          issueDate: todayManaguaDate(),
+          expirationDate: new Date("2099-12-31T12:00:00-06:00"),
           status: "Activo",
         });
       }
@@ -66,8 +99,68 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    await onSave(formData);
-    onClose();
+    const issueDateStr = toManaguaDateInput(formData.issueDate);
+    const expirationDateStr = toManaguaDateInput(formData.expirationDate);
+    const startNumber = Number(formData.startNumber ?? 0);
+    const endNumber = Number(formData.endNumber ?? 0);
+    const currentNumber = Number(formData.currentNumber ?? 0);
+
+    if (!formData.resolutionNumber?.trim()) {
+      setErrorMessage("Ingresa el número de resolución.");
+      return;
+    }
+    if (
+      !Number.isInteger(startNumber) ||
+      startNumber < 1 ||
+      !Number.isInteger(endNumber) ||
+      endNumber < startNumber
+    ) {
+      setErrorMessage(
+        "El rango final debe ser un entero mayor o igual al rango inicial (mínimo 1).",
+      );
+      return;
+    }
+    if (
+      !Number.isInteger(currentNumber) ||
+      currentNumber < startNumber ||
+      currentNumber > endNumber
+    ) {
+      setErrorMessage(
+        "El número actual debe estar dentro del rango inicial y final.",
+      );
+      return;
+    }
+    if (!issueDateStr || !expirationDateStr) {
+      setErrorMessage(
+        "Selecciona la fecha de aprobación y la fecha de vencimiento.",
+      );
+      return;
+    }
+    if (issueDateStr > expirationDateStr) {
+      setErrorMessage(
+        "La fecha de vencimiento debe ser igual o posterior a la fecha de aprobación.",
+      );
+      return;
+    }
+
+    setErrorMessage(null);
+    setSaving(true);
+    try {
+      await onSave({
+        ...formData,
+        issueDate: fromManaguaDateInput(issueDateStr),
+        expirationDate: fromManaguaDateInput(expirationDateStr),
+      });
+      onClose();
+    } catch (error) {
+      const msg =
+        error instanceof Error && error.message
+          ? error.message
+          : "No se pudo guardar el correlativo.";
+      setErrorMessage(msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -145,7 +238,29 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
                     }).format(new Date(formData.issueDate))
                   : ""
               }
-              onChange={(e) => setFormData({ ...formData, issueDate: new Date(e.target.value) })}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  issueDate: fromManaguaDateInput(e.target.value),
+                })
+              }
+              variant="outlined"
+            />
+          </Box>
+          <Box sx={{ gridColumn: 'span 6' }}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Fecha de Vencimiento"
+              name="expirationDate"
+              InputLabelProps={{ shrink: true }}
+              value={toManaguaDateInput(formData.expirationDate)}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  expirationDate: fromManaguaDateInput(e.target.value),
+                })
+              }
               variant="outlined"
             />
           </Box>
@@ -167,12 +282,17 @@ const CorrelativoFormModal: React.FC<CorrelativoFormModalProps> = ({
         </Box>
       </DialogContent>
       <Divider />
+      {errorMessage && (
+        <Box sx={{ px: 3, pb: 1 }}>
+          <Alert severity="error">{errorMessage}</Alert>
+        </Box>
+      )}
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} color="inherit" sx={{ textTransform: "none" }}>
+        <Button onClick={onClose} color="inherit" disabled={saving} sx={{ textTransform: "none" }}>
           Cancelar
         </Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ textTransform: "none", borderRadius: 2 }}>
-          {initialData?.id ? "Actualizar" : "Guardar"}
+        <Button onClick={handleSubmit} variant="contained" color="primary" disabled={saving} sx={{ textTransform: "none", borderRadius: 2 }}>
+          {saving ? "Guardando..." : initialData?.id ? "Actualizar" : "Guardar"}
         </Button>
       </DialogActions>
     </Dialog>

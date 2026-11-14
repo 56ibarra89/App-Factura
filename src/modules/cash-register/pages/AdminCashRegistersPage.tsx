@@ -13,6 +13,7 @@ import { useCashRegisterDashboard } from "../hooks/useCashRegisterDashboard";
 import { CashRegisterStatusCard } from "../ui/admin/CashRegisterStatusCard";
 import { WaiterPerformanceList } from "../ui/admin/WaiterPerformanceList";
 import { LiveKpiCards } from "../ui/admin/LiveKpiCards";
+import { formatBusinessTime } from "../../../shared/format";
 
 const AdminCashRegistersPage = () => {
   const {
@@ -44,7 +45,7 @@ const AdminCashRegistersPage = () => {
           actions={
             <Stack direction="row" spacing={1.5} alignItems="center">
               <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                Actualizado: {lastUpdated.toLocaleTimeString()}
+                Actualizado: {formatBusinessTime(lastUpdated)}
               </Typography>
               <Button
                 variant="outlined"

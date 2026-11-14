@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -38,29 +38,49 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
   const [editingIcon, setEditingIcon] = useState("Restaurant");
   const [editingKitchenId, setEditingKitchenId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [extrasCategoryId, setExtrasCategoryId] = useState<string | null>(null);
   const extrasCategory = categories.find((category) => category.id === extrasCategoryId) ?? null;
   const { kitchens } = useKitchens();
 
-  const handleAdd = () => {
+  useEffect(() => {
+    if (open) {
+      setError(null);
+      setSaving(false);
+      setEditingCategory(null);
+    }
+  }, [open]);
+
+  const handleAdd = async () => {
     const trimmedName = newCategoryName.trim();
-    if (!trimmedName) return;
+    if (!trimmedName || saving) return;
 
     if (categories.some((c) => c.label.toLowerCase() === trimmedName.toLowerCase())) {
       setError("Ya existe una categoría con ese nombre.");
       return;
     }
 
-    addCategory(trimmedName, newCategoryIcon, newKitchenId || undefined);
-    setNewCategoryName("");
-    setNewCategoryIcon("Restaurant");
-    setNewKitchenId("");
+    setSaving(true);
     setError(null);
+    try {
+      await addCategory(trimmedName, newCategoryIcon, newKitchenId || undefined);
+      setNewCategoryName("");
+      setNewCategoryIcon("Restaurant");
+      setNewKitchenId("");
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "No se pudo crear la categoría.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleEditSave = () => {
+  const handleEditSave = async () => {
     const trimmedName = editingName.trim();
-    if (!trimmedName || !editingCategory) return;
+    if (!trimmedName || !editingCategory || saving) return;
 
     if (
       trimmedName.toLowerCase() !== editingCategory.toLowerCase() &&
@@ -70,22 +90,50 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
       return;
     }
 
-    updateCategory(editingCategory, trimmedName, editingIcon, editingKitchenId || undefined);
-    setEditingCategory(null);
-    setEditingName("");
-    setEditingIcon("Restaurant");
-    setEditingKitchenId("");
+    setSaving(true);
     setError(null);
+    try {
+      await updateCategory(
+        editingCategory,
+        trimmedName,
+        editingIcon,
+        editingKitchenId || null,
+      );
+      setEditingCategory(null);
+      setEditingName("");
+      setEditingIcon("Restaurant");
+      setEditingKitchenId("");
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "No se pudo actualizar la categoría.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (categoryName: string) => {
+  const handleDelete = async (categoryName: string) => {
+    if (saving) return;
     const cat = categories.find((c) => c.label === categoryName);
     if (cat && cat.items.length > 0) {
       setError(`No se puede eliminar '${categoryName}' porque tiene productos asociados.`);
       return;
     }
-    deleteCategory(categoryName);
+    setSaving(true);
     setError(null);
+    try {
+      await deleteCategory(categoryName);
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : "No se pudo eliminar la categoría.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -127,11 +175,20 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
             fullWidth
             label="Nueva categoría"
             value={newCategoryName}
+            disabled={saving}
             onChange={(e) => setNewCategoryName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                void handleAdd();
+              }
+            }}
             error={!!error && !editingCategory}
           />
-          <Button variant="contained" onClick={handleAdd} disabled={!newCategoryName.trim()}>
+          <Button
+            variant="contained"
+            onClick={() => void handleAdd()}
+            disabled={!newCategoryName.trim() || saving}
+          >
             Agregar
           </Button>
         </Box>
@@ -173,7 +230,8 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                     edge="end"
                     aria-label="delete"
                     color="error"
-                    onClick={() => handleDelete(cat.label)}
+                    disabled={saving}
+                    onClick={() => void handleDelete(cat.label)}
                     sx={{ ml: 1 }}
                   >
                     <DeleteIcon />
@@ -215,17 +273,28 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                     size="small"
                     fullWidth
                     value={editingName}
+                    disabled={saving}
                     onChange={(e) => setEditingName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleEditSave()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        void handleEditSave();
+                      }
+                    }}
                     error={!!error && editingCategory === cat.label}
                     autoFocus
                   />
-                  <Button variant="contained" size="small" onClick={handleEditSave}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    disabled={saving || !editingName.trim()}
+                    onClick={() => void handleEditSave()}
+                  >
                     Guardar
                   </Button>
                   <Button
                     variant="outlined"
                     size="small"
+                    disabled={saving}
                     onClick={() => {
                       setEditingCategory(null);
                       setError(null);

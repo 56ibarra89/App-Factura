@@ -95,15 +95,30 @@ export default function DeliveryPage() {
            await updateCustomer(data);
 
            if (selectedCustomer) {
+             const defaultPhone =
+               data.phones.find((p) => p.isDefault)?.phone ||
+               data.phones[0]?.phone ||
+               data.phone ||
+               undefined;
+
              setSelectedCustomer({
                 ...selectedCustomer,
                 name: data.name,
-                phone: data.phone,
+                phone: defaultPhone,
+                phones: data.phones,
                 addresses: data.addresses
              });
 
+             if (defaultPhone) {
+               setPhoneInput(defaultPhone);
+             } else if (data.phones.length === 0) {
+               setPhoneInput("");
+             }
+
              if (data.addresses.length > 0 && (!selectedAddress || !data.addresses.some(a => a.address === selectedAddress))) {
                 setSelectedAddress(data.addresses[0].address);
+             } else if (data.addresses.length === 0) {
+                setSelectedAddress("");
              }
            }
         }}

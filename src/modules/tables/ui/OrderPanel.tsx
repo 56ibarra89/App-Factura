@@ -23,6 +23,7 @@ interface Props {
   hasActiveOrder?: boolean;
   canCheckoutOrder?: boolean;
   canModifyOrder?: boolean;
+  canOperateTables?: boolean;
   onToggleOccupancy?: () => void;
   isOccupied?: boolean;
   cannotReleaseTable?: boolean;
@@ -46,6 +47,7 @@ export default function OrderPanel({
   hasActiveOrder = false,
   canCheckoutOrder = false,
   canModifyOrder = true,
+  canOperateTables = true,
   onToggleOccupancy,
   isOccupied = false,
   cannotReleaseTable = false
@@ -107,6 +109,7 @@ export default function OrderPanel({
             hasActiveOrder={hasActiveOrder}
             canCheckoutOrder={canCheckoutOrder}
             canModifyOrder={canModifyOrder}
+            canOperateTables={canOperateTables}
             onToggleOccupancy={onToggleOccupancy}
             isOccupied={isOccupied}
             cannotReleaseTable={cannotReleaseTable}

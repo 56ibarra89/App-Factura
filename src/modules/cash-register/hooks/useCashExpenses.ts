@@ -38,8 +38,15 @@ export function useCashExpenses(
   );
 
   useEffect(() => {
+    if (
+      initialFilters?.startDate &&
+      initialFilters?.endDate &&
+      initialFilters.startDate > initialFilters.endDate
+    ) {
+      return;
+    }
     void fetchExpenses();
-  }, [fetchExpenses]);
+  }, [fetchExpenses, initialFilters]);
 
   const createExpense = useCallback(
     async (data: CreateCashExpenseDto): Promise<CashExpense> => {

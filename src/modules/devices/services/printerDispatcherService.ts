@@ -1,10 +1,20 @@
 import { deviceGateway } from "../api/deviceGateway";
 import type { PrinterConfig } from "../api/printerConfig.types";
+import { formatBusinessDateTime, formatBusinessTime } from "../../../shared/format";
 import { EscPosBuilder } from "../../../shared/printing/escposBuilder";
 import {
   KITCHEN_MODIFIER_PREFIXES,
   type KitchenModifierSelection,
 } from "../../settings";
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 export interface KitchenOrderItem {
   name: string;
@@ -51,11 +61,26 @@ export interface PrintDispatchResult {
   error?: string;
 }
 
+const AUTH_SESSION_CHANGED_EVENT = "appfactura:auth-session-changed";
+
 class PrinterDispatcherService {
   private cachedPrinters: PrinterConfig[] | null = null;
   private lastFetchTime = 0;
   private readonly printedJobIds = new Set<string>();
   private readonly pendingJobs = new Map<string, KitchenComandaData>();
+
+  constructor() {
+    if (typeof window !== "undefined") {
+      window.addEventListener(AUTH_SESSION_CHANGED_EVENT, () => {
+        this.clearCache();
+      });
+    }
+  }
+
+  clearCache(): void {
+    this.cachedPrinters = null;
+    this.lastFetchTime = 0;
+  }
 
   private deriveJobId(data: KitchenComandaData): string {
     if (data.jobId && data.jobId.trim()) {
@@ -199,7 +224,7 @@ class PrinterDispatcherService {
     }
 
     builder
-      .line(`Fecha: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`)
+      .line(`Fecha: ${formatBusinessDateTime(now)}`)
       .separator("-")
       .align("center")
       .bold(true)
@@ -244,19 +269,150 @@ class PrinterDispatcherService {
       };
     }
 
-    // Impresión por Windows / USB
-    if (window.printAPI?.printSilent) {
-      const result = await window.printAPI.printSilent({
+    // Impresión por Windows / USB mediante plantilla HTML aislada (nunca captura el DOM visible)
+    const testTicketHtml = this.buildTestTicketHtml(printer, now);
+
+    if (window.printAPI?.printHtml) {
+      const result = await window.printAPI.printHtml({
+        html: testTicketHtml,
         deviceName: printer.windowsDeviceName,
       });
       if (!result.success) {
         return { success: false, status: "failed", error: result.error };
       }
+      if (
+        printer.openCashDrawer &&
+        printer.windowsDeviceName &&
+        window.printAPI.openUsbCashDrawer
+      ) {
+        try {
+          const drawerRes = await window.printAPI.openUsbCashDrawer({
+            deviceName: printer.windowsDeviceName,
+            timeoutMs: 4000,
+          });
+          if (!drawerRes.success) {
+            console.warn(
+              `[PrinterDispatcher] Ticket USB impreso, pero no se pudo abrir gaveta (${printer.name}): ${drawerRes.error}`,
+            );
+          }
+        } catch (err) {
+          console.warn(
+            "[PrinterDispatcher] Error enviando pulso de gaveta USB en prueba:",
+            err,
+          );
+        }
+      }
       return { success: true, status: "printed" };
     }
 
-    window.print();
-    return { success: true, status: "printed" };
+    return await this.printHtmlViaIframe(testTicketHtml);
+  }
+
+  private buildTestTicketHtml(printer: PrinterConfig, now: Date): string {
+    const safeName = escapeHtml(printer.name);
+    const safeRole = escapeHtml(printer.role.toUpperCase());
+    const safeDevice = printer.windowsDeviceName
+      ? escapeHtml(printer.windowsDeviceName)
+      : "Predeterminada de Windows";
+    const safeDate = escapeHtml(formatBusinessDateTime(now));
+
+    return `<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';" />
+    <style>
+      @page { margin: 4mm; }
+      body {
+        margin: 0;
+        padding: 8px;
+        width: 72mm;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 12px;
+        color: #000;
+        background: #fff;
+      }
+      .center { text-align: center; }
+      .title { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+      .line { border-top: 1px dashed #000; margin: 6px 0; }
+      .row { margin: 3px 0; word-break: break-word; }
+      .ok { font-weight: 700; margin-top: 6px; }
+    </style>
+  </head>
+  <body>
+    <div class="center title">PIZZA TO GO</div>
+    <div class="center">PRUEBA DE IMPRESION</div>
+    <div class="line"></div>
+    <div class="row"><strong>Impresora:</strong> ${safeName}</div>
+    <div class="row"><strong>Rol:</strong> ${safeRole}</div>
+    <div class="row"><strong>Tipo:</strong> CABLE USB (WINDOWS)</div>
+    <div class="row"><strong>Dispositivo:</strong> ${safeDevice}</div>
+    <div class="row"><strong>Fecha:</strong> ${safeDate}</div>
+    <div class="line"></div>
+    <div class="center ok">ESTADO: COMUNICACION EXITOSA</div>
+    <div class="line"></div>
+  </body>
+</html>`;
+  }
+
+  private async printHtmlViaIframe(html: string): Promise<PrintDispatchResult> {
+    if (typeof document === "undefined") {
+      return {
+        success: false,
+        status: "failed",
+        error: "Entorno de impresión no disponible.",
+      };
+    }
+
+    return await new Promise<PrintDispatchResult>((resolve) => {
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+      iframe.setAttribute("aria-hidden", "true");
+
+      let settled = false;
+      const cleanup = () => {
+        if (iframe.parentNode) {
+          iframe.parentNode.removeChild(iframe);
+        }
+      };
+      const finish = (res: PrintDispatchResult) => {
+        if (settled) return;
+        settled = true;
+        globalThis.setTimeout(cleanup, 1000);
+        resolve(res);
+      };
+
+      const timeoutId = globalThis.setTimeout(() => {
+        finish({
+          success: false,
+          status: "failed",
+          error: "Tiempo de espera agotado al preparar la impresión de prueba.",
+        });
+      }, 5000);
+
+      iframe.onload = () => {
+        globalThis.clearTimeout(timeoutId);
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+          finish({ success: true, status: "printed" });
+        } catch (err: unknown) {
+          finish({
+            success: false,
+            status: "failed",
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      };
+
+      iframe.srcdoc = html;
+      document.body.appendChild(iframe);
+    });
   }
 
   /**
@@ -264,15 +420,7 @@ class PrinterDispatcherService {
    */
   private buildKitchenComandaBuffer(data: KitchenComandaData): Uint8Array {
     const builder = new EscPosBuilder();
-    const dateStr = data.timestamp
-      ? new Date(data.timestamp).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+    const dateStr = formatBusinessTime(data.timestamp ?? new Date());
 
     builder
       .align("center")
@@ -666,11 +814,41 @@ class PrinterDispatcherService {
       printer.ipAddress &&
       window.printAPI?.openNetworkCashDrawer
     ) {
-      await window.printAPI.openNetworkCashDrawer({
-        host: printer.ipAddress,
-        port: printer.port,
-        timeoutMs: 3000,
-      });
+      try {
+        const res = await window.printAPI.openNetworkCashDrawer({
+          host: printer.ipAddress,
+          port: printer.port,
+          timeoutMs: 3000,
+        });
+        if (!res.success) {
+          console.warn(
+            `[PrinterDispatcher] No se pudo abrir gaveta de red (${printer.name}): ${res.error}`,
+          );
+        }
+      } catch (err) {
+        console.warn("[PrinterDispatcher] Error abriendo gaveta de red:", err);
+      }
+      return;
+    }
+
+    if (
+      printer.connectionType === "usb" &&
+      printer.windowsDeviceName &&
+      window.printAPI?.openUsbCashDrawer
+    ) {
+      try {
+        const res = await window.printAPI.openUsbCashDrawer({
+          deviceName: printer.windowsDeviceName,
+          timeoutMs: 4000,
+        });
+        if (!res.success) {
+          console.warn(
+            `[PrinterDispatcher] No se pudo abrir gaveta USB (${printer.name}): ${res.error}`,
+          );
+        }
+      } catch (err) {
+        console.warn("[PrinterDispatcher] Error abriendo gaveta USB:", err);
+      }
     }
   }
 

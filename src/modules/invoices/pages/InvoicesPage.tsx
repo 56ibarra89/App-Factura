@@ -143,6 +143,7 @@ const InvoicesPage = ({ printer = receiptPrinter }: InvoicesPageProps) => {
           invoiceNumber={selectedOrder.invoiceNumber || "Sin Factura"}
           cashierName={selectedOrder.cashierName}
           tableId={selectedOrder.tableId}
+          timestamp={selectedOrder.paidAt ?? selectedOrder.timestamp}
           title={`Factura #${selectedOrder.invoiceNumber || "Sin Factura"} - ${selectedOrder.customerName || "Cliente"}`}
           confirmText="Imprimir"
           showConfirmButton={!isViewOnly}

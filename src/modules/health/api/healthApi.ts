@@ -1,5 +1,7 @@
+import { getApiBaseUrl as getSharedApiBaseUrl } from "../../../shared/api";
+
 export const getApiBaseUrl = (): string => {
-  return import.meta.env.VITE_API_BASE_URL || "";
+  return getSharedApiBaseUrl();
 };
 
 export const checkBackendHealthApi = async (

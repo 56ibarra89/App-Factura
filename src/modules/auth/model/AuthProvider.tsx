@@ -13,7 +13,11 @@ import { secureTokenGateway as defaultTokenGateway } from "../api/secureTokenGat
 import { authService as defaultAuthService } from "../api/authService";
 import type { IAuthService } from "./auth-service.types";
 import { AuthContext } from "./AuthContext";
-import { accessTokenStore, apiClient } from "../../../shared/api";
+import {
+  accessTokenStore,
+  apiClient,
+  attemptTokenRefresh,
+} from "../../../shared/api";
 import type { PermissionCode } from "./permission.types";
 
 interface AuthProviderProps {
@@ -59,7 +63,17 @@ export const AuthProvider = ({
 
     if (window.authAPI) {
       void window.authAPI.hasToken().then((hasToken) => {
-        if (!hasToken) signOut();
+        if (!hasToken) {
+          signOut();
+          return;
+        }
+        if (!accessTokenStore.get()) {
+          void attemptTokenRefresh().then((refreshed) => {
+            if (!refreshed && !accessTokenStore.get()) {
+              signOut();
+            }
+          });
+        }
       });
       return;
     }
@@ -79,12 +93,21 @@ export const AuthProvider = ({
       });
   }, [isLoggedIn, updateAuthorization]);
 
+  const performLogout = authentication.logout;
+  const handleSessionExpire = useCallback(
+    () =>
+      performLogout({
+        auditAction: "SESSION_EXPIRED",
+        auditDetails: "Cierre de sesión automático por inactividad",
+      }),
+    [performLogout],
+  );
+
   useInactivityTimer(
     {
       isLoggedIn: session.state.isLoggedIn,
-      username: session.state.username,
       role: session.state.role,
-      onExpire: authentication.logout,
+      onExpire: handleSessionExpire,
     },
     sessionGateway,
   );

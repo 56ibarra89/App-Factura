@@ -42,11 +42,11 @@ export function useAdminPromotions() {
     setEditingDiscount(discount);
     setDiscountDialogOpen(true);
   };
-  const saveDiscount = (discount: DescuentoRule) => {
+  const saveDiscount = async (discount: DescuentoRule) => {
     if (editingDiscount) {
-      void discountData.editDescuento(discount);
+      await discountData.editDescuento(discount);
     } else {
-      void discountData.addDescuento(discount);
+      await discountData.addDescuento(discount);
     }
   };
 
@@ -58,11 +58,11 @@ export function useAdminPromotions() {
     setEditingHappyHour(happyHour);
     setHappyHourDialogOpen(true);
   };
-  const saveHappyHour = (happyHour: HappyHourRule) => {
+  const saveHappyHour = async (happyHour: HappyHourRule) => {
     if (editingHappyHour) {
-      void happyHourData.editHappyHour(happyHour);
+      await happyHourData.editHappyHour(happyHour);
     } else {
-      void happyHourData.addHappyHour(happyHour);
+      await happyHourData.addHappyHour(happyHour);
     }
   };
 
@@ -74,11 +74,11 @@ export function useAdminPromotions() {
     setEditingCoupon(coupon);
     setCouponDialogOpen(true);
   };
-  const saveCoupon = (coupon: CuponFormOutput) => {
+  const saveCoupon = async (coupon: CuponFormOutput) => {
     if (editingCoupon) {
-      void couponData.editCupon(coupon);
+      await couponData.editCupon(coupon);
     } else {
-      void couponData.addCupon(coupon);
+      await couponData.addCupon(coupon);
     }
   };
 
@@ -90,12 +90,12 @@ export function useAdminPromotions() {
     setCertificateDetailOpen(false);
     setViewingCertificate(null);
   };
-  const markCertificateDelivered = (id: number) => {
-    void certificateData.markDelivered(id);
+  const markCertificateDelivered = async (id: number) => {
+    await certificateData.markDelivered(id);
     closeCertificateDetail();
   };
-  const cancelCertificate = (id: number) => {
-    void certificateData.cancelCertificado(id);
+  const cancelCertificate = async (id: number) => {
+    await certificateData.cancelCertificado(id);
     closeCertificateDetail();
   };
 

@@ -25,6 +25,7 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
 import FolderIcon from "@mui/icons-material/Folder";
 import type { BackupItem, BackupType } from "../api/backupGateway";
+import { formatBusinessDateTime } from "../../../shared/format";
 
 interface BackupHistoryTableProps {
   backups: BackupItem[];
@@ -56,8 +57,7 @@ export const BackupHistoryTable: React.FC<BackupHistoryTableProps> = ({
 
   const formatDate = (dateStr: string) => {
     try {
-      const d = new Date(dateStr);
-      return d.toLocaleString("es-ES", {
+      return formatBusinessDateTime(dateStr, {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",

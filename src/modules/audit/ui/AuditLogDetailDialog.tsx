@@ -24,8 +24,7 @@ import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import PaymentIcon from "@mui/icons-material/Payment";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { formatBusinessDateTime } from "../../../shared/format";
 import type { SystemLog } from "../model/audit.types";
 import { getActionMetadata, parseLogDetails } from "../utils/logFormatter";
 import { formatCurrency } from "../../../shared/format";
@@ -166,9 +165,7 @@ export const AuditLogDetailDialog: React.FC<AuditLogDetailDialogProps> = ({
                 Fecha y Hora
               </Typography>
               <Typography variant="body2" fontWeight={600} sx={{ mt: 0.5 }}>
-                {format(log.timestamp, "dd MMMM yyyy, HH:mm:ss", {
-                  locale: es,
-                })}
+                {formatBusinessDateTime(log.timestamp, { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
               </Typography>
             </Grid>
 

@@ -7,9 +7,7 @@ export interface OrderPreferencesGateway {
 
 export const orderPreferencesGateway: OrderPreferencesGateway = {
   async getHiddenOrderIds() {
-    const response: unknown = await apiClient(
-      "/orders/kitchen/hidden-tickets",
-    );
+    const response: unknown = await apiClient("/orders/hidden-orders");
     if (!Array.isArray(response)) return [];
 
     return response.filter(
@@ -18,9 +16,9 @@ export const orderPreferencesGateway: OrderPreferencesGateway = {
   },
 
   async hideOrderIds(orderIds) {
-    await apiClient("/orders/kitchen/hidden-tickets", {
+    await apiClient("/orders/hidden-orders", {
       method: "POST",
-      body: JSON.stringify({ ticketIds: orderIds }),
+      body: JSON.stringify({ orderIds }),
     });
   },
 };
