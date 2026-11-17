@@ -34,6 +34,7 @@ export function useOrderContentCommands({
       taxAmount,
       discountAmount,
       promotion,
+      expectedUpdatedAt,
     ) => {
       const originalOrder = ordersRef.current.find(
         (order) => order.id === orderId,
@@ -63,6 +64,11 @@ export function useOrderContentCommands({
             result.modified.couponId = promotion.couponId;
             result.modified.discountId = promotion.discountId;
             result.modified.happyHourId = promotion.happyHourId;
+          }
+          if (expectedUpdatedAt) {
+            result.modified.updatedAt = new Date(expectedUpdatedAt);
+          } else if (originalOrder?.updatedAt) {
+            result.modified.updatedAt = originalOrder.updatedAt;
           }
           modifiedOrder = result.modified;
         }
@@ -115,6 +121,7 @@ export function useOrderContentCommands({
               : order,
           ),
         );
+        return updatedOrder;
       } catch (error: unknown) {
         if (originalOrder) {
           updateOrders((current) =>

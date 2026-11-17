@@ -191,6 +191,66 @@ function computeSplitStep(
   return { qtyToMove: 1, giftToMove: 0 };
 }
 
+function clampAccountsToSourceItems(
+  sourceItems: readonly OrderItem[],
+  accounts: readonly SplitBillAccount[],
+): SplitBillAccount[] {
+  const pool = sourceItems
+    .filter((item) => !isSplitBillOrderItem(item))
+    .map((item) => ({ ...item }));
+  let changed = false;
+
+  const nextAccounts = accounts.map((account) => {
+    let accountChanged = false;
+    const nextItems: OrderItem[] = [];
+    for (const assigned of account.items) {
+      let allowedQty = 0;
+      let allowedGift = 0;
+      let remainingNeeded = assigned.quantity;
+      let remainingGiftNeeded = assigned.giftQuantity ?? 0;
+
+      for (let index = 0; index < pool.length && remainingNeeded > 0; index += 1) {
+        const candidate = pool[index];
+        if (!isSameSplitItem(candidate, assigned) || candidate.quantity <= 0) {
+          continue;
+        }
+        const takeQty = Math.min(remainingNeeded, candidate.quantity);
+        const takeGift = Math.min(
+          remainingGiftNeeded,
+          candidate.giftQuantity ?? 0,
+          takeQty,
+        );
+        allowedQty += takeQty;
+        allowedGift += takeGift;
+        remainingNeeded -= takeQty;
+        remainingGiftNeeded -= takeGift;
+        pool[index] = normalizeSplitItemGift(
+          candidate,
+          candidate.quantity - takeQty,
+          Math.max(0, (candidate.giftQuantity ?? 0) - takeGift),
+        );
+      }
+
+      if (
+        allowedQty !== assigned.quantity ||
+        allowedGift !== (assigned.giftQuantity ?? 0)
+      ) {
+        changed = true;
+        accountChanged = true;
+      }
+      if (allowedQty > 0) {
+        nextItems.push(normalizeSplitItemGift(assigned, allowedQty, allowedGift));
+      } else {
+        changed = true;
+        accountChanged = true;
+      }
+    }
+    return accountChanged ? { ...account, items: nextItems } : account;
+  });
+
+  return changed ? nextAccounts : (accounts as SplitBillAccount[]);
+}
+
 export function useSplitBill({
   items,
   totalAmount,
@@ -209,6 +269,15 @@ export function useSplitBill({
       ),
     [discountAmount, items, subTotalAmount, taxAmount, totalAmount],
   );
+  const creditItemsSignature = useMemo(
+    () =>
+      items
+        .filter(isSplitBillCreditOrderItem)
+        .map((item) => `${item.id ?? item.name}:${item.price}:${item.quantity}`)
+        .join("|"),
+    [items],
+  );
+  const lastCreditSignatureRef = useRef(creditItemsSignature);
   const highestInitialEqualAccount = [...initialEqualIdentities, ...items.filter(isSplitBillCreditOrderItem)].reduce(
     (highest, entry) => {
       const match = entry.name.match(/persona\s+(\d+)/i);
@@ -231,6 +300,16 @@ export function useSplitBill({
   const [unassignedItems, setUnassignedItems] = useState<OrderItem[]>(() =>
     deriveUnassignedItems(items, []),
   );
+
+  useEffect(() => {
+    if (lastCreditSignatureRef.current === creditItemsSignature) return;
+    lastCreditSignatureRef.current = creditItemsSignature;
+    setEqualAccountIdentities(initialEqualIdentities);
+  }, [creditItemsSignature, initialEqualIdentities]);
+
+  useEffect(() => {
+    setAccounts((current) => clampAccountsToSourceItems(items, current));
+  }, [items]);
 
   useEffect(() => {
     setUnassignedItems(deriveUnassignedItems(items, accounts));

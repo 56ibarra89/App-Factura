@@ -23,6 +23,7 @@ export interface UpdateOrderStatusCommand {
   kitchenId?: string;
   itemId?: number | string;
   cancelReasonId?: string;
+  expectedUpdatedAt?: string;
 }
 
 export interface CurrentOrdersGateway {
@@ -58,7 +59,7 @@ export interface OrderCreationGateway {
 }
 
 export interface OrderStatusGateway {
-  updateStatus(command: UpdateOrderStatusCommand): Promise<void>;
+  updateStatus(command: UpdateOrderStatusCommand): Promise<Order | void>;
   startDelivery(orderId: string): Promise<void>;
 }
 
@@ -105,6 +106,7 @@ export const ordersGateway: OrdersGateway = {
     kitchenId,
     itemId,
     cancelReasonId,
+    expectedUpdatedAt,
   }) =>
     syncUpdateOrderStatus(
       orderId,
@@ -115,6 +117,7 @@ export const ordersGateway: OrdersGateway = {
       kitchenId,
       itemId,
       cancelReasonId,
+      expectedUpdatedAt,
     ),
   startDelivery: syncStartDelivery,
   updateItems: syncUpdateOrderItems,

@@ -11,6 +11,7 @@ import { useCheckoutPayment } from "./useCheckoutPayment";
 import { useCustomerDeliveryForm } from "./useCustomerDeliveryForm";
 import { usePackagingSelection } from "./usePackagingSelection";
 import { useGeneralSettings, useTaxConfig } from "../../settings";
+import { PERMISSIONS, useAuth } from "../../auth";
 import type { DeliveryZone } from "../../delivery";
 
 interface UseCheckoutDialogOptions {
@@ -63,6 +64,9 @@ export function useCheckoutDialog({
 
   const { config } = useGeneralSettings();
   const { taxes, isExonerated } = useTaxConfig();
+  const { hasPermission } = useAuth();
+  const canReadCustomers = hasPermission(PERMISSIONS.CUSTOMERS_READ);
+  const canManageCustomers = hasPermission(PERMISSIONS.CUSTOMERS_MANAGE);
   const exchangeRate = config.exchangeRate > 0 ? config.exchangeRate : 36.5;
 
   const customerDelivery = useCustomerDeliveryForm({
@@ -214,7 +218,12 @@ export function useCheckoutDialog({
         customerTendered:
           payment.payments.some((detail) => detail.method === "EFECTIVO")
             ? Number(payment.receivedLocal || 0) +
-                Number(payment.receivedSecondary || 0) * exchangeRate ||
+                (payment.payments.some(
+                  (detail) =>
+                    detail.method === "EFECTIVO" && detail.currency === "USD",
+                )
+                  ? Number(payment.receivedSecondary || 0) * exchangeRate
+                  : 0) ||
               payment.payments.find((detail) => detail.method === "EFECTIVO")
                 ?.amount
             : undefined,
@@ -295,7 +304,7 @@ export function useCheckoutDialog({
     const phone = customerDelivery.customerPhone.trim();
 
     // Detección de homónimos / coincidencia de cliente
-    if (name.length >= 2) {
+    if (canReadCustomers && canManageCustomers && name.length >= 2) {
       try {
         const matches = await customerRepository.searchByName(name);
         const exactMatch = matches.find(
@@ -328,7 +337,9 @@ export function useCheckoutDialog({
 
     setIsSubmitting(true);
     try {
-      const persisted = await customerDelivery.persistCustomer();
+      const persisted = canManageCustomers
+        ? await customerDelivery.persistCustomer()
+        : null;
       if (persisted?.isNew) setToastOpen(true);
 
       await executeFinalSubmission(persisted?.customer.id ?? customerDelivery.selectedCustomer?.id);
@@ -342,7 +353,14 @@ export function useCheckoutDialog({
       submissionLock.current = false;
       setIsSubmitting(false);
     }
-  }, [canConfirm, customerDelivery, executeFinalSubmission, isPrintRetry]);
+  }, [
+    canConfirm,
+    canManageCustomers,
+    canReadCustomers,
+    customerDelivery,
+    executeFinalSubmission,
+    isPrintRetry,
+  ]);
 
   const handleConfirmAsNewCustomer = useCallback(async () => {
     if (!matchedCustomer || submissionLock.current) return;

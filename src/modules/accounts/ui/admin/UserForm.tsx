@@ -28,7 +28,7 @@ const DEFAULT_USER: Partial<UserAccount> = {
 };
 
 export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: UserFormProps) {
-  const { hasPermission } = useAuth();
+  const { username: currentUsername, hasPermission } = useAuth();
   const canManageUsers = hasPermission(PERMISSIONS.USERS_MANAGE);
   const [formData, setFormData] = useState<Partial<UserAccount>>(DEFAULT_USER);
   const [accessRoles, setAccessRoles] = useState<AccessRole[]>([]);
@@ -73,7 +73,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.username || !formData.firstName) return;
+    if (!formData.username?.trim() || !formData.firstName?.trim() || !formData.lastName?.trim()) return;
     if (!formData.accessRoleId) return;
     if (!isEditing && !formData.pin) return;
     if (formData.pin && !/^\d{6}$/.test(formData.pin)) return;
@@ -160,7 +160,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
             <TextField id="user-firstname" fullWidth size="small" label="Nombre(s)" value={formData.firstName || ""} onChange={e => handleChange("firstName", e.target.value)} required variant="filled" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField id="user-lastname" fullWidth size="small" label="Apellido(s)" value={formData.lastName || ""} onChange={e => handleChange("lastName", e.target.value)} variant="filled" />
+            <TextField id="user-lastname" fullWidth size="small" label="Apellido(s)" value={formData.lastName || ""} onChange={e => handleChange("lastName", e.target.value)} required variant="filled" />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField id="user-username" fullWidth size="small" label="Usuario de Login" value={formData.username || ""} onChange={e => handleChange("username", e.target.value.toLowerCase().replace(/\s/g, ''))} disabled={isEditing && !canManageUsers} required variant="filled" helperText={isEditing && !canManageUsers ? "No tienes permiso para editar el nombre de usuario." : "Usado para iniciar sesión."} />
@@ -296,7 +296,7 @@ export function UserForm({ user, onSave, onToggleStatus, onDelete, onUnlock }: U
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
         <Box display="flex" gap={2}>
-          {isEditing && formData.id !== "admin" ? (
+          {isEditing && formData.id !== "admin" && formData.username !== currentUsername ? (
             <>
               <Button
                 variant="text"

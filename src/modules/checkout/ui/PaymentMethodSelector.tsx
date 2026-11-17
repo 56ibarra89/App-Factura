@@ -177,6 +177,35 @@ export default function PaymentMethodSelector({
   const mixed = mixedMethodIds.map(
     (id) => methods.find((method) => method.id === id) ?? methods[0],
   );
+  const hasUsdCashInMixed =
+    paymentMethod === "MIXTO" &&
+    mixed.some(
+      (method) => method?.type === "CASH" && method?.currency === "USD",
+    );
+  const hasLocalCashInMixed =
+    paymentMethod === "MIXTO" &&
+    mixed.some(
+      (method) => method?.type === "CASH" && method?.currency !== "USD",
+    );
+
+  useEffect(() => {
+    if (paymentMethod !== "MIXTO") return;
+    if (!hasUsdCashInMixed && receivedSecondary !== "") {
+      setReceivedSecondary("");
+    }
+    if (!hasLocalCashInMixed && receivedLocal !== "") {
+      setReceivedLocal("");
+    }
+  }, [
+    hasLocalCashInMixed,
+    hasUsdCashInMixed,
+    paymentMethod,
+    receivedLocal,
+    receivedSecondary,
+    setReceivedLocal,
+    setReceivedSecondary,
+  ]);
+
   const mixedCashSummary = summarizeMixedCashPayments({
     mixedMethods: mixed,
     mixedAmounts,

@@ -37,7 +37,7 @@ export const checkoutGateway: CheckoutGateway = {
       apiClient<DeliveryDriver[]>(`/users/drivers?date=${dateString}`),
       apiClient<DeliveryDriverStats[]>(
         `/users/motorizados/delivery-stats?date=${dateString}`,
-      ),
+      ).catch(() => [] as DeliveryDriverStats[]),
     ]);
 
     return { drivers, stats };

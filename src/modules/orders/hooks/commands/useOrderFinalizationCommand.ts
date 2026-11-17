@@ -10,6 +10,10 @@ import type {
 } from "../../api/ordersGateway";
 import type { OrderCommands } from "../../model/order-context.types";
 import type { Order } from "../../model/order.types";
+import {
+  shouldApplyOrderUpdateResponse,
+  shouldRollbackOrderUpdate,
+} from "../../model/orderCommandReconciliation";
 import type { OrderStateUpdater } from "../useOrderStore";
 
 interface UseOrderFinalizationCommandOptions {
@@ -120,13 +124,17 @@ export function useOrderFinalizationCommand({
       });
 
       if (!modifiedOrder) return;
+      const optimisticOrder = modifiedOrder;
       try {
-        const resolvedTotal = modifiedOrder.total;
+        const resolvedTotal = optimisticOrder.total;
+        const resolvedExpectedUpdatedAt = command.expectedUpdatedAt
+          ? new Date(command.expectedUpdatedAt)
+          : (originalOrder?.updatedAt ?? optimisticOrder.updatedAt);
         const orderToFinalize: Order = {
-          ...modifiedOrder,
-          updatedAt: originalOrder?.updatedAt ?? modifiedOrder.updatedAt,
+          ...optimisticOrder,
+          updatedAt: resolvedExpectedUpdatedAt,
           payments: reconcileFinalizationPayments(
-            modifiedOrder,
+            optimisticOrder,
             resolvedTotal,
           ),
         };
@@ -136,7 +144,7 @@ export function useOrderFinalizationCommand({
           );
         updateOrders((current) =>
           current.map((order) =>
-            order.id === modifiedOrder?.id && order === modifiedOrder
+            order.id === optimisticOrder.id
               ? {
                   ...order,
                   status: "paid",
@@ -171,7 +179,8 @@ export function useOrderFinalizationCommand({
         if (originalOrder) {
           updateOrders((current) =>
             current.map((order) =>
-              order.id === orderId && order === modifiedOrder
+              order.id === orderId &&
+              shouldRollbackOrderUpdate(order, optimisticOrder)
                 ? originalOrder
                 : order,
             ),
@@ -181,7 +190,7 @@ export function useOrderFinalizationCommand({
           try {
             const refreshed = await finalizationGateway.getById(orderId);
             updateOrders((current) => current.map((order) =>
-              order.id === orderId && order === originalOrder
+              order.id === orderId
                 ? refreshed : order,
             ));
           } catch (refreshError) {
@@ -211,14 +220,15 @@ export function useOrderFinalizationCommand({
       try {
         result = await finalizationGateway.splitCheckout(parentOrderId, {
           ...command,
-          expectedUpdatedAt: initialParent?.updatedAt?.toISOString(),
+          expectedUpdatedAt:
+            command.expectedUpdatedAt ?? initialParent?.updatedAt?.toISOString(),
         });
       } catch (error) {
         if (error instanceof ApiClientError && error.status === 409 && finalizationGateway.getById) {
           try {
             const refreshed = await finalizationGateway.getById(parentOrderId);
             updateOrders((current) => current.map((order) =>
-              order.id === parentOrderId && order === initialParent
+              order.id === parentOrderId
                 ? refreshed : order,
             ));
           } catch (refreshError) {
@@ -230,7 +240,13 @@ export function useOrderFinalizationCommand({
 
       updateOrders((current) => {
         const updatedList = current.map((order) =>
-          order.id === result.parentOrder.id && (!initialParent || order === initialParent)
+          order.id === result.parentOrder.id &&
+          (!initialParent ||
+            shouldApplyOrderUpdateResponse(
+              order,
+              initialParent,
+              result.parentOrder,
+            ))
             ? result.parentOrder
             : order.id === result.paidOrder.id
               ? result.paidOrder

@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   useOrderCommands,
   useOrderQueries,
@@ -19,11 +19,30 @@ export function useCheckout(
   cart: OrderItem[],
   promotion: AppliedPromotion | null,
   promotionChanged = false,
+  activeOrder?: Order | null,
 ) {
   const { taxes, isExonerated } = useTaxConfig();
   const { addOrder, updateOrderItems, finalizeOrder, markAsSentToKitchen } =
     useOrderCommands();
   const { orders } = useOrderQueries();
+  const snapshotOrderVersionRef = useRef<{
+    orderId: string;
+    expectedUpdatedAt?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!activeOrder) {
+      snapshotOrderVersionRef.current = null;
+      return;
+    }
+    if (snapshotOrderVersionRef.current?.orderId === activeOrder.id) {
+      return;
+    }
+    snapshotOrderVersionRef.current = {
+      orderId: activeOrder.id,
+      expectedUpdatedAt: activeOrder.updatedAt?.toISOString(),
+    };
+  }, [activeOrder]);
 
   const shouldPreservePromotion = useCallback(
     (orderId: string) => {
@@ -109,7 +128,11 @@ export function useCheckout(
         : buildOrderPromotionSelection(promotion);
 
       if (orderId) {
-        await updateOrderItems(
+        const snapshotExpectedUpdatedAt =
+          snapshotOrderVersionRef.current?.orderId === orderId
+            ? snapshotOrderVersionRef.current.expectedUpdatedAt
+            : existingOrder?.updatedAt?.toISOString();
+        const updated = await updateOrderItems(
           orderId,
           cart,
           totals.total,
@@ -117,7 +140,14 @@ export function useCheckout(
           totals.taxAmount,
           totals.discountAmount,
           promotionSelection,
+          snapshotExpectedUpdatedAt,
         );
+        if (updated?.updatedAt) {
+          snapshotOrderVersionRef.current = {
+            orderId,
+            expectedUpdatedAt: updated.updatedAt.toISOString(),
+          };
+        }
         return orderId;
       }
 
@@ -160,7 +190,12 @@ export function useCheckout(
         ? {}
         : buildOrderPromotionSelection(promotion);
 
-      await updateOrderItems(
+      let snapshotExpectedUpdatedAt =
+        snapshotOrderVersionRef.current?.orderId === orderId
+          ? snapshotOrderVersionRef.current.expectedUpdatedAt
+          : existingOrder?.updatedAt?.toISOString();
+
+      const updated = await updateOrderItems(
         orderId,
         items,
         totals.total,
@@ -168,10 +203,19 @@ export function useCheckout(
         totals.taxAmount,
         totals.discountAmount,
         promotionSelection,
+        snapshotExpectedUpdatedAt,
       );
+      if (updated?.updatedAt) {
+        snapshotExpectedUpdatedAt = updated.updatedAt.toISOString();
+        snapshotOrderVersionRef.current = {
+          orderId,
+          expectedUpdatedAt: snapshotExpectedUpdatedAt,
+        };
+      }
 
       return finalizeOrder(orderId, {
         ...totals,
+        expectedUpdatedAt: snapshotExpectedUpdatedAt,
         customerId: form.customerId,
         paymentMethod: form.paymentMethod,
         splitAmounts: form.splitAmounts,

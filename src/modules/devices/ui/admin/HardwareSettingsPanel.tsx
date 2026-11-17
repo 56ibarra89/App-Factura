@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import { runtimeConfigGateway } from "../../../../shared/api";
+import { PERMISSIONS, useAuth } from "../../../auth";
 
 const HARDWARE_SETTINGS_KEY = "hardware_global_settings";
 
@@ -45,6 +46,8 @@ const normalizeSettings = (
 });
 
 export default function HardwareSettingsPanel() {
+  const { hasPermission } = useAuth();
+  const canManageSettings = hasPermission(PERMISSIONS.SETTINGS_MANAGE);
   const [settings, setSettings] =
     useState<HardwareGlobalSettings>(DEFAULT_SETTINGS);
   const [savedSettings, setSavedSettings] =
@@ -140,7 +143,7 @@ export default function HardwareSettingsPanel() {
           variant="contained"
           size="small"
           startIcon={<SaveIcon />}
-          disabled={loading || saving || !isDirty}
+          disabled={loading || saving || !isDirty || !canManageSettings}
           onClick={() => void handleSave()}
         >
           {saving ? "Guardando..." : "Guardar preferencias"}
@@ -164,7 +167,7 @@ export default function HardwareSettingsPanel() {
             select
             fullWidth
             size="small"
-            disabled={loading || saving}
+            disabled={loading || saving || !canManageSettings}
             value={settings.printBehavior}
             onChange={(e) =>
               setSettings((prev) => ({
@@ -186,7 +189,7 @@ export default function HardwareSettingsPanel() {
             select
             fullWidth
             size="small"
-            disabled={loading || saving}
+            disabled={loading || saving || !canManageSettings}
             value={settings.drawerTrigger}
             onChange={(e) =>
               setSettings((prev) => ({

@@ -27,6 +27,7 @@ export interface MenuItem {
   action?: () => void;
   disabled?: boolean;
   permission: PermissionCode;
+  requiredPermissions?: PermissionCode[];
   allowedRoles?: UserRole[];
 }
 
@@ -36,36 +37,48 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <PointOfSaleIcon fontSize="large" color="primary" />,
     route: "/facturacion",
     permission: PERMISSIONS.BILLING_CREATE,
+    allowedRoles: ["admin", "cajero", "cajero_principal", "mesero", "despachador"],
   },
   {
     label: "Delivery",
     icon: <DeliveryDiningIcon fontSize="large" color="error" />,
     route: "/delivery",
     permission: PERMISSIONS.DELIVERY_MANAGE,
+    allowedRoles: ["admin", "cajero", "cajero_principal", "despachador"],
   },
   {
     label: "Entregas Motorizado",
     icon: <TwoWheelerIcon fontSize="large" color="error" />,
     route: "/mis-entregas",
     permission: PERMISSIONS.DELIVERY_READ,
+    allowedRoles: ["admin", "cajero", "cajero_principal", "despachador", "motorizado"],
   },
   {
     label: "Pantalla de Cocina",
     icon: <SoupKitchenIcon fontSize="large" color="error" />,
     route: "/kds",
     permission: PERMISSIONS.KITCHEN_READ,
+    requiredPermissions: [
+      PERMISSIONS.ORDERS_READ,
+      PERMISSIONS.KITCHEN_READ,
+      PERMISSIONS.ORDERS_STATUS,
+      PERMISSIONS.KITCHEN_UPDATE,
+    ],
+    allowedRoles: ["admin", "cajero", "cajero_principal", "cocinero", "despachador"],
   },
   {
     label: "Órdenes",
     icon: <ListAltIcon fontSize="large" color="secondary" />,
     route: "/ordenes",
     permission: PERMISSIONS.ORDERS_READ,
+    allowedRoles: ["admin", "cajero", "cajero_principal", "mesero", "cocinero", "despachador"],
   },
   {
     label: "Mesas",
     icon: <TableRestaurantIcon fontSize="large" color="action" />,
     route: "/mesas",
     permission: PERMISSIONS.TABLES_READ,
+    allowedRoles: ["admin", "cajero", "cajero_principal", "mesero", "despachador"],
   },
   {
     label: "Reportes",
@@ -79,18 +92,23 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <InventorySharp fontSize="large" color="error" />,
     route: "/producto",
     permission: PERMISSIONS.PRODUCTS_MANAGE,
+    allowedRoles: ["admin"],
   },
   {
     label: "Anular Factura",
     icon: <CancelIcon fontSize="large" color="error" />,
     route: "/anular-factura",
     permission: PERMISSIONS.INVOICES_CANCEL,
+    requiredPermissions: [PERMISSIONS.INVOICES_CANCEL, PERMISSIONS.ORDERS_CANCEL],
+    allowedRoles: ["admin", "cajero", "cajero_principal", "despachador"],
   },
   {
     label: "Consultar Facturas",
     icon: <ReceiptIcon fontSize="large" color="primary" />,
     route: "/consultar-factura",
     permission: PERMISSIONS.INVOICES_READ,
+    requiredPermissions: [PERMISSIONS.INVOICES_READ, PERMISSIONS.ORDERS_READ],
+    allowedRoles: ["admin", "cajero", "cajero_principal", "despachador"],
   },
 
   {
@@ -98,24 +116,28 @@ export const getMenuItems = (): MenuItem[] => [
     icon: <LocalAtmIcon fontSize="large" color="success" />,
     route: "/abrircaja",
     permission: PERMISSIONS.CASH_OPEN,
+    allowedRoles: ["admin", "cajero", "cajero_principal", "despachador"],
   },
   {
     label: "Cerrar Caja",
     icon: <LocalAtmIcon fontSize="large" color="error" />,
     route: "/cerrarcaja",
     permission: PERMISSIONS.CASH_CLOSE,
+    allowedRoles: ["admin", "cajero", "cajero_principal", "despachador"],
   },
   {
     label: "Consultar Turnos",
     icon: <HistoryIcon fontSize="large" color="warning" />,
     route: "/consultar-turnos",
     permission: PERMISSIONS.CASH_READ,
+    allowedRoles: ["admin", "cajero", "cajero_principal", "despachador"],
   },
   {
     label: "Gastos de Caja",
     icon: <MoneyOffIcon fontSize="large" color="error" />,
     route: "/gastos-caja",
     permission: PERMISSIONS.CASH_EXPENSES,
+    allowedRoles: ["admin", "cajero", "cajero_principal", "despachador"],
   },
   {
     label: "Administración Caja",

@@ -147,6 +147,7 @@ export function useInvoiceCancellation(
           undefined,
           undefined,
           cancelReasonId,
+          orderToCancel.updatedAt?.toISOString(),
         );
         await refresh();
         setPinDialogOpen(false);

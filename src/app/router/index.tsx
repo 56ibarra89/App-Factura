@@ -149,6 +149,7 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<Producto />}
+              allowedRoles={["admin"]}
               requiredPermissions={[PERMISSIONS.PRODUCTS_MANAGE]}
             />
           }
@@ -251,7 +252,12 @@ const AppRoutes = () => (
           element={
             <PrivateRoute
               element={<CashExpensesPage />}
-              allowedRoles={["admin", "cajero", "cajero_principal"]}
+              allowedRoles={[
+                "admin",
+                "cajero",
+                "cajero_principal",
+                "despachador",
+              ]}
               requiredPermissions={[PERMISSIONS.CASH_EXPENSES]}
             />
           }

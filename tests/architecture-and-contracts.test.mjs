@@ -679,3 +679,102 @@ test("F57: estandarización de fechas y rangos comerciales a America/Managua (UT
   assert.match(auditHookContent, /parseBusinessDayStart/);
   assert.match(auditHookContent, /formatBusinessCsvTimestamp/);
 });
+
+test("endurecimiento residual: /producto solo admin, permisos admin, entregas y expectedUpdatedAt", () => {
+  const menuItemsContent = fs.readFileSync(
+    path.join(projectRoot, "src", "app", "navigation", "menuItems.tsx"),
+    "utf8",
+  );
+  const routerContent = fs.readFileSync(
+    path.join(projectRoot, "src", "app", "router", "index.tsx"),
+    "utf8",
+  );
+  const rolesPageContent = fs.readFileSync(
+    path.join(modulesRoot, "access-control", "pages", "RolesPermissionsPage.tsx"),
+    "utf8",
+  );
+  const deliveryPageContent = fs.readFileSync(
+    path.join(modulesRoot, "delivery", "pages", "DriverDeliveriesPage.tsx"),
+    "utf8",
+  );
+  const deliveryModalContent = fs.readFileSync(
+    path.join(modulesRoot, "delivery", "ui", "DriverDeliveriesModal.tsx"),
+    "utf8",
+  );
+  const ordersPageContent = fs.readFileSync(
+    path.join(modulesRoot, "orders", "pages", "OrdersPage.tsx"),
+    "utf8",
+  );
+  const backendSyncContent = fs.readFileSync(
+    path.join(modulesRoot, "orders", "api", "backendSync.ts"),
+    "utf8",
+  );
+
+  assert.match(
+    menuItemsContent,
+    /route:\s*"\/producto"[\s\S]*?allowedRoles:\s*\["admin"\]/,
+  );
+  assert.match(
+    routerContent,
+    /path="\/producto"[\s\S]*?allowedRoles=\{\["admin"\]\}/,
+  );
+  assert.match(rolesPageContent, /ADMIN_ONLY_PERMISSIONS/);
+  assert.match(rolesPageContent, /\(Solo Administrador\)/);
+  assert.match(deliveryPageContent, /Entregado · Pendiente de Liquidar/);
+  assert.match(
+    deliveryModalContent,
+    /setErrorMessage\("No se pudieron cargar las entregas del motorizado\."\)/,
+  );
+  assert.match(
+    ordersPageContent,
+    /orderToDelete\.updatedAt\?\.toISOString\(\)/,
+  );
+  assert.match(backendSyncContent, /expectedUpdatedAt/);
+});
+
+test("Sexta auditoría (F70-F80): concurrencia optimista, permisos, SplitBill, pago mixto y validación de impresora USB", () => {
+  const mesaCheckoutContent = fs.readFileSync(
+    path.join(modulesRoot, "tables", "hooks", "useMesaCheckout.ts"),
+    "utf8",
+  );
+  const mesaOrderActionsContent = fs.readFileSync(
+    path.join(modulesRoot, "tables", "hooks", "useMesaOrderActions.ts"),
+    "utf8",
+  );
+  const useCheckoutDialogContent = fs.readFileSync(
+    path.join(modulesRoot, "checkout", "hooks", "useCheckoutDialog.ts"),
+    "utf8",
+  );
+  const checkoutGatewayContent = fs.readFileSync(
+    path.join(modulesRoot, "checkout", "api", "checkoutGateway.ts"),
+    "utf8",
+  );
+  const splitBillContent = fs.readFileSync(
+    path.join(modulesRoot, "checkout", "hooks", "useSplitBill.ts"),
+    "utf8",
+  );
+  const userDirectoryContent = fs.readFileSync(
+    path.join(modulesRoot, "accounts", "model", "UserDirectoryProvider.tsx"),
+    "utf8",
+  );
+  const hardwareSettingsContent = fs.readFileSync(
+    path.join(modulesRoot, "devices", "ui", "admin", "HardwareSettingsPanel.tsx"),
+    "utf8",
+  );
+  const electronMainContent = fs.readFileSync(
+    path.join(projectRoot, "electron", "main.ts"),
+    "utf8",
+  );
+
+  assert.match(mesaCheckoutContent, /expectedUpdatedAt/);
+  assert.match(mesaOrderActionsContent, /"error-comanda-mesero"/);
+  assert.match(useCheckoutDialogContent, /canManageCustomers/);
+  assert.match(checkoutGatewayContent, /\.catch\(\(\)\s*=>\s*\[\]/);
+  assert.match(splitBillContent, /clampAccountsToSourceItems/);
+  assert.match(userDirectoryContent, /hasPermission\("users\.read"\)/);
+  assert.match(hardwareSettingsContent, /PERMISSIONS\.SETTINGS_MANAGE/);
+  assert.match(
+    electronMainContent,
+    /La impresora USB indicada no está instalada\./,
+  );
+});

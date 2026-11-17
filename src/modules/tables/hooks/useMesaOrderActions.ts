@@ -52,6 +52,11 @@ export function useMesaOrderActions({
               : "No se pudo liberar la reserva de la mesa.",
           );
         });
+        void setTableStatus(selectedMesaId, "ocupado").catch(
+          (error: unknown) => {
+            console.error("Error ocupando mesa reservada al abrir pedido:", error);
+          },
+        );
         return;
       }
 
@@ -110,7 +115,8 @@ export function useMesaOrderActions({
             undefined,
             undefined,
             undefined,
-            "error-digitacion",
+            "error-comanda-mesero",
+            activeOrder.updatedAt?.toISOString(),
           );
         } catch (error: unknown) {
           window.alert(

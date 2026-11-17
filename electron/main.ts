@@ -315,6 +315,13 @@ app.whenReady().then(() => {
       return { success: false, error: 'Contenido o impresora inválidos para impresión.' }
     }
 
+    if (parsed.deviceName) {
+      const printers = await event.sender.getPrintersAsync()
+      if (!printers.some((printer) => printer.name === parsed.deviceName)) {
+        return { success: false, error: 'La impresora indicada no está instalada.' }
+      }
+    }
+
     const PRINT_TIMEOUT_MS = 15000
     const printWin = new BrowserWindow({
       show: false,
@@ -411,6 +418,10 @@ app.whenReady().then(() => {
     const parsed = parseUsbPrinterRequest(options)
     if (!parsed) {
       return { success: false, error: 'Nombre de impresora USB inválido.' }
+    }
+    const printers = await event.sender.getPrintersAsync()
+    if (!printers.some((printer) => printer.name === parsed.deviceName)) {
+      return { success: false, error: 'La impresora USB indicada no está instalada.' }
     }
     return await openDrawerViaWindowsUsb(parsed.deviceName, parsed.timeoutMs)
   })

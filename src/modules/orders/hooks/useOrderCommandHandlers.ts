@@ -51,6 +51,7 @@ export function useOrderCommandHandlers({
     preferencesGateway,
   });
   const status = useOrderStatusCommands({
+    ordersRef,
     updateOrders,
     statusGateway,
     itemsGateway,

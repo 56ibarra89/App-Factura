@@ -412,11 +412,13 @@ export async function syncUpdateOrderStatus(
   kitchenId?: string,
   itemId?: number | string,
   cancelReasonId?: string,
-) {
-  await apiClient(`/orders/${orderId}/status`, {
+  expectedUpdatedAt?: string,
+): Promise<Order | undefined> {
+  const response = await apiClient(`/orders/${orderId}/status`, {
     method: "PATCH",
     body: JSON.stringify({
       status: status.toLowerCase(),
+      ...(expectedUpdatedAt ? { expectedUpdatedAt } : {}),
       ...(sentAt ? { sentAt } : {}),
       ...(kitchenId ? { kitchenId } : {}),
       ...(typeof itemId === "number" ? { itemId } : {}),
@@ -425,6 +427,9 @@ export async function syncUpdateOrderStatus(
       ...(cancelReasonId ? { cancelReasonId } : {}),
     }),
   });
+  return response && typeof response === "object"
+    ? mapBackendOrderToFrontend(response)
+    : undefined;
 }
 
 export async function syncStartDelivery(orderId: string): Promise<void> {

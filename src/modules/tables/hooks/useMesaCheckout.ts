@@ -242,6 +242,7 @@ export function useMesaCheckout(
           subAccountAmount: splitSelection.amount,
           items,
           ...totals,
+          expectedUpdatedAt: checkoutOrder.updatedAt?.toISOString(),
           customerId: form.customerId,
           paymentMethod: form.paymentMethod,
           splitAmounts: form.splitAmounts,
@@ -254,11 +255,12 @@ export function useMesaCheckout(
           certificateSerials: extractCertificateSerials(items),
         });
       } else {
+        let snapshotUpdatedAt = checkoutOrder.updatedAt?.toISOString();
         if (
           supplementalItems.length > 0 ||
           checkoutCart !== checkoutOrder.items
         ) {
-          await updateOrderItems(
+          const updatedFromItems = await updateOrderItems(
             checkoutOrder.id,
             items,
             totals.total,
@@ -266,11 +268,16 @@ export function useMesaCheckout(
             totals.taxAmount,
             totals.discountAmount,
             promotionSelection,
+            snapshotUpdatedAt,
           );
+          if (updatedFromItems?.updatedAt) {
+            snapshotUpdatedAt = updatedFromItems.updatedAt.toISOString();
+          }
         }
 
         invoiceNumber = await finalizeOrder(checkoutOrder.id, {
           ...totals,
+          expectedUpdatedAt: snapshotUpdatedAt,
           customerId: form.customerId,
           paymentMethod: form.paymentMethod,
           splitAmounts: form.splitAmounts,

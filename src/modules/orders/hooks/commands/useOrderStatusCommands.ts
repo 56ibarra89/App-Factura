@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import type { MutableRefObject } from "react";
 import { orderMutations } from "../../model/orderDomain";
 import type {
   OrderItemsGateway,
@@ -6,15 +7,21 @@ import type {
 } from "../../api/ordersGateway";
 import type { OrderCommands } from "../../model/order-context.types";
 import type { Order } from "../../model/order.types";
+import {
+  shouldApplyOrderUpdateResponse,
+  shouldRollbackOrderUpdate,
+} from "../../model/orderCommandReconciliation";
 import type { OrderStateUpdater } from "../useOrderStore";
 
 interface UseOrderStatusCommandsOptions {
+  ordersRef?: MutableRefObject<Order[]>;
   updateOrders(updater: OrderStateUpdater): void;
   statusGateway: OrderStatusGateway;
   itemsGateway: OrderItemsGateway;
 }
 
 export function useOrderStatusCommands({
+  ordersRef,
   updateOrders,
   statusGateway,
   itemsGateway,
@@ -29,8 +36,20 @@ export function useOrderStatusCommands({
       kitchenId,
       itemId,
       cancelReasonId,
+      expectedUpdatedAt,
     ) => {
-      await statusGateway.updateStatus({
+      const currentOrder = ordersRef?.current.find(
+        (order) => order.id === orderId,
+      );
+      const shouldDefaultExpectedUpdatedAt =
+        sentAt === undefined &&
+        (status === "cancelled" || status === "paid");
+      const resolvedExpectedUpdatedAt =
+        expectedUpdatedAt ??
+        (shouldDefaultExpectedUpdatedAt
+          ? currentOrder?.updatedAt?.toISOString()
+          : undefined);
+      const serverOrder = await statusGateway.updateStatus({
         orderId,
         status,
         cancelReason,
@@ -39,6 +58,7 @@ export function useOrderStatusCommands({
         kitchenId,
         itemId,
         cancelReasonId,
+        expectedUpdatedAt: resolvedExpectedUpdatedAt,
       });
       updateOrders((current) => {
         const result = orderMutations.updateOrderStatus(
@@ -49,10 +69,20 @@ export function useOrderStatusCommands({
           kitchenId,
           itemId,
         );
-        return result.orders;
+        if (!serverOrder?.updatedAt) {
+          return result.orders;
+        }
+        return result.orders.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                updatedAt: serverOrder.updatedAt ?? order.updatedAt,
+              }
+            : order,
+        );
       });
     },
-    [statusGateway, updateOrders],
+    [ordersRef, statusGateway, updateOrders],
   );
 
   const markAsSentToKitchen = useCallback<OrderCommands["markAsSentToKitchen"]>(
@@ -71,17 +101,28 @@ export function useOrderStatusCommands({
       });
 
       if (modifiedOrder) {
+        const optimisticOrder = modifiedOrder;
         try {
-          const saved = await itemsGateway.updateItems(modifiedOrder);
-          updateOrders((current) => current.map((order) =>
-            order.id === saved.id && order === modifiedOrder ? saved : order,
-          ));
+          const saved = await itemsGateway.updateItems(optimisticOrder);
+          updateOrders((current) =>
+            current.map((order) =>
+              order.id === saved.id &&
+              shouldApplyOrderUpdateResponse(order, optimisticOrder, saved)
+                ? saved
+                : order,
+            ),
+          );
         } catch (error) {
           if (previousOrder) {
             const snapshot = previousOrder;
-            updateOrders((current) => current.map((order) =>
-              order.id === snapshot.id && order === modifiedOrder ? snapshot : order,
-            ));
+            updateOrders((current) =>
+              current.map((order) =>
+                order.id === snapshot.id &&
+                shouldRollbackOrderUpdate(order, optimisticOrder)
+                  ? snapshot
+                  : order,
+              ),
+            );
           }
           throw error;
         }
@@ -112,13 +153,19 @@ export function useOrderStatusCommands({
       });
 
       if (!modifiedOrder) return undefined;
+      const optimisticOrder = modifiedOrder;
 
       try {
-        const updatedOrder = await itemsGateway.updateItems(modifiedOrder);
+        const updatedOrder = await itemsGateway.updateItems(optimisticOrder);
         if (updatedOrder.items) {
           updateOrders((current) =>
             current.map((order) =>
-              order.id === modifiedOrder?.id && order === modifiedOrder
+              order.id === optimisticOrder.id &&
+              shouldApplyOrderUpdateResponse(
+                order,
+                optimisticOrder,
+                updatedOrder,
+              )
                 ? updatedOrder
                 : order,
             ),
@@ -130,7 +177,10 @@ export function useOrderStatusCommands({
           const snapshot = previousOrder;
           updateOrders((current) =>
             current.map((order) =>
-              order.id === snapshot.id && order === modifiedOrder ? snapshot : order,
+              order.id === snapshot.id &&
+              shouldRollbackOrderUpdate(order, optimisticOrder)
+                ? snapshot
+                : order,
             ),
           );
         }
@@ -138,7 +188,7 @@ export function useOrderStatusCommands({
         throw error;
       }
 
-      return modifiedOrder.items;
+      return optimisticOrder.items;
     },
     [itemsGateway, updateOrders],
   );

@@ -35,9 +35,11 @@ export function UserDirectoryProvider({
     setError(null);
     try {
       setUsers(
-        await (gateway.listDirectory && hasPermission("users.directory")
-          ? gateway.listDirectory()
-          : gateway.list()),
+        await (hasPermission("users.read")
+          ? gateway.list()
+          : gateway.listDirectory
+            ? gateway.listDirectory()
+            : gateway.list()),
       );
     } catch (cause: unknown) {
       const message =

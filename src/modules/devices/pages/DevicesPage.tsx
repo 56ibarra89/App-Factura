@@ -106,9 +106,20 @@ const DevicesPage = ({ gateway }: PerifericosProps) => {
 
   const handleDeletePrinter = async (id: string) => {
     if (window.confirm("¿Seguro que deseas eliminar esta impresora?")) {
-      await printerDispatcherService.deletePrinter(id);
-      await loadPrinters();
-      await devices.refresh();
+      try {
+        await printerDispatcherService.deletePrinter(id);
+        await loadPrinters();
+        await devices.refresh();
+      } catch (err) {
+        setFailoverNotice({
+          open: true,
+          message:
+            err instanceof Error
+              ? err.message
+              : "No se pudo eliminar la impresora.",
+          severity: "error",
+        });
+      }
     }
   };
 

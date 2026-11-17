@@ -204,6 +204,7 @@ export default function DriverDeliveriesPage() {
       await ordersGateway.updateStatus({
         orderId: order.id,
         status: "delivered",
+        expectedUpdatedAt: order.updatedAt?.toISOString(),
       });
       setSnackbar({
         open: true,
@@ -1163,19 +1164,35 @@ export default function DriverDeliveriesPage() {
                         buttonContent
                       );
                     })()
-                  ) : order.status === "delivered" &&
+                  ) : order.status === "delivered" ? (
                     hasPermission(PERMISSIONS.ORDERS_FINALIZE) ? (
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      color="success"
-                      size="large"
-                      startIcon={<PaymentsIcon />}
-                      onClick={() => handleMarkAsPaid(order)}
-                      sx={{ fontWeight: "bold", py: 1 }}
-                    >
-                      Cobrar / Liquidar Pedido
-                    </Button>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        color="success"
+                        size="large"
+                        startIcon={<PaymentsIcon />}
+                        onClick={() => handleMarkAsPaid(order)}
+                        sx={{ fontWeight: "bold", py: 1 }}
+                      >
+                        Cobrar / Liquidar Pedido
+                      </Button>
+                    ) : (
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        gap={1}
+                        width="100%"
+                        py={1}
+                        color="warning.main"
+                      >
+                        <AccessTimeIcon fontSize="small" />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Entregado · Pendiente de Liquidar
+                        </Typography>
+                      </Box>
+                    )
                   ) : (
                     <Box
                       display="flex"

@@ -23,6 +23,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { BackButton, ConfirmDialog, PageHeader } from "../../../shared/ui";
 import {
+  ADMIN_ONLY_PERMISSIONS,
   PERMISSIONS,
   ROLE_LABELS,
   useAuth,
@@ -35,6 +36,16 @@ import type {
   AccessRole,
   AccessRoleDraft,
 } from "../model/access-control.types";
+
+const ADMIN_ONLY_PERMISSION_SET = new Set<PermissionCode>(ADMIN_ONLY_PERMISSIONS);
+
+function filterPermissionsForBaseRole(
+  baseRole: UserRole,
+  permissionCodes: PermissionCode[],
+): PermissionCode[] {
+  if (baseRole === "admin") return permissionCodes;
+  return permissionCodes.filter((code) => !ADMIN_ONLY_PERMISSION_SET.has(code));
+}
 
 const EMPTY_ROLE: AccessRoleDraft = {
   name: "",
@@ -83,6 +94,7 @@ export default function RolesPermissionsPage() {
 
   const togglePermission = (code: PermissionCode) => {
     if (draft.code === "admin") return;
+    if (draft.baseRole !== "admin" && ADMIN_ONLY_PERMISSION_SET.has(code)) return;
     setDraft((current) => ({
       ...current,
       permissionCodes: current.permissionCodes.includes(code)
@@ -93,7 +105,15 @@ export default function RolesPermissionsPage() {
 
   const save = async () => {
     if (!draft.name.trim()) return;
-    const saved = await access.saveRole({ ...draft, name: draft.name.trim() });
+    const sanitizedPermissions = filterPermissionsForBaseRole(
+      draft.baseRole,
+      draft.permissionCodes,
+    );
+    const saved = await access.saveRole({
+      ...draft,
+      name: draft.name.trim(),
+      permissionCodes: sanitizedPermissions,
+    });
     if (saved) {
       setDraft(toDraft(saved));
       setMessage("Rol y permisos guardados correctamente.");
@@ -194,7 +214,17 @@ export default function RolesPermissionsPage() {
               label="Perfil operativo base"
               value={draft.baseRole}
               disabled={!canManage || Boolean(draft.id)}
-              onChange={(event) => setDraft((current) => ({ ...current, baseRole: event.target.value as UserRole }))}
+              onChange={(event) => {
+                const nextBaseRole = event.target.value as UserRole;
+                setDraft((current) => ({
+                  ...current,
+                  baseRole: nextBaseRole,
+                  permissionCodes: filterPermissionsForBaseRole(
+                    nextBaseRole,
+                    current.permissionCodes,
+                  ),
+                }));
+              }}
             >
               {(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => (
                 <MenuItem key={role} value={role}>{ROLE_LABELS[role]}</MenuItem>
@@ -219,30 +249,50 @@ export default function RolesPermissionsPage() {
               El rol Administrador conserva todos los permisos para evitar bloquear la administración del sistema.
             </Alert>
           )}
+          {draft.baseRole !== "admin" && (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              Los permisos exclusivos de administración solo están disponibles para roles con perfil operativo base Administrador.
+            </Alert>
+          )}
 
           <Box display="grid" gridTemplateColumns={{ xs: "1fr", lg: "repeat(2, 1fr)" }} gap={2} mt={2}>
             {permissionsByModule.map(([moduleName, permissions]) => (
               <Paper key={moduleName} variant="outlined" sx={{ p: 2 }}>
                 <Typography fontWeight={800} mb={1}>{moduleName}</Typography>
-                {permissions.map((permission) => (
-                  <FormControlLabel
-                    key={permission.id}
-                    sx={{ display: "flex", alignItems: "flex-start", mx: 0, mb: 0.5 }}
-                    control={
-                      <Checkbox
-                        checked={draft.permissionCodes.includes(permission.code)}
-                        disabled={!canManage || draft.code === "admin"}
-                        onChange={() => togglePermission(permission.code)}
-                      />
-                    }
-                    label={
-                      <Box pt={0.75}>
-                        <Typography variant="body2" fontWeight={700}>{permission.action}</Typography>
-                        <Typography variant="caption" color="text.secondary">{permission.description}</Typography>
-                      </Box>
-                    }
-                  />
-                ))}
+                {permissions.map((permission) => {
+                  const requiresAdminBase =
+                    draft.baseRole !== "admin" &&
+                    ADMIN_ONLY_PERMISSION_SET.has(permission.code);
+                  return (
+                    <FormControlLabel
+                      key={permission.id}
+                      sx={{ display: "flex", alignItems: "flex-start", mx: 0, mb: 0.5 }}
+                      control={
+                        <Checkbox
+                          checked={
+                            !requiresAdminBase &&
+                            draft.permissionCodes.includes(permission.code)
+                          }
+                          disabled={
+                            !canManage ||
+                            draft.code === "admin" ||
+                            requiresAdminBase
+                          }
+                          onChange={() => togglePermission(permission.code)}
+                        />
+                      }
+                      label={
+                        <Box pt={0.75}>
+                          <Typography variant="body2" fontWeight={700}>
+                            {permission.action}
+                            {requiresAdminBase ? " (Solo Administrador)" : ""}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">{permission.description}</Typography>
+                        </Box>
+                      }
+                    />
+                  );
+                })}
               </Paper>
             ))}
           </Box>

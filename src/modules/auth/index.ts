@@ -5,7 +5,7 @@ export {
   useAuth,
 } from "./model/AuthContext";
 export { ROLE_LABELS } from "./model/user.types";
-export { PERMISSIONS } from "./model/permission.types";
+export { ADMIN_ONLY_PERMISSIONS, PERMISSIONS } from "./model/permission.types";
 export type {
   AuthContextValue,
 } from "./model/AuthContext";

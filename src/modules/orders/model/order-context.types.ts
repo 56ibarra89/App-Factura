@@ -23,6 +23,7 @@ export interface OrderCommands {
     kitchenId?: string,
     itemId?: number | string,
     cancelReasonId?: string,
+    expectedUpdatedAt?: string,
   ): Promise<void>;
   removeOrder(orderId: string): void;
   clearHistory(): Promise<void>;
@@ -34,7 +35,8 @@ export interface OrderCommands {
     taxAmount?: number,
     discountAmount?: number,
     promotion?: OrderPromotionSelection,
-  ): Promise<void>;
+    expectedUpdatedAt?: string,
+  ): Promise<Order | void>;
   finalizeOrder(
     orderId: string,
     command: FinalizeOrderCommand,

@@ -112,6 +112,7 @@ export default function DriverDeliveriesModal({
 
   const fetchOrders = useCallback(async (driverId: string) => {
     setLoadingOrders(true);
+    setErrorMessage(null);
     try {
       const [data, currentOrders] = await Promise.all([
         gateway.getDriverOrdersToday(driverId),
@@ -135,6 +136,7 @@ export default function DriverDeliveriesModal({
       setOrders(combined);
     } catch (e) {
       console.error(e);
+      setErrorMessage("No se pudieron cargar las entregas del motorizado.");
     } finally {
       setLoadingOrders(false);
     }

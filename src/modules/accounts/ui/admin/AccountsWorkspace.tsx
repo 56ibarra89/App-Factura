@@ -4,6 +4,7 @@ import {
   Tab,
   Tabs,
 } from "@mui/material";
+import { PERMISSIONS, useAuth } from "../../../auth";
 import type { UserAccount } from "../../model/account.types";
 import { UserActivity } from "./UserActivity";
 import { UserForm } from "./UserForm";
@@ -27,6 +28,9 @@ export function AccountsWorkspace({
   onDelete,
   onUnlock,
 }: AccountsWorkspaceProps) {
+  const { hasPermission } = useAuth();
+  const canReadAudit = hasPermission(PERMISSIONS.AUDIT_READ);
+  const effectiveTabIndex = canReadAudit ? tabIndex : 0;
   return (
     <Paper
       elevation={0}
@@ -51,7 +55,7 @@ export function AccountsWorkspace({
         }}
       >
         <Tabs
-          value={tabIndex}
+          value={effectiveTabIndex}
           onChange={(_, value) => onTabChange(value)}
           textColor="primary"
           indicatorColor="primary"
@@ -71,15 +75,17 @@ export function AccountsWorkspace({
                 : "Ficha de Registro"
             }
           />
-          <Tab
-            label="Actividad Reciente"
-            disabled={!selectedUser}
-          />
+          {canReadAudit && (
+            <Tab
+              label="Actividad Reciente"
+              disabled={!selectedUser}
+            />
+          )}
         </Tabs>
       </Box>
 
       <Box sx={{ p: { xs: 1.5, md: 2 }, flex: 1 }}>
-        {tabIndex === 0 && (
+        {effectiveTabIndex === 0 && (
           <UserForm
             user={selectedUser}
             onSave={onSave}
@@ -88,7 +94,7 @@ export function AccountsWorkspace({
             onUnlock={onUnlock}
           />
         )}
-        {tabIndex === 1 && selectedUser && (
+        {effectiveTabIndex === 1 && canReadAudit && selectedUser && (
           <UserActivity user={selectedUser} />
         )}
       </Box>

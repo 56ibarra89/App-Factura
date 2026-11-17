@@ -197,6 +197,7 @@ const OrdersPage = ({ resolveTableName }: OrdersPageProps) => {
         undefined,
         undefined,
         cancelReasonId,
+        orderToDelete.updatedAt?.toISOString(),
       );
       setPinDialogOpen(false);
       setReasonDialogOpen(false);

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { PERMISSIONS, useAuth } from "../../auth";
 import {
   useDeliveryStats,
   type DeliveryStat,
@@ -14,6 +15,8 @@ export interface ScheduleToast {
 }
 
 export function useAdminSchedules() {
+  const { hasPermission } = useAuth();
+  const canReadDelivery = hasPermission(PERMISSIONS.DELIVERY_READ);
   const { users, loading } = useUserDirectory();
   const { saveUser } = useUserAdministration();
   const { addExtraDay, removeExtraDay } =
@@ -36,10 +39,18 @@ export function useAdminSchedules() {
     users.find((user) => user.id === selectedUserId) ?? null;
 
   useEffect(() => {
-    void fetchDeliveryStats().then((data) => {
-      if (Array.isArray(data)) setStats(data);
-    });
-  }, [fetchDeliveryStats]);
+    if (!canReadDelivery) {
+      setStats([]);
+      return;
+    }
+    void fetchDeliveryStats()
+      .then((data) => {
+        if (Array.isArray(data)) setStats(data);
+      })
+      .catch(() => {
+        setStats([]);
+      });
+  }, [canReadDelivery, fetchDeliveryStats]);
 
   useEffect(() => {
     setCurrentWorkDays(selectedUser?.workDays ?? []);

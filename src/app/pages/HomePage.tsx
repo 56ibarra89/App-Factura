@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Badge, Box, Fab, Tooltip } from "@mui/material";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import { AccountMenu } from "../../modules/accounts";
@@ -15,6 +15,7 @@ import { ordersGateway } from "../../modules/orders";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { username, role, hasPermission } = useAuth();
   const { currentShift } = useCaja();
   const allMenuItems = getMenuItems();
@@ -24,9 +25,13 @@ const HomePage = () => {
       if (item.allowedRoles && (!role || !item.allowedRoles.includes(role))) {
         return false;
       }
-      return item.route === "/admin"
-        ? ADMIN_PANEL_PERMISSIONS.some((permission) => hasPermission(permission))
-        : hasPermission(item.permission);
+      if (item.route === "/admin") {
+        return ADMIN_PANEL_PERMISSIONS.some((permission) =>
+          hasPermission(permission),
+        );
+      }
+      const required = item.requiredPermissions ?? [item.permission];
+      return required.every((permission) => hasPermission(permission));
     });
   }, [allMenuItems, hasPermission, role]);
 
@@ -35,6 +40,11 @@ const HomePage = () => {
   const navigationStartedRef = useRef(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  useEffect(() => {
+    navigationStartedRef.current = false;
+    setIsNavigating(false);
+  }, [location.key]);
+
   const navigateOnce = useCallback(
     (route: string) => {
       if (navigationStartedRef.current) return;
@@ -42,6 +52,10 @@ const HomePage = () => {
       navigationStartedRef.current = true;
       setIsNavigating(true);
       navigate(route);
+      window.setTimeout(() => {
+        navigationStartedRef.current = false;
+        setIsNavigating(false);
+      }, 400);
     },
     [navigate],
   );

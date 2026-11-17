@@ -45,7 +45,7 @@ function useCart(activeOrder?: Order | null) {
   } = useProductSelection(handleConfirmProduct);
 
   const { confirmFactura, saveTableOrder, finalizeTableOrder, sendToKitchen } =
-    useCheckout(cart, promotion, promotionChanged);
+    useCheckout(cart, promotion, promotionChanged, activeOrder);
 
   return {
     cart,
