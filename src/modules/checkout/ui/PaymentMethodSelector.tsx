@@ -80,11 +80,11 @@ export default function PaymentMethodSelector({
   setReceivedSecondary,
   currencySymbol = "C$",
   secondaryCurrencySymbol = "$",
-  exchangeRate = 36.5,
+  exchangeRate = 0,
 }: Props) {
   const selected =
     methods.find((method) => method.id === selectedMethodId) ?? methods[0];
-  const exchange = exchangeRate > 0 ? exchangeRate : 36.5;
+  const exchange = Number.isFinite(exchangeRate) && exchangeRate > 0 ? exchangeRate : 0;
   const received =
     selected?.currency === "USD"
       ? Number(receivedSecondary) * exchange
@@ -219,11 +219,17 @@ export default function PaymentMethodSelector({
       <Typography variant="subtitle2" fontWeight="bold" mb={1}>
         Método de Pago:
       </Typography>
+      {exchange === 0 && methods.some((method) => method.currency === "USD") && (
+        <Typography color="error" variant="body2" mb={1}>
+          Configura una tasa de cambio válida en Configuración general para cobrar en dólares.
+        </Typography>
+      )}
       <Grid container spacing={1}>
         {methods.map((method) => (
           <Grid key={method.id} size={{ xs: 6, sm: 4 }} sx={{ display: "flex" }}>
             <ToggleButton
               value={method.id}
+              disabled={method.currency === "USD" && exchange === 0}
               selected={
                 paymentMethod !== "MIXTO" && selectedMethodId === method.id
               }
@@ -367,7 +373,7 @@ export default function PaymentMethodSelector({
               const amount =
                 index === 0 ? mixedAmounts.efectivo : mixedAmounts.tarjeta;
               const displayedAmount =
-                method?.currency === "USD" ? amount / exchange : amount;
+                method?.currency === "USD" ? (exchange > 0 ? amount / exchange : 0) : amount;
               return (
                 <Grid key={index} size={{ xs: 12, md: 6 }}>
                   <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
@@ -387,7 +393,7 @@ export default function PaymentMethodSelector({
                         <MenuItem
                           key={candidate.id}
                           value={candidate.id}
-                          disabled={mixedMethodIds[1 - index] === candidate.id}
+                          disabled={mixedMethodIds[1 - index] === candidate.id || (candidate.currency === "USD" && exchange === 0)}
                         >
                           {candidate.name}
                         </MenuItem>

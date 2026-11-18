@@ -109,7 +109,6 @@ export const ComboFormDialog = ({
     }
   }, [categories, editing, open]);
 
-  // Manejo de Grupos
   const handleAddGroup = () => {
     setForm((prev) => ({
       ...prev,
@@ -143,7 +142,6 @@ export const ComboFormDialog = ({
     });
   };
 
-  // Manejo de Opciones dentro de un Grupo
   const handleAddOption = (groupIndex: number) => {
     const defaultProduct = selectableProducts[0];
     if (!defaultProduct) return;
@@ -230,7 +228,6 @@ export const ComboFormDialog = ({
     });
   };
 
-  // Validación
   const isFormValid = useMemo(() => {
     if (!form.name.trim()) return false;
     if (!form.category) return false;

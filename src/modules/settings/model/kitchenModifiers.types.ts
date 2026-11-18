@@ -7,6 +7,13 @@ export const KITCHEN_MODIFIER_KINDS = [
 
 export type KitchenModifierKind = (typeof KITCHEN_MODIFIER_KINDS)[number];
 
+// ADD remains readable for instructions saved on existing orders.
+export const AVAILABLE_KITCHEN_MODIFIER_KINDS = [
+  "REMOVE",
+  "PREPARATION",
+  "SERVICE",
+] as const;
+
 export interface KitchenModifierSelection {
   id: string;
   label: string;
@@ -48,25 +55,6 @@ export const KITCHEN_MODIFIER_COLORS: Record<
   SERVICE: "info",
 };
 
-const DEFAULT_LABELS: Array<Pick<KitchenModifier, "label" | "kind">> = [
-  { label: "Sin Cebolla", kind: "REMOVE" },
-  { label: "Sin Chile", kind: "REMOVE" },
-  { label: "Sin Orégano", kind: "REMOVE" },
-  { label: "Sin Hongos", kind: "REMOVE" },
-  { label: "Extra Salsa de Tomate", kind: "ADD" },
-  { label: "Albahaca Fresca", kind: "ADD" },
-  { label: "Ajo", kind: "ADD" },
-  { label: "Masa Delgada", kind: "PREPARATION" },
-  { label: "Masa Gruesa", kind: "PREPARATION" },
-  { label: "Bien Dorada / Tostada", kind: "PREPARATION" },
-  { label: "Poca Salsa", kind: "PREPARATION" },
-  { label: "Corte en 4", kind: "SERVICE" },
-  { label: "Corte en 8", kind: "SERVICE" },
-  { label: "Sin Cortar", kind: "SERVICE" },
-  { label: "Salsa Aparte", kind: "SERVICE" },
-  { label: "Para Llevar", kind: "SERVICE" },
-];
-
 export const slugifyKitchenModifier = (value: string) =>
   value
     .normalize("NFD")
@@ -77,13 +65,7 @@ export const slugifyKitchenModifier = (value: string) =>
     .slice(0, 60);
 
 export const DEFAULT_KITCHEN_MODIFIERS_CONFIG: KitchenModifiersConfig = {
-  modifiers: DEFAULT_LABELS.map((modifier, index) => ({
-    ...modifier,
-    id: slugifyKitchenModifier(modifier.label),
-    categoryIds: [],
-    isActive: true,
-    sortOrder: index,
-  })),
+  modifiers: [],
 };
 
 const isKind = (value: unknown): value is KitchenModifierKind =>

@@ -19,17 +19,14 @@ export default function ShiftHistoryPage() {
   const { role: userRole } = useAuth();
   const { shifts, users, loading, error, reload } = useShiftHistory();
 
-  // Filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [modalidadFilter, setModalidadFilter] = useState<string>("all");
   const [cuadreFilter, setCuadreFilter] = useState<string>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
-  // Paginación
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Modales
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [viewingDenominations, setViewingDenominations] = useState<
     CashDenominationCount[] | null
@@ -56,7 +53,6 @@ export default function ShiftHistoryPage() {
     [users],
   );
 
-  // Filtrado de turnos
   const filteredShifts = useMemo(() => {
     return shifts.filter((shift) => {
       const { fullName, role } = getUserInfo(shift.cashierName);
@@ -64,7 +60,6 @@ export default function ShiftHistoryPage() {
       const totalDiff = shift.totalDifference ?? shift.cashDifference ?? 0;
       const hasDiscrepancy = isClosed && Math.abs(totalDiff) >= 0.01;
 
-      // Filtro por Modalidad (Relevo vs Cierre Final vs En Curso)
       if (modalidadFilter === "HANDOVER" && shift.closeType !== "HANDOVER") {
         return false;
       }
@@ -75,7 +70,6 @@ export default function ShiftHistoryPage() {
         return false;
       }
 
-      // Filtro por Estado de Cuadre
       if (cuadreFilter === "balanced" && (!isClosed || hasDiscrepancy)) {
         return false;
       }
@@ -89,12 +83,10 @@ export default function ShiftHistoryPage() {
         return false;
       }
 
-      // Filtro por Rol
       if (roleFilter !== "all" && role !== roleFilter) {
         return false;
       }
 
-      // Búsqueda por Texto
       if (searchTerm.trim() !== "") {
         const query = searchTerm.toLowerCase().trim();
         const matchUsername = shift.cashierName.toLowerCase().includes(query);
@@ -137,7 +129,6 @@ export default function ShiftHistoryPage() {
     getUserInfo,
   ]);
 
-  // Cálculos de Resumen
   const summaryMetrics = useMemo(() => {
     let totalSales = 0;
     let netDifference = 0;

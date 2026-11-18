@@ -39,7 +39,7 @@ export function calculateCheckoutCosts({
     extraCostsSubtotal,
     extraCostsTax,
     finalTotal,
-    finalTotalSecondary: finalTotal / exchangeRate,
+    finalTotalSecondary: exchangeRate > 0 ? finalTotal / exchangeRate : 0,
   };
 }
 

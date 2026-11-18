@@ -138,6 +138,7 @@ export function useCheckoutPayment({
   const isPaymentValid = useMemo(
     () =>
       referencesValid &&
+      (exchangeRate > 0 || (paymentMethod === "MIXTO" ? mixedMethods.every((method) => method?.currency !== "USD") : selectedMethod?.currency !== "USD")) &&
       (paymentMethod !== "MIXTO" || mixedCashSummary.isAllCashSufficient) &&
       isCheckoutPaymentValid({
         isTableMode,
@@ -158,6 +159,8 @@ export function useCheckoutPayment({
       receivedLocal,
       receivedSecondary,
       referencesValid,
+      mixedMethods,
+      selectedMethod,
     ],
   );
 
@@ -166,7 +169,7 @@ export function useCheckoutPayment({
       method: ConfiguredPaymentMethod | undefined,
       amount: number,
     ): OrderPaymentDetail | null => {
-      if (!method || amount <= 0) return null;
+      if (!method || amount <= 0 || (method.currency === "USD" && exchangeRate <= 0)) return null;
       const rate = method.currency === "USD" ? exchangeRate : 1;
       return {
         method: toLegacyPaymentMethod(method),

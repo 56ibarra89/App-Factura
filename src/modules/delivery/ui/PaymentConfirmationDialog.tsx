@@ -109,11 +109,11 @@ export function PaymentConfirmationDialog({
           active.find((m) => m.id !== matchedCash.id && m.type !== "CASH") ||
           electronic;
 
-        const rate = config.exchangeRate > 0 ? config.exchangeRate : 1;
+        const rate = Number.isFinite(config.exchangeRate) && config.exchangeRate > 0 ? config.exchangeRate : 0;
         const initialCash =
           matchedCash.currency === "USD"
             ? (cashPayment?.originalAmount ??
-              (cashPayment?.amount
+              (cashPayment?.amount && rate > 0
                 ? Math.round((cashPayment.amount / rate) * 100) / 100
                 : 0))
             : (cashPayment?.amount ?? order?.splitAmounts?.efectivo ?? 0);
@@ -145,7 +145,7 @@ export function PaymentConfirmationDialog({
     });
   }, [config.exchangeRate, open, order]);
 
-  const exchangeRate = config.exchangeRate > 0 ? config.exchangeRate : 1;
+  const exchangeRate = Number.isFinite(config.exchangeRate) && config.exchangeRate > 0 ? config.exchangeRate : 0;
   const cashMethods = useMemo(
     () => methods.filter((method) => method.type === "CASH"),
     [methods],
@@ -188,8 +188,8 @@ export function PaymentConfirmationDialog({
     explicitOriginalAmount?: number,
   ): OrderPaymentDetail => {
     const rate =
-      method.currency === "USD" && config.exchangeRate > 0
-        ? config.exchangeRate
+      method.currency === "USD"
+        ? exchangeRate
         : 1;
     const roundedNio = Math.round(amountNio * 100) / 100;
     const originalAmount =
@@ -216,7 +216,7 @@ export function PaymentConfirmationDialog({
       if (mixed) {
         if (
           (cash?.currency === "USD" || other?.currency === "USD") &&
-          config.exchangeRate <= 0
+          exchangeRate <= 0
         ) {
           throw new Error(
             "Configura una tasa de cambio USD válida antes de cobrar en dólares.",
@@ -243,7 +243,7 @@ export function PaymentConfirmationDialog({
         label = `${cash.name} + ${other.name}`;
       } else {
         if (!selected) throw new Error("Selecciona un método de pago.");
-        if (selected.currency === "USD" && config.exchangeRate <= 0) {
+        if (selected.currency === "USD" && exchangeRate <= 0) {
           throw new Error(
             "Configura una tasa de cambio USD válida antes de cobrar en dólares.",
           );
@@ -368,7 +368,7 @@ export function PaymentConfirmationDialog({
                   ),
                 }}
               />
-              {cash.currency === "USD" && parsedCashInput > 0 && (
+              {cash.currency === "USD" && parsedCashInput > 0 && exchangeRate > 0 && (
                 <Typography variant="caption" color="text.secondary">
                   Equivale a C${cashNioAmount.toFixed(2)} (T/C{" "}
                   {exchangeRate.toFixed(2)})
@@ -392,7 +392,9 @@ export function PaymentConfirmationDialog({
                 ))}
               </Select>
               <Typography variant="caption" color="text.secondary">
-                {other?.currency === "USD"
+                {other?.currency === "USD" && exchangeRate <= 0
+                  ? "Configura una tasa de cambio válida para cobrar en dólares."
+                  : other?.currency === "USD"
                   ? `Monto restante: $${(otherAmount / exchangeRate).toFixed(2)} (C$${otherAmount.toFixed(2)})`
                   : `Monto restante: C$${otherAmount.toFixed(2)}`}
               </Typography>

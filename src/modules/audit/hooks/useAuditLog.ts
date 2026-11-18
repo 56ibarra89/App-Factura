@@ -191,7 +191,6 @@ export function useAuditLog() {
     [],
   );
 
-  // Lista de usuarios únicos presentes en los registros cargados
   const availableUsers = useMemo(() => {
     const usersSet = new Set<string>();
     logs.forEach((log) => {
@@ -208,7 +207,6 @@ export function useAuditLog() {
     return Array.from(modules).sort((a, b) => a.localeCompare(b));
   }, [logs]);
 
-  // Filtrado reactivo en memoria
   const filteredLogs = useMemo(() => {
     const searchLower = filters.search.trim().toLowerCase();
 
@@ -306,7 +304,6 @@ export function useAuditLog() {
     });
   }, [logs, filters]);
 
-  // Métricas calculadas para los KPIs
   const stats = useMemo<AuditStats>(() => {
     const dataset = filteredLogs;
     let errors = 0;

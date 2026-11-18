@@ -17,7 +17,7 @@ import {
 import {
   KITCHEN_MODIFIER_COLORS,
   KITCHEN_MODIFIER_KIND_LABELS,
-  KITCHEN_MODIFIER_KINDS,
+  AVAILABLE_KITCHEN_MODIFIER_KINDS,
   KITCHEN_MODIFIER_PREFIXES,
   kitchenModifiersGateway,
   type KitchenModifierSelection,
@@ -71,7 +71,7 @@ export default function KitchenModifiersDialog({
           config.modifiers
             .filter(
               (modifier) =>
-                modifier.isActive &&
+                modifier.isActive && modifier.kind !== "ADD" &&
                 (modifier.categoryIds.length === 0 ||
                   (categoryId
                     ? modifier.categoryIds.includes(categoryId)
@@ -86,7 +86,7 @@ export default function KitchenModifiersDialog({
 
   const byKind = useMemo(
     () =>
-      KITCHEN_MODIFIER_KINDS.map((kind) => ({
+      AVAILABLE_KITCHEN_MODIFIER_KINDS.map((kind) => ({
         kind,
         modifiers: available.filter((modifier) => modifier.kind === kind),
       })).filter((group) => group.modifiers.length > 0),
@@ -154,6 +154,22 @@ export default function KitchenModifiersDialog({
               </Box>
             ))}
           </Stack>
+        )}
+        {selection.some((modifier) => modifier.kind === "ADD") && (
+          <Box mt={2}>
+            <Typography variant="subtitle2" mb={1}>
+              Instrucciones anteriores
+            </Typography>
+            <Stack direction="row" gap={1} flexWrap="wrap">
+              {selection.filter((modifier) => modifier.kind === "ADD").map((modifier) => (
+                <Chip
+                  key={modifier.id}
+                  label={modifier.label}
+                  onDelete={() => toggle(modifier)}
+                />
+              ))}
+            </Stack>
+          </Box>
         )}
         <Divider sx={{ my: 2 }} />
         <TextField

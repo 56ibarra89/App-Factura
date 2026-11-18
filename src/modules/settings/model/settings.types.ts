@@ -38,7 +38,7 @@ export const DEFAULT_GENERAL_CONFIG: GeneralConfigState = {
   enableSecondaryCurrency: true,
   secondaryCurrencyCode: "USD",
   secondaryCurrencySymbol: "$",
-  exchangeRate: 36.5,
+  exchangeRate: 0,
   requireExactOpeningAmount: false,
   autoPrintReceipt: true,
   blindCashCount: true,

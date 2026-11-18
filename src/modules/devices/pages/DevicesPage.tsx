@@ -32,11 +32,9 @@ const DevicesPage = ({ gateway }: PerifericosProps) => {
   const [printers, setPrinters] = useState<PrinterConfig[]>([]);
   const [loadingPrinters, setLoadingPrinters] = useState(false);
 
-  // Estados del modal de edición de impresoras
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPrinter, setSelectedPrinter] = useState<PrinterConfig | null>(null);
 
-  // Alerta de Failover / Respaldo
   const [failoverNotice, setFailoverNotice] = useState<{
     open: boolean;
     message: string;

@@ -11,13 +11,14 @@ interface Props {
 }
 
 export const CurrencyCard: React.FC<Props> = ({ config, onUpdate, onSave }) => {
-  const [localRate, setLocalRate] = React.useState(config.exchangeRate.toString());
+  const [localRate, setLocalRate] = React.useState(config.exchangeRate > 0 ? config.exchangeRate.toString() : '');
+  const [rateError, setRateError] = React.useState(false);
 
   React.useEffect(() => {
     setLocalRate((currentRate) => {
       const parsedLocal = parseFloat(currentRate);
       return isNaN(parsedLocal) || parsedLocal !== config.exchangeRate
-        ? config.exchangeRate.toString()
+        ? (config.exchangeRate > 0 ? config.exchangeRate.toString() : '')
         : currentRate;
     });
   }, [config.exchangeRate]);
@@ -27,11 +28,13 @@ export const CurrencyCard: React.FC<Props> = ({ config, onUpdate, onSave }) => {
 
     if (config.enableSecondaryCurrency) {
       const parsed = parseFloat(localRate);
-      if (!isNaN(parsed) && parsed > 0) {
+      if (Number.isFinite(parsed) && parsed > 0) {
+        setRateError(false);
         onUpdate('exchangeRate', parsed);
         override.exchangeRate = parsed;
       } else {
-        setLocalRate(config.exchangeRate.toString());
+        setRateError(true);
+        return;
       }
     }
 
@@ -149,7 +152,10 @@ export const CurrencyCard: React.FC<Props> = ({ config, onUpdate, onSave }) => {
               size="small"
               type="number"
               value={localRate}
-              onChange={(e) => setLocalRate(e.target.value)}
+              placeholder="Configura la tasa"
+              error={rateError}
+              helperText={rateError ? 'Ingresa una tasa mayor que cero para habilitar cobros en dólares.' : undefined}
+              onChange={(e) => { setLocalRate(e.target.value); setRateError(false); }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   const parsed = parseFloat(localRate);
@@ -164,7 +170,7 @@ export const CurrencyCard: React.FC<Props> = ({ config, onUpdate, onSave }) => {
                 if (!isNaN(parsed) && parsed > 0) {
                   onUpdate('exchangeRate', parsed);
                 } else {
-                  setLocalRate(config.exchangeRate.toString());
+                  setLocalRate(config.exchangeRate > 0 ? config.exchangeRate.toString() : '');
                 }
               }}
               inputProps={{ step: "0.01", min: "0" }}

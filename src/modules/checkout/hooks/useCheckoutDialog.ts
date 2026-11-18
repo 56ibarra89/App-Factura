@@ -67,7 +67,7 @@ export function useCheckoutDialog({
   const { hasPermission } = useAuth();
   const canReadCustomers = hasPermission(PERMISSIONS.CUSTOMERS_READ);
   const canManageCustomers = hasPermission(PERMISSIONS.CUSTOMERS_MANAGE);
-  const exchangeRate = config.exchangeRate > 0 ? config.exchangeRate : 36.5;
+  const exchangeRate = Number.isFinite(config.exchangeRate) && config.exchangeRate > 0 ? config.exchangeRate : 0;
 
   const customerDelivery = useCustomerDeliveryForm({
     open,
@@ -125,7 +125,7 @@ export function useCheckoutDialog({
         ),
         extraCostsTax: Math.max(0, finalTotals.taxAmount - baseTotals.taxAmount),
         finalTotal: finalTotals.total,
-        finalTotalSecondary: finalTotals.total / exchangeRate,
+        finalTotalSecondary: exchangeRate > 0 ? finalTotals.total / exchangeRate : 0,
       };
     },
     [

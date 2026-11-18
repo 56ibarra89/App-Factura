@@ -118,7 +118,6 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
             pagination: { paginationModel: { pageSize: 5, page: 0 } },
           }}
           localeText={{
-            // Column menu
           columnMenuUnsort: "Quitar orden",
           columnMenuSortAsc: "Ordenar ASC",
           columnMenuSortDesc: "Ordenar DESC",
@@ -127,7 +126,6 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
           columnMenuShowColumns: "Administrar columnas",
           columnMenuManageColumns: "Administrar columnas",
 
-          // Filter panel
           filterPanelAddFilter: "Agregar filtro",
           filterPanelRemoveAll: "Eliminar todos",
           filterPanelDeleteIconLabel: "Eliminar",
@@ -135,7 +133,6 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
           filterPanelInputLabel: "Valor",
           filterPanelInputPlaceholder: "Valor del filtro",
 
-          // Filter operators
           filterOperatorContains: "Contiene",
           filterOperatorDoesNotContain: "No contiene",
           filterOperatorEquals: "Igual a",
@@ -146,7 +143,6 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
           filterOperatorIsNotEmpty: "No está vacío",
           filterOperatorIsAnyOf: "Es uno de",
 
-          // Filter operators extra
           filterOperatorAfter: "Después de",
           filterOperatorOnOrAfter: "En o después de",
           filterOperatorBefore: "Antes de",
@@ -154,22 +150,18 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
           filterOperatorIs: "Es",
           filterOperatorNot: "No es",
 
-          // No rows & errors
           noRowsLabel: "No hay datos",
 
-          // Pagination
           footerRowSelected: (count) =>
             count !== 1 ? `${count} filas seleccionadas` : `${count} fila seleccionada`,
           footerTotalRows: "Filas totales:",
           paginationRowsPerPage: "Filas por página:",
 
-          // Density selector
           toolbarDensity: "Densidad",
           toolbarDensityComfortable: "Cómoda",
           toolbarDensityStandard: "Estándar",
           toolbarDensityCompact: "Compacta",
 
-          // Toolbar
           toolbarFilters: "Filtros",
           toolbarFiltersLabel: "Mostrar filtros",
           toolbarFiltersTooltipHide: "Ocultar filtros",

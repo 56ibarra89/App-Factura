@@ -52,7 +52,6 @@ export default function DeliveryZonesConfigModal({
   const [activeTab, setActiveTab] = useState(0);
   const [localConfig, setLocalConfig] = useState<DeliveryRulesConfig>(rules);
 
-  // Formulario de agregar/editar zona
   const [zoneModalOpen, setZoneModalOpen] = useState(false);
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
   const [zoneName, setZoneName] = useState("");
@@ -62,7 +61,6 @@ export default function DeliveryZonesConfigModal({
   const [zoneIsActive, setZoneIsActive] = useState(true);
   const [minAmountInput, setMinAmountInput] = useState<number | string>("");
 
-  // Feedback Snackbar
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -121,7 +119,6 @@ export default function DeliveryZonesConfigModal({
 
     let updatedZones: DeliveryZone[];
     if (editingZoneId) {
-      // Actualizar zona existente
       updatedZones = localConfig.zones.map((z) =>
         z.id === editingZoneId
           ? {
@@ -135,7 +132,6 @@ export default function DeliveryZonesConfigModal({
           : z,
       );
     } else {
-      // Nueva zona
       const newZone: DeliveryZone = {
         id: `zone-${Date.now()}`,
         name: zoneName.trim(),

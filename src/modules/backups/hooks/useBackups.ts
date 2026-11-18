@@ -36,7 +36,6 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
     severity: "info",
   });
 
-  // Diálogo de restauración
   const [restoreModal, setRestoreModal] = useState<{
     open: boolean;
     item: BackupItem | null;
@@ -47,7 +46,6 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
     file: null,
   });
 
-  // Diálogo de eliminación
   const [deleteModal, setDeleteModal] = useState<{
     open: boolean;
     item: BackupItem | null;
@@ -92,7 +90,6 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
     loadAll();
   }, [loadAll]);
 
-  // Generación Manual
   const handleGenerateBackup = async () => {
     setGenerating(true);
     showNotification("Creando copia de seguridad de la base de datos...", "info");
@@ -113,7 +110,6 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
     }
   };
 
-  // Guardar Configuración
   const handleSaveConfig = async (newConfig: Partial<BackupConfig>) => {
     setSavingConfig(true);
     try {
@@ -130,7 +126,6 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
     }
   };
 
-  // Descargar Archivo
   const handleDownload = async (filename: string) => {
     try {
       showNotification(`Iniciando descarga de ${filename}...`, "info");
@@ -144,12 +139,10 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
     }
   };
 
-  // Abrir Modal de Restauración para un ítem del historial
   const handleOpenRestoreItem = (item: BackupItem) => {
     setRestoreModal({ open: true, item, file: null });
   };
 
-  // Abrir Modal de Restauración para un archivo externo
   const handleOpenRestoreFile = (file: File) => {
     const validationError = getBackupFileValidationError(file);
     if (validationError) {
@@ -198,7 +191,6 @@ export const useBackups = (gateway: BackupGateway = backupGateway) => {
     }
   };
 
-  // Modal de Eliminación
   const handleOpenDeleteDialog = (item: BackupItem) => {
     setDeleteModal({ open: true, item });
   };

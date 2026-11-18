@@ -5,13 +5,16 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   CircularProgress,
   FormControl,
   FormControlLabel,
+  FormHelperText,
   Grid,
   IconButton,
   InputLabel,
+  ListItemText,
   MenuItem,
   Select,
   Snackbar,
@@ -30,7 +33,7 @@ import {
   DEFAULT_KITCHEN_MODIFIERS_CONFIG,
   KITCHEN_MODIFIER_COLORS,
   KITCHEN_MODIFIER_KIND_LABELS,
-  KITCHEN_MODIFIER_KINDS,
+  AVAILABLE_KITCHEN_MODIFIER_KINDS,
   KITCHEN_MODIFIER_PREFIXES,
   slugifyKitchenModifier,
   type KitchenModifier,
@@ -43,9 +46,12 @@ export default function KitchenModifiersSettingsPage() {
     DEFAULT_KITCHEN_MODIFIERS_CONFIG,
   );
   const [categories, setCategories] = useState<Category[]>([]);
+  const [emptyCategoryDrafts, setEmptyCategoryDrafts] = useState<Set<string>>(() => new Set());
+  const categoryIds = categories.flatMap((category) => category.id ? [category.id] : []);
   const [newLabel, setNewLabel] = useState("");
   const [newKind, setNewKind] = useState<KitchenModifierKind>("REMOVE");
   const [loading, setLoading] = useState(true);
+  const [configLoaded, setConfigLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{
     text: string;
@@ -60,6 +66,7 @@ export default function KitchenModifiersSettingsPage() {
       .then(([saved, catalogCategories]) => {
         setConfig(saved);
         setCategories(catalogCategories);
+        setConfigLoaded(true);
       })
       .catch(() =>
         setMessage({
@@ -103,6 +110,13 @@ export default function KitchenModifiersSettingsPage() {
   };
 
   const save = async () => {
+    if (config.modifiers.some((modifier) => emptyCategoryDrafts.has(modifier.id))) {
+      setMessage({
+        text: "Selecciona al menos una categoría o elige todas para cada modificador.",
+        severity: "error",
+      });
+      return;
+    }
     if (config.modifiers.some((modifier) => !modifier.label.trim())) {
       setMessage({
         text: "Todos los modificadores deben tener nombre.",
@@ -140,7 +154,7 @@ export default function KitchenModifiersSettingsPage() {
           <Button
             variant="contained"
             startIcon={saving ? <CircularProgress size={18} /> : <SaveIcon />}
-            disabled={loading || saving}
+            disabled={loading || saving || !configLoaded}
             onClick={() => void save()}
           >
             Guardar cambios
@@ -148,9 +162,8 @@ export default function KitchenModifiersSettingsPage() {
         }
       />
       <Typography color="text.secondary" mb={3} maxWidth={950}>
-        Estandariza las instrucciones que el cajero envía a cocina. Sin
-        categorías seleccionadas, el modificador se muestra para todo el menú;
-        al elegir categorías, solo aparece en esos productos.
+        Estandariza las instrucciones que el cajero envía a cocina. Elige todas
+        las categorías o selecciona las categorías donde aparecerá cada modificador.
       </Typography>
 
       {loading ? (
@@ -184,7 +197,7 @@ export default function KitchenModifiersSettingsPage() {
                       setNewKind(event.target.value as KitchenModifierKind)
                     }
                   >
-                    {KITCHEN_MODIFIER_KINDS.map((kind) => (
+                    {AVAILABLE_KITCHEN_MODIFIER_KINDS.map((kind) => (
                       <MenuItem key={kind} value={kind}>
                         {KITCHEN_MODIFIER_PREFIXES[kind]}{" "}
                         {KITCHEN_MODIFIER_KIND_LABELS[kind]}
@@ -205,7 +218,7 @@ export default function KitchenModifiersSettingsPage() {
           </Card>
 
           <Grid container spacing={2}>
-            {config.modifiers.map((modifier) => (
+            {config.modifiers.filter((modifier) => modifier.kind !== "ADD").map((modifier) => (
               <Grid key={modifier.id} size={{ xs: 12, lg: 6 }}>
                 <Card
                   variant="outlined"
@@ -243,13 +256,18 @@ export default function KitchenModifiersSettingsPage() {
                       <IconButton
                         aria-label={`Eliminar ${modifier.label}`}
                         color="error"
-                        onClick={() =>
+                        onClick={() => {
+                          setEmptyCategoryDrafts((current) => {
+                            const next = new Set(current);
+                            next.delete(modifier.id);
+                            return next;
+                          });
                           setConfig((current) => ({
                             modifiers: current.modifiers.filter(
                               (candidate) => candidate.id !== modifier.id,
                             ),
-                          }))
-                        }
+                          }));
+                        }}
                       >
                         <DeleteOutlineIcon />
                       </IconButton>
@@ -266,7 +284,7 @@ export default function KitchenModifiersSettingsPage() {
                             })
                           }
                         >
-                          {KITCHEN_MODIFIER_KINDS.map((kind) => (
+                          {AVAILABLE_KITCHEN_MODIFIER_KINDS.map((kind) => (
                             <MenuItem key={kind} value={kind}>
                               {KITCHEN_MODIFIER_PREFIXES[kind]}{" "}
                               {KITCHEN_MODIFIER_KIND_LABELS[kind]}
@@ -280,17 +298,40 @@ export default function KitchenModifiersSettingsPage() {
                           multiple
                           label="Categorías"
                           notched
-                          value={modifier.categoryIds}
-                          onChange={(event) =>
-                            update(modifier.id, {
-                              categoryIds:
-                                typeof event.target.value === "string"
-                                  ? event.target.value.split(",")
-                                  : event.target.value,
-                            })
-                          }
+                          value={emptyCategoryDrafts.has(modifier.id) ? [] : modifier.categoryIds.length === 0 ? categoryIds : modifier.categoryIds}
+                          onChange={(event) => {
+                            const selected = typeof event.target.value === "string"
+                              ? event.target.value.split(",")
+                              : event.target.value;
+                            const selectAll = selected.includes("__all_categories__");
+                            const hasEveryCategory = categoryIds.length > 0 &&
+                              selected.length === categoryIds.length &&
+                              categoryIds.every((id) => selected.includes(id));
+                            if (selectAll && modifier.categoryIds.length === 0 && !emptyCategoryDrafts.has(modifier.id)) {
+                              setEmptyCategoryDrafts((current) => new Set(current).add(modifier.id));
+                            } else if (selected.length === 0 && !selectAll) {
+                              setEmptyCategoryDrafts((current) => new Set(current).add(modifier.id));
+                            } else if (selectAll || hasEveryCategory) {
+                              setEmptyCategoryDrafts((current) => {
+                                const next = new Set(current);
+                                next.delete(modifier.id);
+                                return next;
+                              });
+                              update(modifier.id, { categoryIds: [] });
+                            } else if (selected.length <= 50) {
+                              setEmptyCategoryDrafts((current) => {
+                                const next = new Set(current);
+                                next.delete(modifier.id);
+                                return next;
+                              });
+                              update(modifier.id, { categoryIds: selected });
+                            }
+                          }}
                           renderValue={(selected) => {
-                            if (selected.length === 0) {
+                            if (emptyCategoryDrafts.has(modifier.id)) {
+                              return "Selecciona categorías";
+                            }
+                            if (modifier.categoryIds.length === 0) {
                               return "Todas las categorías";
                             }
                             const selectedNames = categories
@@ -300,20 +341,54 @@ export default function KitchenModifiersSettingsPage() {
                                   : false,
                               )
                               .map((category) => category.label);
+                            const unavailableCount = selected.length - selectedNames.length;
+                            if (unavailableCount > 0) {
+                              selectedNames.push(`${unavailableCount} no disponible(s)`);
+                            }
                             return selectedNames.length <= 2
                               ? selectedNames.join(", ")
-                              : `${selectedNames.length} categorías`;
+                              : `${selected.length} categorías seleccionadas`;
                           }}
                           displayEmpty
                         >
+                          <MenuItem value="__all_categories__">
+                            <Checkbox
+                              checked={modifier.categoryIds.length === 0 && !emptyCategoryDrafts.has(modifier.id)}
+                              tabIndex={-1}
+                              disableRipple
+                            />
+                            <ListItemText primary="Todas las categorías" />
+                          </MenuItem>
                           {categories
                             .filter((category) => category.id)
                             .map((category) => (
-                              <MenuItem key={category.id} value={category.id}>
-                                {category.label}
+                              <MenuItem
+                                key={category.id}
+                                value={category.id}
+                                disabled={modifier.categoryIds.length >= 50 && !modifier.categoryIds.includes(category.id ?? "")}
+                              >
+                                <Checkbox
+                                  checked={!emptyCategoryDrafts.has(modifier.id) && (modifier.categoryIds.length === 0 || modifier.categoryIds.includes(category.id ?? ""))}
+                                  tabIndex={-1}
+                                  disableRipple
+                                />
+                                <ListItemText primary={category.label} />
+                              </MenuItem>
+                            ))}
+                          {(emptyCategoryDrafts.has(modifier.id) ? [] : modifier.categoryIds)
+                            .filter((id) => !categories.some((category) => category.id === id))
+                            .map((id) => (
+                              <MenuItem key={id} value={id}>
+                                <Checkbox checked tabIndex={-1} disableRipple />
+                                <ListItemText primary="Categoría no disponible" secondary={id} />
                               </MenuItem>
                             ))}
                         </Select>
+                        <FormHelperText>
+                          {emptyCategoryDrafts.has(modifier.id)
+                            ? "Elige al menos una categoría o selecciona todas antes de guardar."
+                            : "Elige todas o desmarca las categorías que no apliquen."}
+                        </FormHelperText>
                       </FormControl>
                     </Stack>
                     <FormControlLabel

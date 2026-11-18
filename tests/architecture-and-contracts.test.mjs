@@ -778,3 +778,19 @@ test("Sexta auditoría (F70-F80): concurrencia optimista, permisos, SplitBill, p
     /La impresora USB indicada no está instalada\./,
   );
 });
+
+test("modificadores: los extras nuevos se gestionan como productos y los históricos se conservan", async () => {
+  const ts = await import("typescript");
+  const source = fs.readFileSync(path.join(modulesRoot, "settings", "model", "kitchenModifiers.types.ts"), "utf8");
+  const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
+  const exported = {};
+  new Function("exports", compiled)(exported);
+  assert.deepEqual(exported.AVAILABLE_KITCHEN_MODIFIER_KINDS, ["REMOVE", "PREPARATION", "SERVICE"]);
+  assert.deepEqual(exported.DEFAULT_KITCHEN_MODIFIERS_CONFIG.modifiers, []);
+  assert.deepEqual(exported.normalizeKitchenModifiersConfig(null).modifiers, []);
+  const saved = { modifiers: [{ id: "old-extra", label: "Extra anterior", kind: "ADD", categoryIds: [], isActive: true, sortOrder: 0 }] };
+  assert.equal(exported.normalizeKitchenModifiersConfig(saved).modifiers[0].kind, "ADD");
+  const configured = { modifiers: [{ id: "sin-cebolla", label: "Sin Cebolla", kind: "REMOVE", categoryIds: ["pizzas", "combos"], isActive: true, sortOrder: 0 }] };
+  assert.deepEqual(exported.normalizeKitchenModifiersConfig(configured).modifiers, configured.modifiers);
+  assert.equal(exported.formatKitchenModifier(saved.modifiers[0]), "[+] Extra anterior");
+});

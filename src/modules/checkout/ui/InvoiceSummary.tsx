@@ -191,7 +191,7 @@ export default function InvoiceSummary({
             {config.currencySymbol}
             {finalTotal.toFixed(2)}
           </Typography>
-          {config.enableSecondaryCurrency && (
+          {config.enableSecondaryCurrency && exchangeRate > 0 && (
             <Typography
               variant="caption"
               color="text.secondary"
