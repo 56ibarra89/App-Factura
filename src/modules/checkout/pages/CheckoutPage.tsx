@@ -146,27 +146,28 @@ const CheckoutPage = () => {
 
   const categoriesByRevenue = useMemo(
     () =>
-      [...categories].sort(
+      categories.filter((category) => category.items.length > 0).sort(
         (a, b) =>
           (b.totalRevenue ?? 0) - (a.totalRevenue ?? 0) ||
           a.label.localeCompare(b.label, "es"),
       ),
     [categories],
   );
-  const currentProducts = categoriesByRevenue[selectedTab]?.items || [];
+  const visibleTab = selectedTab < categoriesByRevenue.length ? selectedTab : 0;
+  const currentProducts = categoriesByRevenue[visibleTab]?.items || [];
 
   return (
     <Box display="flex" height="100vh" overflow="hidden">
       <CategoryTabs
         categories={categoriesByRevenue}
-        selectedTab={selectedTab}
+        selectedTab={categoriesByRevenue.length ? visibleTab : false}
         onTabChange={(_, newValue) => setSelectedTab(newValue)}
       />
 
       <ProductGrid
         products={currentProducts}
         onProductClick={(product) =>
-          handleAddToCart(product, categoriesByRevenue[selectedTab]?.kitchenId)
+          handleAddToCart(product, categoriesByRevenue[visibleTab]?.kitchenId)
         }
       />
 

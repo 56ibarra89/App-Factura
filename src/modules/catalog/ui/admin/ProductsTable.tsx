@@ -108,8 +108,9 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
         Lista de productos
       </Typography>
 
-      <Paper sx={{ height: 420, width: "100%", mb: 3 }}>
+      <Paper sx={{ width: "100%", mb: 3 }}>
         <DataGrid
+          autoHeight
           rows={rows}
           columns={columns}
           pageSizeOptions={[5, 10]}

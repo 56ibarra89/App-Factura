@@ -8,6 +8,8 @@ import { useAuth } from "../../auth";
 
 const defaultIconMap: Record<string, JSX.Element> = {
   Pizzas: CATEGORY_ICONS.LocalPizza,
+  Hamburguesas: CATEGORY_ICONS.LunchDining,
+  "Combos del menú": CATEGORY_ICONS.Fastfood,
   Mexicanos: CATEGORY_ICONS.Fastfood,
   Submarinos: CATEGORY_ICONS.LunchDining,
   Alitas: CATEGORY_ICONS.Restaurant,
@@ -17,7 +19,7 @@ const defaultIconMap: Record<string, JSX.Element> = {
 
 interface CategoryTabsProps {
   categories: Category[];
-  selectedTab: number;
+  selectedTab: number | false;
   onTabChange: (event: React.SyntheticEvent, newValue: number) => void;
 }
 

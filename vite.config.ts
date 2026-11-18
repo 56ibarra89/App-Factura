@@ -28,6 +28,9 @@ function vendorChunk(id: string): string | undefined {
 }
 
 export default defineConfig({
+  // React Fast Refresh injects an inline preamble that Electron's CSP blocks.
+  // Reloading the page remains available while preserving the production CSP.
+  server: { hmr: false },
   build: {
     rollupOptions: {
       output: {
