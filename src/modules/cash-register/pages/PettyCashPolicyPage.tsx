@@ -51,6 +51,8 @@ export default function PettyCashPolicyPage() {
     policy,
     setPolicy,
     loading,
+    configured,
+    loadError,
     saving,
     savePolicy,
     updateCategoryPolicy,
@@ -72,6 +74,7 @@ export default function PettyCashPolicyPage() {
   };
 
   const handleSave = async () => {
+    if (loadError) return;
     if (policy.maxAmountWithoutAuth < 0 || policy.maxShiftTotal < 0) {
       setSnackbar({
         open: true,
@@ -162,7 +165,7 @@ export default function PettyCashPolicyPage() {
                 color="error"
                 startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || Boolean(loadError)}
                 sx={{
                   borderRadius: 2,
                   px: 3,
@@ -177,6 +180,7 @@ export default function PettyCashPolicyPage() {
         />
 
         <Container maxWidth={false} disableGutters sx={{ mt: 3 }}>
+          {!configured && <Alert severity={loadError ? "error" : "warning"} sx={{ mb: 2 }}>{loadError || "Esta política aún no está configurada. Revisa los valores sugeridos y guárdalos antes de registrar gastos."}</Alert>}
           <Grid container spacing={3}>
             {/* Card 1: Umbrales Financieros */}
             <Grid size={{ xs: 12, md: 6 }}>

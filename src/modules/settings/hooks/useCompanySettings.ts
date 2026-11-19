@@ -23,6 +23,8 @@ export const useCompanySettings = (
   const [config, setConfig] = useState<EmpresaConfigState>(
     DEFAULT_EMPRESA_CONFIG,
   );
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configError, setConfigError] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -30,7 +32,9 @@ export const useCompanySettings = (
       if (mounted && data && Object.keys(data).length > 0) {
         setConfig((current) => ({ ...current, ...data }));
       }
-    });
+    }).catch(() => {
+      if (mounted) setConfigError("No se pudieron cargar los datos de la empresa. Revisa la conexión y vuelve a intentarlo.");
+    }).finally(() => { if (mounted) setConfigLoading(false); });
     return () => {
       mounted = false;
     };
@@ -47,6 +51,7 @@ export const useCompanySettings = (
   );
 
   const saveConfig = useCallback(async () => {
+    if (configLoading || configError) return false;
     const sanitizedConfig: EmpresaConfigState = {
       ...config,
       businessName: sanitize(config.businessName, 100),
@@ -69,9 +74,10 @@ export const useCompanySettings = (
       console.error("Error al guardar la configuración:", error);
       return false;
     }
-  }, [config, gateway, role, username]);
+  }, [config, configLoading, configError, gateway, role, username]);
 
   const resetConfig = useCallback(async () => {
+    if (configLoading || configError) return false;
     try {
       await gateway.save(DEFAULT_EMPRESA_CONFIG);
       setConfig(DEFAULT_EMPRESA_CONFIG);
@@ -86,10 +92,12 @@ export const useCompanySettings = (
       console.error("Error al restablecer la configuración:", error);
       return false;
     }
-  }, [gateway, role, username]);
+  }, [configLoading, configError, gateway, role, username]);
 
   return {
     config,
+    configLoading,
+    configError,
     updateField,
     saveConfig,
     resetConfig,

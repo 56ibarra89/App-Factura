@@ -53,7 +53,7 @@ export default function CashExpenseDialog({
   shiftId,
 }: CashExpenseDialogProps) {
   const { username, role } = useAuth();
-  const { policy, isVoucherRequired, validateExpense } = usePettyCashPolicy();
+  const { policy, configured, loading: policyLoading, error: policyError, isVoucherRequired, validateExpense } = usePettyCashPolicy();
   const {
     currentShift,
     calculateCurrentShiftExpenses,
@@ -220,6 +220,7 @@ export default function CashExpenseDialog({
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    if (policyLoading || !configured || policyError) { e.preventDefault(); return; }
     e.preventDefault();
 
     if (!isValidAmount) {
@@ -297,6 +298,9 @@ export default function CashExpenseDialog({
 
           <DialogContent dividers sx={{ pt: 2.5 }}>
             <Stack spacing={2.5}>
+              {!policyLoading && (!configured || policyError) && (
+                <Alert severity="error">{policyError || "Configura y guarda la política de caja chica antes de registrar gastos."}</Alert>
+              )}
               {error && (
                 <Alert severity="error" sx={{ borderRadius: 2 }}>
                   {error}
@@ -482,7 +486,7 @@ export default function CashExpenseDialog({
               type="submit"
               variant="contained"
               color={validation.needsPin ? "warning" : "error"}
-              disabled={loading || !isValidAmount || !reason.trim()}
+              disabled={loading || policyLoading || !configured || Boolean(policyError) || !isValidAmount || !reason.trim()}
               startIcon={
                 validation.needsPin ? (
                   <ShieldIcon />

@@ -18,7 +18,6 @@ import {
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import type { Order, OrderPaymentDetail } from "../../orders";
 import {
-  DEFAULT_PAYMENT_METHODS_CONFIG,
   isValidPosReference,
   paymentMethodsGateway,
   sanitizePosReference,
@@ -44,9 +43,7 @@ export function PaymentConfirmationDialog({
   onConfirm,
 }: Props) {
   const { config } = useGeneralSettings();
-  const [methods, setMethods] = useState<ConfiguredPaymentMethod[]>(
-    DEFAULT_PAYMENT_METHODS_CONFIG.methods,
-  );
+  const [methods, setMethods] = useState<ConfiguredPaymentMethod[]>([]);
   const [selectedId, setSelectedId] = useState("cash-nio");
   const [cashMethodId, setCashMethodId] = useState("cash-nio");
   const [otherId, setOtherId] = useState("card-generic");
@@ -60,9 +57,14 @@ export function PaymentConfirmationDialog({
   useEffect(() => {
     if (!open) return;
     setError("");
-    void paymentMethodsGateway.load().then((loadedConfig) => {
+    setMethods([]);
+    void paymentMethodsGateway.loadOperational().then((loadedConfig) => {
       const active = loadedConfig.methods.filter((method) => method.isActive);
-      if (!active.length) return;
+      if (!active.length) {
+        setMethods([]);
+        setError("Configura al menos un método de pago activo antes de cobrar.");
+        return;
+      }
       const defaultCash =
         active.find(
           (method) => method.type === "CASH" && method.currency === "NIO",
@@ -142,6 +144,9 @@ export function PaymentConfirmationDialog({
         setCashAmount("");
         setReference(singlePayment?.reference ?? "");
       }
+    }).catch(() => {
+      setMethods([]);
+      setError("No se pudieron cargar los métodos de pago. Inténtalo nuevamente.");
     });
   }, [config.exchangeRate, open, order]);
 

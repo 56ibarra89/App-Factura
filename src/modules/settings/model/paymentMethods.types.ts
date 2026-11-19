@@ -69,45 +69,29 @@ export interface PaymentMetrics {
 }
 
 export const DEFAULT_PAYMENT_METHODS_CONFIG: PaymentMethodsConfig = {
-  methods: [
-    {
-      id: "cash-nio",
-      name: "Efectivo Córdobas",
-      type: "CASH",
-      currency: "NIO",
-      requiresReference: false,
-      commissionRate: 0,
-      isActive: true,
-    },
-    {
-      id: "cash-usd",
-      name: "Efectivo Dólares",
-      type: "CASH",
-      currency: "USD",
-      requiresReference: false,
-      commissionRate: 0,
-      isActive: true,
-    },
-    {
-      id: "card-generic",
-      name: "POS Tarjeta",
-      type: "CARD_POS",
-      currency: "NIO",
-      requiresReference: true,
-      commissionRate: 2.5,
-      isActive: true,
-    },
-    {
-      id: "transfer-generic",
-      name: "Transferencia bancaria",
-      type: "BANK_TRANSFER",
-      currency: "NIO",
-      requiresReference: true,
-      commissionRate: 0,
-      isActive: true,
-    },
-  ],
+  methods: [{
+    id: "cash-nio",
+    name: "Efectivo Córdobas",
+    type: "CASH",
+    currency: "NIO",
+    requiresReference: false,
+    commissionRate: 0,
+    isActive: true,
+  }],
 };
+
+export function resolveOperationalPaymentMethods(
+  config: PaymentMethodsConfig,
+  general: { enableSecondaryCurrency?: boolean; secondaryCurrencyCode?: string; exchangeRate?: number } | null,
+): PaymentMethodsConfig {
+  const rate = Number(general?.exchangeRate);
+  const enabled = general?.enableSecondaryCurrency === true &&
+    (typeof general.secondaryCurrencyCode === "string" ? general.secondaryCurrencyCode.toUpperCase() : general.secondaryCurrencyCode === undefined ? "USD" : "") === "USD" &&
+    Number.isFinite(rate) && rate > 0;
+  if (!enabled) return { methods: config.methods.filter((method) => method.currency !== "USD") };
+  if (config.methods.some((method) => (method.type === "CASH" && method.currency === "USD") || method.id === "cash-usd")) return config;
+  return { methods: [...config.methods, { id: "cash-usd", name: "Efectivo Dólares", type: "CASH", currency: "USD", requiresReference: false, commissionRate: 0, isActive: true }] };
+}
 
 const isType = (value: unknown): value is PaymentMethodType =>
   PAYMENT_METHOD_TYPES.includes(value as PaymentMethodType);
@@ -126,6 +110,9 @@ export const slugifyPaymentMethod = (value: string) =>
 export function normalizePaymentMethodsConfig(
   value?: Partial<PaymentMethodsConfig> | null,
 ): PaymentMethodsConfig {
+  if (value == null || (typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0)) {
+    return { methods: DEFAULT_PAYMENT_METHODS_CONFIG.methods.map((method) => ({ ...method })) };
+  }
   const methods = Array.isArray(value?.methods)
     ? value.methods
         .filter((method) => method?.id && method?.name)
@@ -153,9 +140,7 @@ export function normalizePaymentMethodsConfig(
         })
     : [];
   return {
-    methods: methods.length
-      ? methods
-      : DEFAULT_PAYMENT_METHODS_CONFIG.methods.map((method) => ({ ...method })),
+    methods,
   };
 }
 

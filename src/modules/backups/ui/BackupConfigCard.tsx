@@ -132,36 +132,38 @@ export const BackupConfigCard: React.FC<BackupConfigCardProps> = ({
             </Typography>
 
             {enabled && (
-              <Box sx={{ display: "flex", gap: 2, alignItems: "center", mt: 1, bgcolor: "action.hover", p: 1.5, borderRadius: 2 }}>
-                <TextField
-                  select
-                  size="small"
-                  label="Hora"
-                  value={hour}
-                  onChange={(e) => setHour(Number(e.target.value))}
-                  sx={{ width: 110, bgcolor: "background.paper" }}
-                >
-                  {Array.from({ length: 24 }).map((_, i) => (
-                    <MenuItem key={i} value={i}>
-                      {String(i).padStart(2, "0")}:00 ({i < 12 ? "AM" : "PM"})
-                    </MenuItem>
-                  ))}
-                </TextField>
-
-                <TextField
-                  select
-                  size="small"
-                  label="Minuto"
-                  value={minute}
-                  onChange={(e) => setMinute(Number(e.target.value))}
-                  sx={{ width: 100, bgcolor: "background.paper" }}
-                >
-                  {[0, 15, 30, 45].map((m) => (
-                    <MenuItem key={m} value={m}>
-                      :{String(m).padStart(2, "0")}
-                    </MenuItem>
-                  ))}
-                </TextField>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, alignItems: "flex-start", mt: 1, bgcolor: "action.hover", p: 1.5, borderRadius: 2 }}>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, width: "100%" }}>
+                  <TextField  
+                    select  
+                    size="small"  
+                    label="Hora"  
+                    value={hour}  
+                    onChange={(e) => setHour(Number(e.target.value))}  
+                    sx={{ flex: "1 1 130px", minWidth: 130, bgcolor: "background.paper" }}  
+                  >  
+                    {Array.from({ length: 24 }).map((_, i) => (  
+                      <MenuItem key={i} value={i}>  
+                        {String(i).padStart(2, "0")}:00  
+                      </MenuItem>  
+                    ))}  
+                  </TextField>  
+    
+                  <TextField  
+                    select  
+                    size="small"  
+                    label="Minuto"  
+                    value={minute}  
+                    onChange={(e) => setMinute(Number(e.target.value))}  
+                    sx={{ flex: "1 1 110px", minWidth: 110, bgcolor: "background.paper" }}  
+                  >  
+                    {[0, 15, 30, 45].map((m) => (  
+                      <MenuItem key={m} value={m}>  
+                        :{String(m).padStart(2, "0")}  
+                      </MenuItem>  
+                    ))}  
+                  </TextField>
+                </Box>
 
                 <Chip
                   label={`Hora programada: ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`}
@@ -170,6 +172,9 @@ export const BackupConfigCard: React.FC<BackupConfigCardProps> = ({
                   size="small"
                   sx={{ fontWeight: 600 }}
                 />
+                <Typography variant="caption" color="text.secondary">
+                  Formato de 24 horas
+                </Typography>
               </Box>
             )}
           </Box>

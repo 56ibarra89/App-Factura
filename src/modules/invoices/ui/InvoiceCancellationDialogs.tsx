@@ -64,6 +64,11 @@ export function InvoiceCancellationDialogs({
             Selecciona un motivo oficial. El sistema pedirá PIN cuando la orden
             esté pagada, la cocina ya haya iniciado o el motivo lo requiera.
           </Typography>
+          {policyReady && reasons.length === 0 && (
+            <Typography color="error" variant="body2" mb={2}>
+              Configura al menos un motivo activo en Políticas de anulación.
+            </Typography>
+          )}
           <FormControl fullWidth sx={{ mb: 2 }}>
             <InputLabel>Motivo oficial</InputLabel>
             <Select

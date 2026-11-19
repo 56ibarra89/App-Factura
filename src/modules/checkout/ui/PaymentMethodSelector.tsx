@@ -219,6 +219,11 @@ export default function PaymentMethodSelector({
       <Typography variant="subtitle2" fontWeight="bold" mb={1}>
         Método de Pago:
       </Typography>
+      {methods.length === 0 && (
+        <Typography color="error" variant="body2" mb={1}>
+          No hay métodos de pago disponibles. Configúralos en administración o revisa la conexión.
+        </Typography>
+      )}
       {exchange === 0 && methods.some((method) => method.currency === "USD") && (
         <Typography color="error" variant="body2" mb={1}>
           Configura una tasa de cambio válida en Configuración general para cobrar en dólares.

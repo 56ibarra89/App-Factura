@@ -58,8 +58,8 @@ export const DEFAULT_TAX_CONFIG: TaxConfig = {
 
 export const DEFAULT_EMPRESA_CONFIG: EmpresaConfigState = {
   logoUrl: "",
-  businessName: "Mi Negocio",
-  address: "Av. Principal 123, Ciudad",
-  phone: "+1 234 567 8900",
+  businessName: "",
+  address: "",
+  phone: "",
   ticketFooter: "¡Gracias por su compra! Vuelva pronto.",
 };

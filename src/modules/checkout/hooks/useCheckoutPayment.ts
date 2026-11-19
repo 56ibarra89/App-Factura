@@ -5,7 +5,6 @@ import type {
   SplitPaymentAmounts,
 } from "../../orders";
 import {
-  DEFAULT_PAYMENT_METHODS_CONFIG,
   isValidPosReference,
   paymentMethodsGateway,
   toLegacyPaymentMethod,
@@ -32,9 +31,7 @@ export function useCheckoutPayment({
   isTableMode,
   initialCustomerTendered,
 }: UseCheckoutPaymentOptions) {
-  const [methods, setMethods] = useState<ConfiguredPaymentMethod[]>(
-    DEFAULT_PAYMENT_METHODS_CONFIG.methods,
-  );
+  const [methods, setMethods] = useState<ConfiguredPaymentMethod[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("EFECTIVO");
   const [selectedMethodId, setSelectedMethodId] = useState("cash-nio");
   const [mixedMethodIds, setMixedMethodIds] = useState<[string, string]>([
@@ -53,10 +50,11 @@ export function useCheckoutPayment({
 
   useEffect(() => {
     if (!open) return;
-    void paymentMethodsGateway.load().then((config) => {
+    setMethods([]);
+    void paymentMethodsGateway.loadOperational().then((config) => {
       const active = config.methods.filter((method) => method.isActive);
-      if (!active.length) return;
       setMethods(active);
+      if (!active.length) return;
       const primary =
         active.find(
           (method) => method.type === "CASH" && method.currency === "NIO",
@@ -70,7 +68,7 @@ export function useCheckoutPayment({
       setSelectedMethodId(primary.id);
       setPaymentMethod(toLegacyPaymentMethod(primary));
       setMixedMethodIds([primary.id, secondary.id]);
-    });
+    }).catch(() => setMethods([]));
   }, [open]);
 
   useEffect(() => {

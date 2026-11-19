@@ -549,6 +549,78 @@ test("F54 y F55: SplitBill conserva borrador/personas pendientes y PaymentMethod
   assert.match(selectorContent, /setSecondAmount/);
 });
 
+test("efectivo en córdobas está disponible solo si no existe configuración de pago", async () => {
+  const ts = await import("typescript");
+  const source = fs.readFileSync(path.join(modulesRoot, "settings", "model", "paymentMethods.types.ts"), "utf8");
+  const payment = {};
+  new Function("require", "exports", ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS },
+  }).outputText)(() => ({}), payment);
+  const missing = payment.normalizePaymentMethodsConfig({});
+  assert.equal(missing.methods.length, 1);
+  assert.deepEqual(missing.methods[0], { id: "cash-nio", name: "Efectivo Córdobas", type: "CASH", currency: "NIO", requiresReference: false, commissionRate: 0, isActive: true });
+  assert.deepEqual(payment.normalizePaymentMethodsConfig({ methods: [] }).methods, []);
+  assert.equal(payment.normalizePaymentMethodsConfig({ methods: [{ ...missing.methods[0], isActive: false }] }).methods[0].isActive, false);
+  const general = { enableSecondaryCurrency: true, secondaryCurrencyCode: "USD", exchangeRate: 36.5 };
+  assert.deepEqual(payment.resolveOperationalPaymentMethods(missing, general).methods.map((method) => method.id), ["cash-nio", "cash-usd"]);
+  assert.deepEqual(payment.resolveOperationalPaymentMethods(missing, { ...general, exchangeRate: 0 }).methods.map((method) => method.id), ["cash-nio"]);
+  assert.deepEqual(payment.resolveOperationalPaymentMethods(missing, { ...general, enableSecondaryCurrency: false }).methods.map((method) => method.id), ["cash-nio"]);
+  const usd = payment.resolveOperationalPaymentMethods(missing, general).methods[1];
+  assert.equal(payment.resolveOperationalPaymentMethods({ methods: [...missing.methods, { ...usd, isActive: false }] }, general).methods[1].isActive, false);
+});
+
+test("dividir cuenta reutiliza personas eliminadas pero no personas cobradas", async () => {
+  const ts = await import("typescript");
+  const compile = (file, requireModule) => {
+    const exports = {};
+    const source = fs.readFileSync(path.join(modulesRoot, "checkout", file), "utf8");
+    new Function("require", "exports", ts.transpileModule(source, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS },
+    }).outputText)(requireModule, exports);
+    return exports;
+  };
+  const domain = compile("model/splitBillDomain.ts", () => ({}));
+  const slots = [];
+  let cursor = 0;
+  const react = {
+    useCallback: (fn) => fn,
+    useEffect: () => {},
+    useMemo: (fn) => fn(),
+    useRef: (initial) => {
+      const i = cursor++;
+      return slots[i] ??= { current: initial };
+    },
+    useState: (initial) => {
+      const i = cursor++;
+      if (!(i in slots)) slots[i] = typeof initial === "function" ? initial() : initial;
+      return [slots[i], (value) => { slots[i] = typeof value === "function" ? value(slots[i]) : value; }];
+    },
+  };
+  const hook = compile("hooks/useSplitBill.ts", (name) => {
+    if (name === "react") return react;
+    if (name === "../model/splitBillDomain") return domain;
+    if (name === "../../orders") return {
+      isSplitBillCreditOrderItem: (item) => item.name.startsWith("División de cuenta -"),
+      isSplitBillOrderItem: (item) => item.name.startsWith("División de cuenta -"),
+    };
+    return {};
+  });
+  const render = () => { cursor = 0; return hook.useSplitBill({ items: [], totalAmount: 100 }); };
+  let state = render();
+  for (let i = 0; i < 5; i++) { state.addAccount(); state = render(); }
+  state.removeAccount("split-account-7");
+  state = render();
+  state.addAccount();
+  state = render();
+  assert.equal(state.accounts.at(-1).name, "Persona 7");
+  state.completeCheckout({ mode: "items", accountId: "split-account-7" });
+  state = render();
+  state.addAccount();
+  state = render();
+  assert.equal(state.accounts.at(-1).name, "Persona 8");
+  assert.equal(new Set(state.accounts.map((account) => account.id)).size, state.accounts.length);
+});
+
 test("F56, F58 y F59: impresora de caja en caja/gastos, error al eliminar talonario, rollback cocina y notificaciones", () => {
   const cashExpensesPageContent = fs.readFileSync(
     path.join(modulesRoot, "cash-register", "pages", "CashExpensesPage.tsx"),

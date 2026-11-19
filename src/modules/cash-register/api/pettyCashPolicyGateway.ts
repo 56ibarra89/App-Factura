@@ -10,7 +10,7 @@ import {
 const PETTY_CASH_POLICY_KEY = "petty_cash_policy";
 
 export interface PettyCashPolicyGateway {
-  load(): Promise<PettyCashPolicy>;
+  load(): Promise<PettyCashPolicy | null>;
   save(policy: PettyCashPolicy): Promise<void>;
 }
 
@@ -18,11 +18,10 @@ export function createPettyCashPolicyGateway(
   runtime: RuntimeConfigGateway,
 ): PettyCashPolicyGateway {
   return {
-    async load(): Promise<PettyCashPolicy> {
-      try {
+    async load(): Promise<PettyCashPolicy | null> {
         const data = await runtime.get<PettyCashPolicy>(PETTY_CASH_POLICY_KEY);
-        if (!data) {
-          return { ...DEFAULT_PETTY_CASH_POLICY };
+        if (!data || Object.keys(data).length === 0) {
+          return null;
         }
 
         // Merge saved data with defaults to ensure all categories and fields exist
@@ -34,10 +33,6 @@ export function createPettyCashPolicyGateway(
             ...(data.categoryPolicies || {}),
           },
         };
-      } catch (error) {
-        console.error("Error al obtener políticas de caja chica:", error);
-        return { ...DEFAULT_PETTY_CASH_POLICY };
-      }
     },
 
     async save(policy: PettyCashPolicy): Promise<void> {

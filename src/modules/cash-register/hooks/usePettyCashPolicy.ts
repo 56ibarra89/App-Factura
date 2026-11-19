@@ -25,19 +25,25 @@ export function usePettyCashPolicy(
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [configured, setConfigured] = useState(false);
 
   const fetchPolicy = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setLoadError(null);
     try {
       const loaded = await gateway.load();
-      setPolicy(loaded);
+      setConfigured(loaded !== null);
+      setPolicy(loaded ?? DEFAULT_PETTY_CASH_POLICY);
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error
           ? err.message
           : "Error al cargar las políticas de caja chica.";
       setError(errorMsg);
+      setLoadError(errorMsg);
+      setConfigured(false);
       setPolicy(DEFAULT_PETTY_CASH_POLICY);
     } finally {
       setLoading(false);
@@ -54,6 +60,7 @@ export function usePettyCashPolicy(
       setError(null);
       try {
         await gateway.save(newPolicy);
+        setConfigured(true);
         setPolicy(newPolicy);
         return true;
       } catch (err: unknown) {
@@ -173,10 +180,12 @@ export function usePettyCashPolicy(
 
   return {
     policy,
+    configured,
     setPolicy,
     loading,
     saving,
     error,
+    loadError,
     fetchPolicy,
     savePolicy,
     updateCategoryPolicy,

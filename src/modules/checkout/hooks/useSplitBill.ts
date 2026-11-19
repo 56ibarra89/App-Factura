@@ -9,6 +9,7 @@ import {
   createSplitBillAccounts,
   roundMoney,
   splitTotalEqually,
+  takeReusableAccountNumber,
 } from "../model/splitBillDomain";
 import type {
   SplitBillAccount,
@@ -286,6 +287,8 @@ export function useSplitBill({
     0,
   );
   const nextAccountNumber = useRef(3);
+  const removedAccountNumbers = useRef<number[]>([]);
+  const completedAccountNumbers = useRef<Set<number>>(new Set());
   const nextEqualAccountNumber = useRef(highestInitialEqualAccount + 1);
   const [mode, setMode] = useState<SplitBillMode>("items");
   const [equalAccountIdentities, setEqualAccountIdentities] = useState(
@@ -346,8 +349,20 @@ export function useSplitBill({
     accounts.every((account) => (account.customAmount ?? 0) > 0);
 
   const addAccount = useCallback(() => {
-    const accountNumber = nextAccountNumber.current;
-    nextAccountNumber.current += 1;
+    const reserved = new Set(completedAccountNumbers.current);
+    for (const account of accounts) {
+      const match = /^split-account-(\d+)$/.exec(account.id);
+      if (match) reserved.add(Number(match[1]));
+    }
+    for (const item of items.filter(isSplitBillCreditOrderItem)) {
+      const match = item.name.match(/persona\s+(\d+)/i);
+      if (match) reserved.add(Number(match[1]));
+    }
+    let accountNumber = takeReusableAccountNumber(removedAccountNumbers.current, reserved);
+    if (accountNumber === undefined) {
+      while (reserved.has(nextAccountNumber.current)) nextAccountNumber.current += 1;
+      accountNumber = nextAccountNumber.current++;
+    }
     const account: SplitBillAccount = {
       id: `split-account-${accountNumber}`,
       name: `Persona ${accountNumber}`,
@@ -356,13 +371,15 @@ export function useSplitBill({
 
     setAccounts((current) => [...current, account]);
     setActiveAccountId(account.id);
-  }, []);
+  }, [accounts, items]);
 
   const removeAccount = useCallback(
     (accountId: string) => {
       if (accounts.length <= 1) return;
 
       const account = accounts.find((candidate) => candidate.id === accountId);
+      const match = account && /^split-account-(\d+)$/.exec(account.id);
+      if (match) removedAccountNumbers.current.push(Number(match[1]));
       const remainingAccounts = accounts.filter(
         (candidate) => candidate.id !== accountId,
       );
@@ -552,6 +569,9 @@ export function useSplitBill({
         );
         return;
       }
+
+      const completedMatch = /^split-account-(\d+)$/.exec(selection.accountId);
+      if (completedMatch) completedAccountNumbers.current.add(Number(completedMatch[1]));
 
       const remainingAccounts = accounts.filter(
         (account) => account.id !== selection.accountId,

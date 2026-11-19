@@ -34,9 +34,10 @@ const CompanySettingsPage = () => {
         />
 
         <Container maxWidth="md" disableGutters sx={{ mt: 3 }}>
+          {company.configError && <Alert severity="error" sx={{ mb: 2 }}>{company.configError}</Alert>}
           <CompanyIdentityCard
             config={company.config}
-            loading={company.loading}
+            loading={company.loading || company.configLoading || Boolean(company.configError)}
             fileInputRef={company.fileInputRef}
             onChange={company.updateField}
             onLogoChange={company.uploadLogo}

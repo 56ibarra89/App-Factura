@@ -16,12 +16,7 @@ export function createCompanyConfigGateway(
 ): CompanyConfigGateway {
   return {
     async load() {
-      try {
-        return await runtime.get<EmpresaConfigState>(COMPANY_CONFIG_KEY);
-      } catch (error) {
-        console.error("Error obteniendo configuración de empresa:", error);
-        return null;
-      }
+      return runtime.get<EmpresaConfigState>(COMPANY_CONFIG_KEY);
     },
 
     save: (config) => runtime.save(COMPANY_CONFIG_KEY, config),

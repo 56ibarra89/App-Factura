@@ -4,6 +4,17 @@ import type {
   SplitBillAccountTotal,
 } from "./splitBill.types";
 
+export function takeReusableAccountNumber(
+  removedNumbers: number[],
+  reservedNumbers: ReadonlySet<number>,
+): number | undefined {
+  while (removedNumbers.length > 0) {
+    const number = removedNumbers.pop();
+    if (number !== undefined && !reservedNumbers.has(number)) return number;
+  }
+  return undefined;
+}
+
 export function createSplitBillAccounts(count = 2): SplitBillAccount[] {
   return Array.from({ length: count }, (_, index) => ({
     id: `split-account-${index + 1}`,
