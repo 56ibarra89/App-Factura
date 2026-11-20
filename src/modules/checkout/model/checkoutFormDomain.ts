@@ -86,6 +86,7 @@ interface CanSubmitCheckoutInput {
   selectedDriverId: string;
   deliveryCost: number;
   isFreeDelivery?: boolean;
+  isManualDelivery?: boolean;
   hasAvailableDrivers?: boolean;
   packagingIsConfigured: boolean;
   hasSelectedPackaging: boolean;
@@ -98,6 +99,7 @@ export function canSubmitCheckout({
   selectedDriverId,
   deliveryCost,
   isFreeDelivery = false,
+  isManualDelivery = false,
   hasAvailableDrivers = true,
   packagingIsConfigured,
   hasSelectedPackaging,
@@ -107,7 +109,8 @@ export function canSubmitCheckout({
   if (orderType === "delivery") {
     if (!customerAddress.trim()) return false;
     if (hasAvailableDrivers && !selectedDriverId) return false;
-    if (!isFreeDelivery && deliveryCost < 0) return false;
+    if (!Number.isFinite(deliveryCost) || deliveryCost < 0) return false;
+    if (!isFreeDelivery && !isManualDelivery && deliveryCost === 0) return false;
   }
 
   const requiresPackaging =

@@ -23,7 +23,19 @@ export interface DeliveryGateway {
   ): Promise<void>;
 }
 
-export const deliveryGateway: DeliveryGateway = {
+type DeliveryResponse = Parameters<typeof mapBackendOrderToFrontend>[0];
+
+function validateDeliveries(payload: unknown): DeliveryResponse[] {
+  if (!Array.isArray(payload) || !payload.every((entry) =>
+    entry && typeof entry.id === "string" && entry.orderType === "delivery" &&
+    typeof entry.timestamp === "string" && Array.isArray(entry.items),
+  )) {
+    throw new Error("La respuesta de entregas no es válida.");
+  }
+  return payload as DeliveryResponse[];
+}
+
+export const deliveryGateway: DeliveryGateway & { listDeliveries(): Promise<Order[]> } = {
   async listAvailableDrivers(date = new Date()) {
     return apiClient(`/users/drivers?date=${getBusinessDateString(date)}`);
   },
@@ -41,8 +53,12 @@ export const deliveryGateway: DeliveryGateway = {
   },
 
   async getMyDeliveries() {
-    const orders: Parameters<typeof mapBackendOrderToFrontend>[0][] =
-      await apiClient("/orders/my-deliveries");
+    const orders = await apiClient("/orders/my-deliveries", { validateResponse: validateDeliveries });
+    return orders.map(mapBackendOrderToFrontend);
+  },
+
+  async listDeliveries() {
+    const orders = await apiClient("/orders/deliveries", { validateResponse: validateDeliveries });
     return orders.map(mapBackendOrderToFrontend);
   },
 

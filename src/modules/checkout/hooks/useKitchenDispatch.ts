@@ -90,9 +90,15 @@ export function useKitchenDispatch({
         `Pedido enviado a cocina para Mesa ${tableId.split("-M")[1]}`,
       );
 
-      const kitchenItems = cart.filter(
-        (item) => requiresKitchenPreparation(item) && !item.isSentToKitchen,
+      const previousSentTimes = new Set(
+        cart.filter((item) => item.isSentToKitchen).map((item) => item.sentAt),
       );
+      const kitchenItems = syncedItems
+        ? syncedItems.filter((item) =>
+            requiresKitchenPreparation(item) && item.isSentToKitchen &&
+            !previousSentTimes.has(item.sentAt),
+          )
+        : cart.filter((item) => requiresKitchenPreparation(item) && !item.isSentToKitchen);
       if (kitchenItems.length > 0) {
         void printerDispatcherService.printKitchenComanda({
           orderId: resolvedOrderId,
@@ -109,7 +115,7 @@ export function useKitchenDispatch({
             kitchenModifiers: k.kitchenModifiers,
             extras: k.extras,
             isCombo: k.isCombo,
-            comboSelections: k.comboSelections,
+            comboSelections: k.comboSelections?.filter((selection) => selection.requiresPreparation !== false),
           })),
           timestamp: sentAt,
         }).catch((error) => console.error("No se pudo imprimir la comanda de cocina", error));

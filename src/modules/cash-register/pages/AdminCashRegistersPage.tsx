@@ -23,6 +23,7 @@ const AdminCashRegistersPage = () => {
     loading,
     isRefreshing,
     lastUpdated,
+    failedSections,
     reloadDashboard,
   } = useCashRegisterDashboard();
 
@@ -45,7 +46,9 @@ const AdminCashRegistersPage = () => {
           actions={
             <Stack direction="row" spacing={1.5} alignItems="center">
               <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                Actualizado: {formatBusinessTime(lastUpdated)}
+                {lastUpdated
+                  ? `Última actualización completa: ${formatBusinessTime(lastUpdated)}`
+                  : "Sin actualización completa"}
               </Typography>
               <Button
                 variant="outlined"
@@ -78,7 +81,12 @@ const AdminCashRegistersPage = () => {
 
         <Container maxWidth={false} disableGutters sx={{ mt: 3 }}>
           {/* Barra superior de KPIs Globales */}
-          <LiveKpiCards kpis={liveKpis} loading={loading} />
+          {failedSections.length > 0 && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              Sin actualizar: {failedSections.join(", ")}. Se muestran los últimos datos disponibles.
+            </Alert>
+          )}
+          {liveKpis && <LiveKpiCards kpis={liveKpis} loading={loading} />}
 
           <Grid container spacing={3.5}>
             {/* Columna Izquierda: Cajas Activas */}
@@ -89,10 +97,10 @@ const AdminCashRegistersPage = () => {
                 color="text.primary"
                 sx={{ mb: 2.5 }}
               >
-                Cajas Trabajando ({cajasActivas.length})
+                Cajas Trabajando{cajasActivas && ` (${cajasActivas.length})`}
               </Typography>
 
-              {cajasActivas.length === 0 && !loading ? (
+              {cajasActivas?.length === 0 && !loading ? (
                 <Alert
                   severity="info"
                   sx={{
@@ -108,7 +116,7 @@ const AdminCashRegistersPage = () => {
                 </Alert>
               ) : (
                 <Grid container spacing={2.5}>
-                  {cajasActivas.map((caja) => (
+                  {cajasActivas?.map((caja) => (
                     <Grid
                       size={{
                         xs: 12,
@@ -125,10 +133,12 @@ const AdminCashRegistersPage = () => {
 
             {/* Columna Derecha: Top Meseros */}
             <Grid size={{ xs: 12, lg: 4.5 }}>
-              <WaiterPerformanceList
-                waiters={waiterPerformance}
-                loading={loading}
-              />
+              {(waiterPerformance || loading) && (
+                <WaiterPerformanceList
+                  waiters={waiterPerformance ?? []}
+                  loading={loading}
+                />
+              )}
             </Grid>
           </Grid>
         </Container>

@@ -143,6 +143,7 @@ export function useCustomerDeliveryForm({
       initialPhone || getPreferredOrRecentPhone(initialCustomer),
     );
     setOrderType(initialOrderType);
+    setDeliveryCost(initialDeliveryCost);
     setCustomerAddress(
       initialAddress || getPreferredOrRecentAddress(initialCustomer),
     );
@@ -167,25 +168,19 @@ export function useCustomerDeliveryForm({
 
   useEffect(() => {
     if (orderType === "delivery") {
-      const currentZone = selectedZone ?? (activeZones.length > 0 ? activeZones[0] : null);
-      if (!selectedZone && currentZone) {
+      const currentZone = activeZones.find((zone) => zone.id === selectedZone?.id) ?? activeZones[0] ?? null;
+      if (selectedZone !== currentZone) {
         setSelectedZone(currentZone);
       }
 
       if (currentZone) {
         const feeInfo = calculateFee(orderSubTotal ?? 0, currentZone.id);
         setDeliveryCost(feeInfo.customerFee);
-      } else if (
-        deliveryRules.freeDeliveryEnabled &&
-        deliveryRules.freeDeliveryMinAmount > 0 &&
-        (orderSubTotal ?? 0) >= deliveryRules.freeDeliveryMinAmount
-      ) {
-        setDeliveryCost(0);
       }
     } else {
       setDeliveryCost(0);
     }
-  }, [orderType, selectedZone, activeZones, orderSubTotal, calculateFee, deliveryRules]);
+  }, [orderType, selectedZone, activeZones, orderSubTotal, calculateFee]);
 
   const handleZoneSelect = useCallback(
     (zone: DeliveryZone | null) => {

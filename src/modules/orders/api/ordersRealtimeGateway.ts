@@ -45,105 +45,137 @@ function isRealtimeEvent(
 
 const AUTH_SESSION_CHANGED_EVENT = "appfactura:auth-session-changed";
 
-export const ordersRealtimeGateway: OrdersRealtimeGateway = {
-  subscribe(handlers) {
-    let manualReconnectTimer: number | undefined;
-    const socket: Socket = io(getOrdersNamespace(), {
-      auth: (callback) => {
-        callback({ token: accessTokenStore.get() });
-      },
-      reconnection: true,
-      reconnectionDelay: 1_000,
-      reconnectionDelayMax: 10_000,
-    });
+function connectOrdersSocket(handlers: OrderRealtimeHandlers): () => void {
+  let manualReconnectTimer: number | undefined;
+  const socket: Socket = io(getOrdersNamespace(), {
+    auth: (callback) => {
+      callback({ token: accessTokenStore.get() });
+    },
+    reconnection: true,
+    reconnectionDelay: 1_000,
+    reconnectionDelayMax: 10_000,
+  });
 
-    const clearManualReconnect = () => {
-      if (manualReconnectTimer === undefined) return;
-      window.clearTimeout(manualReconnectTimer);
-      manualReconnectTimer = undefined;
-    };
+  const clearManualReconnect = () => {
+    if (manualReconnectTimer === undefined) return;
+    window.clearTimeout(manualReconnectTimer);
+    manualReconnectTimer = undefined;
+  };
 
-    const scheduleReconnectIfAuthenticated = () => {
-      if (!accessTokenStore.get()) {
-        clearManualReconnect();
-        return;
-      }
-
-      if (!socket.active && manualReconnectTimer === undefined) {
-        manualReconnectTimer = window.setTimeout(() => {
-          manualReconnectTimer = undefined;
-          if (accessTokenStore.get()) {
-            socket.connect();
-          }
-        }, 3_000);
-      }
-    };
-
-    const handleConnect = () => {
+  const scheduleReconnectIfAuthenticated = () => {
+    if (!accessTokenStore.get()) {
       clearManualReconnect();
-      handlers.onConnect();
-    };
+      return;
+    }
 
-    const handleDisconnect = (reason: Socket.DisconnectReason) => {
-      handlers.onDisconnect();
-      if (reason === "io server disconnect") {
-        scheduleReconnectIfAuthenticated();
-      }
-    };
+    if (!socket.active && manualReconnectTimer === undefined) {
+      manualReconnectTimer = window.setTimeout(() => {
+        manualReconnectTimer = undefined;
+        if (accessTokenStore.get()) {
+          socket.connect();
+        }
+      }, 3_000);
+    }
+  };
 
-    const handleConnectError = (error: Error) => {
-      handlers.onError(error);
+  const handleConnect = () => {
+    clearManualReconnect();
+    handlers.onConnect();
+  };
+
+  const handleDisconnect = (reason: Socket.DisconnectReason) => {
+    handlers.onDisconnect();
+    if (reason === "io server disconnect") {
       scheduleReconnectIfAuthenticated();
-    };
+    }
+  };
 
-    const handleChanged = (event: BackendOrderRealtimeEvent) => {
-      if (!isRealtimeEvent(event)) {
-        console.warn("Evento de orden en tiempo real invalido.");
-        return;
-      }
+  const handleConnectError = (error: Error) => {
+    handlers.onError(error);
+    scheduleReconnectIfAuthenticated();
+  };
 
-      handlers.onOrderChanged({
-        mutation: event.mutation,
-        order: mapBackendOrderToFrontend(event.order),
-      });
-    };
+  const handleChanged = (event: BackendOrderRealtimeEvent) => {
+    if (!isRealtimeEvent(event)) {
+      console.warn("Evento de orden en tiempo real invalido.");
+      return;
+    }
 
-    const handleAuthSessionChanged = () => {
-      const token = accessTokenStore.get();
-      if (!token) {
-        clearManualReconnect();
-        socket.disconnect();
-        return;
-      }
+    handlers.onOrderChanged({
+      mutation: event.mutation,
+      order: mapBackendOrderToFrontend(event.order),
+    });
+  };
 
-      if (socket.connected) {
-        socket.emit("auth:refresh", { token });
-      } else {
-        clearManualReconnect();
-        socket.connect();
-      }
-    };
+  const handleAuthSessionChanged = () => {
+    const token = accessTokenStore.get();
+    if (!token) {
+      clearManualReconnect();
+      socket.disconnect();
+      return;
+    }
 
-    socket.on("orders:changed", handleChanged);
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
-    socket.on("connect_error", handleConnectError);
-    window.addEventListener(
+    if (socket.connected) {
+      socket.emit("auth:refresh", { token });
+    } else {
+      clearManualReconnect();
+      socket.connect();
+    }
+  };
+
+  socket.on("orders:changed", handleChanged);
+  socket.on("connect", handleConnect);
+  socket.on("disconnect", handleDisconnect);
+  socket.on("connect_error", handleConnectError);
+  window.addEventListener(
+    AUTH_SESSION_CHANGED_EVENT,
+    handleAuthSessionChanged,
+  );
+
+  return () => {
+    clearManualReconnect();
+    socket.off("orders:changed", handleChanged);
+    socket.off("connect", handleConnect);
+    socket.off("disconnect", handleDisconnect);
+    socket.off("connect_error", handleConnectError);
+    window.removeEventListener(
       AUTH_SESSION_CHANGED_EVENT,
       handleAuthSessionChanged,
     );
+    socket.disconnect();
+  };
+}
+
+const listeners = new Set<OrderRealtimeHandlers>();
+let releaseSocket: (() => void) | undefined;
+let connected = false;
+
+export const ordersRealtimeGateway: OrdersRealtimeGateway = {
+  subscribe(handlers) {
+    listeners.add(handlers);
+    if (!releaseSocket) {
+      releaseSocket = connectOrdersSocket({
+        onOrderChanged: (event) => listeners.forEach((listener) => listener.onOrderChanged(event)),
+        onConnect: () => {
+          connected = true;
+          listeners.forEach((listener) => listener.onConnect());
+        },
+        onDisconnect: () => {
+          connected = false;
+          listeners.forEach((listener) => listener.onDisconnect());
+        },
+        onError: (error) => listeners.forEach((listener) => listener.onError(error)),
+      });
+    } else if (connected) {
+      handlers.onConnect();
+    }
 
     return () => {
-      clearManualReconnect();
-      socket.off("orders:changed", handleChanged);
-      socket.off("connect", handleConnect);
-      socket.off("disconnect", handleDisconnect);
-      socket.off("connect_error", handleConnectError);
-      window.removeEventListener(
-        AUTH_SESSION_CHANGED_EVENT,
-        handleAuthSessionChanged,
-      );
-      socket.disconnect();
+      listeners.delete(handlers);
+      if (listeners.size > 0) return;
+      releaseSocket?.();
+      releaseSocket = undefined;
+      connected = false;
     };
   },
 };

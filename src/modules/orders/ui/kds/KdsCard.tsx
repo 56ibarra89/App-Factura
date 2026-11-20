@@ -332,7 +332,8 @@ export const KdsCard: React.FC<KdsCardProps> = ({
 
             // CASO 1: ÍTEM ES UN COMBO
             if (item.isCombo) {
-              const enrichedSelections = (item.comboSelections || []).map(
+              const enrichedSelections = (item.comboSelections ?? [])
+                .filter((selection) => selection.requiresPreparation !== false).map(
                 (sel) => {
                   const catName = resolveItemCategoryName(
                     sel.productId,

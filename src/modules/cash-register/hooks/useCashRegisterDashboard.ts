@@ -7,60 +7,54 @@ import {
   type LiveKpis,
 } from "../api/adminDashboardGateway";
 
-const DEFAULT_KPIS: LiveKpis = {
-  totalSalesToday: 0,
-  activeOccupiedTables: 0,
-  pendingKitchenOrders: 0,
-  activeDeliveryOrders: 0,
-};
-
 export const useCashRegisterDashboard = (
   gateway: AdminDashboardGateway = adminDashboardGateway,
   autoRefreshIntervalMs: number = 30000,
 ) => {
-  const [cajasActivas, setCajasActivas] = useState<ActiveCashRegister[]>([]);
+  const [cajasActivas, setCajasActivas] = useState<ActiveCashRegister[] | null>(null);
   const [waiterPerformance, setWaiterPerformance] = useState<
-    WaiterPerformance[]
-  >([]);
-  const [liveKpis, setLiveKpis] = useState<LiveKpis>(DEFAULT_KPIS);
+    WaiterPerformance[] | null
+  >(null);
+  const [liveKpis, setLiveKpis] = useState<LiveKpis | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-
-  const isMountedRef = useRef(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [failedSections, setFailedSections] = useState<string[]>([]);
+  const currentRequest = useRef<symbol | null>(null);
 
   const fetchDashboardData = useCallback(
     async (showLoading: boolean = false) => {
-      try {
-        if (showLoading) setLoading(true);
-        setIsRefreshing(true);
+      if (currentRequest.current) return;
+      const request = Symbol();
+      currentRequest.current = request;
+      if (showLoading) setLoading(true);
+      setIsRefreshing(true);
 
-        const [cajasRes, waitersRes, kpisRes] = await Promise.all([
-          gateway.getActiveCashRegisters().catch(() => []),
-          gateway.getWaiterPerformance().catch(() => []),
-          gateway.getLiveKpis().catch(() => DEFAULT_KPIS),
-        ]);
+      const [cajas, meseros, indicadores] = await Promise.allSettled([
+        gateway.getActiveCashRegisters(),
+        gateway.getWaiterPerformance(),
+        gateway.getLiveKpis(),
+      ]);
+      if (currentRequest.current !== request) return;
 
-        if (isMountedRef.current) {
-          setCajasActivas(cajasRes || []);
-          setWaiterPerformance(waitersRes || []);
-          setLiveKpis(kpisRes || DEFAULT_KPIS);
-          setLastUpdated(new Date());
-        }
-      } catch (error) {
-        console.error("Error al obtener datos del dashboard de cajas:", error);
-      } finally {
-        if (isMountedRef.current) {
-          setLoading(false);
-          setIsRefreshing(false);
-        }
-      }
+      const errors: string[] = [];
+      if (cajas.status === "fulfilled") setCajasActivas(cajas.value);
+      else errors.push("cajas activas");
+      if (meseros.status === "fulfilled") setWaiterPerformance(meseros.value);
+      else errors.push("desempeño de meseros");
+      if (indicadores.status === "fulfilled") setLiveKpis(indicadores.value);
+      else errors.push("indicadores");
+
+      if (errors.length === 0) setLastUpdated(new Date());
+      setFailedSections(errors);
+      currentRequest.current = null;
+      setLoading(false);
+      setIsRefreshing(false);
     },
     [gateway],
   );
 
   useEffect(() => {
-    isMountedRef.current = true;
     void fetchDashboardData(true);
 
     const intervalId = setInterval(() => {
@@ -68,7 +62,7 @@ export const useCashRegisterDashboard = (
     }, autoRefreshIntervalMs);
 
     return () => {
-      isMountedRef.current = false;
+      currentRequest.current = null;
       clearInterval(intervalId);
     };
   }, [fetchDashboardData, autoRefreshIntervalMs]);
@@ -84,6 +78,7 @@ export const useCashRegisterDashboard = (
     loading,
     isRefreshing,
     lastUpdated,
+    failedSections,
     reloadDashboard,
   };
 };

@@ -25,6 +25,7 @@ export interface CheckoutFormValues {
   driverId?: string;
   deliveryCost?: number;
   deliveryZoneId?: string;
+  deliveryFeeOverrideReason?: string;
   deliveryZoneName?: string;
   deliveryDriverPayout?: number;
   isFreeDelivery?: boolean;

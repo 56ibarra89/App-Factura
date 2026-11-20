@@ -29,6 +29,7 @@ export const CatalogProvider = ({
           items: category.items.map((product) => ({
             ...product,
             categoryId: product.categoryId ?? category.id,
+            requiresPreparation: product.requiresPreparation ?? category.requiresPreparation,
           })),
         })),
       );
@@ -123,10 +124,10 @@ export const CatalogProvider = ({
   );
 
   const addCategory = useCallback(
-    async (categoryName: string, icon?: string, kitchenId?: string) => {
+    async (categoryName: string, icon?: string, kitchenId?: string, requiresPreparation?: boolean) => {
       try {
         if (categories.some((cat) => cat.label === categoryName)) return;
-        await gateway.createCategory({ label: categoryName, icon, kitchenId });
+        await gateway.createCategory({ label: categoryName, icon, kitchenId, requiresPreparation });
         await loadCategories();
       } catch (error) {
         console.error("Error al crear categoría:", error);
@@ -142,6 +143,7 @@ export const CatalogProvider = ({
       newName: string,
       icon?: string,
       kitchenId?: string | null,
+      requiresPreparation?: boolean,
     ) => {
       try {
         const cat = categories.find((c) => c.label === oldName);
@@ -150,6 +152,7 @@ export const CatalogProvider = ({
             label: newName,
             icon,
             kitchenId,
+            requiresPreparation,
           });
           await loadCategories();
         }

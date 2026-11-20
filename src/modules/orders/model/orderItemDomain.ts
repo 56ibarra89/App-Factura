@@ -1,6 +1,6 @@
 import type { OrderItem } from "./order.types";
 
-type NamedOrderItem = Pick<OrderItem, "name">;
+type NamedOrderItem = Pick<OrderItem, "name" | "requiresPreparation">;
 
 function normalizeItemName(item: NamedOrderItem): string {
   return item.name.trim().toLocaleLowerCase("es");
@@ -41,5 +41,5 @@ export function isSupplementalOrderItem(item: NamedOrderItem): boolean {
 }
 
 export function requiresKitchenPreparation(item: NamedOrderItem): boolean {
-  return !isSupplementalOrderItem(item);
+  return item.requiresPreparation !== false && !isSupplementalOrderItem(item);
 }

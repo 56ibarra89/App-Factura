@@ -28,6 +28,8 @@ interface CategoryManagerDialogProps {
   onClose: () => void;
 }
 
+const NO_PREPARATION = "__no_preparation__";
+
 const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onClose }) => {
   const { categories, addCategory, updateCategory, deleteCategory } = useCatalog();
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -63,7 +65,11 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
     setSaving(true);
     setError(null);
     try {
-      await addCategory(trimmedName, newCategoryIcon, newKitchenId || undefined);
+      await addCategory(
+        trimmedName, newCategoryIcon,
+        newKitchenId === NO_PREPARATION ? undefined : newKitchenId || undefined,
+        newKitchenId !== NO_PREPARATION,
+      );
       setNewCategoryName("");
       setNewCategoryIcon("Restaurant");
       setNewKitchenId("");
@@ -97,7 +103,8 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
         editingCategory,
         trimmedName,
         editingIcon,
-        editingKitchenId || null,
+        editingKitchenId === NO_PREPARATION ? null : editingKitchenId || null,
+        editingKitchenId !== NO_PREPARATION,
       );
       setEditingCategory(null);
       setEditingName("");
@@ -165,6 +172,7 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
               <MenuItem value="">
                 <em>Ninguna cocina</em>
               </MenuItem>
+              <MenuItem value={NO_PREPARATION}>No requiere preparación</MenuItem>
               {kitchens.map((k) => (
                 <MenuItem key={k.id} value={k.id}>{k.name}</MenuItem>
               ))}
@@ -220,7 +228,7 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                       setEditingCategory(cat.label);
                       setEditingName(cat.label);
                       setEditingIcon(cat.icon || "Restaurant");
-                      setEditingKitchenId(cat.kitchenId || "");
+                      setEditingKitchenId(cat.requiresPreparation === false ? NO_PREPARATION : cat.kitchenId || "");
                       setError(null);
                     }}
                   >
@@ -264,6 +272,7 @@ const CategoryManagerDialog: React.FC<CategoryManagerDialogProps> = ({ open, onC
                       <MenuItem value="">
                         <em>Ninguna cocina</em>
                       </MenuItem>
+                      <MenuItem value={NO_PREPARATION}>No requiere preparación</MenuItem>
                       {kitchens.map((k) => (
                         <MenuItem key={k.id} value={k.id}>{k.name}</MenuItem>
                       ))}

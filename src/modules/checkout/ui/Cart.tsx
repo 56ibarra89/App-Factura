@@ -77,6 +77,7 @@ const Cart = ({
               onAddItem({
                 productId: item.productId,
                 categoryId: item.categoryId,
+                requiresPreparation: item.requiresPreparation,
                 name: item.name,
                 price: Math.max(
                   0,

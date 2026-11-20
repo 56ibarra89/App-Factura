@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { BackButton, PageHeader } from "../../../shared/ui";
 import { ApiClientError } from "../../../shared/api";
-import { formatBusinessTime } from "../../../shared/format";
+import { formatBusinessTime, getBusinessDateString } from "../../../shared/format";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import TwoWheelerIcon from "@mui/icons-material/TwoWheeler";
 import PhoneIcon from "@mui/icons-material/Phone";
@@ -53,27 +53,20 @@ import {
 } from "../../orders";
 import { useServiceSlaConfig } from "../../settings";
 import type { DeliveryDriver } from "../model/delivery.types";
+import { useDeliveryOrders } from "../hooks/useDeliveryOrders";
 
 type DeliveryTab = "pending" | "in_transit" | "delivered" | "all";
 type DeliveryStage = Exclude<DeliveryTab, "all">;
 
 function isOrderReadyForDelivery(order: Order): boolean {
-  const sentItems = order.items.filter(
-    (item) => requiresKitchenPreparation(item) && item.isSentToKitchen,
-  );
-  if (sentItems.length === 0) return true;
-  return (
-    order.status === "ready" ||
-    order.status === "delivered" ||
-    order.status === "paid" ||
-    sentItems.every(
-      (item) =>
-        item.kitchenStatus === "ready" || item.kitchenStatus === "delivered",
-    )
+  return order.items.filter(requiresKitchenPreparation).every(
+    (item) => item.isSentToKitchen &&
+      (item.kitchenStatus === "ready" || item.kitchenStatus === "delivered"),
   );
 }
 
 function getDeliveryStage(order: Order): DeliveryStage | null {
+  if (order.status === "cancelled") return null;
   if (order.status === "paid") return "delivered";
   if (order.status === "delivered" || order.deliveryStartedAt) {
     return "in_transit";
@@ -88,7 +81,6 @@ export default function DriverDeliveriesPage() {
 
   const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
-  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [tabFilter, setTabFilter] = useState<DeliveryTab>("pending");
@@ -104,6 +96,8 @@ export default function DriverDeliveriesPage() {
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
 
   const isMotorizado = role === "motorizado";
+  const { orders, loading: loadingOrders, error: ordersError, reload: fetchAllDeliveryOrders } =
+    useDeliveryOrders(isMotorizado, username, getBusinessDateString(new Date(clock)));
 
   useEffect(() => {
     const timer = window.setInterval(() => setClock(Date.now()), 30000);
@@ -135,61 +129,9 @@ export default function DriverDeliveriesPage() {
     }
   }, [isMotorizado]);
 
-  const fetchAllDeliveryOrders = useCallback(async () => {
-    try {
-      const [allCurrentOrders, driverOrders] = await Promise.all([
-        isMotorizado
-          ? deliveryGateway.getMyDeliveries()
-          : ordersGateway.listCurrent().catch(() => [] as Order[]),
-        selectedDriverId
-          && !isMotorizado
-          && selectedDriverId !== "all"
-          ? deliveryGateway.getDriverOrdersToday(selectedDriverId)
-          : Promise.resolve([] as Order[]),
-      ]);
-
-      const orderMap = new Map<string, Order>();
-
-      driverOrders.forEach((order) => {
-        orderMap.set(order.id, order);
-      });
-
-      allCurrentOrders.forEach((order) => {
-        if (order.orderType === "delivery") {
-          orderMap.set(order.id, order);
-        }
-      });
-
-      const combined = Array.from(orderMap.values());
-
-      combined.sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-      );
-
-      setOrders(combined);
-    } catch (err) {
-      console.error("Error cargando pedidos de delivery:", err);
-      setSnackbar({
-        open: true,
-        message: "Error al sincronizar pedidos de delivery.",
-        severity: "error",
-      });
-    }
-  }, [isMotorizado, selectedDriverId]);
-
   useEffect(() => {
     void loadInitialData();
   }, [loadInitialData]);
-
-  useEffect(() => {
-    void fetchAllDeliveryOrders();
-
-    const interval = setInterval(() => {
-      void fetchAllDeliveryOrders();
-    }, 12000);
-    return () => clearInterval(interval);
-  }, [fetchAllDeliveryOrders]);
 
   const handleMarkAsDelivered = async (order: Order) => {
     if (!isOrderReadyForDelivery(order)) {
@@ -204,7 +146,6 @@ export default function DriverDeliveriesPage() {
       await ordersGateway.updateStatus({
         orderId: order.id,
         status: "delivered",
-        expectedUpdatedAt: order.updatedAt?.toISOString(),
       });
       setSnackbar({
         open: true,
@@ -348,7 +289,7 @@ export default function DriverDeliveriesPage() {
           selectedDriverUser.username?.toLowerCase();
 
       return matchId || matchUser;
-    });
+    }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }, [orders, isMotorizado, selectedDriverUser, selectedDriverId]);
 
   const stagedOrders = useMemo(
@@ -654,7 +595,8 @@ export default function DriverDeliveriesPage() {
       </Paper>
 
       {/* Grid de Pedidos para el Motorizado */}
-      {loading ? (
+      {ordersError && <Alert severity="warning" sx={{ mb: 2 }}>{ordersError}</Alert>}
+      {loading || loadingOrders ? (
         <Box display="flex" flexDirection="column" alignItems="center" py={8}>
           <CircularProgress color="error" size={36} sx={{ mb: 2 }} />
           <Typography color="text.secondary">

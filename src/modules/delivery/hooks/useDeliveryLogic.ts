@@ -23,7 +23,7 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
   const { rules: deliveryRules, activeZones } = useDeliveryRules();
 
   const [phoneInput, setPhoneInput] = useState("");
-  const [transporteInput, setTransporteInput] = useState("30.00");
+  const [transporteInput, setTransporteInput] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const manualCustomer = useRef<Customer | null>(null);
   const selectCustomer = useCallback((customer: Customer | null) => {
@@ -91,7 +91,7 @@ export function useDeliveryLogic(gateway: DeliveryGateway = deliveryGateway) {
       state: {
         fromDeliveryPage: true,
         deliveryCustomer: selectedCustomer,
-        deliveryPhone: selectedCustomer?.phone || phoneInput || undefined,
+        deliveryPhone: phoneInput.trim() || selectedCustomer?.phone || undefined,
         deliveryAddress: selectedAddress || undefined,
         deliveryCost: parseFloat(transporteInput) || 0,
         deliveryDriverId: selectedDriverId || undefined,

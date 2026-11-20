@@ -7,6 +7,10 @@ import {
   DialogTitle,
   Divider,
   Snackbar,
+  Stack,
+  Switch,
+  FormControlLabel,
+  TextField,
 } from "@mui/material";
 import type { OrderItem } from "../../orders";
 import type { CheckoutFormValues } from "../model/checkout.types";
@@ -110,6 +114,7 @@ export default function FacturaPreviewDialog({
     checkout.orderType === "delivery" ? checkout.selectedZone?.name : undefined,
     checkout.orderType === "delivery" ? checkout.driverPayout : undefined,
     checkout.orderType === "delivery" ? checkout.isFreeDelivery : false,
+    checkout.hasManualDelivery,
   );
   const printableCart = [...cart, ...supplementalCart];
 
@@ -117,7 +122,7 @@ export default function FacturaPreviewDialog({
     <>
       <Dialog
         open={open}
-        onClose={onClose}
+        onClose={checkout.isSubmitting ? undefined : onClose}
         maxWidth="sm"
         fullWidth
         disableRestoreFocus={disableRestoreFocus}
@@ -185,7 +190,51 @@ export default function FacturaPreviewDialog({
                 activeZones={checkout.activeZones}
                 deliveryRules={checkout.deliveryRules}
                 isFreeDelivery={checkout.isFreeDelivery}
+                manualDelivery={checkout.hasManualDelivery}
               />
+              {checkout.orderType === "delivery" && checkout.canOverrideDelivery && (
+                <Stack spacing={1} sx={{ mt: 2 }}>
+                  <FormControlLabel
+                    control={<Switch
+                      checked={checkout.hasManualDelivery}
+                      disabled={checkout.isSubmitting}
+                      onChange={(_, checked) => checkout.setDeliveryOverride(
+                        checked ? { amount: String(checkout.deliveryCost), reason: "" } : null,
+                      )}
+                    />}
+                    label="Autorizar tarifa de envío manual"
+                  />
+                  {checkout.deliveryOverride && (
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                      <TextField
+                        label="Tarifa autorizada (C$)"
+                        type="number"
+                        size="small"
+                        inputProps={{ min: 0, step: 0.01 }}
+                        value={checkout.deliveryOverride.amount}
+                        disabled={checkout.isSubmitting}
+                        onChange={(event) => {
+                          const amount = event.target.value;
+                          checkout.setDeliveryOverride((current) => current && { ...current, amount });
+                        }}
+                      />
+                      <TextField
+                        label="Motivo de autorización"
+                        size="small"
+                        fullWidth
+                        required
+                        inputProps={{ maxLength: 250 }}
+                        value={checkout.deliveryOverride.reason}
+                        disabled={checkout.isSubmitting}
+                        onChange={(event) => {
+                          const reason = event.target.value;
+                          checkout.setDeliveryOverride((current) => current && { ...current, reason });
+                        }}
+                      />
+                    </Stack>
+                  )}
+                </Stack>
+              )}
               {(checkout.orderType === "llevar" ||
                 checkout.orderType === "delivery") && (
                 <PackagingSection
@@ -234,6 +283,7 @@ export default function FacturaPreviewDialog({
         <DialogActions sx={{ "@media print": { display: "none" } }}>
           <Button
             onClick={onClose}
+            disabled={checkout.isSubmitting}
             sx={{ color: "error.main" }}
           >
             {isPrintRetry ? "Cerrar" : "Cancelar"}

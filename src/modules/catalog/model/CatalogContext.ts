@@ -14,12 +14,14 @@ export interface CatalogContextValue {
     categoryName: string,
     icon?: string,
     kitchenId?: string,
+    requiresPreparation?: boolean,
   ): Promise<void>;
   updateCategory(
     oldName: string,
     newName: string,
     icon?: string,
     kitchenId?: string | null,
+    requiresPreparation?: boolean,
   ): Promise<void>;
   deleteCategory(categoryName: string): Promise<void>;
   saveCategoryExtra(categoryId: string, extra: ExtraIngredientDef): Promise<void>;

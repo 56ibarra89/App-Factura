@@ -38,6 +38,7 @@ export function buildSupplementalCartItems(
   deliveryZoneName?: string,
   deliveryDriverPayout?: number,
   isFreeDelivery?: boolean,
+  isManualDelivery = false,
 ): OrderItem[] {
   const items: OrderItem[] = packagingItems.map((packaging) => ({
     id: crypto.randomUUID(),
@@ -49,7 +50,7 @@ export function buildSupplementalCartItems(
     isSentToKitchen: false,
   }));
 
-  if ((deliveryCost !== undefined && deliveryCost > 0) || isFreeDelivery) {
+  if ((deliveryCost !== undefined && deliveryCost > 0) || isFreeDelivery || isManualDelivery) {
     const isFree = Boolean(isFreeDelivery || deliveryCost === 0);
     const noteParts: string[] = [];
     if (deliveryZoneName) {
@@ -58,7 +59,7 @@ export function buildSupplementalCartItems(
     if (deliveryDriverPayout !== undefined) {
       noteParts.push(`Pago Motorizado: C$${deliveryDriverPayout.toFixed(2)}`);
     }
-    if (isFree) {
+    if (isFree && !isManualDelivery) {
       noteParts.push("Envío Gratis por Consumo Mínimo");
     }
 

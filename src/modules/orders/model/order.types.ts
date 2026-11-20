@@ -36,6 +36,7 @@ export interface SelectedComboOptionItem {
   extraPrice: number;
   extras?: SelectedExtra[];
   kitchenId?: string;
+  requiresPreparation?: boolean;
   categoryId?: string;
   categoryName?: string;
   kitchenStatus?: KitchenStatus;
@@ -58,6 +59,7 @@ export interface OrderItem {
   sentAt?: number;
   kitchenStatus?: KitchenStatus;
   kitchenId?: string;
+  requiresPreparation?: boolean;
   certificateSerial?: string;
   isCombo?: boolean;
   comboSelections?: SelectedComboOptionItem[];
@@ -76,6 +78,7 @@ export type OrderItemInput = Pick<
       | "giftQuantity"
       | "giftReason"
       | "kitchenId"
+      | "requiresPreparation"
       | "certificateSerial"
       | "categoryId"
       | "isCombo"
@@ -117,6 +120,8 @@ export interface Order extends OrderPromotionSelection {
   customerId?: string;
   orderType?: OrderType;
   customerAddress?: string;
+  deliveryZoneId?: string;
+  deliveryFeeOverrideReason?: string;
   driverId?: string;
   waiterId?: string;
   waiterName?: string;

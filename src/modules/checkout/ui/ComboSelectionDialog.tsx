@@ -138,7 +138,8 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
           quantity: 1,
           extraPrice,
           extras: [],
-          kitchenId: meta?.kitchenId || kitchenId,
+          kitchenId: meta?.product.requiresPreparation === false ? undefined : meta?.kitchenId || kitchenId,
+          requiresPreparation: meta?.product.requiresPreparation,
           categoryId: meta?.categoryId,
           categoryName: meta?.categoryName,
         },
@@ -185,7 +186,8 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
           quantity: 1,
           extraPrice,
           extras: [],
-          kitchenId: meta?.kitchenId || kitchenId,
+          kitchenId: meta?.product.requiresPreparation === false ? undefined : meta?.kitchenId || kitchenId,
+          requiresPreparation: meta?.product.requiresPreparation,
           categoryId: meta?.categoryId,
           categoryName: meta?.categoryName,
         },
@@ -268,6 +270,9 @@ export const ComboSelectionDialog: React.FC<ComboSelectionDialogProps> = ({
       note: comboNote.trim() || undefined,
       isCombo: true,
       comboSelections: selections,
+      requiresPreparation: selections.length
+        ? selections.some((selection) => selection.requiresPreparation !== false)
+        : comboProduct.requiresPreparation,
       kitchenId: parentKitchenId,
     });
 

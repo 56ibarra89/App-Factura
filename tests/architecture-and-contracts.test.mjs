@@ -276,8 +276,12 @@ test("F49 y B39: historial oculto persistido con rollback, permisos y bandeja pr
   assert.match(ordersPageContent, /setClearError/);
   assert.match(deliveryGatewayContent, /getMyDeliveries\(\)/);
   assert.match(deliveryGatewayContent, /"\/orders\/my-deliveries"/);
-  assert.match(driverPageContent, /deliveryGateway\.getMyDeliveries\(\)/);
-  assert.match(driverPageContent, /&&\s*!isMotorizado/);
+  const deliverySyncContent = fs.readFileSync(
+    path.join(modulesRoot, "delivery", "hooks", "useDeliveryOrders.ts"),
+    "utf8",
+  );
+  assert.match(driverPageContent, /useDeliveryOrders\(\s*isMotorizado,\s*username,/);
+  assert.match(deliverySyncContent, /ownOnly[\s\S]*?deliveryGateway\.getMyDeliveries\(\)/);
 });
 
 test("F50 y F51: reservas con rollback seguro, errores visibles y efectivo USD en cobro mixto", () => {

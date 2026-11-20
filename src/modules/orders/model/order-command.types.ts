@@ -27,6 +27,8 @@ export interface CreateOrderCommand
   customerPhone?: string;
   orderType?: OrderType;
   customerAddress?: string;
+  deliveryZoneId?: string;
+  deliveryFeeOverrideReason?: string;
   tableId?: string;
   paymentMethod?: PaymentMethod;
   splitAmounts?: SplitPaymentAmounts;

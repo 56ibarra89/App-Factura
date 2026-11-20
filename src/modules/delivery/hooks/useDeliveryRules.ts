@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   deliveryRulesGateway,
   DEFAULT_DELIVERY_RULES,
@@ -50,7 +50,7 @@ export function useDeliveryRules(gateway: DeliveryRulesGateway = deliveryRulesGa
     [gateway],
   );
 
-  const activeZones = rules.zones.filter((z) => z.isActive);
+  const activeZones = useMemo(() => rules.zones.filter((zone) => zone.isActive), [rules.zones]);
 
   const calculateFee = useCallback(
     (subTotal: number, zoneId?: string) => {

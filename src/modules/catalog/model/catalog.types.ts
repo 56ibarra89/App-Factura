@@ -49,6 +49,7 @@ export interface Product {
   categoryId?: string;
   name: string;
   description?: string;
+  requiresPreparation?: boolean;
   prices: ProductPrice[];
   hasMultipleSizes?: boolean;
   isCombo?: boolean;
@@ -63,6 +64,7 @@ export interface Category {
   totalRevenue?: number;
   icon?: string;
   kitchenId?: string;
+  requiresPreparation?: boolean;
   extras: ExtraIngredientDef[];
   items: Product[];
 }

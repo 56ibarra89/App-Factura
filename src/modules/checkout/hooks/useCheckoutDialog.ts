@@ -57,13 +57,15 @@ export function useCheckoutDialog({
   const [toastOpen, setToastOpen] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deliveryOverride, setDeliveryOverride] = useState<{ amount: string; reason: string } | null>(null);
   const submissionLock = useRef(false);
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [matchedCustomer, setMatchedCustomer] = useState<Customer | null>(null);
 
   const { config } = useGeneralSettings();
   const { taxes, isExonerated } = useTaxConfig();
-  const { hasPermission } = useAuth();
+  const { hasPermission, role } = useAuth();
+  const canOverrideDelivery = !isTableMode && (role === "admin" || role === "cajero_principal");
   const canReadCustomers = hasPermission(PERMISSIONS.CUSTOMERS_READ);
   const canManageCustomers = hasPermission(PERMISSIONS.CUSTOMERS_MANAGE);
   const exchangeRate = Number.isFinite(config.exchangeRate) && config.exchangeRate > 0 ? config.exchangeRate : 0;
@@ -84,6 +86,21 @@ export function useCheckoutDialog({
     orderSubTotal: deliveryPromotionSubtotal,
     gateway,
   });
+  const manualDelivery = customerDelivery.orderType === "delivery" && canOverrideDelivery
+    ? deliveryOverride
+    : null;
+  const isFreeDelivery = !manualDelivery && customerDelivery.isFreeDelivery;
+  const deliveryCost = manualDelivery
+    ? Number(manualDelivery.amount)
+    : isFreeDelivery ? 0 : customerDelivery.deliveryCost;
+  const hasManualDelivery = manualDelivery !== null;
+  const validManualDelivery = !manualDelivery || (
+    manualDelivery.amount.trim() !== "" &&
+    Number.isFinite(deliveryCost) &&
+    deliveryCost >= 0 &&
+    Math.abs(deliveryCost * 100 - Math.round(deliveryCost * 100)) < 1e-7 &&
+    Boolean(manualDelivery.reason.trim())
+  );
   const packaging = usePackagingSelection({
     open,
     orderType: customerDelivery.orderType,
@@ -95,11 +112,12 @@ export function useCheckoutDialog({
       const supplementalItems = buildSupplementalCartItems(
       packaging.packagingItems,
       customerDelivery.orderType === "delivery"
-        ? customerDelivery.deliveryCost
+        ? deliveryCost
         : undefined,
       customerDelivery.selectedZone?.name,
       customerDelivery.driverPayout,
-      customerDelivery.isFreeDelivery,
+      isFreeDelivery,
+      hasManualDelivery,
     );
     const baseTotals = calculateCartTotals(
       items,
@@ -117,7 +135,7 @@ export function useCheckoutDialog({
     );
     const deliveryCharge =
       customerDelivery.orderType === "delivery"
-        ? customerDelivery.deliveryCost
+        ? deliveryCost
         : 0;
 
       return {
@@ -132,11 +150,12 @@ export function useCheckoutDialog({
       };
     },
     [
-      customerDelivery.deliveryCost,
+      deliveryCost,
       customerDelivery.driverPayout,
-      customerDelivery.isFreeDelivery,
+      isFreeDelivery,
       customerDelivery.orderType,
       customerDelivery.selectedZone?.name,
+      hasManualDelivery,
       exchangeRate,
       fallbackDiscountAmount,
       isExonerated,
@@ -157,22 +176,25 @@ export function useCheckoutDialog({
 
   const canConfirm = useMemo(
     () =>
-      canSubmitCheckout({
+      validManualDelivery && canSubmitCheckout({
         isPaymentValid: payment.isPaymentValid,
         orderType: customerDelivery.orderType,
         customerAddress: customerDelivery.customerAddress,
         selectedDriverId: customerDelivery.selectedDriverId,
-        deliveryCost: customerDelivery.deliveryCost,
-        isFreeDelivery: customerDelivery.isFreeDelivery,
+        deliveryCost,
+        isFreeDelivery,
+        isManualDelivery: hasManualDelivery,
         hasAvailableDrivers: customerDelivery.drivers.length > 0,
         packagingIsConfigured: packaging.packagingConfig.length > 0,
         hasSelectedPackaging: packaging.packagingItems.length > 0,
       }),
     [
       customerDelivery.customerAddress,
-      customerDelivery.deliveryCost,
+      deliveryCost,
       customerDelivery.drivers.length,
-      customerDelivery.isFreeDelivery,
+      isFreeDelivery,
+      hasManualDelivery,
+      validManualDelivery,
       customerDelivery.orderType,
       customerDelivery.selectedDriverId,
       packaging.packagingConfig.length,
@@ -184,6 +206,7 @@ export function useCheckoutDialog({
   useEffect(() => {
     if (!open) return;
     setSubmitError("");
+    setDeliveryOverride(null);
     setIsSubmitting(false);
     setMatchDialogOpen(false);
     setMatchedCustomer(null);
@@ -236,12 +259,13 @@ export function useCheckoutDialog({
             : undefined,
         deliveryCost:
           customerDelivery.orderType === "delivery"
-            ? customerDelivery.deliveryCost
+            ? deliveryCost
             : undefined,
         deliveryZoneId:
           customerDelivery.orderType === "delivery"
             ? customerDelivery.selectedZone?.id
             : undefined,
+        deliveryFeeOverrideReason: manualDelivery?.reason.trim(),
         deliveryZoneName:
           customerDelivery.orderType === "delivery"
             ? customerDelivery.selectedZone?.name
@@ -252,7 +276,7 @@ export function useCheckoutDialog({
             : undefined,
         isFreeDelivery:
           customerDelivery.orderType === "delivery"
-            ? customerDelivery.isFreeDelivery
+            ? isFreeDelivery
             : false,
       });
     },
@@ -260,12 +284,13 @@ export function useCheckoutDialog({
       customerDelivery.customerAddress,
       customerDelivery.customerName,
       customerDelivery.customerPhone,
-      customerDelivery.deliveryCost,
+      deliveryCost,
       customerDelivery.orderType,
       customerDelivery.selectedDriverId,
       customerDelivery.selectedZone,
       customerDelivery.driverPayout,
-      customerDelivery.isFreeDelivery,
+      isFreeDelivery,
+      manualDelivery,
       exchangeRate,
       onConfirm,
       packaging.packagingItems,
@@ -456,6 +481,12 @@ export function useCheckoutDialog({
     config,
     exchangeRate,
     deliveryPromotionSubtotal,
+    deliveryCost,
+    isFreeDelivery,
+    hasManualDelivery,
+    canOverrideDelivery,
+    deliveryOverride,
+    setDeliveryOverride,
     canConfirm,
     submitError,
     isSubmitting,

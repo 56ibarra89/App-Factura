@@ -53,6 +53,7 @@ interface CustomerDeliverySectionProps {
   activeZones?: DeliveryZone[];
   deliveryRules?: DeliveryRulesConfig;
   isFreeDelivery?: boolean;
+  manualDelivery?: boolean;
 }
 
 export default function CustomerDeliverySection({
@@ -82,6 +83,7 @@ export default function CustomerDeliverySection({
   activeZones = [],
   deliveryRules,
   isFreeDelivery = false,
+  manualDelivery = false,
 }: CustomerDeliverySectionProps) {
   return (
     <Box sx={{ mb: 3 }}>
@@ -257,7 +259,7 @@ export default function CustomerDeliverySection({
             </Box>
           )}
 
-          {!isFreeDelivery &&
+          {!manualDelivery && !isFreeDelivery &&
             deliveryRules?.freeDeliveryEnabled &&
             deliveryRules.freeDeliveryMinAmount > 0 &&
             subTotal !== undefined &&
@@ -354,7 +356,7 @@ export default function CustomerDeliverySection({
             ) : null}
 
             <TextField
-              select={activeZones.length === 0}
+              select={!manualDelivery && activeZones.length === 0}
               label="Transporte"
               value={isFreeDelivery ? "GRATIS" : deliveryCost === 0 ? "" : String(deliveryCost)}
               onChange={(event) => {
@@ -363,13 +365,14 @@ export default function CustomerDeliverySection({
                 }
               }}
               size="small"
-              disabled={isFreeDelivery}
+              helperText={!isFreeDelivery && !manualDelivery && deliveryCost <= 0 ? "Selecciona una tarifa" : undefined}
+              disabled={isFreeDelivery || manualDelivery}
               InputProps={{
                 readOnly: activeZones.length > 0,
               }}
               sx={{ width: 130 }}
             >
-              {activeZones.length === 0 &&
+              {!manualDelivery && activeZones.length === 0 &&
                 deliveryPrices.map((price) => (
                   <MenuItem key={price} value={price}>
                     C$ {price}
@@ -384,7 +387,7 @@ export default function CustomerDeliverySection({
               <TwoWheelerIcon sx={{ fontSize: 16 }} color="action" />
               <Typography variant="caption" color="text.secondary">
                 {selectedZone.name}: Tarifa de entrega{" "}
-                <b>{isFreeDelivery ? "C$0.00 (Gratis)" : `C$${selectedZone.price.toFixed(2)}`}</b>
+                <b>{isFreeDelivery ? "C$0.00 (Gratis)" : `C$${deliveryCost.toFixed(2)}`}</b>
               </Typography>
             </Box>
           )}

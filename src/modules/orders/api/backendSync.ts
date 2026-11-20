@@ -38,6 +38,7 @@ interface BackendItem {
   sentAt?: string | Date;
   kitchenStatus?: string;
   kitchenId?: string;
+  requiresPreparation?: boolean;
   isCombo?: boolean;
   comboSelections?: BackendComboSelection[];
 }
@@ -136,6 +137,7 @@ export function mapBackendOrderToFrontend(backendOrder: BackendOrder): Order {
         ? (i.kitchenStatus.toLowerCase() as KitchenStatus)
         : undefined,
       kitchenId: i.kitchenId,
+      requiresPreparation: i.requiresPreparation,
       isCombo: Boolean(i.isCombo),
       comboSelections: i.comboSelections?.map((selection) => ({
         ...selection,
@@ -357,6 +359,8 @@ export async function syncAddOrderToBackend(order: Order): Promise<Order> {
     customerPhone: order.customerPhone,
     orderType: order.orderType ? order.orderType.toLowerCase() : undefined,
     customerAddress: order.customerAddress,
+    deliveryZoneId: order.deliveryZoneId,
+    deliveryFeeOverrideReason: order.deliveryFeeOverrideReason,
     driverId: order.driverId,
     customerTendered: order.customerTendered,
     deliveryChange: order.deliveryChange,

@@ -17,6 +17,7 @@ export interface CategoryPayload {
   label: string;
   icon?: string;
   kitchenId?: string | null;
+  requiresPreparation?: boolean;
 }
 
 export interface CategoryExtraPayload {

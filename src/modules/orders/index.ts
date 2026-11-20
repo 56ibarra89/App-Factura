@@ -56,6 +56,7 @@ export type {
   OrderHistoryQuery,
   OrdersGateway,
 } from "./api/ordersGateway";
+export { ordersRealtimeGateway } from "./api/ordersRealtimeGateway";
 export type {
   OrderRealtimeEvent,
   OrderRealtimeHandlers,
