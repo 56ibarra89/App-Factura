@@ -569,6 +569,27 @@ test("efectivo en córdobas está disponible solo si no existe configuración de
   assert.equal(payment.resolveOperationalPaymentMethods({ methods: [...missing.methods, { ...usd, isActive: false }] }, general).methods[1].isActive, false);
 });
 
+test("el mínimo de envío gratis considera productos después de descuentos", async () => {
+  const ts = await import("typescript");
+  const source = fs.readFileSync(path.join(modulesRoot, "checkout", "model", "cartTotals.ts"), "utf8");
+  const domain = {};
+  new Function("require", "exports", ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText)(
+    () => ({
+      isPackagingOrderItem: (item) => item.name.startsWith("Empaque"),
+      isDeliveryChargeOrderItem: (item) => item.name.startsWith("Delivery"),
+      isSplitBillOrderItem: (item) => item.name.startsWith("Abono"),
+    }), domain,
+  );
+  const items = [
+    { name: "Pizza", price: 650, quantity: 1 },
+    { name: "Empaque grande", price: 50, quantity: 1 },
+    { name: "Delivery", price: 30, quantity: 1 },
+  ];
+  assert.equal(domain.calculateDeliveryPromotionSubtotal(items, { discountType: "porcentaje", discountValue: 10 }), 585);
+  assert.equal(domain.calculateDeliveryPromotionSubtotal(items, null, 100), 550);
+  assert.equal(domain.calculateDeliveryPromotionSubtotal(items, null, 900), 0);
+});
+
 test("dividir cuenta reutiliza personas eliminadas pero no personas cobradas", async () => {
   const ts = await import("typescript");
   const compile = (file, requireModule) => {

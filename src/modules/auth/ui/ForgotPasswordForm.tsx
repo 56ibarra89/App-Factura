@@ -18,7 +18,7 @@ export const ForgotPasswordForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim()) {
-      setError("Por favor, ingresa tu usuario o correo electrónico");
+      setError("Por favor, ingresa tu correo electrónico");
       return;
     }
 
@@ -29,7 +29,7 @@ export const ForgotPasswordForm = () => {
     try {
       const response = await authService.requestPasswordReset(identifier);
       if (response.success) {
-        setSuccess("Instrucciones enviadas. Revisa tu bandeja de entrada.");
+        setSuccess("Si el correo corresponde a una cuenta de administrador habilitada, recibirás instrucciones. Revisa tu bandeja de entrada y correo no deseado.");
         setIdentifier("");
       } else {
         setError(response.message || "Error al enviar las instrucciones");
@@ -58,7 +58,7 @@ export const ForgotPasswordForm = () => {
         Recuperar Contraseña
       </Typography>
       <Typography variant="body1" color="text.secondary" mb={4}>
-        Ingresa tu usuario o correo para enviarte las instrucciones de recuperación.
+        Ingresa el correo de tu cuenta para solicitar las instrucciones de recuperación.
       </Typography>
 
       <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>
@@ -69,9 +69,10 @@ export const ForgotPasswordForm = () => {
       {success && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{success}</Alert>}
 
       <TextField
-        label="Usuario o Correo"
+        label="Correo electrónico"
+        type="email"
         variant="outlined"
-        name="username"
+        name="email"
         fullWidth
         margin="normal"
         value={identifier}

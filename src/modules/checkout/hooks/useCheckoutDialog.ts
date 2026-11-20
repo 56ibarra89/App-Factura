@@ -6,7 +6,7 @@ import type { AppliedPromotion } from "../../promotions";
 import { checkoutGateway, type CheckoutGateway } from "../api/checkoutGateway";
 import { canSubmitCheckout } from "../model/checkoutFormDomain";
 import { buildSupplementalCartItems } from "../model/checkoutDomain";
-import { calculateCartTotals } from "../model/cartTotals";
+import { calculateCartTotals, calculateDeliveryPromotionSubtotal } from "../model/cartTotals";
 import { useCheckoutPayment } from "./useCheckoutPayment";
 import { useCustomerDeliveryForm } from "./useCustomerDeliveryForm";
 import { usePackagingSelection } from "./usePackagingSelection";
@@ -39,7 +39,6 @@ export function useCheckoutDialog({
   open,
   items,
   total,
-  orderSubTotal,
   promotion,
   fallbackDiscountAmount,
   isTableMode,
@@ -68,6 +67,10 @@ export function useCheckoutDialog({
   const canReadCustomers = hasPermission(PERMISSIONS.CUSTOMERS_READ);
   const canManageCustomers = hasPermission(PERMISSIONS.CUSTOMERS_MANAGE);
   const exchangeRate = Number.isFinite(config.exchangeRate) && config.exchangeRate > 0 ? config.exchangeRate : 0;
+  const deliveryPromotionSubtotal = useMemo(
+    () => calculateDeliveryPromotionSubtotal(items, promotion, fallbackDiscountAmount),
+    [items, promotion, fallbackDiscountAmount],
+  );
 
   const customerDelivery = useCustomerDeliveryForm({
     open,
@@ -78,7 +81,7 @@ export function useCheckoutDialog({
     initialDriverId,
     initialDeliveryCost,
     initialDeliveryZone,
-    orderSubTotal: orderSubTotal ?? total,
+    orderSubTotal: deliveryPromotionSubtotal,
     gateway,
   });
   const packaging = usePackagingSelection({
@@ -452,6 +455,7 @@ export function useCheckoutDialog({
     ...costs,
     config,
     exchangeRate,
+    deliveryPromotionSubtotal,
     canConfirm,
     submitError,
     isSubmitting,

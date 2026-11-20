@@ -179,7 +179,7 @@ export default function FacturaPreviewDialog({
                 deliveryCost={checkout.deliveryCost}
                 onDeliveryCostChange={checkout.setDeliveryCost}
                 deliveryPrices={checkout.deliveryPrices}
-                subTotal={subTotal}
+                subTotal={checkout.deliveryPromotionSubtotal}
                 selectedZone={checkout.selectedZone}
                 onZoneChange={checkout.setSelectedZone}
                 activeZones={checkout.activeZones}

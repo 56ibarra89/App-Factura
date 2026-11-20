@@ -101,6 +101,20 @@ export function calculateCartTotals(
   return { subTotal, discountAmount, taxAmount, total: Math.max(0, subTotalAfterDiscount + taxAmount) };
 }
 
+export function calculateDeliveryPromotionSubtotal(
+  items: OrderItem[],
+  promotion?: AppliedPromotion | null,
+  fallbackDiscountAmount?: number,
+): number {
+  const products = items.filter((item) =>
+    !isPackagingOrderItem(item) &&
+    !isDeliveryChargeOrderItem(item) &&
+    !isSplitBillOrderItem(item),
+  );
+  const totals = calculateCartTotals(products, [], true, promotion, fallbackDiscountAmount);
+  return Math.max(0, totals.subTotal - totals.discountAmount);
+}
+
 export function matchesTwoForOneRule(
   item: OrderItem,
   rule: ActiveTwoForOnePromotion,
